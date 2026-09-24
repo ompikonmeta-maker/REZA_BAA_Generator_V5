@@ -1,6 +1,8 @@
 """Entrypoint FastAPI: init DB, daftarkan router, sajikan frontend statis."""
 from __future__ import annotations
 
+# Build marker: memicu workflow Build Windows EXE untuk branch ini.
+
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
