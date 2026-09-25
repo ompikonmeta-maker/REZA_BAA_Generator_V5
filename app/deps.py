@@ -46,14 +46,16 @@ def require_editor(user=Depends(current_user)):
 
 
 def loc_access(user, owner_id, *, write: bool) -> bool:
-    """Aturan kepemilikan lokasi. admin: selalu. viewer: baca semua (tulis sudah
-    ditolak require_editor). operator: hanya lokasi miliknya (owner_id)."""
+    """Aturan akses lokasi.
+    - Baca: SEMUA user boleh melihat lokasi siapa pun.
+    - Tulis: admin selalu; operator hanya miliknya; viewer tidak pernah."""
+    if not write:
+        return True
     if user["role"] == "admin":
         return True
     if user["role"] == "operator":
         return owner_id == user["id"]
-    # viewer: hanya baca
-    return not write
+    return False
 
 
 def audit(conn: sqlite3.Connection, user, action: str, entity: str = "", entity_id="", detail: str = ""):

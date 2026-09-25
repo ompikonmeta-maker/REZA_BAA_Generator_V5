@@ -19,10 +19,8 @@ def _format_code(n: int) -> str:
 
 
 def _scope(user):
-    """Fragment WHERE + params agar operator hanya melihat lokasi miliknya.
-    Admin & viewer (mode bos) melihat semua."""
-    if user["role"] == "operator":
-        return "l.owner_id = ?", [user["id"]]
+    """Semua user boleh MELIHAT lokasi siapa pun (read-all). Pembatasan hanya
+    berlaku pada aksi tulis (lihat _can_write)."""
     return "", []
 
 
@@ -50,8 +48,15 @@ class InventoryIn(BaseModel):
     items: list[InventoryItem]
 
 
-def _location_dict(conn: sqlite3.Connection, row) -> dict:
+def _location_dict(conn: sqlite3.Connection, row, user=None) -> dict:
     import json
+    owner_id = row["owner_id"] if "owner_id" in row.keys() else None
+    owner_name = None
+    if owner_id:
+        o = conn.execute("SELECT COALESCE(NULLIF(TRIM(full_name),''),username) nm FROM users WHERE id=?",
+                         (owner_id,)).fetchone()
+        owner_name = o["nm"] if o else None
+    can_edit = bool(user) and (user["role"] == "admin" or (user["role"] == "operator" and owner_id == user["id"]))
     inv = conn.execute(
         "SELECT id,nama_barang,merk_type,jumlah,sn_tagging,keterangan,sort_order "
         "FROM inventory_items WHERE location_id=? ORDER BY sort_order,id", (row["id"],)
@@ -64,6 +69,7 @@ def _location_dict(conn: sqlite3.Connection, row) -> dict:
         "id": row["id"], "code": row["code"], "name": row["name"],
         "data": json.loads(row["data_json"]), "status": row["status"],
         "created_at": row["created_at"], "updated_at": row["updated_at"],
+        "owner_id": owner_id, "owner_name": owner_name, "can_edit": can_edit,
         "inventory": [dict(i) for i in inv],
         "photos": [dict(p) for p in photos],
     }
@@ -200,7 +206,7 @@ def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db)
     conn.commit()
     audit(conn, user, "create", "location", cur.lastrowid, code)
     row = conn.execute("SELECT * FROM locations WHERE id=?", (cur.lastrowid,)).fetchone()
-    return _location_dict(conn, row)
+    return _location_dict(conn, row, user)
 
 
 class TransferIn(BaseModel):
@@ -241,9 +247,7 @@ def get_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
     row = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
     if not row:
         raise HTTPException(404, "Lokasi tidak ditemukan")
-    if user["role"] == "operator" and row["owner_id"] != user["id"]:
-        raise HTTPException(404, "Lokasi tidak ditemukan")
-    return _location_dict(conn, row)
+    return _location_dict(conn, row, user)
 
 
 @router.put("/{loc_id}")
@@ -262,7 +266,7 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
     )
     conn.commit()
     audit(conn, user, "update", "location", loc_id, row["code"])
-    return _location_dict(conn, conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone())
+    return _location_dict(conn, conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone(), user)
 
 
 @router.put("/{loc_id}/inventory")

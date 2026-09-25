@@ -21,10 +21,9 @@ router = APIRouter(prefix="/api/export", tags=["export"])
 
 
 def _filter_where(q: str, status: str, creator: int, date: str, user=None):
-    """Bangun klausa WHERE yang sama dengan GET /api/locations (Log Lokasi)."""
+    """Bangun klausa WHERE yang sama dengan GET /api/locations (Log Lokasi).
+    Read-all: semua user boleh mengekspor lokasi mana pun."""
     where, params = ["deleted_at IS NULL"], []
-    if user is not None and user["role"] == "operator":
-        where.append("owner_id = ?"); params.append(user["id"])
     if q.strip():
         like = f"%{q.strip()}%"
         where.append("(code LIKE ? OR name LIKE ?)")
@@ -45,11 +44,8 @@ def _filter_where(q: str, status: str, creator: int, date: str, user=None):
 def _gather_locations(conn: sqlite3.Connection, scope: str, loc_id: int | None,
                       q: str = "", status: str = "all", creator: int = 0,
                       date: str = "", user=None) -> list[dict]:
-    is_op = user is not None and user["role"] == "operator"
     if scope == "all":
-        wsql = "WHERE deleted_at IS NULL" + (" AND owner_id = ?" if is_op else "")
-        rows = conn.execute(f"SELECT * FROM locations {wsql} ORDER BY id",
-                            ([user["id"]] if is_op else [])).fetchall()
+        rows = conn.execute("SELECT * FROM locations WHERE deleted_at IS NULL ORDER BY id").fetchall()
     elif scope == "filter":
         wsql, params = _filter_where(q, status, creator, date, user)
         rows = conn.execute(f"SELECT * FROM locations {wsql} ORDER BY id", params).fetchall()
@@ -57,8 +53,6 @@ def _gather_locations(conn: sqlite3.Connection, scope: str, loc_id: int | None,
         if not loc_id:
             raise HTTPException(400, "loc_id wajib untuk scope 'one'")
         rows = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchall()
-        if rows and is_op and rows[0]["owner_id"] != user["id"]:
-            raise HTTPException(404, "Lokasi tidak ditemukan")
     if not rows:
         raise HTTPException(404, "Tidak ada lokasi untuk diekspor")
     out = []
