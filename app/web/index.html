@@ -365,10 +365,58 @@
   .ac-item b{color:var(--md-sys-color-primary);font-weight:700}
 
   /* foto — uniform cards */
-  .drop{border:2px dashed var(--md-sys-color-outline-variant);border-radius:16px;padding:16px;text-align:center;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px}
+  .drop{position:relative;border:2px dashed var(--md-sys-color-outline-variant);border-radius:16px;padding:16px;text-align:center;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;
+    transition:border-color .18s,background .18s,transform .18s}
   .drop .mi{font-size:28px;color:var(--md-sys-color-primary)}
   .drop-actions{display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap}
   .count{background:var(--md-sys-color-primary-container);color:var(--md-sys-color-on-primary-container);border-radius:99px;padding:3px 12px;font:var(--md-sys-typescale-label-medium)}
+  /* Drag & drop: sorot dropzone saat file diseret masuk */
+  .drop.drag{border-color:var(--md-sys-color-primary);border-style:solid;background:color-mix(in srgb,var(--md-sys-color-primary) 8%,transparent);transform:translateY(-1px)}
+  .drop.drag .mi{animation:dropbounce .7s ease-in-out infinite}
+  @keyframes dropbounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  /* Overlay progres unggah */
+  .upprog{position:absolute;inset:0;border-radius:14px;background:color-mix(in srgb,var(--md-sys-color-surface) 92%,transparent);
+    backdrop-filter:blur(2px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:5}
+  .upprog.on{display:flex;animation:upfade .2s ease}
+  @keyframes upfade{from{opacity:0}}
+  .upprog .ring{position:relative;width:60px;height:60px}
+  .upprog .ring svg{width:60px;height:60px;transform:rotate(-90deg)}
+  .upprog .ring circle{fill:none;stroke-width:6;stroke-linecap:round}
+  .upprog .ring .trk{stroke:var(--md-sys-color-surface-container-highest)}
+  .upprog .ring .prg{stroke:var(--md-sys-color-primary);stroke-dasharray:163.4;stroke-dashoffset:163.4;transition:stroke-dashoffset .25s cubic-bezier(.2,0,0,1)}
+  .upprog .ring .mi{position:absolute;inset:0;display:grid;place-items:center;font-size:24px;color:var(--md-sys-color-primary);animation:uppulse 1.4s ease-in-out infinite}
+  @keyframes uppulse{0%,100%{opacity:.65;transform:scale(.94)}50%{opacity:1;transform:scale(1.06)}}
+  .upprog .ptxt{font:var(--md-sys-typescale-title-small);font-weight:700;color:var(--md-sys-color-on-surface)}
+  .upprog .psub{font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant);margin-top:-6px}
+  .upprog .bar{width:min(78%,360px);height:6px;border-radius:99px;background:var(--md-sys-color-surface-container-highest);overflow:hidden}
+  .upprog .bar>i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--md-sys-color-primary),color-mix(in srgb,var(--md-sys-color-primary) 55%,var(--md-sys-color-tertiary)));
+    transition:width .25s cubic-bezier(.2,0,0,1);position:relative}
+  .upprog .bar>i::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,color-mix(in srgb,#fff 55%,transparent),transparent);
+    transform:translateX(-100%);animation:upshim 1.1s linear infinite}
+  @keyframes upshim{to{transform:translateX(200%)}}
+  .upprog.done .ring .prg{stroke:var(--md-sys-color-tertiary,var(--md-sys-color-primary))}
+  .upprog.done .ring .mi{animation:none;color:var(--md-sys-color-tertiary,var(--md-sys-color-primary))}
+  @media(prefers-reduced-motion:reduce){.upprog .ring .mi,.upprog .bar>i::after,.drop.drag .mi{animation:none}}
+  /* Tombol hapus semua foto (header kartu) */
+  .clrall{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--md-sys-color-outline-variant);background:transparent;
+    color:var(--md-sys-color-error);border-radius:99px;padding:5px 12px;font:var(--md-sys-typescale-label-medium);font-weight:600;cursor:pointer;transition:background .15s}
+  .clrall:hover{background:color-mix(in srgb,var(--md-sys-color-error) 10%,transparent)}
+  .clrall .mi{font-size:17px}
+  .clrall[disabled]{opacity:.4;pointer-events:none}
+  /* Snackbar undo hapus-massal */
+  #clrSnack{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);z-index:3200;display:none;align-items:center;gap:14px;
+    background:var(--md-sys-color-inverse-surface);color:var(--md-sys-color-inverse-on-surface);padding:12px 14px 12px 18px;border-radius:14px;
+    box-shadow:var(--md-sys-elevation-level4);font:var(--md-sys-typescale-body-medium);opacity:0;transition:opacity .2s,transform .2s}
+  #clrSnack.on{display:flex;opacity:1;transform:translateX(-50%) translateY(0)}
+  #clrSnack b{font-weight:700}
+  #clrSnack .ub{display:inline-flex;align-items:center;gap:6px;border:none;background:transparent;color:var(--md-sys-color-inverse-primary);
+    font:var(--md-sys-typescale-label-large);font-weight:700;cursor:pointer;padding:6px 8px;border-radius:8px}
+  #clrSnack .ub:hover{background:color-mix(in srgb,var(--md-sys-color-inverse-on-surface) 12%,transparent)}
+  #clrSnack .cring{width:22px;height:22px}
+  #clrSnack .cring svg{width:22px;height:22px;transform:rotate(-90deg)}
+  #clrSnack .cring circle{fill:none;stroke-width:3}
+  #clrSnack .cring .t{stroke:color-mix(in srgb,var(--md-sys-color-inverse-on-surface) 30%,transparent)}
+  #clrSnack .cring .p{stroke:var(--md-sys-color-inverse-primary);stroke-dasharray:59.7;stroke-dashoffset:0;transition:stroke-dashoffset 1s linear}
   .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;align-items:stretch}
   .pcard{display:flex;flex-direction:column;background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline-variant);border-radius:16px;padding:12px;height:100%}
   /* border kartu seragam; penanda SN hanya lewat ikon label, bukan warna border */
@@ -836,7 +884,7 @@
   /* Read-only lokasi milik user lain (operator boleh lihat, tak boleh edit) */
   #entry-form.ro #entry-del,#entry-form.ro #save-btn,#entry-form.ro #inv-add,
   #entry-form.ro .tr md-icon-button,#entry-form.ro .drop,#entry-form.ro #ocr-note,
-  #entry-form.ro .snap .actbar,#entry-form.ro .cbx-arrow{display:none!important}
+  #entry-form.ro #btn-clrall,#entry-form.ro .snap .actbar,#entry-form.ro .cbx-arrow{display:none!important}
   /* mode lihat: matikan semua aksi tulis yang bukan <input> (tile foto, date field, strip SN) */
   #entry-form.ro #photo-slots .thumb,#entry-form.ro #uncat-slots .thumb,
   #entry-form.ro .ptile .more,#entry-form.ro .ptile .snstrip,
@@ -1285,7 +1333,9 @@
               </div>
             </div>
             <div class="card">
-              <div class="sec"><span class="mi acc">photo_camera</span><h3>Foto &amp; Capture</h3><span class="grow"></span><span class="count" id="foto-count">0 / 0</span></div>
+              <div class="sec"><span class="mi acc">photo_camera</span><h3>Foto &amp; Capture</h3><span class="grow"></span>
+                <button class="clrall" id="btn-clrall" onclick="clearAllPhotos()" disabled><span class="mi">delete_sweep</span>Hapus semua</button>
+                <span class="count" id="foto-count">0 / 0</span></div>
               <div class="drop">
                 <span class="mi">cloud_upload</span>
                 <div class="muted" style="margin-top:4px">Unggah — kategori otomatis dari nama file, SN langsung di-OCR</div>
@@ -1296,6 +1346,12 @@
                 </div>
                 <input id="file-auto" type="file" multiple accept="image/*" class="hidden">
                 <input id="file-folder" type="file" multiple webkitdirectory class="hidden">
+                <div class="upprog" id="upProg">
+                  <div class="ring"><svg viewBox="0 0 60 60"><circle class="trk" cx="30" cy="30" r="26"/><circle class="prg" id="upRing" cx="30" cy="30" r="26"/></svg><span class="mi" id="upIcon">cloud_upload</span></div>
+                  <div class="ptxt" id="upTxt">Mengunggah…</div>
+                  <div class="psub" id="upSub"></div>
+                  <div class="bar"><i id="upBar"></i></div>
+                </div>
               </div>
               <div id="ocr-note" class="muted" style="margin-bottom:8px"></div>
               <div class="pgrid" id="photo-slots"></div>
@@ -1734,6 +1790,7 @@
 <div class="dp-pop" id="dpPop"></div>
 <div class="ac-pop" id="acPop"></div>
 <div id="heatTip"></div>
+<div id="clrSnack"><span class="cring"><svg viewBox="0 0 22 22"><circle class="t" cx="11" cy="11" r="9.5"/><circle class="p" id="clrRing" cx="11" cy="11" r="9.5"/></svg></span><span id="clrSnackTxt"><b>0</b> foto dihapus</span><button class="ub" onclick="undoClearAll()"><span class="mi">undo</span>Urungkan</button></div>
 
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -2526,6 +2583,8 @@ function renderPhotos(){
   const activeByCat={};activePhotos().forEach(p=>{(activeByCat[p.category]=activeByCat[p.category]||[]).push(p);});
   const filled=S.cats.filter(c=>(activeByCat[c.key]||[]).length).length;
   $('#foto-count').textContent=filled+' / '+S.cats.length;
+  const clr=$('#btn-clrall');if(clr)clr.disabled=roActive()||activePhotos().length===0;
+  bindDropzone();
   $('#photo-slots').className='ptgrid';
   $('#photo-slots').innerHTML=S.cats.map(c=>{
     const ph=(activeByCat[c.key]||[])[0];
@@ -2611,7 +2670,7 @@ window.applySnToInventory=(cat,serial)=>{if(!serial)return;
 
 /* ---- soft delete + undo in-card (timer 5s, cincin di dalam kartu) ---- */
 const pendingDel=new Map();  // id -> timeoutId
-function activePhotos(){return (S.loc&&S.loc.photos||[]).filter(p=>!pendingDel.has(p.id));}
+function activePhotos(){return (S.loc&&S.loc.photos||[]).filter(p=>!pendingDel.has(p.id)&&!clrPending.has(p.id));}
 window.softRemove=id=>{
   if(roActive())return;
   if(pendingDel.has(id))return;
@@ -2659,21 +2718,77 @@ window.replacePhoto=(oldId,cat)=>{if(roActive())return;pickFiles(false,files=>{c
       S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();toast('Foto diganti');}catch(e){toast('Gagal: '+e.message);}});});};
 window.reassignMenu=(btn,pid)=>openMenu(btn,S.cats.map(c=>({icon:c.ocr?'tag':'image',label:c.label,fn:async()=>{await api('/api/photos/'+pid,{method:'PATCH',body:JSON.stringify({category:c.key})});S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();toast('Dipindah');}})));
 function roActive(){const f=$('#entry-form');return !!(f&&f.classList.contains('ro'));}
-async function doUpload(files,category,relpaths){if(!files||!files.length)return;
-  if(roActive()){toast('Mode lihat — tidak bisa mengunggah');return;}
-  const fd=new FormData();
-  [...files].forEach(f=>fd.append('files',f));if(category)fd.append('category',category);
-  fd.append('relpaths',JSON.stringify([...files].map(f=>f.webkitRelativePath||f.name)));
-  toast('Mengunggah '+files.length+' file…');
-  try{const r=await fetch('/api/locations/'+S.loc.id+'/photos',{method:'POST',credentials:'same-origin',body:fd});
-    if(!r.ok)throw new Error((await r.json()).detail);const d=await r.json();
-    const sn=d.results.filter(x=>x.ocr_serial).map(x=>x.ocr_serial);
-    S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();
-    toast('Selesai · '+d.results.length+' foto'+(sn.length?' · SN: '+sn.join(', '):''));}catch(e){toast('Gagal: '+e.message);}}
+/* ---- Overlay progres unggah (#17) ---- */
+const UP_C=2*Math.PI*26;                                        // keliling ring r=26 ≈163.4
+function upShow(total){const p=$('#upProg');if(!p)return;p.classList.add('on');p.classList.remove('done');
+  $('#upIcon').textContent='cloud_upload';$('#upTxt').textContent='Mengunggah…';$('#upSub').textContent=total+' foto';upSet(0);}
+function upSet(pct){const r=$('#upRing'),b=$('#upBar');if(r)r.style.strokeDashoffset=(UP_C*(1-pct/100)).toFixed(1);if(b)b.style.width=Math.max(0,Math.min(100,pct)).toFixed(0)+'%';}
+function upCount(total,pct){const s=$('#upSub');if(s)s.textContent=Math.min(total,Math.max(1,Math.round(pct/100*total)))+' / '+total+' foto · '+Math.round(pct)+'%';}
+function upDone(n,ok){const p=$('#upProg');if(!p)return;p.classList.add('done');$('#upIcon').textContent=ok?'check_circle':'error';
+  $('#upTxt').textContent=ok?'Selesai':'Gagal';$('#upSub').textContent=ok?(n+' foto terunggah'):'';upSet(100);
+  setTimeout(()=>{p.classList.remove('on','done');},950);}
+function doUpload(files,category,relpaths){return new Promise(resolve=>{
+  const arr=files?[...files]:[];if(!arr.length)return resolve();
+  if(roActive()){toast('Mode lihat — tidak bisa mengunggah');return resolve();}
+  const fd=new FormData();arr.forEach(f=>fd.append('files',f));if(category)fd.append('category',category);
+  const rp=(relpaths&&relpaths.length)?relpaths:arr.map(f=>f.webkitRelativePath||f.name);
+  fd.append('relpaths',JSON.stringify(rp));
+  upShow(arr.length);
+  const xhr=new XMLHttpRequest();xhr.open('POST','/api/locations/'+S.loc.id+'/photos');xhr.withCredentials=true;
+  xhr.upload.onprogress=e=>{if(e.lengthComputable){const pct=e.loaded/e.total*100;upSet(pct);upCount(arr.length,pct);}};
+  xhr.upload.onload=()=>{upSet(100);$('#upTxt').textContent='Memproses…';$('#upSub').textContent='menyimpan & OCR';$('#upIcon').textContent='autorenew';};
+  xhr.onload=async()=>{try{
+      if(xhr.status<200||xhr.status>=300)throw new Error((JSON.parse(xhr.responseText||'{}').detail)||('HTTP '+xhr.status));
+      const d=JSON.parse(xhr.responseText);const sn=d.results.filter(x=>x.ocr_serial).map(x=>x.ocr_serial);
+      S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();upDone(d.results.length,true);
+      toast('Selesai · '+d.results.length+' foto'+(sn.length?' · SN: '+sn.join(', '):''));
+    }catch(e){upDone(0,false);toast('Gagal: '+e.message);}resolve();};
+  xhr.onerror=()=>{upDone(0,false);toast('Gagal mengunggah — koneksi terputus');resolve();};
+  xhr.send(fd);});}
 $('#btn-auto').addEventListener('click',()=>$('#file-auto').click());
 $('#btn-folder').addEventListener('click',()=>$('#file-folder').click());
 $('#file-auto').addEventListener('change',e=>{doUpload(e.target.files,'',[]);e.target.value='';});
 $('#file-folder').addEventListener('change',e=>{doUpload(e.target.files,'',[]);e.target.value='';});
+
+/* ---- Drag & drop (#16): dukung file & folder (webkitGetAsEntry) ---- */
+const IMG_RE=/\.(jpe?g|png|webp|gif|bmp)$/i;
+function _collectEntries(items){const out=[];
+  const walk=(entry,prefix)=>new Promise(res=>{
+    if(!entry)return res();
+    if(entry.isFile)entry.file(f=>{out.push({file:f,path:prefix+f.name});res();},()=>res());
+    else if(entry.isDirectory){const rd=entry.createReader();const all=[];
+      const read=()=>rd.readEntries(es=>{if(!es.length){Promise.all(all.map(e=>walk(e,prefix+entry.name+'/'))).then(()=>res());}
+        else{all.push(...es);read();}},()=>res());read();}
+    else res();});
+  return Promise.all([...items].map(it=>{const e=it.webkitGetAsEntry&&it.webkitGetAsEntry();return walk(e,'');})).then(()=>out);}
+function bindDropzone(){const dz=$('#entry-form .drop');if(!dz||dz._dnd)return;dz._dnd=true;
+  const stop=e=>{e.preventDefault();e.stopPropagation();};
+  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{stop(e);if(!roActive())dz.classList.add('drag');}));
+  ['dragleave','dragend'].forEach(ev=>dz.addEventListener(ev,e=>{stop(e);if(e.type==='dragleave'&&dz.contains(e.relatedTarget))return;dz.classList.remove('drag');}));
+  dz.addEventListener('drop',async e=>{stop(e);dz.classList.remove('drag');if(roActive())return;
+    const dt=e.dataTransfer;if(!dt)return;let files=[],relpaths=[];
+    const items=dt.items?[...dt.items]:[];
+    const hasEntry=items.some(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry());
+    if(hasEntry){const col=await _collectEntries(items);files=col.map(x=>x.file);relpaths=col.map(x=>x.path);}
+    else{files=[...(dt.files||[])];relpaths=files.map(f=>f.name);}
+    const keep=files.map((f,i)=>[f,relpaths[i]]).filter(([f])=>/^image\//.test(f.type)||IMG_RE.test(f.name));
+    if(!keep.length){toast('Tidak ada gambar yang valid');return;}
+    doUpload(keep.map(x=>x[0]),'',keep.map(x=>x[1]));});}
+
+/* ---- Hapus semua foto + undo bertimer (#18) ---- */
+const clrPending=new Set();let clrIds=[],clrTimer=null;
+window.clearAllPhotos=()=>{if(roActive())return;const ph=activePhotos();if(!ph.length){toast('Belum ada foto');return;}
+  clrIds=ph.map(p=>p.id);clrIds.forEach(id=>clrPending.add(id));renderPhotos();updateSummary();
+  const sn=$('#clrSnack');$('#clrSnackTxt').innerHTML=`<b>${clrIds.length}</b> foto dihapus`;sn.classList.add('on');
+  const R=$('#clrRing');R.style.transition='none';R.style.strokeDashoffset='0';
+  requestAnimationFrame(()=>{R.style.transition='stroke-dashoffset 5.1s linear';R.style.strokeDashoffset=(2*Math.PI*9.5).toFixed(1);});
+  clearTimeout(clrTimer);clrTimer=setTimeout(commitClearAll,5200);};
+window.undoClearAll=()=>{clearTimeout(clrTimer);clrPending.clear();clrIds=[];$('#clrSnack').classList.remove('on');
+  renderPhotos();updateSummary();toast('Dibatalkan');};
+async function commitClearAll(){$('#clrSnack').classList.remove('on');const ids=clrIds.slice();clrIds=[];
+  for(const id of ids){try{await fetch('/api/photos/'+id,{method:'DELETE',credentials:'same-origin'});}catch(e){}}
+  clrPending.clear();try{S.loc=await api('/api/locations/'+S.loc.id);}catch(e){}renderPhotos();updateSummary();
+  toast(ids.length+' foto dihapus');}
 
 /* ---- Baca SN: barcode/QR-first + seleksi area OCR ---- */
 let sn={photoId:null,cat:null,rect:null};
