@@ -70,11 +70,16 @@ def upload_photos(
 
         rel = paths[idx] if idx < len(paths) else (up.filename or "")
         folder = str(Path(rel).parent) if rel else ""
+        # Cocokkan HANYA berdasar nama file (basename), bukan path lengkap.
+        # Sebagian browser/WebView mengirim filename = "NamaFolder/Foto.jpg"
+        # saat "Pilih folder"; bila ikut dicocokkan, nama folder mencemari
+        # match tiap file -> banyak foto salah kategori & saling menimpa.
+        base = Path((up.filename or "").replace("\\", "/")).name
 
         if category:
             cat_key, matched_by = category, "manual"
         else:
-            cat_key, matched_by = autosort.match_category(up.filename or "", categories, folder)
+            cat_key, matched_by = autosort.match_category(base, categories, folder)
             # Cegah kehilangan diam-diam: bila kategori (auto) sudah dipakai file
             # lain dalam batch yang sama, jangan menimpa — alihkan ke
             # "uncategorized" agar foto tetap tampil & bisa dipindah manual.
@@ -107,11 +112,11 @@ def upload_photos(
         cur = conn.execute(
             "INSERT INTO photos(location_id,category,orig_name,filename,path,ocr_text,"
             "ocr_serial,matched_by,uploaded_by,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
-            (loc_id, cat_key, up.filename or fname, fname, str(fpath), ocr_text,
+            (loc_id, cat_key, base or fname, fname, str(fpath), ocr_text,
              ocr_serial, matched_by, user["id"], db.now_iso()),
         )
         results.append({
-            "id": cur.lastrowid, "orig_name": up.filename, "category": cat_key,
+            "id": cur.lastrowid, "orig_name": base, "category": cat_key,
             "matched_by": matched_by, "ocr_serial": ocr_serial,
         })
 
