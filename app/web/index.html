@@ -591,6 +591,25 @@
   .hcell.s4{background:var(--md-sys-color-primary)}
   .hcell.empty{background:transparent}
   .hcell.today{box-shadow:0 0 0 2px var(--md-sys-color-primary)}
+  /* ==== Ritme kontribusi ala GitHub (adaptasi): variant Ocean + entrance Scan + ambient Twinkle ==== */
+  .hcols.v-ocean .hcell.s1{background:#b4e2ff}
+  .hcols.v-ocean .hcell.s2{background:#62bdf5}
+  .hcols.v-ocean .hcell.s3{background:#2585d8}
+  .hcols.v-ocean .hcell.s4{background:#124e93}
+  .hcols.v-ocean .hcell.today{box-shadow:0 0 0 2px #2585d8}
+  :root[data-theme="dark"] .hcols.v-ocean .hcell.s1{background:#123f63}
+  :root[data-theme="dark"] .hcols.v-ocean .hcell.s2{background:#1f6aa8}
+  :root[data-theme="dark"] .hcols.v-ocean .hcell.s3{background:#3d9be0}
+  :root[data-theme="dark"] .hcols.v-ocean .hcell.s4{background:#7cc4f5}
+  .hcols.hgraph .hcell:not(.empty){opacity:0;transform:scale(.35);
+    animation:hpop .34s cubic-bezier(.2,.8,.2,1) forwards, htw var(--tw,2.4s) ease-in-out infinite}
+  @keyframes hpop{to{opacity:1;transform:none}}
+  @keyframes htw{0%,100%{opacity:1}50%{opacity:.62}}
+  @media(prefers-reduced-motion:reduce){.hcols .hcell{animation:none!important;opacity:1!important;transform:none!important}}
+  #heatTip{position:fixed;z-index:2600;pointer-events:none;background:var(--md-sys-color-inverse-surface);color:var(--md-sys-color-inverse-on-surface);
+    padding:6px 12px;border-radius:999px;font:var(--md-sys-typescale-label-large);white-space:nowrap;opacity:0;
+    transform:translate(-50%,-100%) scale(.92);transition:opacity .12s,transform .12s}
+  #heatTip.on{opacity:1;transform:translate(-50%,-100%) scale(1)}
   .hlegend{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:12px;font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant)}
   .hlegend .k{display:flex;align-items:center;gap:5px}
   .hlegend i{width:12px;height:12px;border-radius:4px;display:inline-block}
@@ -1694,6 +1713,7 @@
 <div class="toast" id="toast"></div>
 <div class="dp-pop" id="dpPop"></div>
 <div class="ac-pop" id="acPop"></div>
+<div id="heatTip"></div>
 
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -1985,6 +2005,13 @@ function dBars(trend){trend=trend||[];const n=trend.length,mx=Math.max(...trend,
   $('#dTrendSum').textContent=`+${sum} · puncak ${pd.getDate()} ${MON3[pd.getMonth()]} (${mx})`;
 }
 function heatLvl(v){return v<=0?0:v<=2?1:v<=5?2:v<=8?3:4;}
+let _heatTipBound=false;
+function _bindHeatTip(){if(_heatTipBound)return;_heatTipBound=true;
+  const cols=$('#dHeatCols'),tip=$('#heatTip');if(!cols||!tip)return;
+  cols.addEventListener('mouseover',e=>{const c=e.target.closest('.hcell[data-htip]');if(!c)return;
+    const r=c.getBoundingClientRect();tip.textContent=c.dataset.htip;
+    tip.style.left=(r.left+r.width/2)+'px';tip.style.top=(r.top-6)+'px';tip.classList.add('on');});
+  cols.addEventListener('mouseleave',()=>tip.classList.remove('on'));}
 function buildDashHeat(heat){heat=heat||[];
   const DAYS=['Min','Sen','Sel','Rab','Kam','Jum','Sab'],MO=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   const today=new Date();today.setHours(0,0,0,0);
@@ -1993,6 +2020,7 @@ function buildDashHeat(heat){heat=heat||[];
   const startMon=new Date(mStart);startMon.setDate(mStart.getDate()-((mStart.getDay()+6)%7));
   const WEEKS=Math.floor((today-startMon)/(7*86400000))+1;
   const cols=$('#dHeatCols'),months=$('#dHeatMonths');cols.innerHTML='';months.innerHTML='<span></span>';
+  cols.className='hcols v-ocean hgraph';           // Ocean + Scan(entrance) + Twinkle(ambient)
   // Kolom dinamis (cegah overflow): lebar sel dibatasi, jumlah = WEEKS
   cols.style.gridTemplateColumns=`repeat(${WEEKS},minmax(0,30px))`;
   months.style.gridTemplateColumns=`22px repeat(${WEEKS},minmax(0,30px))`;
@@ -2008,10 +2036,15 @@ function buildDashHeat(heat){heat=heat||[];
       const idx=N-1-Math.round((today-dt)/86400000);const v=(idx>=0&&idx<N)?(heat[idx]||0):0;
       total++;if(v>0){active++;sum+=v;}byDay[(dt.getDay()+6)%7]+=v;
       const td=(+dt===+today)?' today':'';
-      col+=`<div class="hcell s${heatLvl(v)}${td}" title="${DAYS[dt.getDay()]}, ${dt.getDate()} ${MO[dt.getMonth()]} · ${v} aktivitas"></div>`;
+      const dly=(w*0.03).toFixed(3);                                   // Scan: per kolom
+      const seed=((w*17+r*31)%11)/10;const tw=(2+seed*1.4).toFixed(2); // Twinkle
+      const style=`--tw:${tw}s;animation-delay:${dly}s,${(+dly+0.5+seed).toFixed(2)}s`;
+      const tip=`${v} aktivitas · ${DAYS[dt.getDay()]}, ${dt.getDate()} ${MO[dt.getMonth()]}`;
+      col+=`<div class="hcell s${heatLvl(v)}${td}" style="${style}" data-htip="${tip}"></div>`;
     }
     cols.innerHTML+=col+'</div>';
   }
+  _bindHeatTip();
   const busy=byDay.indexOf(Math.max(...byDay));const dayName=['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'][busy];
   $('#dHeatCal').classList.toggle('blank',sum===0);
   $('#dHeatInsight').innerHTML=sum>0?`<b>${active}</b> dari ${total} hari aktif · total <b>${sum}</b> aktivitas · tersibuk <b>${dayName}</b>`:'Ringkasan bulan ini';
