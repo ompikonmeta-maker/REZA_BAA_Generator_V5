@@ -296,9 +296,11 @@
     color:var(--md-sys-color-on-surface);cursor:pointer;text-align:left;font:inherit;transition:border-color .15s}
   .locpick:hover{background:color-mix(in srgb,var(--md-sys-color-on-surface) 4%,transparent)}
   .locpick .lp-lab{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-primary)}
-  .locpick .lp-val{font:var(--md-sys-typescale-body-large);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .locpick .lp-val.ph{color:var(--md-sys-color-on-surface-variant)}
-  .locpick .lp-code{font-family:ui-monospace,Consolas,monospace;color:var(--md-sys-color-primary);font-weight:700}
+  .locpick .lp-val{font:var(--md-sys-typescale-body-large);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:baseline;gap:8px}
+  .locpick .lp-val.ph{color:var(--md-sys-color-on-surface-variant);display:block}
+  .locpick .lp-nm-main{font-weight:700;color:var(--md-sys-color-on-surface);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .locpick .lp-code{font-family:ui-monospace,Consolas,monospace;font-size:11px;font-weight:600;color:var(--md-sys-color-on-surface-variant);
+    background:var(--md-sys-color-surface-container-high);padding:1px 7px;border-radius:6px;flex:0 0 auto}
   .locpick .lp-arrow{position:absolute;right:8px;top:50%;transform:translateY(-50%);color:var(--md-sys-color-on-surface-variant);transition:transform .2s}
   .locpick.open{border:2px solid var(--md-sys-color-primary);padding:5px 39px 5px 13px}
   .locpick.open .lp-arrow{transform:translateY(-50%) rotate(180deg)}
@@ -312,8 +314,10 @@
   .lp-list{max-height:320px;overflow-y:auto;padding:6px;scrollbar-gutter:stable}
   .lp-opt{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;cursor:pointer}
   .lp-opt:hover,.lp-opt.act{background:var(--md-sys-color-surface-container-high)}
-  .lp-opt .lp-code{font-family:ui-monospace,Consolas,monospace;color:var(--md-sys-color-primary);font-weight:700;font-size:12.5px;min-width:98px}
-  .lp-opt .lp-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:var(--md-sys-typescale-body-medium)}
+  .lp-opt .lp-code{font-family:ui-monospace,Consolas,monospace;font-size:11px;font-weight:600;color:var(--md-sys-color-on-surface-variant);
+    background:var(--md-sys-color-surface-container-high);padding:2px 8px;border-radius:6px;flex:0 0 auto}
+  .lp-opt .lp-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:var(--md-sys-typescale-body-large);font-weight:600;color:var(--md-sys-color-on-surface)}
+  .lp-opt .lp-nm.empty{font-style:italic;font-weight:500;color:var(--md-sys-color-on-surface-variant)}
   .lp-opt.sel{background:var(--md-sys-color-secondary-container)}
   .lp-badge{font:var(--md-sys-typescale-label-small);font-weight:700;padding:2px 9px;border-radius:20px}
   .lp-badge.b-d{background:var(--warn-bg);color:var(--warn)}
@@ -459,10 +463,11 @@
     background:var(--md-sys-color-surface-container-high)}
   .sum-locid>.mi{font-size:18px;color:var(--md-sys-color-primary)}
   .sli-txt{display:flex;flex-direction:column;min-width:0;line-height:1.25}
-  .sli-code{font-family:ui-monospace,Consolas,monospace;font-weight:700;font-size:13px;color:var(--md-sys-color-primary);letter-spacing:.3px}
-  .sli-name{font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant);
+  .sli-name{font:var(--md-sys-typescale-title-small);font-weight:700;color:var(--md-sys-color-on-surface);
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .sli-name:empty::after{content:'(nama lokasi belum diisi)';font-style:italic;opacity:.7}
+  .sli-name:empty::after{content:'(nama lokasi belum diisi)';font-weight:500;font-style:italic;opacity:.7}
+  .sli-code{font-family:ui-monospace,Consolas,monospace;font-weight:600;font-size:11px;color:var(--md-sys-color-on-surface-variant);
+    letter-spacing:.3px;margin-top:1px}
   /* donut ring */
   .sum-top{display:flex;align-items:center;gap:16px;margin:10px 0 4px}
   .sum-ring{position:relative;width:92px;height:92px;flex:0 0 auto;display:grid;place-items:center}
@@ -1297,7 +1302,7 @@
               <div class="sum-head"><span class="mi">assignment</span><h2 class="sum-title">Ringkasan BAA</h2></div>
               <div class="sum-locid" id="sum-locid">
                 <span class="mi">place</span>
-                <div class="sli-txt"><span class="sli-code" id="sum-locid-code">—</span><span class="sli-name" id="sum-locid-name"></span></div>
+                <div class="sli-txt"><span class="sli-name" id="sum-locid-name"></span><span class="sli-code" id="sum-locid-code">—</span></div>
               </div>
               <div class="sum-top">
                 <div class="sum-ring">
@@ -1800,7 +1805,7 @@ class LocationPicker{
   setValue(v){this.value=v==null?'':String(v);this._renderTrigger();return this;}
   getValue(){return this.value;}
   _renderTrigger(){const o=this.items.find(x=>x.value===this.value);const v=this.el.querySelector('.lp-val');
-    v.innerHTML=o?(`<span class="lp-code">${esc(o.code)}</span>`+(o.nama?` · ${esc(o.nama)}`:'')):'— pilih lokasi —';v.classList.toggle('ph',!o);}
+    v.innerHTML=o?(`<span class="lp-nm-main">${esc(o.nama||'(tanpa nama)')}</span><span class="lp-code">${esc(o.code)}</span>`):'— pilih lokasi —';v.classList.toggle('ph',!o);}
   _position(){const r=this.el.getBoundingClientRect();const w=Math.max(300,r.width);
     const left=Math.min(r.left,window.innerWidth-w-8);
     this.panel.style.width=w+'px';this.panel.style.left=Math.max(8,left)+'px';this.panel.style.top=(r.bottom+6)+'px';}
@@ -1813,7 +1818,7 @@ class LocationPicker{
     this.panel.querySelector('.lp-cnt').textContent=rows.length+' / '+this.items.length+' lokasi';
     if(this.act>=rows.length)this.act=Math.max(0,rows.length-1);
     this.list.innerHTML=rows.length?rows.map((o,i)=>`<div class="lp-opt${i===this.act?' act':''}${o.value===this.value?' sel':''}" data-v="${o.value}">
-        <span class="lp-code">${esc(o.code)}</span><span class="lp-nm">${esc(o.nama||'')}</span>
+        <span class="lp-nm${o.nama?'':' empty'}">${esc(o.nama||'(tanpa nama)')}</span><span class="lp-code">${esc(o.code)}</span>
         <span class="lp-badge ${o.status==='selesai'?'b-s':'b-d'}">${esc(o.status||'')}</span></div>`).join(''):'<div class="lp-empty">Tidak ada lokasi cocok.</div>';
     [...this.list.querySelectorAll('.lp-opt')].forEach(el=>el.addEventListener('click',()=>this._choose(el.dataset.v)));
   }
