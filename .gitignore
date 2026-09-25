@@ -1,5 +1,7 @@
 # Runtime data (DB, uploaded images, generated output, templates)
 /data/
+# Dev server home (REZA_BAA_HOME saat pengujian lokal)
+/.devdata/
 
 # Python
 __pycache__/
