@@ -1031,6 +1031,7 @@
     <a class="navitem active" data-view="dashboard" data-tip="Dashboard"><span class="mi">dashboard</span><span class="lbl">Dashboard</span></a>
     <a class="navitem" data-view="entry" data-tip="Entry BAA"><span class="mi">edit_document</span><span class="lbl">Entry BAA</span></a>
     <a class="navitem" data-view="locations" data-tip="Log Lokasi"><span class="mi">table_rows</span><span class="lbl">Log Lokasi</span><span class="pill" id="loc-count"></span></a>
+    <a class="navitem admin-only" data-view="import" data-tip="Import Lokasi"><span class="mi">upload_file</span><span class="lbl">Import Lokasi</span></a>
     <a class="navitem admin-only" data-view="trash" data-tip="Lokasi Terhapus"><span class="mi">delete_sweep</span><span class="lbl">Lokasi Terhapus</span><span class="pill" id="trash-count"></span></a>
     <div class="navgroup admin-only" id="navSettings">
       <a class="navitem grouphead" id="setToggle" data-tip="Pengaturan"><span class="mi">settings</span><span class="lbl">Pengaturan</span><span class="mi chev">expand_more</span></a>
@@ -1432,6 +1433,46 @@
                   <div><label class="muted">Tinggi max px</label><input id="map-ph" class="maptab-inp" style="width:100%" type="number" value="240"></div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="v-import" class="hidden">
+        <div class="map-ws">
+          <nav class="map-steps card">
+            <div class="rtitle">Langkah Import</div>
+            <div class="mstep" id="imp-s1"><span class="num">1</span><div><div class="lbl">Unduh template</div><small>Excel · 2 sheet</small></div></div>
+            <div class="mstep" id="imp-s2"><span class="num">2</span><div><div class="lbl">Unggah file</div><small id="imp-s2sub">belum ada file</small></div></div>
+            <div class="mstep" id="imp-s3"><span class="num">3</span><div><div class="lbl">Pratinjau</div><small id="imp-s3sub">—</small></div></div>
+            <div class="mstep" id="imp-s4"><span class="num">4</span><div><div class="lbl">Import</div><small>generate kode &amp; simpan</small></div></div>
+            <div class="raildiv"></div>
+            <div class="rprog">
+              <svg class="ring" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="var(--md-sys-color-surface-container-highest)" stroke-width="5"/><circle id="imp-ring" cx="20" cy="20" r="16" fill="none" stroke="var(--md-sys-color-primary)" stroke-width="5" stroke-linecap="round" stroke-dasharray="100.5" stroke-dashoffset="100.5" transform="rotate(-90 20 20)"/></svg>
+              <div class="pt"><b id="imp-pct">—</b><small>siap diimpor</small></div>
+            </div>
+            <div id="imp-mini" style="display:grid;grid-template-columns:1fr 1fr;gap:8px 6px;padding:12px 10px 4px;font-size:12px;font-weight:600"></div>
+            <div class="raildiv"></div>
+            <label style="display:flex;align-items:center;gap:6px;padding:4px 10px;font-size:12.5px"><input type="checkbox" id="imp-skipdup" checked>Lewati duplikat</label>
+            <div class="railbtns"><md-button id="imp-commit" variant="filled" icon="publish" disabled>Import</md-button></div>
+          </nav>
+          <div style="min-width:0">
+            <div class="card">
+              <div class="sec"><span class="mi acc">upload_file</span><h3>Import Lokasi</h3><span class="grow"></span>
+                <span class="code-chip"><span class="mi" style="font-size:15px">admin_panel_settings</span>Khusus Admin</span></div>
+              <p class="muted" style="margin:0 0 12px">Unggah daftar lokasi + inventory dari Excel. Kode unik dibuat otomatis saat import.</p>
+              <div class="rowflex" style="gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
+                <md-button id="imp-tpl" variant="tonal" icon="download">Unduh Template</md-button>
+                <span class="muted" style="margin:0">2 sheet: <b>Lokasi</b> &amp; <b>Inventory</b> (dihubungkan kolom <span class="mono">ref</span>).</span>
+              </div>
+              <input type="file" id="imp-file" accept=".xlsx" class="hidden">
+              <div class="drop" id="imp-drop" style="cursor:pointer"><span class="mi">cloud_upload</span>
+                <div style="margin-top:6px;font-weight:700;color:var(--md-sys-color-on-surface)">Klik untuk pilih file .xlsx</div>
+                <div class="muted" id="imp-fname" style="margin-top:2px">Belum ada file dipilih</div></div>
+            </div>
+            <div class="card hidden" id="imp-preview-card" style="margin-top:16px">
+              <div class="sec"><span class="mi acc">fact_check</span><h3 style="font-size:16px">Pratinjau <span style="font-weight:500;color:var(--md-sys-color-on-surface-variant);font-size:13px">· belum disimpan</span></h3></div>
+              <table><thead><tr><th>#</th><th>Nama Lokasi</th><th>Item</th><th>Status</th></tr></thead><tbody id="imp-ptable"></tbody></table>
             </div>
           </div>
         </div>
@@ -1842,10 +1883,10 @@ $$('.navitem[data-view]').forEach(n=>n.addEventListener('click',()=>{
   const run=()=>{
     $$('.navitem[data-view]').forEach(x=>x.classList.remove('active'));n.classList.add('active');
     $('#setToggle').classList.remove('active');$('#navSettings').classList.remove('open');  /* tutup accordion Pengaturan */
-    const v=n.dataset.view;['dashboard','entry','locations','trash','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!==v);});
+    const v=n.dataset.view;['dashboard','entry','locations','import','trash','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!==v);});
     $('#pageTitle').textContent=n.querySelector('.lbl').textContent;$('#entryTools').classList.toggle('hidden',v!=='entry');$('#setSaveWrap').classList.add('hidden');
     $('#pageTitle').classList.toggle('hidden',v==='entry');$('#topGrow').classList.toggle('hidden',v==='entry');
-    if(v==='dashboard')loadDashboard();if(v==='locations')loadLocations();if(v==='templates')loadTemplates();if(v==='trash')loadTrash();
+    if(v==='dashboard')loadDashboard();if(v==='locations')loadLocations();if(v==='templates')loadTemplates();if(v==='trash')loadTrash();if(v==='import')loadImport();
     revealCards($('#v-'+v));};
   if(n.classList.contains('active'))run(); else guardLeave(run,n.querySelector('.lbl').textContent.trim());}));
 
@@ -2773,6 +2814,42 @@ window.restoreLoc=async(id)=>{try{await api('/api/locations/'+id+'/restore',{met
   toast('Lokasi dipulihkan');loadTrash();loadLocations();if(typeof loadDashboard==='function')loadDashboard();}catch(e){toast('Gagal: '+e.message);}};
 window.purgeLoc=async(id,code)=>{if(!confirm('Hapus permanen '+code+'?\nData & foto tidak bisa dikembalikan.'))return;
   try{await api('/api/locations/'+id+'/purge',{method:'DELETE'});toast(code+' dihapus permanen');loadTrash();}catch(e){toast('Gagal: '+e.message);}};
+
+/* ===== Import Lokasi (Excel) — admin ===== */
+let IMP={file:null,res:null};
+function loadImport(){IMP={file:null,res:null};
+  const f=$('#imp-file');if(f)f.value='';$('#imp-fname').textContent='Belum ada file dipilih';
+  $('#imp-preview-card').classList.add('hidden');$('#imp-commit').setAttribute('disabled','');
+  ['imp-s1','imp-s2','imp-s3','imp-s4'].forEach(id=>$('#'+id).classList.remove('on','done'));
+  $('#imp-s2sub').textContent='belum ada file';$('#imp-s3sub').textContent='—';$('#imp-pct').textContent='—';
+  $('#imp-mini').innerHTML='';$('#imp-ring').style.strokeDashoffset='100.5';}
+$('#imp-tpl')&&$('#imp-tpl').addEventListener('click',()=>{location.href='/api/locations/import/template';$('#imp-s1').classList.add('done');});
+$('#imp-drop')&&$('#imp-drop').addEventListener('click',()=>$('#imp-file').click());
+$('#imp-file')&&$('#imp-file').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;IMP.file=f;
+  $('#imp-fname').innerHTML='<b>'+esc(f.name)+'</b>';$('#imp-s2').classList.add('done');$('#imp-s2sub').textContent=f.name;await impPreview();});
+async function impPreview(){const fd=new FormData();fd.append('file',IMP.file);
+  try{const r=await fetch('/api/locations/import/preview',{method:'POST',credentials:'same-origin',body:fd});
+    if(!r.ok)throw new Error((await r.json()).detail||'Gagal baca file');IMP.res=await r.json();renderImp();}
+  catch(e){toast('Gagal: '+e.message);}}
+function renderImp(){const res=IMP.res;if(!res)return;const s=res.summary;
+  $('#imp-preview-card').classList.remove('hidden');
+  $('#imp-s3').classList.add('on');$('#imp-s3sub').textContent=s.ready+' siap · '+s.errors+' error';
+  const pct=s.total?Math.round(s.ready/s.total*100):0;$('#imp-pct').textContent=pct+'% ('+s.ready+'/'+s.total+')';
+  $('#imp-ring').style.strokeDashoffset=(100.5*(1-pct/100)).toFixed(1);
+  $('#imp-mini').innerHTML=[['location_on',s.ready+' lokasi'],['inventory_2',s.items+' item'],['error',s.errors+' error'],['content_copy',s.dup+' duplikat']]
+    .map(([i,t])=>`<div style="display:flex;align-items:center;gap:6px"><span class="mi" style="font-size:15px;color:var(--md-sys-color-primary)">${i}</span>${t}</div>`).join('');
+  $('#imp-ptable').innerHTML=res.locations.map(l=>{const st=l.errors.length?`<span class="loc-st warn">${esc(l.errors[0])}</span>`:(l.dup?'<span class="loc-st warn">Duplikat</span>':'<span class="loc-st ok">OK</span>');
+    return `<tr${l.errors.length?' style="background:color-mix(in srgb,var(--md-sys-color-error) 7%,transparent)"':''}><td>${l.row}</td><td>${esc(l.nama||'(kosong)')}</td><td>${l.inventory.length}</td><td>${st}</td></tr>`;}).join('')
+    ||'<tr><td colspan="4" class="muted">Tidak ada baris</td></tr>';
+  $('#imp-commit').toggleAttribute('disabled', s.ready<=0);}
+$('#imp-commit')&&$('#imp-commit').addEventListener('click',async()=>{if(!IMP.file)return;
+  const fd=new FormData();fd.append('file',IMP.file);fd.append('skip_dup',$('#imp-skipdup').checked?'true':'false');
+  $('#imp-commit').setAttribute('disabled','');
+  try{const r=await fetch('/api/locations/import/commit',{method:'POST',credentials:'same-origin',body:fd});
+    if(!r.ok)throw new Error((await r.json()).detail||'Gagal');const res=await r.json();
+    $('#imp-s4').classList.add('done');toast(res.created+' lokasi diimpor'+(res.skipped?(' · '+res.skipped+' dilewati'):''));
+    loadImport();if(typeof loadLocations==='function')loadLocations();if(typeof loadDashboard==='function')loadDashboard();}
+  catch(e){toast('Gagal: '+e.message);$('#imp-commit').removeAttribute('disabled');}});
 function gotoEntry(){$$('.navitem[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view==='entry'));
   ['dashboard','entry','locations','templates','users','settings'].forEach(x=>$('#v-'+x).classList.toggle('hidden',x!=='entry'));
   $('#pageTitle').classList.add('hidden');$('#topGrow').classList.add('hidden');$('#entryTools').classList.remove('hidden');}
