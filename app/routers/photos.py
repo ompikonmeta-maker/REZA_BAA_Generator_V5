@@ -57,6 +57,7 @@ def upload_photos(
     dest_dir.mkdir(parents=True, exist_ok=True)
 
     results = []
+    batch_used: set[str] = set()          # kategori yg sudah terisi oleh file lain di batch ini
     for idx, up in enumerate(files):
         ext = _safe_ext(up.filename or "")
         if not ext:
@@ -74,6 +75,13 @@ def upload_photos(
             cat_key, matched_by = category, "manual"
         else:
             cat_key, matched_by = autosort.match_category(up.filename or "", categories, folder)
+            # Cegah kehilangan diam-diam: bila kategori (auto) sudah dipakai file
+            # lain dalam batch yang sama, jangan menimpa — alihkan ke
+            # "uncategorized" agar foto tetap tampil & bisa dipindah manual.
+            if cat_key and cat_key != "uncategorized" and cat_key in batch_used:
+                cat_key, matched_by = "uncategorized", "batch-dup"
+            elif cat_key and cat_key != "uncategorized":
+                batch_used.add(cat_key)
 
         fname = f"{uuid.uuid4().hex}{ext}"
         fpath = dest_dir / fname

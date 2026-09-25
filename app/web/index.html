@@ -2739,9 +2739,16 @@ function doUpload(files,category,relpaths){return new Promise(resolve=>{
   xhr.upload.onload=()=>{upSet(100);$('#upTxt').textContent='Memproses…';$('#upSub').textContent='menyimpan & OCR';$('#upIcon').textContent='autorenew';};
   xhr.onload=async()=>{try{
       if(xhr.status<200||xhr.status>=300)throw new Error((JSON.parse(xhr.responseText||'{}').detail)||('HTTP '+xhr.status));
-      const d=JSON.parse(xhr.responseText);const sn=d.results.filter(x=>x.ocr_serial).map(x=>x.ocr_serial);
-      S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();upDone(d.results.length,true);
-      toast('Selesai · '+d.results.length+' foto'+(sn.length?' · SN: '+sn.join(', '):''));
+      const d=JSON.parse(xhr.responseText);const res=d.results||[];
+      const saved=res.filter(x=>!x.error);const failed=res.length-saved.length;
+      const uncat=saved.filter(x=>x.category==='uncategorized').length;
+      const sn=saved.filter(x=>x.ocr_serial).map(x=>x.ocr_serial);
+      S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();upDone(saved.length,true);
+      let msg='Selesai · '+saved.length+' foto';
+      if(uncat)msg+=' · '+uncat+' perlu dikategorikan';
+      if(failed)msg+=' · '+failed+' gagal (format/ukuran)';
+      if(sn.length)msg+=' · SN: '+sn.join(', ');
+      toast(msg);
     }catch(e){upDone(0,false);toast('Gagal: '+e.message);}resolve();};
   xhr.onerror=()=>{upDone(0,false);toast('Gagal mengunggah — koneksi terputus');resolve();};
   xhr.send(fd);});}
