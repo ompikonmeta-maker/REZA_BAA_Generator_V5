@@ -32,6 +32,10 @@ class ItemMerks(BaseModel):
     merks: dict[str, list[str]]
 
 
+class InvKeterangan(BaseModel):
+    keterangan: list[str]
+
+
 @router.get("")
 def get_settings(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     return {
@@ -40,6 +44,7 @@ def get_settings(conn: sqlite3.Connection = Depends(get_db), user=Depends(curren
         "photo_categories": db.get_setting(conn, "photo_categories", []),
         "default_inventory_items": db.get_setting(conn, "default_inventory_items", []),
         "item_merks": db.get_setting(conn, "item_merks", {}),
+        "inventory_keterangan": db.get_setting(conn, "inventory_keterangan", []),
         "ocr_available": _ocr_available(),
     }
 
@@ -96,3 +101,20 @@ def update_item_merks(body: ItemMerks, conn: sqlite3.Connection = Depends(get_db
     conn.commit()
     audit(conn, user, "update", "settings", "item_merks")
     return {"ok": True, "merks": merks}
+
+
+@router.put("/inventory-keterangan")
+def update_inventory_keterangan(body: InvKeterangan, conn: sqlite3.Connection = Depends(get_db),
+                                user=Depends(require_admin)):
+    """Opsi Keterangan global (satu daftar, dipakai semua item). Urutan
+    dipertahankan sesuai kiriman (untuk fitur drag-reorder), dedup + trim."""
+    seen, ket = set(), []
+    for x in body.keterangan:
+        s = x.strip()
+        if s and s.lower() not in seen:
+            seen.add(s.lower())
+            ket.append(s)
+    db.set_setting(conn, "inventory_keterangan", ket)
+    conn.commit()
+    audit(conn, user, "update", "settings", "inventory_keterangan")
+    return {"ok": True, "keterangan": ket}

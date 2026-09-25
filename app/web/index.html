@@ -810,6 +810,76 @@
   .ecard-del{border:none;background:transparent;color:var(--md-sys-color-on-surface-variant);cursor:pointer;width:34px;height:34px;border-radius:50%;display:grid;place-items:center}
   .ecard-del:hover{background:color-mix(in srgb,var(--md-sys-color-on-surface) 8%,transparent);color:var(--warn)}
   .ecard-del .mi{font-size:19px}
+
+  /* ===== Field Inventory (redesign): keterangan global + merk per item, drag-reorder ===== */
+  .fi-sec{margin-top:22px}
+  .fi-slabel{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+  .fi-slabel .mi{font-size:19px;color:var(--md-sys-color-primary)}
+  .fi-slabel h4{margin:0;font:var(--md-sys-typescale-title-medium);font-weight:800}
+  .fi-slabel .grow{flex:1}
+  .fi-tag{font:var(--md-sys-typescale-label-small);font-weight:700;letter-spacing:.03em;color:var(--md-sys-color-primary);
+    background:color-mix(in srgb,var(--md-sys-color-primary) 12%,transparent);padding:4px 10px;border-radius:999px}
+  .fi-global{background:color-mix(in srgb,var(--md-sys-color-primary) 6%,var(--md-sys-color-surface-container-low));
+    border-radius:18px;padding:16px;position:relative;overflow:hidden}
+  .fi-global::before{content:'';position:absolute;inset:0 auto 0 0;width:4px;background:var(--md-sys-color-primary)}
+  .fi-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;min-height:6px}
+  .fi-chips:empty::after{content:'Belum ada opsi';font-style:italic;color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-medium)}
+  .fi-chip{display:inline-flex;align-items:center;gap:5px;padding:7px 7px 7px 6px;border-radius:999px;
+    background:var(--md-sys-color-surface);box-shadow:inset 0 0 0 1.5px var(--md-sys-color-outline-variant);
+    font:var(--md-sys-typescale-label-large);font-weight:600;color:var(--md-sys-color-on-surface);
+    transition:box-shadow .15s,transform .2s var(--md-sys-motion-easing-emphasized),opacity .2s;
+    animation:fichipin .24s var(--md-sys-motion-easing-emphasized) both}
+  .fi-global .fi-chip{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--md-sys-color-primary) 30%,transparent)}
+  @keyframes fichipin{from{opacity:0;transform:scale(.72)}to{opacity:1;transform:scale(1)}}
+  .fi-chip.out{animation:fichipout .18s ease forwards}
+  @keyframes fichipout{to{opacity:0;transform:scale(.55);margin-right:-8px}}
+  .fi-chip .fi-drag{cursor:grab;color:var(--md-sys-color-on-surface-variant);font-size:16px;opacity:.6;touch-action:none}
+  .fi-chip .fi-drag:active{cursor:grabbing}
+  .fi-chip .fi-v{padding:0 2px}
+  .fi-chip .fi-x{border:none;background:transparent;cursor:pointer;color:var(--md-sys-color-on-surface-variant);
+    width:22px;height:22px;border-radius:50%;display:grid;place-items:center;transition:background .15s,color .15s}
+  .fi-chip .fi-x:hover{background:color-mix(in srgb,var(--warn) 22%,transparent);color:var(--warn)}
+  .fi-chip .fi-x .mi{font-size:16px}
+  .fi-chip.dragging{opacity:.4;box-shadow:inset 0 0 0 1.5px var(--md-sys-color-primary)}
+  .fi-chip.dragover{transform:translateX(6px)}
+  .fi-add{display:flex;gap:9px;align-items:center;max-width:460px}
+  .fi-add input{flex:1;min-width:0;border:none;border-bottom:1.5px solid var(--md-sys-color-outline-variant);
+    background:transparent;color:var(--md-sys-color-on-surface);padding:9px 2px;font:var(--md-sys-typescale-body-large);
+    outline:none;transition:border-color .18s}
+  .fi-add input:focus{border-color:var(--md-sys-color-primary)}
+  .fi-addbtn{border:none;cursor:pointer;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);
+    width:38px;height:38px;border-radius:50%;display:grid;place-items:center;flex:none;transition:transform .12s,filter .15s}
+  .fi-addbtn:hover{filter:brightness(1.07)}.fi-addbtn:active{transform:scale(.9)}
+  /* item rows */
+  #di-list{display:flex;flex-direction:column}
+  .fi-item{border-bottom:1px solid var(--md-sys-color-outline-variant);transition:opacity .2s,transform .2s}
+  .fi-item.out{opacity:0;transform:scale(.97)}
+  .fi-irow{display:flex;align-items:center;gap:12px;padding:13px 2px;cursor:pointer;transition:padding-left .2s}
+  .fi-irow:hover{padding-left:8px}
+  .fi-chev{color:var(--md-sys-color-on-surface-variant);font-size:20px;transition:transform .3s var(--md-sys-motion-easing-emphasized)}
+  .fi-item.open .fi-chev{transform:rotate(90deg);color:var(--md-sys-color-primary)}
+  .fi-idx{font-family:ui-monospace,Consolas,monospace;font-size:12px;font-weight:700;color:var(--md-sys-color-on-surface-variant);min-width:22px}
+  .fi-name{flex:1;min-width:90px;border:none;background:transparent;outline:none;padding:3px 2px;
+    font:var(--md-sys-typescale-title-medium);font-weight:700;color:var(--md-sys-color-on-surface)}
+  .fi-name::placeholder{color:var(--md-sys-color-on-surface-variant);font-weight:600}
+  .fi-name:focus{box-shadow:inset 0 -2px 0 var(--md-sys-color-primary)}
+  .fi-meta{font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant);white-space:nowrap}
+  .fi-del{border:none;background:transparent;cursor:pointer;color:var(--md-sys-color-on-surface-variant);
+    width:34px;height:34px;border-radius:50%;display:grid;place-items:center;opacity:0;transition:opacity .15s,background .15s}
+  .fi-item:hover .fi-del,.fi-item.open .fi-del{opacity:1}
+  .fi-del:hover{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+  .fi-del .mi{font-size:19px}
+  .fi-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s var(--md-sys-motion-easing-emphasized)}
+  .fi-item.open .fi-body{grid-template-rows:1fr}
+  .fi-body>.fi-inner{overflow:hidden;min-height:0}
+  .fi-merkbox{padding:2px 2px 18px 34px}
+  .fi-mlab{font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant);
+    text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .fi-mlab .mi{font-size:15px}
+  .fi-additem{width:100%;margin-top:14px;border:none;background:transparent;color:var(--md-sys-color-primary);cursor:pointer;
+    font:var(--md-sys-typescale-title-small);font-weight:700;display:flex;align-items:center;gap:8px;padding:10px 2px;transition:gap .18s}
+  .fi-additem:hover{gap:12px}
+  #set-inventory #di-save{margin-top:20px}
   /* ==== Field Photo & Capture: tabel terpadu (Opsi A) ==== */
   .pctable{width:100%}
   .pcthead,.pctr{display:grid;grid-template-columns:26px minmax(0,2.1fr) minmax(0,1.2fr) minmax(0,1.7fr) 54px minmax(0,1fr) minmax(0,1.2fr) 32px;gap:10px;align-items:center}
@@ -1325,11 +1395,28 @@
           <div style="margin-top:12px"><md-button id="lf-save" variant="filled" icon="save">Simpan field</md-button></div>
         </div>
         <div class="card setview hidden" id="set-inventory">
-          <div class="sec"><span class="mi acc">inventory_2</span><h3>Field Inventory</h3><span class="grow"></span>
-            <md-button id="di-add" variant="tonal" icon="add">Item</md-button></div>
-          <p class="muted" style="margin:0 0 12px">Item default untuk lokasi baru + opsi Merk/Type (dipakai combobox di tabel Inventory Entry BAA).</p>
-          <div id="di-list"></div>
-          <div style="margin-top:12px"><md-button id="di-save" variant="filled" icon="save">Simpan default</md-button></div>
+          <div class="sec"><span class="mi acc">inventory_2</span><h3>Field Inventory</h3></div>
+          <p class="muted" style="margin:0 0 4px">Item default untuk lokasi baru. Opsi <b>Keterangan</b> berlaku global untuk semua item; opsi <b>Merk / Type</b> diatur per item. Keduanya jadi dropdown di tabel Inventory saat Entry BAA. Seret <span class="mi" style="font-size:15px;vertical-align:-3px">drag_indicator</span> untuk mengurutkan.</p>
+
+          <!-- Keterangan global -->
+          <div class="fi-sec">
+            <div class="fi-slabel"><span class="mi">notes</span><h4>Keterangan</h4><span class="fi-tag">Global · semua item</span></div>
+            <div class="fi-global">
+              <div class="fi-chips" id="ket-chips" data-drag="ket"></div>
+              <div class="fi-add"><input id="ket-input" placeholder="Tambah keterangan, mis. Rusak ringan…" autocomplete="off">
+                <button class="fi-addbtn" id="ket-add" title="Tambah"><span class="mi">add</span></button></div>
+            </div>
+          </div>
+
+          <!-- Item default + merk per item -->
+          <div class="fi-sec">
+            <div class="fi-slabel"><span class="mi">inventory_2</span><h4>Item default</h4><span class="grow"></span>
+              <span class="muted" id="di-count" style="font:var(--md-sys-typescale-label-medium)">0 item</span></div>
+            <div id="di-list"></div>
+            <button class="fi-additem" id="di-add"><span class="mi">add</span> Tambah item</button>
+          </div>
+
+          <md-button id="di-save" variant="filled" icon="save">Simpan default</md-button>
         </div>
         <div class="card setview hidden" id="set-photo">
           <div class="sec"><span class="mi acc">photo_library</span><h3>Field Photo &amp; Capture</h3><span class="grow"></span>
@@ -1646,7 +1733,7 @@ $('#themeBtn').addEventListener('click',()=>{const c=MD3.getTheme();MD3.setTheme
 $('#railBtn').addEventListener('click',()=>{$('#app').classList.toggle('rail');if(typeof flyHide==='function')flyHide(true);});
 
 async function showApp(){$('#login').classList.add('hidden');$('#app').classList.remove('hidden');
-  S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.appTitle=s.app_title||'BAA Generator';});
+  S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.keterangan=s.inventory_keterangan||[];S.appTitle=s.app_title||'BAA Generator';});
   await S.settingsReady;
   if(S.user.role!=='admin')$$('.admin-only').forEach(x=>x.classList.add('hidden'));
   $('#app').classList.toggle('is-operator',S.user.role!=='admin');
@@ -2090,7 +2177,7 @@ function invRow(it={}){
   <input data-iv="nama_barang" value="${esc(it.nama_barang)}"${isDef?' readonly data-tip="Item default — tidak bisa diubah/dihapus"':' placeholder="nama barang"'}>
   <div class="cbx"><input data-iv="merk_type" placeholder="pilih / ketik…" value="${esc(it.merk_type)}"><span class="cbx-arrow mi" data-tip="Pilih Merk/Type" onclick="openMerkMenu(this)">arrow_drop_down</span></div>
   <input data-iv="jumlah" value="${esc(it.jumlah)}"><input data-iv="sn_tagging" class="sn" value="${esc(it.sn_tagging)}">
-  <input data-iv="keterangan" value="${esc(it.keterangan)}">
+  <div class="cbx"><input data-iv="keterangan" placeholder="pilih / ketik…" value="${esc(it.keterangan)}"><span class="cbx-arrow mi" data-tip="Pilih Keterangan" onclick="openKetMenu(this)">arrow_drop_down</span></div>
   ${isDef?'<span></span>':'<md-icon-button data-tip="Hapus baris" onclick="this.closest(\'.tr\').remove();updateSummary()"><span>close</span></md-icon-button>'}</div>`;}
 function renderInventory(){let rows=S.loc.inventory;
   if(!rows.length)rows=(S.invItems.length?S.invItems:['','','']).map(n=>({nama_barang:n}));
@@ -2101,6 +2188,11 @@ window.openMerkMenu=(el)=>{const tr=el.closest('.tr');const input=tr.querySelect
   const name=(tr.querySelector('[data-iv="nama_barang"]').value||'').trim();const opts=merkOpts(name);
   if(!opts.length){toast('Belum ada opsi untuk "'+(name||'item ini')+'". Atur di Pengaturan → Field Inventory.');input.focus();return;}
   openMenu(input,opts.map(o=>({icon:'label',label:o,fn:()=>{input.value=o;updateSummary();}})));};
+/* Combobox Keterangan: opsi global (satu daftar untuk semua item) */
+window.openKetMenu=(el)=>{const tr=el.closest('.tr');const input=tr.querySelector('[data-iv="keterangan"]');
+  const opts=S.keterangan||[];
+  if(!opts.length){toast('Belum ada opsi keterangan. Atur di Pengaturan → Field Inventory.');input.focus();return;}
+  openMenu(input,opts.map(o=>({icon:'notes',label:o,fn:()=>{input.value=o;updateSummary();if(S.loc)entryDirty=true;}})));};
 function collectInventory(){return $$('#inv-body .tr').map(tr=>{const o={};tr.querySelectorAll('[data-iv]').forEach(i=>o[i.dataset.iv]=i.value);return o;}).filter(o=>Object.values(o).some(v=>v&&v.trim()));}
 function collectData(){const d={};$$('[data-lf]').forEach(el=>d[el.dataset.lf]=el.value);return d;}
 $('#entry-form').addEventListener('input',e=>{if(S.loc)entryDirty=true;updateSummary();
@@ -2812,20 +2904,106 @@ $('#pc-save').addEventListener('click',async()=>{const categories=$$('#pc-rows .
     if(typeof MAP_IMG!=='undefined'&&MAP_IMG.length){MAP_IMG.forEach(p=>{const c=S.cats.find(x=>x.key===p.key);if(c){p.ocr=c.ocr;p.label=c.label;}});if(typeof renderImgRows==='function')renderImgRows();}
     toast('Kategori foto tersimpan');}catch(e){toast('Gagal: '+e.message);}});
 
-function diRow(n=''){return `<div class="ecard di" data-di>
-  <div class="erow"><input class="labelf" data-k="name" placeholder="Nama barang" value="${esc(n)}">${delBtnCell()}</div>
-  <div class="efields"><div class="field"><label>Opsi Merk/Type (pisah koma)</label><input data-k="merks" placeholder="mis. Std Actuated, Gen 3, HP" value="${esc((S.itemMerks[n]||[]).join(', '))}"></div></div></div>`;}
-function renderDI(){$('#di-list').innerHTML=(S.invItems.length?S.invItems:['']).map(diRow).join('');bindTips();}
-$('#di-add').addEventListener('click',()=>{$('#di-list').insertAdjacentHTML('beforeend',diRow());bindTips();});
+/* ===== Field Inventory: keterangan global + merk per item, chip editor + drag-reorder ===== */
+const _uid=()=>Math.random().toString(36).slice(2,9);
+let _diItems=[], _diKet=[];   // model kerja (di-load dari S saat halaman dibuka)
+const _fiMark=()=>{if(typeof setSaveDirty==='function'&&curSetSub==='inventory')setSaveDirty(true);};
+
+function _fiChip(val){return `<span class="fi-chip" draggable="true" data-v="${esc(val)}">`
+  +`<span class="mi fi-drag" title="Seret untuk urutkan">drag_indicator</span>`
+  +`<span class="fi-v">${esc(val)}</span>`
+  +`<button class="fi-x" type="button" title="Hapus" aria-label="Hapus"><span class="mi">close</span></button></span>`;}
+
+function paintKet(){$('#ket-chips').innerHTML=_diKet.map(_fiChip).join('');}
+function _itemHTML(it,i){return `<div class="fi-item" data-id="${it.id}">
+  <div class="fi-irow">
+    <span class="mi fi-chev">chevron_right</span><span class="fi-idx">${String(i+1).padStart(2,'0')}</span>
+    <input class="fi-name" value="${esc(it.name)}" placeholder="Nama barang" autocomplete="off">
+    <span class="fi-meta">${it.merk.length} merk</span>
+    <button class="fi-del" type="button" title="Hapus item"><span class="mi">delete</span></button>
+  </div>
+  <div class="fi-body"><div class="fi-inner"><div class="fi-merkbox">
+    <div class="fi-mlab"><span class="mi">sell</span>Opsi Merk / Type</div>
+    <div class="fi-chips" data-drag="merk">${it.merk.map(_fiChip).join('')}</div>
+    <div class="fi-add"><input class="fi-mi-input" placeholder="Tambah merk/type…" autocomplete="off">
+      <button class="fi-addbtn fi-merk-add" type="button" title="Tambah"><span class="mi">add</span></button></div>
+  </div></div></div></div>`;}
+function _openIds(){const s=new Set();$$('#di-list .fi-item.open').forEach(el=>s.add(el.dataset.id));return s;}
+function paintItems(open){open=open||new Set();
+  $('#di-list').innerHTML=_diItems.map(_itemHTML).join('');
+  if(open.size)$$('#di-list .fi-item').forEach(el=>{if(open.has(el.dataset.id))el.classList.add('open');});
+  $('#di-count').textContent=_diItems.length+' item';}
+function _repaintItems(){paintItems(_openIds());}
+
+function renderDI(){
+  _diItems=(S.invItems||[]).filter(Boolean).map(n=>({id:_uid(),name:n,merk:(S.itemMerks[n]||[]).slice()}));
+  _diKet=(S.keterangan||[]).slice();
+  paintKet();paintItems();}
+
+/* --- keterangan (global) --- */
+function _addKet(){const inp=$('#ket-input');const v=(inp.value||'').trim();if(!v)return;
+  if(_diKet.some(x=>x.toLowerCase()===v.toLowerCase())){toast('“'+v+'” sudah ada');inp.select();return;}
+  _diKet.push(v);inp.value='';paintKet();inp.focus();_fiMark();}
+$('#ket-add').addEventListener('click',_addKet);
+$('#ket-input').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();_addKet();}});
+$('#ket-chips').addEventListener('click',e=>{const x=e.target.closest('.fi-x');if(!x)return;
+  const chip=x.closest('.fi-chip');const v=chip.dataset.v;chip.classList.add('out');
+  setTimeout(()=>{_diKet=_diKet.filter(t=>t!==v);paintKet();_fiMark();},180);});
+
+/* --- item + merk --- */
+function _addMerk(itemEl,it){const inp=itemEl.querySelector('.fi-mi-input');const v=(inp.value||'').trim();if(!v)return;
+  if(it.merk.some(x=>x.toLowerCase()===v.toLowerCase())){toast('“'+v+'” sudah ada');inp.select();return;}
+  it.merk.push(v);inp.value='';const open=_openIds();open.add(itemEl.dataset.id);paintItems(open);
+  const again=$(`#di-list .fi-item[data-id="${it.id}"] .fi-mi-input`);if(again)again.focus();_fiMark();}
+$('#di-add').addEventListener('click',()=>{const it={id:_uid(),name:'',merk:[]};_diItems.push(it);
+  const open=_openIds();open.add(it.id);paintItems(open);
+  const el=$(`#di-list .fi-item[data-id="${it.id}"]`);el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  el.querySelector('.fi-name').focus();_fiMark();});
+$('#di-list').addEventListener('click',e=>{const itemEl=e.target.closest('.fi-item');if(!itemEl)return;
+  const it=_diItems.find(d=>d.id===itemEl.dataset.id);if(!it)return;
+  if(e.target.closest('.fi-del')){itemEl.classList.add('out');
+    setTimeout(()=>{_diItems=_diItems.filter(d=>d.id!==it.id);_repaintItems();_fiMark();},200);return;}
+  if(e.target.closest('.fi-x')){const chip=e.target.closest('.fi-chip');const v=chip.dataset.v;chip.classList.add('out');
+    setTimeout(()=>{const i=it.merk.indexOf(v);if(i>-1)it.merk.splice(i,1);_repaintItems();_fiMark();},180);return;}
+  if(e.target.closest('.fi-merk-add')){_addMerk(itemEl,it);return;}
+  if(e.target.closest('.fi-name')||e.target.closest('.fi-body'))return;
+  if(e.target.closest('.fi-irow'))itemEl.classList.toggle('open');});
+$('#di-list').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('fi-mi-input')){
+  e.preventDefault();const itemEl=e.target.closest('.fi-item');_addMerk(itemEl,_diItems.find(d=>d.id===itemEl.dataset.id));}});
+$('#di-list').addEventListener('input',e=>{if(e.target.classList.contains('fi-name')){
+  const it=_diItems.find(d=>d.id===e.target.closest('.fi-item').dataset.id);if(it){it.name=e.target.value;_fiMark();}}});
+
+/* --- drag-reorder (keterangan + merk) --- */
+function _afterChip(cont,x,y){let best=null,bestD=Infinity;
+  cont.querySelectorAll('.fi-chip:not(.dragging)').forEach(el=>{const b=el.getBoundingClientRect();
+    const cx=b.left+b.width/2,cy=b.top+b.height/2;const d=Math.hypot(x-cx,y-cy);
+    if((y<cy-4||(Math.abs(y-cy)<=b.height/2&&x<cx))&&d<bestD){bestD=d;best=el;}});return best;}
+function _commitOrder(cont){const vals=[...cont.querySelectorAll('.fi-chip')].map(c=>c.dataset.v);
+  if(cont.id==='ket-chips'){_diKet=vals;}
+  else{const itemEl=cont.closest('.fi-item');if(itemEl){const it=_diItems.find(d=>d.id===itemEl.dataset.id);if(it)it.merk=vals;}}}
+function _bindDrag(root){
+  root.addEventListener('dragstart',e=>{const c=e.target.closest('.fi-chip');if(!c)return;
+    c.classList.add('dragging');e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain','');}catch(_){}});
+  root.addEventListener('dragover',e=>{const d=root.querySelector('.fi-chip.dragging');if(!d)return;
+    const cont=d.parentElement;if(!cont)return;e.preventDefault();
+    const after=_afterChip(cont,e.clientX,e.clientY);if(after==null)cont.appendChild(d);else cont.insertBefore(d,after);});
+  root.addEventListener('drop',e=>e.preventDefault());
+  root.addEventListener('dragend',()=>{const d=root.querySelector('.fi-chip.dragging');if(!d)return;
+    const cont=d.parentElement;d.classList.remove('dragging');if(cont)_commitOrder(cont);_fiMark();});}
+_bindDrag($('#ket-chips'));_bindDrag($('#di-list'));
+
 $('#di-save').addEventListener('click',async()=>{
-  const items=[],merks={};
-  $$('#di-list .ecard.di').forEach(r=>{const name=(r.querySelector('[data-k="name"]').value||'').trim();if(!name)return;
-    items.push(name);
-    const opts=(r.querySelector('[data-k="merks"]').value||'').split(',').map(s=>s.trim()).filter(Boolean);
-    if(opts.length)merks[name]=opts;});
-  try{await api('/api/settings/default-inventory-items',{method:'PUT',body:JSON.stringify({items})});
+  const items=[],merks={},seen=new Set();
+  _diItems.forEach(it=>{const name=(it.name||'').trim();if(!name||seen.has(name.toLowerCase()))return;
+    seen.add(name.toLowerCase());items.push(name);
+    const opts=it.merk.map(s=>s.trim()).filter(Boolean);if(opts.length)merks[name]=opts;});
+  const keterangan=_diKet.map(s=>s.trim()).filter(Boolean);
+  try{
+    await api('/api/settings/default-inventory-items',{method:'PUT',body:JSON.stringify({items})});
     await api('/api/settings/item-merks',{method:'PUT',body:JSON.stringify({merks})});
-    S.invItems=items;S.itemMerks=merks;toast('Default inventory tersimpan');}catch(e){toast('Gagal: '+e.message);}});
+    await api('/api/settings/inventory-keterangan',{method:'PUT',body:JSON.stringify({keterangan})});
+    S.invItems=items;S.itemMerks=merks;S.keterangan=keterangan;toast('Default inventory tersimpan');
+  }catch(e){toast('Gagal: '+e.message);}});
 function deepMerge(b,o){for(const k in(o||{})){if(o[k]&&typeof o[k]==='object'&&!Array.isArray(o[k]))b[k]=deepMerge(b[k]||{},o[k]);else b[k]=o[k];}return b;}
 window.addEventListener('DOMContentLoaded',boot);
 </script>
