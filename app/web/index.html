@@ -1923,10 +1923,10 @@ function openSettings(sub){
   curSetSub=sub;
   const sv=SET_VIEWS[sub];
   if(sv){
-    ['dashboard','entry','locations','templates','users','settings'].forEach(x=>$('#v-'+x).classList.toggle('hidden',x!==sv.view));
+    ['dashboard','entry','locations','import','trash','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!==sv.view);});
     $('#pageTitle').textContent='Pengaturan · '+sv.title;$('#pageTitle').classList.remove('hidden');$('#topGrow').classList.remove('hidden');$('#setSaveWrap').classList.add('hidden');sv.load();revealCards($('#v-'+sv.view));
   }else{
-    ['dashboard','entry','locations','templates','users','settings'].forEach(x=>$('#v-'+x).classList.toggle('hidden',x!=='settings'));
+    ['dashboard','entry','locations','import','trash','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!=='settings');});
     loadSettingsPage();showSetSub(sub);
   }}
 /* ===== Flyout Pengaturan saat rail (A: hover · C: klik) ===== */
@@ -2851,7 +2851,7 @@ $('#imp-commit')&&$('#imp-commit').addEventListener('click',async()=>{if(!IMP.fi
     loadImport();if(typeof loadLocations==='function')loadLocations();if(typeof loadDashboard==='function')loadDashboard();}
   catch(e){toast('Gagal: '+e.message);$('#imp-commit').removeAttribute('disabled');}});
 function gotoEntry(){$$('.navitem[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view==='entry'));
-  ['dashboard','entry','locations','templates','users','settings'].forEach(x=>$('#v-'+x).classList.toggle('hidden',x!=='entry'));
+  ['dashboard','entry','locations','import','trash','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!=='entry');});
   $('#pageTitle').classList.add('hidden');$('#topGrow').classList.add('hidden');$('#entryTools').classList.remove('hidden');}
 
 /* DELETE */
