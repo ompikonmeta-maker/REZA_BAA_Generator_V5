@@ -1,7 +1,6 @@
 """Lokasi (BAA per lokasi) + item inventory."""
 from __future__ import annotations
 
-import secrets
 import shutil
 import sqlite3
 
@@ -13,8 +12,10 @@ from ..deps import audit, current_user, get_db, require_editor
 
 router = APIRouter(prefix="/api/locations", tags=["locations"])
 
-# Alfabet tanpa karakter ambigu (tanpa I, L, O, 0, 1)
-_CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+def _format_code(n: int) -> str:
+    """Kode urut dari nomor baris, mis. LOK_00001. Minimal 5 digit (auto
+    melebar kalau > 99999)."""
+    return f"LOK_{n:05d}"
 
 
 class LocationIn(BaseModel):
@@ -33,17 +34,6 @@ class InventoryItem(BaseModel):
 
 class InventoryIn(BaseModel):
     items: list[InventoryItem]
-
-
-def _gen_code(conn: sqlite3.Connection) -> str:
-    """Kode unik acak (mis. LOK-7F3K9Q). Aman dibuat paralel oleh banyak user
-    tanpa koordinasi, dan valid sebagai nama sheet Excel (<=31 char, tanpa
-    karakter terlarang)."""
-    for _ in range(30):
-        code = "LOK-" + "".join(secrets.choice(_CODE_ALPHABET) for _ in range(6))
-        if not conn.execute("SELECT 1 FROM locations WHERE code=?", (code,)).fetchone():
-            return code
-    return "LOK-" + secrets.token_hex(6).upper()  # fallback
 
 
 def _location_dict(conn: sqlite3.Connection, row) -> dict:
@@ -170,14 +160,18 @@ def location_options(conn: sqlite3.Connection = Depends(get_db), user=Depends(cu
 def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db),
                     user=Depends(require_editor)):
     import json
-    code = _gen_code(conn)
     now = db.now_iso()
+    # Insert dulu dengan placeholder unik, lalu kunci kode dari id AUTOINCREMENT.
+    # id dijamin unik & monoton oleh SQLite (write ter-serialisasi), jadi kode
+    # urut aman dibuat paralel banyak user tanpa koordinasi.
     cur = conn.execute(
         "INSERT INTO locations(code,name,data_json,status,created_by,created_at,updated_at) "
         "VALUES(?,?,?,?,?,?,?)",
-        (code, body.name, json.dumps(body.data, ensure_ascii=False), body.status,
+        ("", body.name, json.dumps(body.data, ensure_ascii=False), body.status,
          user["id"], now, now),
     )
+    code = _format_code(cur.lastrowid)
+    conn.execute("UPDATE locations SET code=? WHERE id=?", (code, cur.lastrowid))
     conn.commit()
     audit(conn, user, "create", "location", cur.lastrowid, code)
     row = conn.execute("SELECT * FROM locations WHERE id=?", (cur.lastrowid,)).fetchone()
