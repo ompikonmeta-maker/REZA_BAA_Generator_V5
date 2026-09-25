@@ -218,8 +218,12 @@
     font:var(--md-sys-typescale-body-large);letter-spacing:var(--md-sys-typescale-body-large-tracking);
     color:var(--md-sys-color-on-surface-variant);background:var(--md-sys-color-surface);
     padding:0 4px;pointer-events:none;white-space:nowrap;transition:all 200ms cubic-bezier(0.2,0,0,1)}
-  .datefield.filled .dflab,.datefield.open .dflab{top:0;left:12px;transform:translateY(-50%) scale(.75)}
+  .datefield.filled .dflab,.datefield.open .dflab,.datefield.dffilter .dflab{top:0;left:12px;transform:translateY(-50%) scale(.75)}
   .datefield.open .dflab{color:var(--md-sys-color-primary)}
+  /* varian filter: label selalu mengambang, nilai default 'Semua' (muted), chevron beri ruang */
+  .datefield.dffilter{padding-right:38px}
+  .datefield.dffilter .df-trail{position:absolute;right:12px;top:50%;transform:translateY(-50%)}
+  .datefield.dffilter .dfv.ph{color:var(--md-sys-color-on-surface-variant);font-weight:500}
   .dp-pop{position:fixed;z-index:2600;width:300px;max-width:calc(100vw - 24px);background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline-variant);border-radius:18px;box-shadow:var(--md-sys-elevation-level5);padding:12px;
     transform-origin:top;opacity:0;transform:scale(.94) translateY(-6px);pointer-events:none;transition:.18s cubic-bezier(.2,.85,.3,1)}
   .dp-pop.on{opacity:1;transform:none;pointer-events:auto}
@@ -278,16 +282,21 @@
   @media(max-width:1040px){.entry-grid{grid-template-columns:1fr}.summary{position:static}}
 
   /* MD3 select (opens MDMenu) */
-  .md-select{position:relative;display:inline-flex;flex-direction:column;justify-content:center;min-width:190px;height:52px;
-    padding:6px 40px 6px 14px;border:1px solid var(--md-sys-color-outline);border-radius:11px;background:var(--md-sys-color-surface);
-    color:var(--md-sys-color-on-surface);cursor:pointer;text-align:left;font:inherit;transition:border-color .15s}
-  .md-select:hover{background:color-mix(in srgb,var(--md-sys-color-on-surface) 4%,transparent)}
-  .md-select .lab{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-primary)}
+  /* Select outlined: dimensi & floating label identik dgn md-text-field outlined */
+  .md-select{position:relative;display:inline-flex;flex-direction:column;justify-content:center;min-width:190px;height:56px;
+    box-sizing:border-box;padding:0 40px 0 14px;border:1px solid var(--md-sys-color-outline);border-radius:var(--md-sys-shape-corner-extra-small);
+    background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface);cursor:pointer;text-align:left;font:inherit;
+    transition:border-color .15s,box-shadow .15s}
+  .md-select:hover{border-color:var(--md-sys-color-on-surface)}
+  .md-select .lab{position:absolute;top:0;left:12px;transform:translateY(-50%) scale(.75);transform-origin:left;
+    font:var(--md-sys-typescale-body-large);color:var(--md-sys-color-on-surface-variant);
+    background:var(--md-sys-color-surface);padding:0 4px;pointer-events:none;white-space:nowrap;transition:color .15s}
   .md-select .lab:empty{display:none}
   .md-select .val{font:var(--md-sys-typescale-body-large);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .md-select .val.ph{color:var(--md-sys-color-on-surface-variant)}
   .md-select .arrow{position:absolute;right:8px;top:50%;transform:translateY(-50%);color:var(--md-sys-color-on-surface-variant);transition:transform .2s}
-  .md-select[data-menu-open]{border:2px solid var(--md-sys-color-primary);padding:5px 39px 5px 13px}
+  .md-select[data-menu-open]{border:2px solid var(--md-sys-color-primary);padding:0 39px 0 13px;box-shadow:0 0 0 4px color-mix(in srgb,var(--md-sys-color-primary) 13%,transparent)}
+  .md-select[data-menu-open] .lab{color:var(--md-sys-color-primary)}
   .md-select[data-menu-open] .arrow{transform:translateY(-50%) rotate(180deg)}
 
   /* Searchable location picker */
@@ -1337,9 +1346,9 @@
           <div class="rowflex" style="margin-bottom:14px;flex-wrap:wrap;gap:10px">
             <md-text-field id="loc-search" variant="outlined" label="Cari kode / nama" leading-icon="search" style="min-width:220px"></md-text-field>
             <div class="md-select" id="loc-creator"></div>
-            <div style="position:relative;min-width:190px"><input type="hidden" id="loc-date" value="">
-              <div class="datefield" id="loc-date-field" onclick="dpOpenFilter(this)"><span class="mi">calendar_month</span>
-              <span class="dfv"></span><label class="dflab">Tanggal dibuat</label><span class="mi df-trail">expand_more</span></div></div>
+            <div style="position:relative;min-width:200px"><input type="hidden" id="loc-date" value="">
+              <div class="datefield dffilter" id="loc-date-field" onclick="dpOpenFilter(this)"><span class="mi">calendar_month</span>
+              <span class="dfv ph">Semua</span><label class="dflab">Tanggal dibuat</label><span class="mi df-trail">expand_more</span></div></div>
             <md-button variant="text" id="loc-clear" icon="filter_alt_off">Reset</md-button>
             <span class="grow"></span>
             <md-segmented-button id="loc-filter"><button data-value="all" selected>Semua</button><button data-value="draft">Draft</button><button data-value="selesai">Selesai</button></md-segmented-button>
@@ -2826,7 +2835,8 @@ window.openFromLog=id=>{gotoEntry();openLoc(id);};
 $('#loc-search').addEventListener('input',()=>{clearTimeout(locSearchTimer);locSearchTimer=setTimeout(loadLocations,300);});
 $('#loc-filter').addEventListener('change',e=>{S.locFilter=e.detail.value;loadLocations();});
 function locDateSet(iso){const hid=$('#loc-date');hid.value=iso||'';const v=$('#loc-date-field .dfv');
-  v.textContent=iso?dpFmt(iso):'';$('#loc-date-field').classList.toggle('filled',!!iso);$('#loc-date-field').classList.toggle('active',!!iso);}
+  v.textContent=iso?dpFmt(iso):'Semua';v.classList.toggle('ph',!iso);
+  $('#loc-date-field').classList.toggle('filled',!!iso);$('#loc-date-field').classList.toggle('active',!!iso);}
 window.dpOpenFilter=el=>{DP.open(el,$('#loc-date').value||'',iso=>{locDateSet(iso);loadLocations();});};
 $('#loc-clear').addEventListener('click',()=>{$('#loc-search').value='';locDateSet('');
   locCreatorSel&&locCreatorSel.setValue('');S.locFilter='all';
