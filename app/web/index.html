@@ -1074,7 +1074,7 @@
         <div class="dash">
           <div class="dkpis" id="dKpis"></div>
           <div class="dtile dheat">
-            <div class="th"><span class="mi">calendar_month</span> Ritme aktivitas · 8 minggu</div>
+            <div class="th"><span class="mi">calendar_month</span> Ritme aktivitas · <span id="dHeatRange">bulan ini</span></div>
             <div class="hinsight" id="dHeatInsight"></div>
             <div class="hcal" id="dHeatCal">
               <div class="hmonths" id="dHeatMonths"></div>
@@ -1082,7 +1082,7 @@
                 <div class="hdays"><span>Sen</span><span></span><span>Rab</span><span></span><span>Jum</span><span></span><span>Min</span></div>
                 <div class="hcols" id="dHeatCols"></div>
               </div>
-              <div class="hoverlay"><span class="mi">event_busy</span>Belum ada aktivitas 8 minggu terakhir</div>
+              <div class="hoverlay"><span class="mi">event_busy</span>Belum ada aktivitas bulan ini</div>
             </div>
             <div class="hlegend"><span class="k"><i style="background:var(--md-sys-color-surface-container-highest)"></i>0</span><span class="k"><i class="hcell s1" style="aspect-ratio:auto"></i>1–2</span><span class="k"><i class="hcell s2" style="aspect-ratio:auto"></i>3–5</span><span class="k"><i class="hcell s4" style="aspect-ratio:auto"></i>6+</span></div>
           </div>
@@ -1925,9 +1925,16 @@ function dBars(trend){trend=trend||[];const n=trend.length,mx=Math.max(...trend,
 function heatLvl(v){return v<=0?0:v<=2?1:v<=5?2:v<=8?3:4;}
 function buildDashHeat(heat){heat=heat||[];
   const DAYS=['Min','Sen','Sel','Rab','Kam','Jum','Sab'],MO=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-  const today=new Date();today.setHours(0,0,0,0);const wd=(today.getDay()+6)%7;const WEEKS=18;
-  const startMon=new Date(today);startMon.setDate(today.getDate()-wd-(WEEKS-1)*7);
+  const today=new Date();today.setHours(0,0,0,0);
+  // Mulai dari awal bulan berjalan: Senin pada minggu yang memuat tanggal 1
+  const mStart=new Date(today.getFullYear(),today.getMonth(),1);
+  const startMon=new Date(mStart);startMon.setDate(mStart.getDate()-((mStart.getDay()+6)%7));
+  const WEEKS=Math.floor((today-startMon)/(7*86400000))+1;
   const cols=$('#dHeatCols'),months=$('#dHeatMonths');cols.innerHTML='';months.innerHTML='<span></span>';
+  // Kolom dinamis (cegah overflow): lebar sel dibatasi, jumlah = WEEKS
+  cols.style.gridTemplateColumns=`repeat(${WEEKS},minmax(0,30px))`;
+  months.style.gridTemplateColumns=`22px repeat(${WEEKS},minmax(0,30px))`;
+  const rng=$('#dHeatRange');if(rng)rng.textContent=MO[today.getMonth()]+' '+today.getFullYear();
   const N=heat.length;let prevM=-1,active=0,total=0,sum=0;const byDay=[0,0,0,0,0,0,0];
   for(let w=0;w<WEEKS;w++){
     const first=new Date(startMon);first.setDate(startMon.getDate()+w*7);
@@ -1945,7 +1952,7 @@ function buildDashHeat(heat){heat=heat||[];
   }
   const busy=byDay.indexOf(Math.max(...byDay));const dayName=['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'][busy];
   $('#dHeatCal').classList.toggle('blank',sum===0);
-  $('#dHeatInsight').innerHTML=sum>0?`<b>${active}</b> dari ${total} hari aktif · total <b>${sum}</b> aktivitas · tersibuk <b>${dayName}</b>`:'Ringkasan 56 hari terakhir';
+  $('#dHeatInsight').innerHTML=sum>0?`<b>${active}</b> dari ${total} hari aktif · total <b>${sum}</b> aktivitas · tersibuk <b>${dayName}</b>`:'Ringkasan bulan ini';
 }
 function actionLabel(f){const m={create:'membuat lokasi',update:'memperbarui',delete:'menghapus',upload_photos:'mengunggah foto',save_inventory:'menyimpan inventory',login:'login',set_serial:'set SN',reassign_photo:'memindah foto'};
   const a=m[f.action]||f.action;const ref=f.detail||f.entity_id||'';return a+(ref?' '+esc(ref):'');}
