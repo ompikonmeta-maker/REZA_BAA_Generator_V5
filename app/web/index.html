@@ -1031,6 +1031,7 @@
     <a class="navitem active" data-view="dashboard" data-tip="Dashboard"><span class="mi">dashboard</span><span class="lbl">Dashboard</span></a>
     <a class="navitem" data-view="entry" data-tip="Entry BAA"><span class="mi">edit_document</span><span class="lbl">Entry BAA</span></a>
     <a class="navitem" data-view="locations" data-tip="Log Lokasi"><span class="mi">table_rows</span><span class="lbl">Log Lokasi</span><span class="pill" id="loc-count"></span></a>
+    <a class="navitem admin-only" data-view="trash" data-tip="Lokasi Terhapus"><span class="mi">delete_sweep</span><span class="lbl">Lokasi Terhapus</span><span class="pill" id="trash-count"></span></a>
     <div class="navgroup admin-only" id="navSettings">
       <a class="navitem grouphead" id="setToggle" data-tip="Pengaturan"><span class="mi">settings</span><span class="lbl">Pengaturan</span><span class="mi chev">expand_more</span></a>
       <div class="navsub"><div class="navsub-inner">
@@ -1436,6 +1437,16 @@
         </div>
       </section>
 
+      <section id="v-trash" class="hidden">
+        <div class="card">
+          <div class="sec"><span class="mi acc">delete_sweep</span><h3>Lokasi Terhapus</h3><span class="grow"></span>
+            <span class="code-chip"><span class="mi" style="font-size:15px">admin_panel_settings</span>Khusus Admin</span></div>
+          <p class="muted" style="margin:0 0 12px">Lokasi yang dihapus disimpan di sini (data &amp; foto tetap ada). Pulihkan untuk mengembalikannya ke Log Lokasi, atau hapus permanen.</p>
+          <table><thead><tr><th>Kode</th><th>Nama Lokasi</th><th>Pemilik</th><th>Dihapus</th><th>Oleh</th><th>Isi</th><th></th></tr></thead>
+            <tbody id="trash-table"></tbody></table>
+        </div>
+      </section>
+
       <section id="v-users" class="hidden">
         <div class="card">
           <div class="sec"><span class="mi acc">group</span><h3>Users</h3><span class="grow"></span>
@@ -1831,10 +1842,10 @@ $$('.navitem[data-view]').forEach(n=>n.addEventListener('click',()=>{
   const run=()=>{
     $$('.navitem[data-view]').forEach(x=>x.classList.remove('active'));n.classList.add('active');
     $('#setToggle').classList.remove('active');$('#navSettings').classList.remove('open');  /* tutup accordion Pengaturan */
-    const v=n.dataset.view;['dashboard','entry','locations','templates','users','settings'].forEach(x=>$('#v-'+x).classList.toggle('hidden',x!==v));
+    const v=n.dataset.view;['dashboard','entry','locations','trash','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!==v);});
     $('#pageTitle').textContent=n.querySelector('.lbl').textContent;$('#entryTools').classList.toggle('hidden',v!=='entry');$('#setSaveWrap').classList.add('hidden');
     $('#pageTitle').classList.toggle('hidden',v==='entry');$('#topGrow').classList.toggle('hidden',v==='entry');
-    if(v==='dashboard')loadDashboard();if(v==='locations')loadLocations();if(v==='templates')loadTemplates();
+    if(v==='dashboard')loadDashboard();if(v==='locations')loadLocations();if(v==='templates')loadTemplates();if(v==='trash')loadTrash();
     revealCards($('#v-'+v));};
   if(n.classList.contains('active'))run(); else guardLeave(run,n.querySelector('.lbl').textContent.trim());}));
 
@@ -2745,6 +2756,23 @@ async function doTransfer(l,u){try{const r=await api('/api/locations/transfer',{
     body:JSON.stringify({ids:[l.id],to_user_id:u.id})});
     toast(l.code+' dipindah ke '+r.to.name);loadLocations();if(typeof loadDashboard==='function')loadDashboard();}
   catch(e){toast('Gagal: '+e.message);}}
+
+/* ===== Lokasi Terhapus (soft-delete) — admin ===== */
+let TRASH=[];
+async function loadTrash(){try{const r=await api('/api/locations/trash/list');TRASH=r.rows||[];
+  const el=$('#trash-count');if(el)el.textContent=r.total||'';renderTrash();}catch(e){toast('Gagal: '+e.message);}}
+function renderTrash(){$('#trash-table').innerHTML=(TRASH.length?TRASH.map(l=>`<tr>
+  <td class="mono">${esc(l.code)}</td><td>${esc(l.name||'—')}</td><td>${esc(l.owner_name||'—')}</td>
+  <td class="mono" style="white-space:nowrap">${fmtDateTime(l.deleted_at)}</td><td>${esc(l.deleted_by_name||'—')}</td>
+  <td style="white-space:nowrap">${l.inv_count} item · ${l.photo_count} foto</td>
+  <td style="text-align:right;white-space:nowrap">
+    <md-icon-button data-tip="Pulihkan" onclick="restoreLoc(${l.id})"><span>restore_from_trash</span></md-icon-button>
+    <md-icon-button data-tip="Hapus permanen" onclick="purgeLoc(${l.id},'${esc(l.code)}')"><span>delete_forever</span></md-icon-button>
+  </td></tr>`).join(''):'<tr><td colspan="7" class="muted">Tidak ada lokasi terhapus</td></tr>');bindTips();}
+window.restoreLoc=async(id)=>{try{await api('/api/locations/'+id+'/restore',{method:'POST'});
+  toast('Lokasi dipulihkan');loadTrash();loadLocations();if(typeof loadDashboard==='function')loadDashboard();}catch(e){toast('Gagal: '+e.message);}};
+window.purgeLoc=async(id,code)=>{if(!confirm('Hapus permanen '+code+'?\nData & foto tidak bisa dikembalikan.'))return;
+  try{await api('/api/locations/'+id+'/purge',{method:'DELETE'});toast(code+' dihapus permanen');loadTrash();}catch(e){toast('Gagal: '+e.message);}};
 function gotoEntry(){$$('.navitem[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view==='entry'));
   ['dashboard','entry','locations','templates','users','settings'].forEach(x=>$('#v-'+x).classList.toggle('hidden',x!=='entry'));
   $('#pageTitle').classList.add('hidden');$('#topGrow').classList.add('hidden');$('#entryTools').classList.remove('hidden');}

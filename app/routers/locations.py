@@ -293,14 +293,70 @@ def save_inventory(loc_id: int, body: InventoryIn, conn: sqlite3.Connection = De
 @router.delete("/{loc_id}")
 def delete_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
                     user=Depends(require_editor)):
+    """Soft-delete: pindahkan ke 'Lokasi Terhapus' (data & foto tetap ada,
+    bisa dipulihkan admin). Tidak menghapus baris/relasi/foto."""
     row = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
     if not row:
         raise HTTPException(404, "Lokasi tidak ditemukan")
     if not _can_write(user, row):
         raise HTTPException(403, "Hanya admin atau pemilik entry yang boleh menghapus")
+    conn.execute("UPDATE locations SET deleted_at=?, deleted_by=? WHERE id=?",
+                 (db.now_iso(), user["id"], loc_id))
+    conn.commit()
+    audit(conn, user, "delete", "location", loc_id, row["code"])
+    return {"ok": True}
+
+
+# ===== Lokasi Terhapus (soft-delete) — admin only =====
+@router.get("/trash/list")
+def list_deleted(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    rows = conn.execute(
+        """SELECT l.id, l.code, l.name, l.data_json, l.deleted_at,
+                  COALESCE(NULLIF(TRIM(d.full_name),''), d.username, '—') AS deleted_by_name,
+                  COALESCE(NULLIF(TRIM(o.full_name),''), o.username, '—') AS owner_name,
+                  (SELECT COUNT(*) FROM inventory_items i WHERE i.location_id=l.id) AS inv_count,
+                  (SELECT COUNT(*) FROM photos p WHERE p.location_id=l.id) AS photo_count
+           FROM locations l LEFT JOIN users d ON d.id=l.deleted_by
+                            LEFT JOIN users o ON o.id=l.owner_id
+           WHERE l.deleted_at IS NOT NULL ORDER BY l.deleted_at DESC"""
+    ).fetchall()
+    import json
+    out = []
+    for r in rows:
+        nama = r["name"] or ""
+        if not nama:
+            try:
+                nama = (json.loads(r["data_json"]) or {}).get("nama_lokasi", "") or ""
+            except Exception:
+                nama = ""
+        out.append({"id": r["id"], "code": r["code"], "name": nama, "deleted_at": r["deleted_at"],
+                    "deleted_by_name": r["deleted_by_name"], "owner_name": r["owner_name"],
+                    "inv_count": r["inv_count"], "photo_count": r["photo_count"]})
+    return {"rows": out, "total": len(out)}
+
+
+@router.post("/{loc_id}/restore")
+def restore_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
+                     user=Depends(require_admin)):
+    row = conn.execute("SELECT code FROM locations WHERE id=? AND deleted_at IS NOT NULL", (loc_id,)).fetchone()
+    if not row:
+        raise HTTPException(404, "Lokasi terhapus tidak ditemukan")
+    conn.execute("UPDATE locations SET deleted_at=NULL, deleted_by=NULL, updated_at=? WHERE id=?",
+                 (db.now_iso(), loc_id))
+    conn.commit()
+    audit(conn, user, "restore", "location", loc_id, row["code"])
+    return {"ok": True}
+
+
+@router.delete("/{loc_id}/purge")
+def purge_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
+                   user=Depends(require_admin)):
+    """Hapus permanen (baris + relasi + folder foto). Hanya dari trash."""
+    row = conn.execute("SELECT code FROM locations WHERE id=? AND deleted_at IS NOT NULL", (loc_id,)).fetchone()
+    if not row:
+        raise HTTPException(404, "Lokasi terhapus tidak ditemukan")
     conn.execute("DELETE FROM locations WHERE id=?", (loc_id,))  # cascade -> inventory & photos
     conn.commit()
-    # Hapus folder foto fisik lokasi ini dari storage terpusat
     shutil.rmtree(config.IMAGES_DIR / row["code"], ignore_errors=True)
-    audit(conn, user, "delete", "location", loc_id, row["code"])
+    audit(conn, user, "purge", "location", loc_id, row["code"])
     return {"ok": True}
