@@ -2,17 +2,11 @@ name: Build Windows EXE
 
 # Build exe portabel. Unduh hasilnya di tab Actions -> run terkait -> Artifacts.
 on:
-  workflow_dispatch:        # tombol "Run workflow" manual
+  # Hemat menit Actions: build HANYA saat diminta.
+  workflow_dispatch:        # tombol "Run workflow" manual di tab Actions
   push:
-    branches:
-      - "claude/**"
-      - main
-    paths:
-      - "app/**"
-      - "run.py"
-      - "requirements.txt"
-      - "rezabaa.spec"
-      - ".github/workflows/build-windows.yml"
+    tags:
+      - "v*"               # atau saat menandai rilis (mis. git tag v1.0.0)
 
 permissions:
   contents: write        # butuh untuk membuat/menempel GitHub Release
