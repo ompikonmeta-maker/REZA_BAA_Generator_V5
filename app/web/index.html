@@ -337,6 +337,17 @@
   .cbx input{padding-right:26px}
   .cbx-arrow{position:absolute;right:4px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--md-sys-color-on-surface-variant);font-size:20px;user-select:none;border-radius:50%;line-height:1}
   .cbx-arrow:hover{background:color-mix(in srgb,var(--md-sys-color-on-surface) 8%,transparent)}
+  /* autocomplete / type-ahead popup */
+  .ac-pop{position:fixed;z-index:2650;min-width:150px;max-width:340px;max-height:244px;overflow:auto;
+    background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline-variant);border-radius:12px;
+    box-shadow:var(--md-sys-elevation-level3);padding:5px;opacity:0;transform:translateY(-4px);pointer-events:none;
+    transition:opacity .14s cubic-bezier(.2,.8,.2,1),transform .14s cubic-bezier(.2,.8,.2,1)}
+  .ac-pop.on{opacity:1;transform:none;pointer-events:auto}
+  .ac-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;
+    font:var(--md-sys-typescale-body-medium);color:var(--md-sys-color-on-surface);white-space:nowrap}
+  .ac-item .mi{font-size:17px;color:var(--md-sys-color-on-surface-variant)}
+  .ac-item:hover,.ac-item.act{background:color-mix(in srgb,var(--md-sys-color-primary) 12%,transparent)}
+  .ac-item b{color:var(--md-sys-color-primary);font-weight:800}
 
   /* foto — uniform cards */
   .drop{border:2px dashed var(--md-sys-color-outline-variant);border-radius:16px;padding:16px;text-align:center;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px}
@@ -424,7 +435,11 @@
   .is-viewer .ptile .thumb,.is-viewer .ptile .snstrip{cursor:default}
 
   /* summary panel */
-  .summary .card{margin-bottom:0}
+  .summary .card{margin-bottom:0;
+    background:color-mix(in srgb,var(--md-sys-color-primary) 5%,var(--md-sys-color-surface));
+    border-color:color-mix(in srgb,var(--md-sys-color-primary) 22%,var(--md-sys-color-outline-variant));
+    box-shadow:0 1px 2px color-mix(in srgb,var(--md-sys-color-primary) 12%,transparent),
+               0 6px 18px color-mix(in srgb,var(--md-sys-color-primary) 10%,transparent)}
   .sum-head{display:flex;align-items:center;gap:9px;margin-bottom:6px}
   .sum-head .mi{font-size:22px;color:var(--md-sys-color-on-surface)}
   .sum-title{font:var(--md-sys-typescale-title-large);font-weight:800;margin:0}
@@ -1608,6 +1623,7 @@
 <div class="tip" id="tip"></div>
 <div class="toast" id="toast"></div>
 <div class="dp-pop" id="dpPop"></div>
+<div class="ac-pop" id="acPop"></div>
 
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -2188,7 +2204,7 @@ window.dpOpenFor=el=>{if(S.user&&S.user.role==='viewer')return;const hid=el.pare
   DP.open(el,hid.value||'',iso=>{hid.value=iso;const v=el.querySelector('.dfv');v.textContent=iso?dpFmt(iso):'';el.classList.toggle('filled',!!iso);});};
 function dateField(f){const iso=S.loc.data[f.key]||'';
   return `<div style="position:relative"><input type="hidden" data-lf="${f.key}" value="${esc(iso)}">
-    <div class="datefield${iso?' filled':''}" onclick="dpOpenFor(this)"><span class="mi">calendar_month</span>
+    <div class="datefield${iso?' filled':''}" tabindex="0" onclick="dpOpenFor(this)"><span class="mi">calendar_month</span>
     <span class="dfv">${iso?esc(dpFmt(iso)):''}</span><label class="dflab">${esc(f.label)}${f.required?' *':''}</label><span class="mi df-trail">expand_more</span></div></div>`;}
 function renderLocFields(){$('#loc-fields').innerHTML=S.locFields.map(f=>
   f.type==='date'?dateField(f)
@@ -2218,6 +2234,79 @@ window.openKetMenu=(el)=>{const tr=el.closest('.tr');const input=tr.querySelecto
   if(!opts.length){toast('Belum ada opsi keterangan. Atur di Pengaturan → Field Inventory.');input.focus();return;}
   openMenu(input,opts.map(o=>({icon:'notes',label:o,fn:()=>{input.value=o;updateSummary();if(S.loc)entryDirty=true;}})));};
 function collectInventory(){return $$('#inv-body .tr').map(tr=>{const o={};tr.querySelectorAll('[data-iv]').forEach(i=>o[i.dataset.iv]=i.value);return o;}).filter(o=>Object.values(o).some(v=>v&&v.trim()));}
+
+/* ===== Autocomplete / type-ahead (inline completion + filter + auto-correct) ===== */
+const AC={input:null,matches:[],act:-1,icon:'label',typed:'',
+  provider(inp){if(inp.dataset.iv==='merk_type'){const tr=inp.closest('.tr');
+      const name=(tr.querySelector('[data-iv="nama_barang"]').value||'').trim();return {opts:merkOpts(name),icon:'label'};}
+    return {opts:S.keterangan||[],icon:'notes'};},
+  open(inp,inline){this.input=inp;const {opts,icon}=this.provider(inp);this.icon=icon;
+    const val=inp.value;this.typed=val;const low=val.toLowerCase();
+    const sw=low?opts.filter(o=>o.toLowerCase().startsWith(low)):[];
+    const ct=low?opts.filter(o=>!o.toLowerCase().startsWith(low)&&o.toLowerCase().includes(low)):[];
+    this.matches=sw.concat(ct);
+    if(!this.matches.length){this.close();return;}
+    this.act=0;
+    if(inline&&val&&sw.length&&sw[0].toLowerCase()!==low){const best=sw[0];
+      inp.value=best;try{inp.setSelectionRange(val.length,best.length);}catch(e){}}
+    this.render();this.pos();},
+  render(){const pop=$('#acPop');const low=(this.typed||'').toLowerCase();
+    pop.innerHTML=this.matches.map((o,i)=>{let disp=esc(o);const idx=low?o.toLowerCase().indexOf(low):-1;
+      if(idx>=0)disp=esc(o.slice(0,idx))+'<b>'+esc(o.slice(idx,idx+low.length))+'</b>'+esc(o.slice(idx+low.length));
+      return `<div class="ac-item${i===this.act?' act':''}" data-i="${i}"><span class="mi">${this.icon}</span><span>${disp}</span></div>`;}).join('');
+    pop.classList.add('on');
+    pop.querySelectorAll('.ac-item').forEach(el=>el.onmousedown=e=>{e.preventDefault();this.accept(this.matches[+el.dataset.i]);});},
+  pos(){const p=$('#acPop'),r=this.input.getBoundingClientRect();let left=r.left,top=r.bottom+4;
+    const pw=Math.max(150,r.width);p.style.minWidth=r.width+'px';
+    if(left+pw>innerWidth-8)left=innerWidth-8-pw;if(top+244>innerHeight&&r.top>244)top=r.top-4-Math.min(244,p.offsetHeight||200);
+    p.style.left=Math.max(8,left)+'px';p.style.top=top+'px';},
+  move(d){if(!this.matches.length)return;this.act=(this.act+d+this.matches.length)%this.matches.length;this.render();
+    const el=$('#acPop').querySelector('.ac-item.act');if(el)el.scrollIntoView({block:'nearest'});},
+  accept(v){if(!this.input||v==null)return;const inp=this.input;inp.value=v;try{inp.setSelectionRange(v.length,v.length);}catch(e){}
+    this.close();updateSummary();if(S.loc)entryDirty=true;},
+  open_(){},close(){$('#acPop').classList.remove('on');this.input=null;this.matches=[];this.act=-1;}};
+window.addEventListener('scroll',()=>{if(AC.input)AC.pos();},true);
+window.addEventListener('resize',()=>{if(AC.input)AC.close();});
+
+/* Enter-to-advance + autocomplete di tabel Inventory */
+function invAdvance(inp){const tr=inp.closest('.tr');
+  const cells=[...tr.querySelectorAll('input[data-iv]')].filter(x=>!x.readOnly);
+  const i=cells.indexOf(inp);
+  if(i>-1&&i<cells.length-1){const n=cells[i+1];n.focus();n.select&&n.select();return;}
+  let nr=tr.nextElementSibling;while(nr&&!nr.querySelector('input[data-iv]:not([readonly])'))nr=nr.nextElementSibling;
+  if(!nr){$('#inv-add').click();const rows=$$('#inv-body .tr');nr=rows[rows.length-1];}
+  const t=nr&&nr.querySelector('input[data-iv]:not([readonly])');if(t){t.focus();t.select&&t.select();}}
+$('#inv-body').addEventListener('input',e=>{const inp=e.target;
+  if(!inp.dataset||(inp.dataset.iv!=='merk_type'&&inp.dataset.iv!=='keterangan'))return;
+  if(!inp.value){AC.close();return;}AC.open(inp,!( (e.inputType||'').startsWith('delete') ));});
+$('#inv-body').addEventListener('keydown',e=>{const inp=e.target;if(!inp.matches||!inp.matches('input[data-iv]'))return;
+  const acOn=AC.input===inp&&$('#acPop').classList.contains('on');
+  if(acOn){
+    if(e.key==='ArrowDown'){e.preventDefault();AC.move(1);return;}
+    if(e.key==='ArrowUp'){e.preventDefault();AC.move(-1);return;}
+    if(e.key==='Escape'){e.preventDefault();AC.close();return;}
+    if(e.key==='ArrowRight'){if(inp.selectionEnd>inp.selectionStart){e.preventDefault();AC.accept(inp.value);}return;}
+    if((e.key==='Enter'||e.key==='Tab')&&AC.act>=0){e.preventDefault();AC.accept(AC.matches[AC.act]);return;}}
+  if(e.key==='Enter'){e.preventDefault();invAdvance(inp);}});
+$('#inv-body').addEventListener('focusout',e=>{const inp=e.target;
+  if(!inp.dataset||(inp.dataset.iv!=='merk_type'&&inp.dataset.iv!=='keterangan'))return;
+  const {opts}=AC.provider(inp);const v=(inp.value||'').trim();
+  const m=opts.find(o=>o.toLowerCase()===v.toLowerCase());
+  if(m&&m!==inp.value){inp.value=m;updateSummary();if(S.loc)entryDirty=true;}
+  setTimeout(()=>{if(AC.input===inp)AC.close();},130);});
+
+/* Enter-to-advance di kartu Data Lokasi */
+function focusField(el){if(!el)return;
+  if(el.classList&&el.classList.contains('datefield')){el.focus();dpOpenFor(el);}
+  else{const inp=el.shadowRoot&&el.shadowRoot.querySelector('input,textarea');(inp||el).focus();inp&&inp.select&&inp.select();}}
+$('#loc-fields').addEventListener('keydown',e=>{if(e.key!=='Enter')return;
+  const cur=e.target.closest&&e.target.closest('md-text-field,.datefield');if(!cur)return;
+  if(e.target.tagName==='TEXTAREA')return;e.preventDefault();
+  const list=[...document.querySelectorAll('#loc-fields md-text-field,#loc-fields .datefield')];
+  const n=list[list.indexOf(cur)+1];if(n)focusField(n);});
+/* datefield: Space membuka picker (Enter ditangani handler advance) */
+$('#loc-fields').addEventListener('keydown',e=>{if(e.key!==' '&&e.key!=='Spacebar')return;
+  const df=e.target.closest&&e.target.closest('.datefield');if(df){e.preventDefault();dpOpenFor(df);}});
 function collectData(){const d={};$$('[data-lf]').forEach(el=>d[el.dataset.lf]=el.value);return d;}
 $('#entry-form').addEventListener('input',e=>{if(S.loc)entryDirty=true;updateSummary();
   const nm=e.target.closest('[data-lf="nama_lokasi"]');if(nm&&pickerSel)pickerSel.updateCurrentName(nm.value.trim());});
