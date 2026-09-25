@@ -35,7 +35,7 @@
   .lgcard{position:relative;z-index:2;width:340px;max-width:calc(100vw - 32px);text-align:center;opacity:0;transform:translateY(16px);
     animation:lgin .7s cubic-bezier(.2,.8,.2,1) .1s forwards}
   @keyframes lgin{to{opacity:1;transform:none}}
-  .lgcard.shake{animation:lgshake .4s cubic-bezier(.36,.07,.19,.97)}
+  .lgcard.shake{opacity:1;transform:none;animation:lgshake .4s cubic-bezier(.36,.07,.19,.97)}
   @keyframes lgshake{10%,90%{transform:translateX(-2px)}20%,80%{transform:translateX(4px)}30%,50%,70%{transform:translateX(-9px)}40%,60%{transform:translateX(9px)}}
   .lgcard.gone{opacity:0;transform:scale(.94);filter:blur(6px);pointer-events:none;transition:.5s}
   .lg-logo{width:52px;height:52px;border-radius:16px;display:inline-grid;place-items:center;color:#04211f;font-size:26px;margin-bottom:14px;
@@ -435,11 +435,19 @@
   .is-viewer .ptile .thumb,.is-viewer .ptile .snstrip{cursor:default}
 
   /* summary panel */
-  .summary .card{margin-bottom:0;
-    background:color-mix(in srgb,var(--md-sys-color-primary) 5%,var(--md-sys-color-surface));
-    border-color:color-mix(in srgb,var(--md-sys-color-primary) 22%,var(--md-sys-color-outline-variant));
-    box-shadow:0 1px 2px color-mix(in srgb,var(--md-sys-color-primary) 12%,transparent),
-               0 6px 18px color-mix(in srgb,var(--md-sys-color-primary) 10%,transparent)}
+  /* tint dinamis mengikuti % kelengkapan (opsi B): <40 merah, 40-79 amber, 80-99 kuning-terang, 100 teal */
+  .summary .card{margin-bottom:0;--sum-accent:var(--md-sys-color-primary);
+    background:color-mix(in srgb,var(--sum-accent) 6%,var(--md-sys-color-surface));
+    border-color:color-mix(in srgb,var(--sum-accent) 26%,var(--md-sys-color-outline-variant));
+    box-shadow:0 1px 2px color-mix(in srgb,var(--sum-accent) 14%,transparent),
+               0 6px 18px color-mix(in srgb,var(--sum-accent) 11%,transparent);
+    transition:background .4s cubic-bezier(.2,.8,.2,1),border-color .4s cubic-bezier(.2,.8,.2,1),box-shadow .4s cubic-bezier(.2,.8,.2,1)}
+  .summary .card.sum-lvl-low{--sum-accent:#C62828}   /* merah — <40% */
+  .summary .card.sum-lvl-mid{--sum-accent:#E89200}   /* amber — 40-79% */
+  .summary .card.sum-lvl-high{--sum-accent:#9DB800}  /* kuning-terang/lime — 80-99% */
+  .summary .card.sum-lvl-done{--sum-accent:var(--md-sys-color-primary)} /* teal — 100% */
+  .summary .card .sum-ring .prg{stroke:var(--sum-accent);transition:stroke-dashoffset .5s var(--md-sys-motion-easing-emphasized-decelerate),stroke .4s cubic-bezier(.2,.8,.2,1)}
+  .summary .card .sum-ring-pct{color:color-mix(in srgb,var(--sum-accent) 45%,var(--md-sys-color-on-surface))}
   .sum-head{display:flex;align-items:center;gap:9px;margin-bottom:6px}
   .sum-head .mi{font-size:22px;color:var(--md-sys-color-on-surface)}
   .sum-title{font:var(--md-sys-typescale-title-large);font-weight:800;margin:0}
@@ -1757,8 +1765,13 @@ function lgAmbience(){const u=$('#lg-user').value.trim();
 $('#lg-user').addEventListener('input',lgAmbience);
 $('#lgEye').addEventListener('click',()=>{const p=$('#lg-pass');const s=p.type==='password';p.type=s?'text':'password';$('#lgEye').textContent=s?'visibility_off':'visibility';});
 $('#lg-btn').addEventListener('click',async()=>{const el=$('#lg-err');el.classList.add('hidden');
+  const btn=$('#lg-btn');if(btn.hasAttribute('disabled'))return;
+  const uName=$('#lg-user').value.trim();
+  if(!uName||!$('#lg-pass').value){const c=$('#lgCard');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');
+    el.textContent='Username dan password wajib diisi.';el.classList.remove('hidden');return;}
+  btn.setAttribute('disabled','');btn.style.opacity='.7';
   try{
-    const u=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:$('#lg-user').value,password:$('#lg-pass').value})});
+    const u=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:uName,password:$('#lg-pass').value})});
     S.user=await api('/api/auth/me');
     const nm=(S.user.full_name||S.user.username||'').trim()||'Teman';
     $('#lgCard').classList.add('gone');$('#lgIris').classList.add('on');
@@ -1766,7 +1779,10 @@ $('#lg-btn').addEventListener('click',async()=>{const el=$('#lg-err');el.classLi
     setTimeout(()=>$('#lgGreet').classList.remove('on'),2300);
     setTimeout(()=>{showApp();$('#lgGreet').classList.remove('on');$('#lgIris').classList.remove('on');$('#lgCard').classList.remove('gone');},2750);
   }catch(e){const c=$('#lgCard');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');
-    el.textContent=e.message;el.classList.remove('hidden');}});
+    const msg=/401|unauthorized|invalid|salah|incorrect/i.test(e.message||'')?'Username atau password salah.':(e.message||'Login gagal, coba lagi.');
+    el.textContent=msg;el.classList.remove('hidden');$('#lg-pass').focus();$('#lg-pass').select&&$('#lg-pass').select();
+  }finally{btn.removeAttribute('disabled');btn.style.opacity='';}});
+['#lg-user','#lg-pass'].forEach(s=>$(s).addEventListener('input',()=>$('#lg-err').classList.add('hidden')));
 $('#lg-pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('#lg-btn').click()});
 $('#logoutBtn').addEventListener('click',async()=>{await api('/api/auth/logout',{method:'POST'});location.reload();});
 $('#themeBtn').addEventListener('click',()=>{const c=MD3.getTheme();MD3.setTheme(c==='dark'?'light':'dark');applyCalm();});
@@ -2336,6 +2352,8 @@ function updateSummary(){
   const done=(s.fields.length?s.filledF:(s.locDone?1:0))+(s.invOk?1:(s.items>0?0.5:0))+s.fotoDone;
   const pct=Math.round(done/total*100);
   $('#sum-pct').textContent=pct+'%';$('#sum-ring-pct').textContent=pct+'%';
+  const _sc=$('.summary .card');if(_sc){const lvl=pct>=100?'done':pct>=80?'high':pct>=40?'mid':'low';
+    _sc.classList.remove('sum-lvl-low','sum-lvl-mid','sum-lvl-high','sum-lvl-done');_sc.classList.add('sum-lvl-'+lvl);}
   const C=226.19;$('#sum-ring-prg').style.strokeDashoffset=(C*(1-pct/100)).toFixed(1);
   $('#sum-status').textContent='Status: '+(S.loc.status||'draft');
   $('#sum-locid-code').textContent=S.loc.code||'—';
