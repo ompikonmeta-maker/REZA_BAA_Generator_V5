@@ -14,6 +14,9 @@ on:
       - "rezabaa.spec"
       - ".github/workflows/build-windows.yml"
 
+permissions:
+  contents: write        # butuh untuk membuat/menempel GitHub Release
+
 jobs:
   build:
     runs-on: windows-latest
@@ -67,3 +70,32 @@ jobs:
           name: BAA_Generator-windows
           path: release/
           retention-days: 30
+
+      - name: Zip release folder
+        shell: pwsh
+        run: Compress-Archive -Path release/* -DestinationPath BAA_Generator-windows.zip -Force
+
+      - name: Compute release tag
+        id: rel
+        shell: pwsh
+        run: |
+          # Nama branch bisa mengandung '/', tidak valid untuk tag → ganti ke '-'
+          $safe = "${{ github.ref_name }}" -replace '[^A-Za-z0-9._-]', '-'
+          "tag=build-$safe"        | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "name=BAA Generator ($safe)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.rel.outputs.tag }}
+          name: ${{ steps.rel.outputs.name }}
+          prerelease: true
+          # Rolling release per-branch: tag yang sama di-update tiap build
+          files: |
+            release/BAA_Generator.exe
+            BAA_Generator-windows.zip
+          body: |
+            Build otomatis dari commit ${{ github.sha }} (branch `${{ github.ref_name }}`).
+
+            Unduh `BAA_Generator.exe` (portabel) atau `BAA_Generator-windows.zip`
+            (berisi exe + Tesseract OCR + Template_BAA.xlsx + CARA_PAKAI.txt).
