@@ -52,6 +52,9 @@ CREATE TABLE IF NOT EXISTS locations (
     data_json  TEXT NOT NULL DEFAULT '{}',       -- field lokasi + custom fields
     status     TEXT NOT NULL DEFAULT 'draft',    -- draft | complete
     created_by INTEGER REFERENCES users(id),
+    owner_id   INTEGER REFERENCES users(id),     -- pemilik saat ini (bisa ditransfer admin)
+    deleted_at TEXT,                              -- soft-delete (NULL = aktif)
+    deleted_by INTEGER REFERENCES users(id),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -158,10 +161,29 @@ def set_setting(conn: sqlite3.Connection, key: str, value: Any) -> None:
     )
 
 
+def _has_column(conn: sqlite3.Connection, table: str, col: str) -> bool:
+    return any(r["name"] == col for r in conn.execute(f"PRAGMA table_info({table})").fetchall())
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Migrasi ringan & idempoten untuk DB lama."""
+    # Kepemilikan lokasi: owner_id (transfer bisa mengubah tanpa hilangkan created_by)
+    if not _has_column(conn, "locations", "owner_id"):
+        conn.execute("ALTER TABLE locations ADD COLUMN owner_id INTEGER REFERENCES users(id)")
+        conn.execute("UPDATE locations SET owner_id = created_by WHERE owner_id IS NULL")
+    # Soft-delete lokasi (Task #9) — disiapkan sekarang agar aman dipakai nanti
+    if not _has_column(conn, "locations", "deleted_at"):
+        conn.execute("ALTER TABLE locations ADD COLUMN deleted_at TEXT")
+    if not _has_column(conn, "locations", "deleted_by"):
+        conn.execute("ALTER TABLE locations ADD COLUMN deleted_by INTEGER REFERENCES users(id)")
+    conn.commit()
+
+
 def init_db() -> None:
     conn = connect()
     try:
         conn.executescript(SCHEMA)
+        _migrate(conn)
         # Seed settings
         if get_setting(conn, "photo_categories") is None:
             set_setting(conn, "photo_categories", DEFAULT_PHOTO_CATEGORIES)

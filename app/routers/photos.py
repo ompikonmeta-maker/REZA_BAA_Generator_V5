@@ -13,10 +13,18 @@ from fastapi import (APIRouter, Depends, File, Form, HTTPException, UploadFile)
 from fastapi.responses import FileResponse
 
 from .. import config, db
-from ..deps import audit, current_user, get_db, require_editor
+from ..deps import audit, current_user, get_db, loc_access, require_editor
 from ..services import autosort, ocr
 
 router = APIRouter(prefix="/api", tags=["photos"])
+
+
+def _guard_photo(conn, user, photo_row, *, write: bool):
+    """Batasi akses foto sesuai kepemilikan lokasinya (operator hanya miliknya)."""
+    loc = conn.execute("SELECT owner_id FROM locations WHERE id=?", (photo_row["location_id"],)).fetchone()
+    owner = loc["owner_id"] if loc else None
+    if not loc_access(user, owner, write=write):
+        raise HTTPException(403 if write else 404, "Tidak diizinkan" if write else "Foto tidak ditemukan")
 
 
 def _safe_ext(name: str) -> str:
@@ -33,9 +41,11 @@ def upload_photos(
     conn: sqlite3.Connection = Depends(get_db),
     user=Depends(require_editor),
 ):
-    loc = conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone()
+    loc = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
     if not loc:
         raise HTTPException(404, "Lokasi tidak ditemukan")
+    if not loc_access(user, loc["owner_id"], write=True):
+        raise HTTPException(403, "Bukan pekerjaan Anda")
 
     categories = db.get_setting(conn, "photo_categories", [])
     try:
@@ -110,6 +120,7 @@ def reassign_photo(photo_id: int, payload: dict, conn: sqlite3.Connection = Depe
     row = conn.execute("SELECT * FROM photos WHERE id=?", (photo_id,)).fetchone()
     if not row:
         raise HTTPException(404, "Foto tidak ditemukan")
+    _guard_photo(conn, user, row, write=True)
     # Set serial manual (dari barcode/OCR area/edit) tanpa memindah kategori
     if "ocr_serial" in payload and "category" not in payload:
         conn.execute("UPDATE photos SET ocr_serial=? WHERE id=?",
@@ -139,6 +150,7 @@ def reocr_photo(photo_id: int, conn: sqlite3.Connection = Depends(get_db),
     row = conn.execute("SELECT * FROM photos WHERE id=?", (photo_id,)).fetchone()
     if not row:
         raise HTTPException(404, "Foto tidak ditemukan")
+    _guard_photo(conn, user, row, write=True)
     serial, text = ocr.read_serial(row["path"])
     conn.execute("UPDATE photos SET ocr_serial=?,ocr_text=? WHERE id=?", (serial, text, photo_id))
     conn.commit()
@@ -151,6 +163,7 @@ def photo_file(photo_id: int, conn: sqlite3.Connection = Depends(get_db),
     row = conn.execute("SELECT * FROM photos WHERE id=?", (photo_id,)).fetchone()
     if not row or not Path(row["path"]).exists():
         raise HTTPException(404, "File tidak ditemukan")
+    _guard_photo(conn, user, row, write=False)
     return FileResponse(row["path"])
 
 
@@ -160,6 +173,7 @@ def delete_photo(photo_id: int, conn: sqlite3.Connection = Depends(get_db),
     row = conn.execute("SELECT * FROM photos WHERE id=?", (photo_id,)).fetchone()
     if not row:
         raise HTTPException(404, "Foto tidak ditemukan")
+    _guard_photo(conn, user, row, write=True)
     try:
         Path(row["path"]).unlink(missing_ok=True)
     except Exception:

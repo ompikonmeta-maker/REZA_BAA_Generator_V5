@@ -2631,7 +2631,7 @@ function renderLocTable(){
     <td>${l.inv_count}</td><td>${present}/${S.cats.length}</td>
     <td><span class="loc-st ${stCls}">${esc(l.status)}</span></td>
     <td class="loc-lack">${locLack(l)}</td>
-    <td style="text-align:right"><md-icon-button data-tip="Aksi" onclick='locMenu(this,${JSON.stringify({id:l.id,code:l.code,cd:l.can_delete})})'><span>more_vert</span></md-icon-button></td></tr>`;}).join('')||'<tr><td colspan=9 class="muted">Tidak ada data</td></tr>';
+    <td style="text-align:right"><md-icon-button data-tip="Aksi" onclick='locMenu(this,${JSON.stringify({id:l.id,code:l.code,cd:l.can_delete,owner_id:l.owner_id,owner_name:l.owner_name})})'><span>more_vert</span></md-icon-button></td></tr>`;}).join('')||'<tr><td colspan=9 class="muted">Tidak ada data</td></tr>';
   $('#loc-info').textContent=LOC_TOTAL?`Menampilkan ${Math.min(LOC_ROWS.length,LOC_TOTAL)} dari ${LOC_TOTAL}`:'';
   const cnt=$('#loc-exp-cnt');if(cnt)cnt.textContent=LOC_TOTAL?`${LOC_TOTAL} lokasi cocok filter`:'Tidak ada lokasi';
   $('#loc-more').classList.toggle('hidden',LOC_ROWS.length>=LOC_TOTAL);bindTips();}
@@ -2708,7 +2708,17 @@ window.locMenu=(btn,l)=>{const items=[
   {icon:'edit',label:'Buka / Edit',fn:()=>{gotoEntry();openLoc(l.id);}},
   {icon:'grid_on',label:'Export Excel',fn:()=>location.href='/api/export/excel?scope=one&loc_id='+l.id},
   {icon:'picture_as_pdf',label:'Export PDF',fn:()=>location.href='/api/export/pdf?scope=one&loc_id='+l.id}];
+  if(S.user&&S.user.role==='admin')items.push({icon:'swap_horiz',label:'Transfer ke…',fn:()=>transferMenu(btn,l)});
   if(l.cd)items.push({icon:'delete',label:'Hapus',fn:()=>confirmDelete(l.id,l.code,false)});openMenu(btn,items);};
+function transferMenu(btn,l){const targets=(USR_ROWS||[]).filter(u=>u.active&&u.role!=='viewer');
+  if(!targets.length){toast('Belum ada user tujuan (operator/admin aktif)');return;}
+  openMenu(btn,targets.map(u=>({icon:u.id===l.owner_id?'person_check':'person',
+    label:(u.full_name||u.username)+(u.id===l.owner_id?' · pemilik':''),
+    fn:()=>{if(u.id===l.owner_id){toast('Sudah milik user ini');return;}doTransfer(l,u);}})));}
+async function doTransfer(l,u){try{const r=await api('/api/locations/transfer',{method:'POST',
+    body:JSON.stringify({ids:[l.id],to_user_id:u.id})});
+    toast(l.code+' dipindah ke '+r.to.name);loadLocations();if(typeof loadDashboard==='function')loadDashboard();}
+  catch(e){toast('Gagal: '+e.message);}}
 function gotoEntry(){$$('.navitem[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view==='entry'));
   ['dashboard','entry','locations','templates','users','settings'].forEach(x=>$('#v-'+x).classList.toggle('hidden',x!=='entry'));
   $('#pageTitle').classList.add('hidden');$('#topGrow').classList.add('hidden');$('#entryTools').classList.remove('hidden');}

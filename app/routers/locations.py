@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from .. import config, db
-from ..deps import audit, current_user, get_db, require_editor
+from ..deps import audit, current_user, get_db, require_admin, require_editor
 
 router = APIRouter(prefix="/api/locations", tags=["locations"])
 
@@ -16,6 +16,20 @@ def _format_code(n: int) -> str:
     """Kode urut dari nomor baris, mis. LOK_00001. Minimal 5 digit (auto
     melebar kalau > 99999)."""
     return f"LOK_{n:05d}"
+
+
+def _scope(user):
+    """Fragment WHERE + params agar operator hanya melihat lokasi miliknya.
+    Admin & viewer (mode bos) melihat semua."""
+    if user["role"] == "operator":
+        return "l.owner_id = ?", [user["id"]]
+    return "", []
+
+
+def _can_write(user, row) -> bool:
+    """Boleh mengubah/hapus lokasi ini? admin selalu; operator hanya miliknya.
+    (viewer sudah ditolak oleh require_editor)."""
+    return user["role"] == "admin" or row["owner_id"] == user["id"]
 
 
 class LocationIn(BaseModel):
@@ -71,7 +85,10 @@ def list_locations(
     Ringan walau data ribuan: hanya ``size`` baris per halaman, tanpa N+1.
     """
     import json
-    where, params = [], []
+    where, params = ["l.deleted_at IS NULL"], []
+    sc, scp = _scope(user)
+    if sc:
+        where.append(sc); params.extend(scp)
     if q.strip():
         like = f"%{q.strip()}%"
         where.append("(l.code LIKE ? OR l.name LIKE ?)")
@@ -93,9 +110,10 @@ def list_locations(
 
     offset = (page - 1) * size
     rows = conn.execute(
-        f"""SELECT l.id, l.code, l.name, l.status, l.data_json, l.created_by,
+        f"""SELECT l.id, l.code, l.name, l.status, l.data_json, l.created_by, l.owner_id,
               l.created_at, l.updated_at,
               COALESCE(NULLIF(TRIM(u.full_name),''), u.username, '—') AS creator_name,
+              COALESCE(NULLIF(TRIM(o.full_name),''), o.username, '—') AS owner_name,
               (SELECT COUNT(*) FROM photos p WHERE p.location_id = l.id) AS photo_count,
               (SELECT GROUP_CONCAT(DISTINCT category) FROM photos p WHERE p.location_id = l.id) AS photo_cats,
               (SELECT COUNT(*) FROM inventory_items i WHERE i.location_id = l.id) AS inv_count,
@@ -104,6 +122,7 @@ def list_locations(
                    TRIM(COALESCE(i.jumlah,'')) = '' OR TRIM(COALESCE(i.sn_tagging,'')) = '' OR
                    TRIM(COALESCE(i.keterangan,'')) = '')) AS inv_bad
             FROM locations l LEFT JOIN users u ON u.id = l.created_by
+                              LEFT JOIN users o ON o.id = l.owner_id
             {wsql} ORDER BY l.id DESC LIMIT ? OFFSET ?""",
         params + [size, offset],
     ).fetchall()
@@ -116,9 +135,10 @@ def list_locations(
             "inv_count": r["inv_count"], "updated_at": r["updated_at"],
             "created_at": r["created_at"], "created_by": r["created_by"],
             "creator_name": r["creator_name"],
+            "owner_id": r["owner_id"], "owner_name": r["owner_name"],
             "photo_cats": (r["photo_cats"].split(",") if r["photo_cats"] else []),
             "inv_ok": r["inv_count"] > 0 and r["inv_bad"] == 0,
-            "can_delete": is_admin or r["created_by"] == user["id"],
+            "can_delete": is_admin or r["owner_id"] == user["id"],
         }
         for r in rows
     ]
@@ -128,11 +148,14 @@ def list_locations(
 @router.get("/creators")
 def location_creators(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     """Daftar pembuat entry (untuk filter Log Lokasi)."""
+    sc, scp = _scope(user)
+    extra = (" AND " + sc) if sc else ""
     rows = conn.execute(
-        """SELECT u.id, COALESCE(NULLIF(TRIM(u.full_name),''), u.username) AS name,
+        f"""SELECT u.id, COALESCE(NULLIF(TRIM(u.full_name),''), u.username) AS name,
                   COUNT(l.id) AS n
-           FROM users u JOIN locations l ON l.created_by = u.id
-           GROUP BY u.id ORDER BY name COLLATE NOCASE"""
+           FROM users u JOIN locations l ON l.owner_id = u.id
+           WHERE l.deleted_at IS NULL{extra}
+           GROUP BY u.id ORDER BY name COLLATE NOCASE""", scp
     ).fetchall()
     return {"creators": [dict(r) for r in rows]}
 
@@ -141,8 +164,10 @@ def location_creators(conn: sqlite3.Connection = Depends(get_db), user=Depends(c
 def location_options(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     """Daftar ringan (id, code, nama) untuk dropdown pemilih lokasi di Entry BAA."""
     import json
+    sc, scp = _scope(user)
+    wsql = "WHERE l.deleted_at IS NULL" + ((" AND " + sc) if sc else "")
     rows = conn.execute(
-        "SELECT id, code, name, status, data_json FROM locations ORDER BY id DESC"
+        f"SELECT l.id, l.code, l.name, l.status, l.data_json FROM locations l {wsql} ORDER BY l.id DESC", scp
     ).fetchall()
     opts = []
     for r in rows:
@@ -165,10 +190,10 @@ def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db)
     # id dijamin unik & monoton oleh SQLite (write ter-serialisasi), jadi kode
     # urut aman dibuat paralel banyak user tanpa koordinasi.
     cur = conn.execute(
-        "INSERT INTO locations(code,name,data_json,status,created_by,created_at,updated_at) "
-        "VALUES(?,?,?,?,?,?,?)",
+        "INSERT INTO locations(code,name,data_json,status,created_by,owner_id,created_at,updated_at) "
+        "VALUES(?,?,?,?,?,?,?,?)",
         ("", body.name, json.dumps(body.data, ensure_ascii=False), body.status,
-         user["id"], now, now),
+         user["id"], user["id"], now, now),
     )
     code = _format_code(cur.lastrowid)
     conn.execute("UPDATE locations SET code=? WHERE id=?", (code, cur.lastrowid))
@@ -178,11 +203,45 @@ def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db)
     return _location_dict(conn, row)
 
 
+class TransferIn(BaseModel):
+    ids: list[int]
+    to_user_id: int
+
+
+@router.post("/transfer")
+def transfer_locations(body: TransferIn, conn: sqlite3.Connection = Depends(get_db),
+                       user=Depends(require_admin)):
+    """Admin mengalihkan kepemilikan beberapa lokasi ke user lain."""
+    tgt = conn.execute("SELECT id, username, full_name, role, active FROM users WHERE id=?",
+                       (body.to_user_id,)).fetchone()
+    if not tgt:
+        raise HTTPException(404, "User tujuan tidak ditemukan")
+    if not tgt["active"]:
+        raise HTTPException(400, "User tujuan nonaktif")
+    if tgt["role"] == "viewer":
+        raise HTTPException(400, "User tujuan berperan viewer (tidak bisa mengerjakan lokasi)")
+    n = 0
+    for lid in body.ids:
+        r = conn.execute("SELECT id FROM locations WHERE id=? AND deleted_at IS NULL", (lid,)).fetchone()
+        if not r:
+            continue
+        conn.execute("UPDATE locations SET owner_id=?, updated_at=? WHERE id=?",
+                     (body.to_user_id, db.now_iso(), lid))
+        n += 1
+    conn.commit()
+    name = (tgt["full_name"] or tgt["username"]).strip()
+    audit(conn, user, "transfer", "location", ",".join(map(str, body.ids)),
+          f"{n} lokasi -> {name}")
+    return {"ok": True, "count": n, "to": {"id": tgt["id"], "name": name}}
+
+
 @router.get("/{loc_id}")
 def get_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
                  user=Depends(current_user)):
-    row = conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone()
+    row = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
     if not row:
+        raise HTTPException(404, "Lokasi tidak ditemukan")
+    if user["role"] == "operator" and row["owner_id"] != user["id"]:
         raise HTTPException(404, "Lokasi tidak ditemukan")
     return _location_dict(conn, row)
 
@@ -191,9 +250,11 @@ def get_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
 def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = Depends(get_db),
                     user=Depends(require_editor)):
     import json
-    row = conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone()
+    row = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
     if not row:
         raise HTTPException(404, "Lokasi tidak ditemukan")
+    if not _can_write(user, row):
+        raise HTTPException(403, "Bukan pekerjaan Anda")
     conn.execute(
         "UPDATE locations SET name=?,data_json=?,status=?,updated_at=? WHERE id=?",
         (body.name, json.dumps(body.data, ensure_ascii=False), body.status,
@@ -207,8 +268,11 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
 @router.put("/{loc_id}/inventory")
 def save_inventory(loc_id: int, body: InventoryIn, conn: sqlite3.Connection = Depends(get_db),
                    user=Depends(require_editor)):
-    if not conn.execute("SELECT 1 FROM locations WHERE id=?", (loc_id,)).fetchone():
+    row = conn.execute("SELECT owner_id FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
+    if not row:
         raise HTTPException(404, "Lokasi tidak ditemukan")
+    if not _can_write(user, row):
+        raise HTTPException(403, "Bukan pekerjaan Anda")
     conn.execute("DELETE FROM inventory_items WHERE location_id=?", (loc_id,))
     for i, it in enumerate(body.items):
         conn.execute(
@@ -225,11 +289,11 @@ def save_inventory(loc_id: int, body: InventoryIn, conn: sqlite3.Connection = De
 @router.delete("/{loc_id}")
 def delete_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
                     user=Depends(require_editor)):
-    row = conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone()
+    row = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
     if not row:
         raise HTTPException(404, "Lokasi tidak ditemukan")
-    if user["role"] != "admin" and row["created_by"] != user["id"]:
-        raise HTTPException(403, "Hanya admin atau pembuat entry yang boleh menghapus")
+    if not _can_write(user, row):
+        raise HTTPException(403, "Hanya admin atau pemilik entry yang boleh menghapus")
     conn.execute("DELETE FROM locations WHERE id=?", (loc_id,))  # cascade -> inventory & photos
     conn.commit()
     # Hapus folder foto fisik lokasi ini dari storage terpusat

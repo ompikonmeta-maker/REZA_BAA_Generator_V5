@@ -20,9 +20,11 @@ from ..services import xlsx2pdf
 router = APIRouter(prefix="/api/export", tags=["export"])
 
 
-def _filter_where(q: str, status: str, creator: int, date: str):
+def _filter_where(q: str, status: str, creator: int, date: str, user=None):
     """Bangun klausa WHERE yang sama dengan GET /api/locations (Log Lokasi)."""
-    where, params = [], []
+    where, params = ["deleted_at IS NULL"], []
+    if user is not None and user["role"] == "operator":
+        where.append("owner_id = ?"); params.append(user["id"])
     if q.strip():
         like = f"%{q.strip()}%"
         where.append("(code LIKE ? OR name LIKE ?)")
@@ -42,16 +44,21 @@ def _filter_where(q: str, status: str, creator: int, date: str):
 
 def _gather_locations(conn: sqlite3.Connection, scope: str, loc_id: int | None,
                       q: str = "", status: str = "all", creator: int = 0,
-                      date: str = "") -> list[dict]:
+                      date: str = "", user=None) -> list[dict]:
+    is_op = user is not None and user["role"] == "operator"
     if scope == "all":
-        rows = conn.execute("SELECT * FROM locations ORDER BY id").fetchall()
+        wsql = "WHERE deleted_at IS NULL" + (" AND owner_id = ?" if is_op else "")
+        rows = conn.execute(f"SELECT * FROM locations {wsql} ORDER BY id",
+                            ([user["id"]] if is_op else [])).fetchall()
     elif scope == "filter":
-        wsql, params = _filter_where(q, status, creator, date)
+        wsql, params = _filter_where(q, status, creator, date, user)
         rows = conn.execute(f"SELECT * FROM locations {wsql} ORDER BY id", params).fetchall()
     else:
         if not loc_id:
             raise HTTPException(400, "loc_id wajib untuk scope 'one'")
-        rows = conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchall()
+        rows = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchall()
+        if rows and is_op and rows[0]["owner_id"] != user["id"]:
+            raise HTTPException(404, "Lokasi tidak ditemukan")
     if not rows:
         raise HTTPException(404, "Tidak ada lokasi untuk diekspor")
     out = []
@@ -140,7 +147,7 @@ def export_excel(scope: str = Query("one"), loc_id: int | None = None,
         raise HTTPException(400, "Belum ada template aktif. Daftarkan template dulu di menu Template.")
     if not Path(tpl["path"]).exists():
         raise HTTPException(400, "File template hilang di server.")
-    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date)
+    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user)
     tcfg = json.loads(tpl["config_json"]) if tpl["config_json"] else {}
     tcfg["sheet_log"] = tpl["sheet_log"]
     tcfg["sheet_detail"] = tpl["sheet_detail"]
@@ -166,7 +173,7 @@ def export_pdf(scope: str = Query("one"), loc_id: int | None = None,
                q: str = Query(""), status: str = Query("all"),
                creator: int = Query(0), date: str = Query(""),
                conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
-    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date)
+    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user)
     cats = db.get_setting(conn, "photo_categories", [])
     title = db.get_setting(conn, "app_title", "Berita Acara Aktivasi")
     out = _stamp(locs[0]["code"] if scope == "one" else "BAA", "pdf")
@@ -183,7 +190,7 @@ def export_pdf_zip(scope: str = Query("filter"), loc_id: int | None = None,
                    creator: int = Query(0), date: str = Query(""),
                    conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     """Satu PDF detail per lokasi (tanpa LOG sheet), dibundel dalam satu ZIP."""
-    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date)
+    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user)
     cats = db.get_setting(conn, "photo_categories", [])
     title = db.get_setting(conn, "app_title", "Berita Acara Aktivasi")
     zpath = _stamp("PDF_BAA", "zip")

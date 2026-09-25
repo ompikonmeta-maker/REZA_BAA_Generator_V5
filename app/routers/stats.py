@@ -32,8 +32,9 @@ def _day_series(rows: dict, days: int) -> list[int]:
 @router.get("/stats")
 def stats(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     is_admin = user["role"] == "admin"
+    see_all = user["role"] in ("admin", "viewer")   # viewer = mode bos: lihat semua
     uid = user["id"]
-    scope = "" if is_admin else " AND l.created_by = :uid"
+    scope = "" if see_all else " AND l.owner_id = :uid"
     p = {"uid": uid}
 
     # --- ringkasan lokasi ---
@@ -49,14 +50,14 @@ def stats(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)
 
     photos = conn.execute(
         f"SELECT COUNT(*) c FROM photos ph WHERE 1=1" +
-        ("" if is_admin else " AND ph.location_id IN (SELECT id FROM locations WHERE created_by=:uid)"), p
+        ("" if see_all else " AND ph.location_id IN (SELECT id FROM locations WHERE owner_id=:uid)"), p
     ).fetchone()["c"] or 0
 
     users_active = conn.execute("SELECT COUNT(*) c FROM users WHERE active=1").fetchone()["c"] or 0
     template_active = conn.execute("SELECT COUNT(*) c FROM templates WHERE active=1").fetchone()["c"] or 0
     inv_items = conn.execute(
         f"SELECT COUNT(*) c FROM inventory_items i WHERE 1=1" +
-        ("" if is_admin else " AND i.location_id IN (SELECT id FROM locations WHERE created_by=:uid)"), p
+        ("" if see_all else " AND i.location_id IN (SELECT id FROM locations WHERE owner_id=:uid)"), p
     ).fetchone()["c"] or 0
 
     # --- butuh perhatian (draft, terlama dulu) ---
@@ -81,13 +82,13 @@ def stats(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)
         for r in conn.execute(
             "SELECT COALESCE(NULLIF(u.full_name,''),u.username) nm, COUNT(l.id) total, "
             "SUM(CASE WHEN l.status='selesai' THEN 1 ELSE 0 END) done "
-            "FROM users u JOIN locations l ON l.created_by=u.id "
+            "FROM users u JOIN locations l ON l.owner_id=u.id "
             "GROUP BY u.id HAVING total>0 ORDER BY done DESC, total DESC LIMIT 6"
         ).fetchall():
             leaderboard.append({"name": r["nm"], "total": r["total"], "done": r["done"] or 0})
 
     # --- aktivitas terbaru ---
-    feed_scope = "" if is_admin else " WHERE user_id=:uid"
+    feed_scope = "" if see_all else " WHERE user_id=:uid"
     feed = [dict(r) for r in conn.execute(
         f"SELECT username,action,entity,entity_id,detail,created_at FROM audit_log{feed_scope} "
         f"ORDER BY id DESC LIMIT 8", p
@@ -104,7 +105,7 @@ def stats(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)
 
     # --- heatmap: aktivitas per hari (126 hari = 18 minggu, rolling) dari audit ---
     cutoff56 = (date.today() - timedelta(days=125)).isoformat()
-    heat_scope = " AND user_id=:uid" if not is_admin else ""
+    heat_scope = "" if see_all else " AND user_id=:uid"
     heat_rows = {r["d"]: r["c"] for r in conn.execute(
         f"SELECT date(created_at) d, COUNT(*) c FROM audit_log "
         f"WHERE date(created_at)>=:c56{heat_scope} GROUP BY d",
@@ -168,7 +169,7 @@ def supervisor(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_
              "AND date(updated_at)>=? AND date(updated_at)<?")
         pr = [a.isoformat(), b.isoformat()]
         if uid is not None:
-            q += " AND created_by=?"; pr.append(uid)
+            q += " AND owner_id=?"; pr.append(uid)
         return conn.execute(q, pr).fetchone()["c"] or 0
 
     tot = conn.execute(
@@ -201,17 +202,17 @@ def supervisor(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_
     ).fetchall():
         r = conn.execute(
             "SELECT COUNT(*) t, SUM(CASE WHEN status='selesai' THEN 1 ELSE 0 END) d "
-            "FROM locations WHERE created_by=?", [u["id"]]
+            "FROM locations WHERE owner_id=?", [u["id"]]
         ).fetchone()
         t = r["t"] or 0
         if t == 0:
             continue
         d = r["d"] or 0
         load = conn.execute(
-            "SELECT COUNT(*) c FROM locations WHERE created_by=? AND status!='selesai'", [u["id"]]
+            "SELECT COUNT(*) c FROM locations WHERE owner_id=? AND status!='selesai'", [u["id"]]
         ).fetchone()["c"] or 0
         stalled_u = conn.execute(
-            "SELECT COUNT(*) c FROM locations WHERE created_by=? AND status!='selesai' AND date(updated_at)<?",
+            "SELECT COUNT(*) c FROM locations WHERE owner_id=? AND status!='selesai' AND date(updated_at)<?",
             [u["id"], cutoff7]
         ).fetchone()["c"] or 0
         vel = [completed(wk(j), wk(j - 1), u["id"]) for j in range(3, -1, -1)]
