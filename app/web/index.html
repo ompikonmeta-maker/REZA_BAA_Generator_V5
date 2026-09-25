@@ -579,11 +579,11 @@
   .hmonths{display:grid;grid-template-columns:22px repeat(18,1fr);gap:4px;margin-bottom:5px;font-size:9.5px;color:var(--md-sys-color-on-surface-variant);overflow:hidden}
   .hmonths span{white-space:nowrap}
   .hbody{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px}
-  .hdays{display:grid;grid-template-rows:repeat(7,1fr);gap:4px;font-size:9px;color:var(--md-sys-color-on-surface-variant)}
+  .hdays{display:grid;grid-template-rows:repeat(7,var(--hc,11px));gap:4px;font-size:9px;color:var(--md-sys-color-on-surface-variant)}
   .hdays span{display:flex;align-items:center}
-  .hcols{display:grid;grid-template-columns:repeat(18,1fr);gap:4px;min-width:0}
-  .hcol{display:grid;grid-template-rows:repeat(7,1fr);gap:4px}
-  .hcell{aspect-ratio:1;border-radius:3px;background:var(--md-sys-color-surface-container-highest);transition:transform .1s}
+  .hcols{display:grid;grid-template-columns:repeat(18,var(--hc,11px));gap:4px;min-width:0}
+  .hcol{display:grid;grid-template-rows:repeat(7,var(--hc,11px));gap:4px}
+  .hcell{width:var(--hc,11px);height:var(--hc,11px);border-radius:3px;background:var(--md-sys-color-surface-container-highest);transition:transform .1s}
   .hcell:hover{transform:scale(1.25)}
   .hcell.s1{background:color-mix(in srgb,var(--md-sys-color-primary) 32%,var(--md-sys-color-surface-container-highest))}
   .hcell.s2{background:color-mix(in srgb,var(--md-sys-color-primary) 58%,var(--md-sys-color-surface-container-highest))}
@@ -592,15 +592,15 @@
   .hcell.empty{background:transparent}
   .hcell.today{box-shadow:0 0 0 2px var(--md-sys-color-primary)}
   /* ==== Ritme kontribusi ala GitHub (adaptasi): variant Ocean + entrance Scan + ambient Twinkle ==== */
-  .hcols.v-ocean .hcell.s1{background:#b4e2ff}
-  .hcols.v-ocean .hcell.s2{background:#62bdf5}
-  .hcols.v-ocean .hcell.s3{background:#2585d8}
-  .hcols.v-ocean .hcell.s4{background:#124e93}
-  .hcols.v-ocean .hcell.today{box-shadow:0 0 0 2px #2585d8}
-  :root[data-theme="dark"] .hcols.v-ocean .hcell.s1{background:#123f63}
-  :root[data-theme="dark"] .hcols.v-ocean .hcell.s2{background:#1f6aa8}
-  :root[data-theme="dark"] .hcols.v-ocean .hcell.s3{background:#3d9be0}
-  :root[data-theme="dark"] .hcols.v-ocean .hcell.s4{background:#7cc4f5}
+  .v-ocean .hcell.s1{background:#b4e2ff}
+  .v-ocean .hcell.s2{background:#62bdf5}
+  .v-ocean .hcell.s3{background:#2585d8}
+  .v-ocean .hcell.s4{background:#124e93}
+  .v-ocean .hcell.today{box-shadow:0 0 0 2px #2585d8}
+  :root[data-theme="dark"] .v-ocean .hcell.s1{background:#123f63}
+  :root[data-theme="dark"] .v-ocean .hcell.s2{background:#1f6aa8}
+  :root[data-theme="dark"] .v-ocean .hcell.s3{background:#3d9be0}
+  :root[data-theme="dark"] .v-ocean .hcell.s4{background:#7cc4f5}
   .hcols.hgraph .hcell:not(.empty){opacity:0;transform:scale(.35);
     animation:hpop .34s cubic-bezier(.2,.8,.2,1) forwards, htw var(--tw,2.4s) ease-in-out infinite}
   @keyframes hpop{to{opacity:1;transform:none}}
@@ -1113,9 +1113,9 @@
                 <div class="hdays"><span>Sen</span><span></span><span>Rab</span><span></span><span>Jum</span><span></span><span>Min</span></div>
                 <div class="hcols" id="dHeatCols"></div>
               </div>
-              <div class="hoverlay"><span class="mi">event_busy</span>Belum ada aktivitas bulan ini</div>
+              <div class="hoverlay"><span class="mi">event_busy</span>Belum ada aktivitas 6 bulan terakhir</div>
             </div>
-            <div class="hlegend"><span class="k"><i style="background:var(--md-sys-color-surface-container-highest)"></i>0</span><span class="k"><i class="hcell s1" style="aspect-ratio:auto"></i>1–2</span><span class="k"><i class="hcell s2" style="aspect-ratio:auto"></i>3–5</span><span class="k"><i class="hcell s4" style="aspect-ratio:auto"></i>6+</span></div>
+            <div class="hlegend v-ocean"><span class="k"><i class="hcell" style="aspect-ratio:auto;background:var(--md-sys-color-surface-container-highest)"></i>0</span><span class="k"><i class="hcell s1" style="aspect-ratio:auto"></i>1–2</span><span class="k"><i class="hcell s2" style="aspect-ratio:auto"></i>3–5</span><span class="k"><i class="hcell s4" style="aspect-ratio:auto"></i>6+</span></div>
           </div>
           <div class="dtile ddonut">
             <div class="th"><span class="mi">donut_small</span> Tingkat Penyelesaian</div>
@@ -2015,16 +2015,22 @@ function _bindHeatTip(){if(_heatTipBound)return;_heatTipBound=true;
 function buildDashHeat(heat){heat=heat||[];
   const DAYS=['Min','Sen','Sel','Rab','Kam','Jum','Sab'],MO=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
   const today=new Date();today.setHours(0,0,0,0);
-  // Mulai dari awal bulan berjalan: Senin pada minggu yang memuat tanggal 1
-  const mStart=new Date(today.getFullYear(),today.getMonth(),1);
+  // 6 bulan terakhir (dinamis): mulai dari Senin pada minggu yang memuat tanggal 1
+  // bulan 5 bulan lalu -> hari ini (= 6 bulan termasuk bulan berjalan).
+  const mStart=new Date(today.getFullYear(),today.getMonth()-5,1);
   const startMon=new Date(mStart);startMon.setDate(mStart.getDate()-((mStart.getDay()+6)%7));
   const WEEKS=Math.floor((today-startMon)/(7*86400000))+1;
-  const cols=$('#dHeatCols'),months=$('#dHeatMonths');cols.innerHTML='';months.innerHTML='<span></span>';
+  const cols=$('#dHeatCols'),months=$('#dHeatMonths'),cal=$('#dHeatCal');cols.innerHTML='';months.innerHTML='<span></span>';
   cols.className='hcols v-ocean hgraph';           // Ocean + Scan(entrance) + Twinkle(ambient)
-  // Kolom dinamis (cegah overflow): lebar sel dibatasi, jumlah = WEEKS
-  cols.style.gridTemplateColumns=`repeat(${WEEKS},minmax(0,30px))`;
-  months.style.gridTemplateColumns=`22px repeat(${WEEKS},minmax(0,30px))`;
-  const rng=$('#dHeatRange');if(rng)rng.textContent=MO[today.getMonth()]+' '+today.getFullYear();
+  // Ukuran sel tetap (px) dihitung dari lebar tersedia: kolom + baris + label
+  // hari semuanya memakai --hc yang sama => sel persegi, sejajar, tak pernah
+  // overflow & tak saling tumpang-tindih (auto-fit ala GitHub).
+  const GAP=4,avail=(cols.clientWidth||cal.clientWidth-26||300);
+  const cell=Math.max(6,Math.min(15,Math.floor((avail-(WEEKS-1)*GAP)/WEEKS)));
+  cal.style.setProperty('--hc',cell+'px');
+  cols.style.gridTemplateColumns=`repeat(${WEEKS},${cell}px)`;
+  months.style.gridTemplateColumns=`22px repeat(${WEEKS},${cell}px)`;
+  const rng=$('#dHeatRange');if(rng)rng.textContent='6 bulan terakhir';
   const N=heat.length;let prevM=-1,active=0,total=0,sum=0;const byDay=[0,0,0,0,0,0,0];
   for(let w=0;w<WEEKS;w++){
     const first=new Date(startMon);first.setDate(startMon.getDate()+w*7);
@@ -2047,7 +2053,10 @@ function buildDashHeat(heat){heat=heat||[];
   _bindHeatTip();
   const busy=byDay.indexOf(Math.max(...byDay));const dayName=['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'][busy];
   $('#dHeatCal').classList.toggle('blank',sum===0);
-  $('#dHeatInsight').innerHTML=sum>0?`<b>${active}</b> dari ${total} hari aktif · total <b>${sum}</b> aktivitas · tersibuk <b>${dayName}</b>`:'Ringkasan bulan ini';
+  $('#dHeatInsight').innerHTML=sum>0?`<b>${active}</b> dari ${total} hari aktif · total <b>${sum}</b> aktivitas · tersibuk <b>${dayName}</b>`:'Ringkasan 6 bulan terakhir';
+  buildDashHeat._last=heat;                                          // untuk render ulang saat resize
+  if(!buildDashHeat._rz){buildDashHeat._rz=true;let t;                // recompute ukuran sel bila lebar berubah
+    window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(()=>{if($('#dHeatCols'))buildDashHeat(buildDashHeat._last||[]);},160);});}
 }
 function actionLabel(f){const m={create:'membuat lokasi',update:'memperbarui',delete:'menghapus',upload_photos:'mengunggah foto',save_inventory:'menyimpan inventory',login:'login',set_serial:'set SN',reassign_photo:'memindah foto'};
   const a=m[f.action]||f.action;const ref=f.detail||f.entity_id||'';return a+(ref?' '+esc(ref):'');}

@@ -104,15 +104,15 @@ def stats(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)
     ).fetchall()}
     trend = _day_series(trend_rows, 14)
 
-    # --- heatmap: aktivitas per hari (126 hari = 18 minggu, rolling) dari audit ---
-    cutoff56 = (date.today() - timedelta(days=125)).isoformat()
+    # --- heatmap: aktivitas per hari (~6 bulan, rolling) dari audit ---
+    cutoff56 = (date.today() - timedelta(days=196)).isoformat()  # ~6 bulan + buffer minggu
     heat_scope = "" if see_all else " AND user_id=:uid"
     heat_rows = {r["d"]: r["c"] for r in conn.execute(
         f"SELECT date(created_at) d, COUNT(*) c FROM audit_log "
         f"WHERE date(created_at)>=:c56{heat_scope} GROUP BY d",
         {**p, "c56": cutoff56}
     ).fetchall()}
-    heat = _day_series(heat_rows, 126)
+    heat = _day_series(heat_rows, 197)
 
     out = {
         "role": user["role"],
