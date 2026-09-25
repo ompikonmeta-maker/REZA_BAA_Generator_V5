@@ -823,6 +823,12 @@
   #entry-form.ro #entry-del,#entry-form.ro #save-btn,#entry-form.ro #inv-add,
   #entry-form.ro .tr md-icon-button,#entry-form.ro .drop,#entry-form.ro #ocr-note,
   #entry-form.ro .snap .actbar,#entry-form.ro .cbx-arrow{display:none!important}
+  /* mode lihat: matikan semua aksi tulis yang bukan <input> (tile foto, date field, strip SN) */
+  #entry-form.ro #photo-slots .thumb,#entry-form.ro #uncat-slots .thumb,
+  #entry-form.ro .ptile .more,#entry-form.ro .ptile .snstrip,
+  #entry-form.ro .ptile.empty,#entry-form.ro .datefield{pointer-events:none!important}
+  #entry-form.ro .ptile.empty{opacity:.5}
+  #entry-form.ro .datefield{opacity:.6;cursor:default;background:var(--md-sys-color-surface-container-high)}
   #ro-banner{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:0 0 14px;padding:11px 14px;border-radius:12px;
     background:color-mix(in srgb,var(--md-sys-color-primary) 10%,var(--md-sys-color-surface-container));
     color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-label-large);font-weight:600}
@@ -2343,7 +2349,7 @@ const DP={anchor:null,cb:null,view:null,sel:null,sub:'days',
 };
 document.addEventListener('mousedown',e=>{if(DP.anchor&&!e.target.closest('#dpPop')&&e.target!==DP.anchor&&!DP.anchor.contains(e.target))DP.close();});
 window.addEventListener('resize',()=>DP.anchor&&DP.pos());
-window.dpOpenFor=el=>{if(S.user&&S.user.role==='viewer')return;const hid=el.parentElement.querySelector('input[data-lf]');
+window.dpOpenFor=el=>{if(S.user&&S.user.role==='viewer')return;if(roActive())return;const hid=el.parentElement.querySelector('input[data-lf]');
   DP.open(el,hid.value||'',iso=>{hid.value=iso;const v=el.querySelector('.dfv');v.textContent=iso?dpFmt(iso):'';el.classList.toggle('filled',!!iso);});};
 function dateField(f){const iso=S.loc.data[f.key]||'';
   return `<div style="position:relative"><input type="hidden" data-lf="${f.key}" value="${esc(iso)}">
@@ -2563,7 +2569,7 @@ window.tileEditSn=(strip,id,cat)=>{if(strip.querySelector('input'))return;const 
   strip.querySelector('.sgo').addEventListener('mousedown',e=>{e.preventDefault();inp.blur();});
   inp.addEventListener('blur',commit);inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();else if(e.key==='Escape'){done=true;renderPhotos();}});};
 function pickFiles(multi,cb){const inp=document.createElement('input');inp.type='file';inp.accept='image/*';inp.multiple=!!multi;inp.onchange=()=>cb(inp.files);inp.click();}
-window.pick=cat=>pickFiles(false,files=>{const f=files[0];if(!f)return;openEditor(f,blob=>uploadBlob(cat,blob,f.name));});
+window.pick=cat=>{if(roActive())return;pickFiles(false,files=>{const f=files[0];if(!f)return;openEditor(f,blob=>uploadBlob(cat,blob,f.name));});};
 /* Edit foto yang sudah ada: buka editor (juga sbg preview fit), simpan -> ganti */
 window.editExisting=async(id,cat)=>{try{const r=await fetch('/api/photos/'+id+'/file',{credentials:'same-origin'});const b=await r.blob();
   const f=new File([b],'foto.jpg',{type:b.type||'image/jpeg'});
@@ -2593,6 +2599,7 @@ window.applySnToInventory=(cat,serial)=>{if(!serial)return;
 const pendingDel=new Map();  // id -> timeoutId
 function activePhotos(){return (S.loc&&S.loc.photos||[]).filter(p=>!pendingDel.has(p.id));}
 window.softRemove=id=>{
+  if(roActive())return;
   if(pendingDel.has(id))return;
   pendingDel.set(id,setTimeout(()=>commitDelete(id),5000));
   renderPhotos();updateSummary();
@@ -2631,13 +2638,16 @@ $('#ed-save').addEventListener('click',()=>{
   cv.toBlob(b=>{$('#edDlg').close();if(ed.onDone)ed.onDone(b);},'image/jpeg',0.9);});
 
 function uploadBlob(cat,blob,name){const f=new File([blob],name||('foto_'+Date.now()+'.jpg'),{type:'image/jpeg'});doUpload([f],cat,[]);}
-window.replacePhoto=(oldId,cat)=>pickFiles(false,files=>{const f=files[0];if(!f)return;
+window.replacePhoto=(oldId,cat)=>{if(roActive())return;pickFiles(false,files=>{const f=files[0];if(!f)return;
   openEditor(f,async blob=>{const nf=new File([blob],f.name,{type:'image/jpeg'});
     const fd=new FormData();fd.append('files',nf);fd.append('category',cat);fd.append('relpaths',JSON.stringify([f.name]));
     try{const r=await fetch('/api/locations/'+S.loc.id+'/photos',{method:'POST',credentials:'same-origin',body:fd});if(!r.ok)throw new Error((await r.json()).detail);
-      S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();toast('Foto diganti');}catch(e){toast('Gagal: '+e.message);}});});
+      S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();toast('Foto diganti');}catch(e){toast('Gagal: '+e.message);}});});};
 window.reassignMenu=(btn,pid)=>openMenu(btn,S.cats.map(c=>({icon:c.ocr?'tag':'image',label:c.label,fn:async()=>{await api('/api/photos/'+pid,{method:'PATCH',body:JSON.stringify({category:c.key})});S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();toast('Dipindah');}})));
-async function doUpload(files,category,relpaths){if(!files||!files.length)return;const fd=new FormData();
+function roActive(){const f=$('#entry-form');return !!(f&&f.classList.contains('ro'));}
+async function doUpload(files,category,relpaths){if(!files||!files.length)return;
+  if(roActive()){toast('Mode lihat — tidak bisa mengunggah');return;}
+  const fd=new FormData();
   [...files].forEach(f=>fd.append('files',f));if(category)fd.append('category',category);
   fd.append('relpaths',JSON.stringify([...files].map(f=>f.webkitRelativePath||f.name)));
   toast('Mengunggah '+files.length+' file…');
