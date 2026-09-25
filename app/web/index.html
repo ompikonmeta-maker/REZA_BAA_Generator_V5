@@ -211,12 +211,12 @@
   .datefield>.mi{color:var(--md-sys-color-primary);font-size:19px}
   .datefield .df-trail{color:var(--md-sys-color-on-surface-variant)}
   .datefield .dfv{flex:1;min-width:0;font-size:14.5px;font-weight:600;color:var(--md-sys-color-on-surface);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  /* floating label: seragam dengan md-text-field outlined */
-  .datefield .dflab{position:absolute;left:42px;top:50%;transform:translateY(-50%);transform-origin:left center;
-    font-size:14.5px;font-weight:400;color:var(--md-sys-color-on-surface-variant);background:var(--md-sys-color-surface);
-    padding:0 4px;pointer-events:none;white-space:nowrap;
-    transition:transform .2s cubic-bezier(.2,.8,.2,1),color .2s cubic-bezier(.2,.8,.2,1)}
-  .datefield.filled .dflab,.datefield.open .dflab{transform:translate(-30px,-28px) scale(.78)}
+  /* floating label: posisi & motion identik dengan md-text-field outlined */
+  .datefield .dflab{position:absolute;left:42px;top:50%;transform:translateY(-50%);transform-origin:left;
+    font:var(--md-sys-typescale-body-large);letter-spacing:var(--md-sys-typescale-body-large-tracking);
+    color:var(--md-sys-color-on-surface-variant);background:var(--md-sys-color-surface);
+    padding:0 4px;pointer-events:none;white-space:nowrap;transition:all 200ms cubic-bezier(0.2,0,0,1)}
+  .datefield.filled .dflab,.datefield.open .dflab{top:0;left:12px;transform:translateY(-50%) scale(.75)}
   .datefield.open .dflab{color:var(--md-sys-color-primary)}
   .dp-pop{position:fixed;z-index:2600;width:300px;max-width:calc(100vw - 24px);background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline-variant);border-radius:18px;box-shadow:var(--md-sys-elevation-level5);padding:12px;
     transform-origin:top;opacity:0;transform:scale(.94) translateY(-6px);pointer-events:none;transition:.18s cubic-bezier(.2,.85,.3,1)}
