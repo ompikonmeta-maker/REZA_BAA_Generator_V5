@@ -22,24 +22,29 @@ def match_category(
 ) -> tuple[str, str]:
     """Kembalikan (category_key, matched_by).
 
-    matched_by: 'folder' | 'filename' | '' (tak cocok).
-    Folder diprioritaskan agar penempatan per-subfolder lebih kuat.
+    matched_by: 'filename' | 'folder' | '' (tak cocok).
+
+    Nama file diprioritaskan karena lebih spesifik: saat mengunggah satu
+    folder berisi banyak foto dgn nama berbeda (mis. 'Foto SN Router.jpg'),
+    setiap foto tetap masuk kategorinya sendiri. Nama folder hanya dipakai
+    sebagai fallback bila nama file tak mengandung kata kunci apa pun
+    (mis. foto diorganisir per-subfolder dgn nama file acak).
     """
     fname = _normalize(filename)
     fdir = _normalize(folder)
 
-    # 1) cocokkan berdasar folder dulu
-    for cat in categories:
-        for kw in cat.get("keywords", []):
-            k = _normalize(kw)
-            if k and k in fdir:
-                return cat["key"], "folder"
-    # 2) lalu nama file
+    # 1) cocokkan berdasar nama file dulu (paling spesifik per-foto)
     for cat in categories:
         for kw in cat.get("keywords", []):
             k = _normalize(kw)
             if k and k in fname:
                 return cat["key"], "filename"
+    # 2) fallback: nama folder/subfolder asal
+    for cat in categories:
+        for kw in cat.get("keywords", []):
+            k = _normalize(kw)
+            if k and k in fdir:
+                return cat["key"], "folder"
     return "uncategorized", ""
 
 
