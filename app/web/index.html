@@ -429,6 +429,15 @@
   .sum-head .mi{font-size:22px;color:var(--md-sys-color-on-surface)}
   .sum-title{font:var(--md-sys-typescale-title-large);font-weight:800;margin:0}
   .sum-sub{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant);margin:2px 0 0}
+  /* kode + nama lokasi */
+  .sum-locid{display:flex;align-items:center;gap:8px;padding:9px 11px;margin-bottom:2px;border-radius:12px;
+    background:var(--md-sys-color-surface-container-high)}
+  .sum-locid>.mi{font-size:18px;color:var(--md-sys-color-primary)}
+  .sli-txt{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+  .sli-code{font-family:ui-monospace,Consolas,monospace;font-weight:700;font-size:13px;color:var(--md-sys-color-primary);letter-spacing:.3px}
+  .sli-name{font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .sli-name:empty::after{content:'(nama lokasi belum diisi)';font-style:italic;opacity:.7}
   /* donut ring */
   .sum-top{display:flex;align-items:center;gap:16px;margin:10px 0 4px}
   .sum-ring{position:relative;width:92px;height:92px;flex:0 0 auto;display:grid;place-items:center}
@@ -1226,6 +1235,10 @@
           <aside class="summary">
             <div class="card">
               <div class="sum-head"><span class="mi">assignment</span><h2 class="sum-title">Ringkasan BAA</h2></div>
+              <div class="sum-locid" id="sum-locid">
+                <span class="mi">place</span>
+                <div class="sli-txt"><span class="sli-code" id="sum-locid-code">—</span><span class="sli-name" id="sum-locid-name"></span></div>
+              </div>
               <div class="sum-top">
                 <div class="sum-ring">
                   <svg viewBox="0 0 84 84"><circle class="trk" cx="42" cy="42" r="36"/><circle class="prg" id="sum-ring-prg" cx="42" cy="42" r="36"/></svg>
@@ -2236,6 +2249,9 @@ function updateSummary(){
   $('#sum-pct').textContent=pct+'%';$('#sum-ring-pct').textContent=pct+'%';
   const C=226.19;$('#sum-ring-prg').style.strokeDashoffset=(C*(1-pct/100)).toFixed(1);
   $('#sum-status').textContent='Status: '+(S.loc.status||'draft');
+  $('#sum-locid-code').textContent=S.loc.code||'—';
+  const nmEl=$('[data-lf="nama_lokasi"]');const liveName=nmEl?(nmEl.value||'').trim():'';
+  $('#sum-locid-name').textContent=liveName||((S.loc.data&&S.loc.data.nama_lokasi)||S.loc.name||'').trim();
   const setRow=(rowId,icId,valEl,done,valText)=>{
     $(rowId).classList.toggle('ok-row',done);
     $(icId).textContent=done?'check_circle':'error';
