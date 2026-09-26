@@ -94,9 +94,17 @@
   .navitem .lbl{font:var(--md-sys-typescale-label-large);margin-right:auto;overflow:hidden;transition:opacity .2s,max-width .3s;max-width:150px}
   .navitem .pill{background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);border-radius:99px;font:var(--md-sys-typescale-label-small);padding:2px 8px}
   /* RAIL: item jadi kotak center => ikon tepat di tengah highlight */
-  .shell.rail .navitem{width:48px;height:48px;padding:0;margin:0 auto;gap:0;justify-content:center;border-radius:16px}
-  .shell.rail .navitem .lbl{opacity:0;max-width:0;margin:0}
+  .shell.rail .navitem{flex-direction:column;width:56px;height:auto;min-height:50px;padding:7px 0 5px;margin:0 auto;gap:3px;justify-content:center;border-radius:16px}
+  .shell.rail .navitem .lbl{opacity:0;max-width:0;margin:0;height:0}
   .shell.rail .navitem .pill{display:none}
+  /* Label mikro di bawah ikon saat rail (#20) */
+  .shell.rail .navitem[data-short]::after{content:attr(data-short);font-size:9.5px;font-weight:700;letter-spacing:.3px;line-height:1;
+    color:inherit;opacity:.85;text-align:center;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    opacity:0;transform:translateY(3px);animation:railLblIn .32s var(--md-sys-motion-easing-emphasized,cubic-bezier(.2,0,0,1)) forwards;animation-delay:var(--nav-lead,.12s)}
+  .shell.rail .navitem.active[data-short]::after{opacity:1}
+  @keyframes railLblIn{to{opacity:.85;transform:none}}
+  .shell.rail .navitem .chev{display:none}
+  @media(prefers-reduced-motion:reduce){.shell.rail .navitem[data-short]::after{animation:none;opacity:.85;transform:none}}
   /* Accordion sub-menu Pengaturan */
   .navgroup{position:relative}
   .navgroup .chev{margin-left:auto;font-size:20px;transition:transform .32s var(--md-sys-motion-easing-emphasized)}
@@ -313,6 +321,12 @@
   .locpick .lp-arrow{position:absolute;right:8px;top:50%;transform:translateY(-50%);color:var(--md-sys-color-on-surface-variant);transition:transform .2s}
   .locpick.open{border:2px solid var(--md-sys-color-primary);padding:5px 39px 5px 13px}
   .locpick.open .lp-arrow{transform:translateY(-50%) rotate(180deg)}
+  /* Navigasi Prev/Next lokasi (#22) */
+  .locnav{display:inline-flex;align-items:center;gap:2px;background:var(--md-sys-color-surface-container-high);border-radius:99px;padding:2px}
+  .locnav md-icon-button{--_t:transform .2s var(--md-sys-motion-easing-emphasized,cubic-bezier(.2,0,0,1));transition:var(--_t),opacity .2s}
+  .locnav md-icon-button:not(.navoff):hover{transform:scale(1.12)}
+  .locnav md-icon-button:not(.navoff):active{transform:scale(.9)}
+  .locnav md-icon-button.navoff{opacity:.32;pointer-events:none}
   .lp-panel{position:fixed;z-index:3000;background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline-variant);
     border-radius:18px;box-shadow:var(--md-sys-elevation-level5);overflow:hidden;display:none;flex-direction:column}
   .lp-panel.show{display:flex;animation:lppop .16s cubic-bezier(.2,0,0,1)}
@@ -374,17 +388,30 @@
   .drop-expand{max-height:180px;opacity:1;overflow:hidden;
     transition:max-height .45s cubic-bezier(.2,0,0,1),opacity .28s ease,margin .4s cubic-bezier(.2,0,0,1)}
   .dz-cloud{display:inline-block;transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
-  /* Hint kompak (tampil hanya saat mini) */
-  .dz-hint{display:none;align-items:center;gap:5px;font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant);
-    padding-left:4px;opacity:.9}
+  /* Hint di dropzone besar (baris sendiri) */
+  .dz-hint{display:inline-flex;flex-basis:100%;justify-content:center;align-items:center;gap:5px;margin-top:2px;
+    font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant);opacity:.9}
   .dz-hint .mi{font-size:17px;color:var(--md-sys-color-primary)}
-  /* ---- State MINI: dock kompak, hanya tombol + hint ---- */
-  .drop.mini{padding:10px 14px}
-  .drop.mini .drop-expand{max-height:0;opacity:0;margin:0}
-  .drop.mini .drop-actions{margin-top:0}
-  .drop.mini .dz-hint{display:inline-flex;flex-basis:100%;justify-content:center;margin-top:3px;animation:dzidle 2.6s ease-in-out infinite}
-  .drop.mini .dz-cloud{transform:scale(.5)}
-  @keyframes dzidle{0%,100%{opacity:.55}50%{opacity:1}}
+  /* ===== #21 Dock kecil di header (collapsed) ===== */
+  .photodock{display:inline-flex;align-items:center;gap:8px;padding:4px 4px 4px 6px;border-radius:99px;
+    border:1.6px dashed var(--md-sys-color-outline);background:var(--md-sys-color-surface-container-high);cursor:pointer;
+    transition:opacity .28s var(--md-sys-motion-easing-emphasized,cubic-bezier(.2,0,0,1)),transform .28s var(--md-sys-motion-easing-emphasized,cubic-bezier(.2,0,0,1)),border-color .2s,box-shadow .25s,background .2s}
+  .photodock:hover{border-style:solid;border-color:var(--md-sys-color-primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--md-sys-color-primary) 13%,transparent)}
+  .photodock.drag{border-style:solid;border-color:var(--md-sys-color-primary);background:color-mix(in srgb,var(--md-sys-color-primary) 12%,var(--md-sys-color-surface));
+    transform:scale(1.05);box-shadow:0 0 0 4px color-mix(in srgb,var(--md-sys-color-primary) 26%,transparent),var(--card-shadow);animation:pdpulse 1.3s ease-in-out infinite}
+  @keyframes pdpulse{50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--md-sys-color-primary) 30%,transparent),var(--card-shadow)}}
+  .photodock .pd-btn{display:inline-flex;align-items:center;gap:6px;border:none;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);
+    border-radius:99px;padding:7px 14px;font:var(--md-sys-typescale-label-large);font-weight:700;cursor:pointer}
+  .photodock .pd-btn .mi{font-size:18px}
+  .photodock .pd-hint{display:inline-flex;align-items:center;gap:4px;font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant);padding-right:8px;white-space:nowrap;animation:dzidle 2.6s ease-in-out infinite}
+  .photodock .pd-hint .mi{font-size:15px;color:var(--md-sys-color-primary)}
+  .photodock.hide{opacity:0;transform:scale(.9);pointer-events:none;width:0;padding:0;margin:0;border:0;overflow:hidden}
+  @keyframes dzidle{0%,100%{opacity:.6}50%{opacity:1}}
+  /* Wrapper dropzone penuh — collapse/expand tinggi + fade */
+  .dzwrap{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .42s var(--md-sys-motion-easing-emphasized,cubic-bezier(.2,0,0,1)),opacity .3s ease}
+  .dzwrap.open{grid-template-rows:1fr;opacity:1}
+  .dzinner{overflow:hidden;min-height:0}
+  @media(prefers-reduced-motion:reduce){.photodock,.dzwrap,.photodock .pd-hint{transition:none;animation:none}}
   /* Overlay 'Lepaskan untuk mengunggah' saat drag */
   .dz-drophint{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:6;
     color:var(--md-sys-color-primary);font:var(--md-sys-typescale-title-small);font-weight:700;pointer-events:none;
@@ -911,7 +938,7 @@
   .is-viewer .ro-note{display:flex}
   /* Read-only lokasi milik user lain (operator boleh lihat, tak boleh edit) */
   #entry-form.ro #entry-del,#entry-form.ro #save-btn,#entry-form.ro #inv-add,
-  #entry-form.ro .tr md-icon-button,#entry-form.ro .drop,#entry-form.ro #ocr-note,
+  #entry-form.ro .tr md-icon-button,#entry-form.ro .drop,#entry-form.ro #ocr-note,#entry-form.ro #photoDock,#entry-form.ro .dzwrap,
   #entry-form.ro #btn-clrall,#entry-form.ro .snap .actbar,#entry-form.ro .cbx-arrow{display:none!important}
   /* mode lihat: matikan semua aksi tulis yang bukan <input> (tile foto, date field, strip SN) */
   #entry-form.ro #photo-slots .thumb,#entry-form.ro #uncat-slots .thumb,
@@ -1143,13 +1170,13 @@
         <span class="txt"><span class="bt">BAA<span class="dot">.</span><span class="flow">flow</span></span><span class="bs">Berita Acara Aktivasi</span></span>
       </span>
     </div>
-    <a class="navitem active" data-view="dashboard" data-tip="Dashboard"><span class="mi">dashboard</span><span class="lbl">Dashboard</span></a>
-    <a class="navitem" data-view="entry" data-tip="Entry BAA"><span class="mi">edit_document</span><span class="lbl">Entry BAA</span></a>
-    <a class="navitem" data-view="locations" data-tip="Log Lokasi"><span class="mi">table_rows</span><span class="lbl">Log Lokasi</span><span class="pill" id="loc-count"></span></a>
-    <a class="navitem admin-only" data-view="import" data-tip="Import Lokasi"><span class="mi">upload_file</span><span class="lbl">Import Lokasi</span></a>
-    <a class="navitem admin-only" data-view="trash" data-tip="Lokasi Terhapus"><span class="mi">delete_sweep</span><span class="lbl">Lokasi Terhapus</span><span class="pill" id="trash-count"></span></a>
+    <a class="navitem active" data-view="dashboard" data-short="Dash" data-tip="Dashboard"><span class="mi">dashboard</span><span class="lbl">Dashboard</span></a>
+    <a class="navitem" data-view="entry" data-short="Entry" data-tip="Entry BAA"><span class="mi">edit_document</span><span class="lbl">Entry BAA</span></a>
+    <a class="navitem" data-view="locations" data-short="LOG" data-tip="Log Lokasi"><span class="mi">table_rows</span><span class="lbl">Log Lokasi</span><span class="pill" id="loc-count"></span></a>
+    <a class="navitem admin-only" data-view="import" data-short="Import" data-tip="Import Lokasi"><span class="mi">upload_file</span><span class="lbl">Import Lokasi</span></a>
+    <a class="navitem admin-only" data-view="trash" data-short="Trash" data-tip="Lokasi Terhapus"><span class="mi">delete_sweep</span><span class="lbl">Lokasi Terhapus</span><span class="pill" id="trash-count"></span></a>
     <div class="navgroup admin-only" id="navSettings">
-      <a class="navitem grouphead" id="setToggle" data-tip="Pengaturan"><span class="mi">settings</span><span class="lbl">Pengaturan</span><span class="mi chev">expand_more</span></a>
+      <a class="navitem grouphead" id="setToggle" data-short="Set" data-tip="Pengaturan"><span class="mi">settings</span><span class="lbl">Pengaturan</span><span class="mi chev">expand_more</span></a>
       <div class="navsub"><div class="navsub-inner">
         <a class="subnav" data-sub="lokasi"><span class="mi">list_alt</span><span class="lbl">Field Data Lokasi</span></a>
         <a class="subnav" data-sub="inventory"><span class="mi">inventory_2</span><span class="lbl">Field Inventory</span></a>
@@ -1181,8 +1208,12 @@
       <span class="grow" id="topGrow"></span>
       <span class="rowflex hidden" id="entryTools">
         <div class="locpick" id="picker"></div>
+        <span class="locnav" id="locNav">
+          <md-icon-button id="loc-prev" data-tip="Lokasi sebelumnya"><span>chevron_left</span></md-icon-button>
+          <md-icon-button id="loc-next" data-tip="Lokasi berikutnya"><span>chevron_right</span></md-icon-button>
+        </span>
+        <span class="grow"></span>
         <md-icon-button id="entry-new" variant="tonal" data-tip="Lokasi baru"><span>add</span></md-icon-button>
-        <md-icon-button id="entry-del" data-tip="Hapus entry" class="hidden"><span>delete</span></md-icon-button>
       </span>
       <span class="hidden" id="setSaveWrap">
         <span class="set-status ok" id="setStatus"><span class="dot"></span><span id="setStatusTxt">Tersimpan</span></span>
@@ -1362,8 +1393,13 @@
             </div>
             <div class="card">
               <div class="sec"><span class="mi acc">photo_camera</span><h3>Foto &amp; Capture</h3><span class="grow"></span>
+                <span class="photodock" id="photoDock" title="Seret foto ke sini / klik untuk mengunggah">
+                  <button class="pd-btn" id="dock-auto" data-tip="Unggah foto"><span class="mi">upload</span>Unggah</button>
+                  <span class="pd-hint"><span class="mi">drag_pan</span>tarik ke sini</span>
+                </span>
                 <button class="clrall" id="btn-clrall" onclick="clearAllPhotos()" disabled><span class="mi">delete_sweep</span>Hapus semua</button>
                 <span class="count" id="foto-count">0 / 0</span></div>
+              <div class="dzwrap" id="dzWrap"><div class="dzinner">
               <div class="drop" id="dropZone">
                 <div class="drop-expand" id="dropExpand">
                   <span class="mi dz-cloud">cloud_upload</span>
@@ -1385,6 +1421,7 @@
                   <div class="bar"><i id="upBar"></i></div>
                 </div>
               </div>
+              </div></div>
               <div id="ocr-note" class="muted" style="margin-bottom:8px"></div>
               <div class="pgrid" id="photo-slots"></div>
               <div id="uncat-wrap" class="hidden" style="margin-top:14px">
@@ -2370,13 +2407,24 @@ $('#entry-new').addEventListener('click',()=>{const btn=$('#entry-new');
       loadLocations();toast('Lokasi '+loc.code+' dibuat');
     }catch(e){toast('Gagal: '+e.message);}finally{btn.removeAttribute('disabled');}};
   guardLeave(run,'lokasi baru');});
-$('#entry-del').addEventListener('click',()=>{if(S.loc)confirmDelete(S.loc.id,S.loc.code,true);});
+/* ---- Navigasi Prev/Next antar lokasi (#22) ---- */
+function locIndex(){if(!pickerSel||!pickerSel.items||!S.loc)return -1;
+  return pickerSel.items.findIndex(o=>String(o.value)===String(S.loc.id));}
+function updateLocNav(){const p=$('#loc-prev'),n=$('#loc-next');if(!p||!n)return;
+  const i=locIndex(),len=(pickerSel&&pickerSel.items||[]).length;
+  const dis=(el,off)=>{const bad=(i<0)||(off);el.toggleAttribute('disabled',bad);el.classList.toggle('navoff',bad);};
+  dis(p,i<=0);dis(n,i<0||i>=len-1);}
+function locStep(dir){const i=locIndex();if(i<0)return;const items=pickerSel.items;
+  const ni=i+dir;if(ni<0||ni>=items.length)return;const target=items[ni].value;
+  guardLeave(()=>{pickerSel.setValue(String(target));openLoc(+target);},'lokasi lain',()=>{});}
+$('#loc-prev').addEventListener('click',()=>locStep(-1));
+$('#loc-next').addEventListener('click',()=>locStep(1));
 
 async function openLoc(id){S.loc=await api('/api/locations/'+id);
   if(pickerSel&&!pickerSel.items.some(o=>o.value===String(id)))await refreshPicker();  /* opsi belum ada -> refresh agar dropdown sinkron */
   pickerSel.setValue(String(id));
   $('#entry-empty').classList.add('hidden');$('#entry-form').classList.remove('hidden');
-  $('#entry-del').classList.toggle('hidden', !S.loc.can_edit);
+  updateLocNav();
   renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();
   entryDirty=false;
   requestAnimationFrame(()=>revealCards($('#v-entry')));}
@@ -2750,16 +2798,22 @@ window.replacePhoto=(oldId,cat)=>{if(roActive())return;pickFiles(false,files=>{c
       S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();toast('Foto diganti');}catch(e){toast('Gagal: '+e.message);}});});};
 window.reassignMenu=(btn,pid)=>openMenu(btn,S.cats.map(c=>({icon:c.ocr?'tag':'image',label:c.label,fn:async()=>{await api('/api/photos/'+pid,{method:'PATCH',body:JSON.stringify({category:c.key})});S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();toast('Dipindah');}})));
 function roActive(){const f=$('#entry-form');return !!(f&&f.classList.contains('ro'));}
-/* ---- Dropzone dinamis: minimize/expand (#19) ---- */
+/* ---- Dropzone dinamis: dock kecil (collapsed) <-> dropzone penuh (#21) ---- */
 let dzMiniTimer=null,dzBusy=false;
-function dzExpand(){const dz=$('#dropZone');if(dz)dz.classList.remove('mini');clearTimeout(dzMiniTimer);}
-function dzMinimize(){const dz=$('#dropZone');if(!dz||dzBusy||dz.classList.contains('drag'))return;
-  if(activePhotos().length>0&&!roActive())dz.classList.add('mini');}
-function dzScheduleMini(delay){clearTimeout(dzMiniTimer);dzMiniTimer=setTimeout(dzMinimize,delay||1500);}
-function dzInit(){const dz=$('#dropZone');if(!dz)return;
-  // state awal: mini bila sudah ada foto (hemat ruang), penuh bila kosong
-  if(dzBusy||dz.classList.contains('drag'))return;
-  if(activePhotos().length>0&&!roActive())dz.classList.add('mini');else dz.classList.remove('mini');}
+function dzExpand(){const w=$('#dzWrap'),d=$('#photoDock');clearTimeout(dzMiniTimer);
+  if(w)w.classList.add('open');if(d)d.classList.add('hide');}          // buka dropzone + dock fade-out
+function dzCollapse(){const w=$('#dzWrap'),d=$('#photoDock'),dz=$('#dropZone');
+  if(!w||dzBusy||(dz&&dz.classList.contains('drag')))return;
+  if(roActive())return;
+  if(activePhotos().length===0){dzExpand();return;}                    // kosong -> tetap tampil penuh
+  w.classList.remove('open');if(d)d.classList.remove('hide');}         // tutup dropzone + dock fade-in
+function dzScheduleMini(delay){clearTimeout(dzMiniTimer);dzMiniTimer=setTimeout(dzCollapse,delay||1500);}
+function dzInit(){const w=$('#dzWrap'),d=$('#photoDock'),dz=$('#dropZone');if(!w)return;
+  if(roActive()){w.classList.remove('open');if(d)d.style.display='none';return;}  // mode lihat: sembunyikan dock & dropzone
+  if(d)d.style.display='';
+  if(dzBusy||(dz&&dz.classList.contains('drag')))return;
+  if(activePhotos().length>0){w.classList.remove('open');if(d)d.classList.remove('hide');}  // ada foto -> dock
+  else{w.classList.add('open');if(d)d.classList.add('hide');}}                              // kosong -> dropzone penuh
 /* ---- Overlay progres unggah (#17) ---- */
 const UP_C=2*Math.PI*26;                                        // keliling ring r=26 ≈163.4
 function upShow(total){const p=$('#upProg');if(!p)return;dzBusy=true;dzExpand();     // buka penuh saat mengunggah
@@ -2811,21 +2865,32 @@ function _collectEntries(items){const out=[];
         else{all.push(...es);read();}},()=>res());read();}
     else res();});
   return Promise.all([...items].map(it=>{const e=it.webkitGetAsEntry&&it.webkitGetAsEntry();return walk(e,'');})).then(()=>out);}
-function bindDropzone(){const dz=$('#entry-form .drop');if(!dz||dz._dnd)return;dz._dnd=true;
+async function _dzHandleDrop(dt){if(!dt)return;let files=[],relpaths=[];
+  const items=dt.items?[...dt.items]:[];
+  const hasEntry=items.some(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry());
+  if(hasEntry){const col=await _collectEntries(items);files=col.map(x=>x.file);relpaths=col.map(x=>x.path);}
+  else{files=[...(dt.files||[])];relpaths=files.map(f=>f.name);}
+  const keep=files.map((f,i)=>[f,relpaths[i]]).filter(([f])=>/^image\//.test(f.type)||IMG_RE.test(f.name));
+  if(!keep.length){toast('Tidak ada gambar yang valid');return;}
+  doUpload(keep.map(x=>x[0]),'',keep.map(x=>x[1]));}
+function bindDropzone(){
   const stop=e=>{e.preventDefault();e.stopPropagation();};
-  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{stop(e);if(!roActive()){dzExpand();dz.classList.add('drag');}}));  // magnetic: buka penuh saat file mendekat
-  ['dragleave','dragend'].forEach(ev=>dz.addEventListener(ev,e=>{stop(e);if(e.type==='dragleave'&&dz.contains(e.relatedTarget))return;dz.classList.remove('drag');if(!dzBusy)dzScheduleMini(600);}));
-  // klik area mini (bukan tombol) -> buka penuh
-  dz.addEventListener('click',e=>{if(dz.classList.contains('mini')&&!e.target.closest('md-button')){dzExpand();dzScheduleMini(4000);}});
-  dz.addEventListener('drop',async e=>{stop(e);dz.classList.remove('drag');if(roActive())return;
-    const dt=e.dataTransfer;if(!dt)return;let files=[],relpaths=[];
-    const items=dt.items?[...dt.items]:[];
-    const hasEntry=items.some(i=>i.webkitGetAsEntry&&i.webkitGetAsEntry());
-    if(hasEntry){const col=await _collectEntries(items);files=col.map(x=>x.file);relpaths=col.map(x=>x.path);}
-    else{files=[...(dt.files||[])];relpaths=files.map(f=>f.name);}
-    const keep=files.map((f,i)=>[f,relpaths[i]]).filter(([f])=>/^image\//.test(f.type)||IMG_RE.test(f.name));
-    if(!keep.length){toast('Tidak ada gambar yang valid');return;}
-    doUpload(keep.map(x=>x[0]),'',keep.map(x=>x[1]));});}
+  const dz=$('#entry-form .drop');
+  if(dz&&!dz._dnd){dz._dnd=true;
+    ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{stop(e);if(!roActive()){dzExpand();dz.classList.add('drag');}}));
+    ['dragleave','dragend'].forEach(ev=>dz.addEventListener(ev,e=>{stop(e);if(e.type==='dragleave'&&dz.contains(e.relatedTarget))return;dz.classList.remove('drag');if(!dzBusy)dzScheduleMini(700);}));
+    dz.addEventListener('drop',e=>{stop(e);dz.classList.remove('drag');if(roActive())return;_dzHandleDrop(e.dataTransfer);});
+  }
+  // Dock kecil di header: seret masuk -> buka dropzone penuh; drop di dock diteruskan
+  const dk=$('#photoDock');
+  if(dk&&!dk._dnd){dk._dnd=true;
+    ['dragenter','dragover'].forEach(ev=>dk.addEventListener(ev,e=>{stop(e);if(!roActive()){dk.classList.add('drag');dzExpand();}}));
+    ['dragleave'].forEach(ev=>dk.addEventListener(ev,e=>{stop(e);if(dk.contains(e.relatedTarget))return;dk.classList.remove('drag');}));
+    dk.addEventListener('drop',e=>{stop(e);dk.classList.remove('drag');if(roActive())return;dzExpand();_dzHandleDrop(e.dataTransfer);});
+  }
+  const da=$('#dock-auto');
+  if(da&&!da._b){da._b=true;da.addEventListener('click',()=>{if(roActive())return;$('#file-auto').click();});}
+}
 
 /* ---- Hapus semua foto + undo bertimer (#18) ---- */
 const clrPending=new Set();let clrIds=[],clrTimer=null;
@@ -3094,7 +3159,7 @@ function confirmDelete(id,code,fromEntry){delTarget=id;delFromEntry=fromEntry;
   $('#delMsg').innerHTML=`Entry <b>${esc(code)}</b> beserta seluruh foto akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.`;$('#delDlg').show();}
 $('#delCancel').addEventListener('click',()=>$('#delDlg').close());
 $('#delOk').addEventListener('click',async()=>{try{await api('/api/locations/'+delTarget,{method:'DELETE'});$('#delDlg').close();toast('Entry dihapus');
-  if(delFromEntry){S.loc=null;$('#entry-form').classList.add('hidden');$('#entry-empty').classList.remove('hidden');$('#entry-del').classList.add('hidden');}
+  if(delFromEntry){S.loc=null;$('#entry-form').classList.add('hidden');$('#entry-empty').classList.remove('hidden');}
   refreshPicker();loadLocations();loadCreators();loadDashboard();}catch(e){toast('Gagal: '+e.message);$('#delDlg').close();}});
 
 /* Dialog konfirmasi & input generik */
