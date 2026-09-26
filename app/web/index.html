@@ -663,69 +663,70 @@
     transform:translateX(calc(100% + 22px));transition:transform .44s cubic-bezier(.34,1.2,.5,1);
     display:flex;flex-direction:column;overflow:hidden}
   .ldrawer.on{transform:none}
-  /* area atas FIXED (tak ikut scroll): header, nama, donut — rata tengah */
-  .ld-top{flex:0 0 auto;padding:16px 20px 12px;text-align:center}
-  .ld-hrow{display:flex;align-items:center;gap:10px;font:var(--md-sys-typescale-title-small);text-align:left}
-  .ld-ro-wrap{margin-left:auto;display:flex;align-items:center}
-  .ld-ro{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 10px;border-radius:99px;font:var(--md-sys-typescale-label-medium);font-weight:700;white-space:nowrap;background:var(--warn-bg);color:var(--warn)}
-  .ld-ro .mi{font-size:14px}
-  .ld-x{flex:0 0 auto}
-  .ld-scroll{flex:1;overflow-y:auto;padding:2px 20px 8px}  /* scroll mulai SETELAH donut */
-  .ld-name{font:var(--md-sys-typescale-headline-small);font-weight:800;letter-spacing:-.4px;line-height:1.15;margin-top:10px;word-break:break-word;overflow:hidden;text-overflow:ellipsis}
-  .ld-code{display:block;font-family:ui-monospace,Consolas,monospace;font-size:12px;font-weight:600;color:var(--md-sys-color-on-surface-variant);margin-top:2px}
+  /* ===== HERO (gelap, fixed) ===== */
+  .ld-hero{flex:0 0 auto;background:linear-gradient(160deg,#0f3a35,#0c2e2b);color:#eafaf6;padding:16px 18px}
+  .ld-htop{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;letter-spacing:.3px;color:#9dc4bd}
+  .ld-htop .cd{font-family:ui-monospace,Consolas,monospace}
+  .ld-x{margin-left:auto;width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.10);color:#eafaf6;font-size:16px;cursor:pointer;display:grid;place-items:center;flex:0 0 auto}
+  .ld-x:hover{background:rgba(255,255,255,.18)}
+  .ld-hmain{display:flex;align-items:center;gap:16px;margin-top:12px}
+  .ld-ring{position:relative;width:84px;height:84px;flex:0 0 auto}
+  .ld-ring svg{width:84px;height:84px;transform:rotate(-90deg)}
+  .ld-ring circle{fill:none;stroke-width:8}
+  .ld-ring .trk{stroke:rgba(255,255,255,.14)}
+  .ld-ring .prg{stroke:#5fd0c4;stroke-linecap:round;stroke-dasharray:226;transition:stroke-dashoffset 1s cubic-bezier(.2,0,0,1)}
+  .ld-ring .pv{position:absolute;inset:0;display:grid;place-items:center;font-size:20px;font-weight:800;color:#fff}
+  .ld-hinfo{min-width:0}
+  .ld-name{font-size:24px;font-weight:800;letter-spacing:-.5px;line-height:1.08;word-break:break-word}
+  .ld-hmeta{display:flex;align-items:center;gap:8px;margin-top:7px;flex-wrap:wrap}
+  .ld-hchip{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 10px;border-radius:99px;font-size:11.5px;font-weight:800;letter-spacing:.4px}
+  .ld-hchip.draft{background:#ffd27a;color:#4a3500}.ld-hchip.done{background:#8ee6c9;color:#053d2b}
+  .ld-hby{font-size:12.5px;color:#9dc4bd;font-weight:600}
+  .ld-ro{margin-left:auto;display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 9px;border-radius:99px;font-size:11px;font-weight:700;background:rgba(255,210,122,.18);color:#ffcf85}
+  .ld-ro .mi{font-size:13px}
+  .ld-hstats{display:flex;margin-top:14px;background:rgba(255,255,255,.055);border-radius:14px;overflow:hidden}
+  .ld-hstat{flex:1;min-width:0;padding:9px 12px;position:relative}
+  .ld-hstat+.ld-hstat::before{content:'';position:absolute;left:0;top:9px;bottom:9px;width:1px;background:rgba(255,255,255,.12)}
+  .ld-hstat .l{font-size:10.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#9dc4bd}
+  .ld-hstat .v{font-size:13.5px;font-weight:700;color:#fff;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ld-hstat.miss .v{color:#ffb4ab}
+  /* ===== BODY (terang, scroll) ===== */
+  .ld-scroll{flex:1;overflow-y:auto;padding:16px 16px 8px}
   .ld-body{animation:ldswap .34s cubic-bezier(.2,0,0,1)}
   @keyframes ldswap{from{opacity:0;transform:translateY(8px)}}
-  /* kartu ringkasan: [donut] [teks %/inv/foto] [chips By/Status bersusun di kanan] */
-  .ld-sum{display:flex;align-items:center;gap:12px;margin:14px 0 2px;padding:12px 14px;border-radius:16px;background:var(--md-sys-color-surface-container);text-align:left}
-  .ld-mid{min-width:0}
-  .ld-schips{display:flex;flex-direction:column;gap:5px;align-items:flex-start;margin-left:auto;flex:0 0 auto}
-  .ld-chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:99px;font:var(--md-sys-typescale-label-medium);font-weight:700;white-space:nowrap}
-  .ld-chip.by{padding-left:4px;background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface-variant)}
-  .ld-chip.st-done{background:var(--good-bg);color:var(--good)}
-  .ld-chip.st-draft{background:var(--warn-bg);color:var(--warn)}
-  .ld-ava{width:22px;height:22px;border-radius:50%;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);display:grid;place-items:center;font-size:11px;font-weight:800}
-  .ld-byname{display:inline-block;max-width:104px;overflow:hidden;white-space:nowrap;vertical-align:bottom;-webkit-mask:linear-gradient(90deg,#000 calc(100% - 14px),transparent);mask:linear-gradient(90deg,#000 calc(100% - 14px),transparent)}
-  .ld-ring{position:relative;width:60px;height:60px;flex:0 0 auto}
-  .ld-ring svg{width:60px;height:60px;transform:rotate(-90deg)}
-  .ld-ring circle{fill:none;stroke-width:7}
-  .ld-ring .trk{stroke:var(--md-sys-color-surface-container-highest)}
-  .ld-ring .prg{stroke:var(--md-sys-color-primary);stroke-linecap:round;stroke-dasharray:163.4;transition:stroke-dashoffset 1s cubic-bezier(.2,0,0,1)}
-  .ld-ring.full .prg{stroke:var(--good)}
-  .ld-ring .pv{position:absolute;inset:0;display:grid;place-items:center;font:var(--md-sys-typescale-label-large);font-weight:800;color:var(--md-sys-color-primary)}
-  .ld-ring.full .pv{color:var(--good)}
-  .ld-sum .bigp{font:var(--md-sys-typescale-title-large);font-weight:800;line-height:1.05;white-space:nowrap}
-  .ld-sum .stx{color:var(--md-sys-color-on-surface-variant);font-size:12px;margin-top:3px;white-space:nowrap}
-  .ld-sum .stx b{color:var(--md-sys-color-on-surface);font-weight:700}
-  .ld-sum .stx.miss,.ld-sum .stx.miss b{color:var(--bad)}
-  .ld-sect{display:flex;align-items:center;gap:8px;font:var(--md-sys-typescale-label-large);font-weight:800;color:var(--md-sys-color-on-surface);margin:18px 0 8px}
-  .ld-sect .mi{color:var(--md-sys-color-primary);font-size:19px}
-  .ld-sect .n{margin-left:auto;font:var(--md-sys-typescale-label-medium);font-weight:700;color:var(--md-sys-color-on-surface-variant)}
-  .ld-sect .n.miss{color:var(--bad)}
-  .ld-frow{display:flex;justify-content:space-between;gap:10px;padding:8px 12px;border-radius:10px;background:var(--md-sys-color-surface-container);margin-bottom:5px;font:var(--md-sys-typescale-body-small)}
-  .ld-frow .k{color:var(--md-sys-color-on-surface);font-weight:700}
-  .ld-frow .v{font-weight:500;text-align:right;color:var(--md-sys-color-on-surface-variant)}
-  .ld-frow.miss{background:var(--bad-bg)}
-  .ld-frow.miss .k,.ld-frow.miss .v{color:var(--bad)}
-  .ld-itab{width:100%;border-collapse:collapse;font:var(--md-sys-typescale-body-small)}
-  .ld-itab th{text-align:left;color:var(--md-sys-color-on-surface-variant);font-weight:700;padding:5px 8px;border-bottom:1px solid var(--md-sys-color-outline-variant)}
-  .ld-itab td{padding:6px 8px;border-bottom:1px solid var(--md-sys-color-surface-container-high)}
-  .ld-itab tr.imiss td{color:var(--bad);background:var(--bad-bg)}
-  .ld-chk{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-  .ld-ci{display:flex;align-items:center;gap:7px;padding:4px 9px;border-radius:9px;background:var(--md-sys-color-surface-container);font:var(--md-sys-typescale-label-medium);min-width:0;overflow:hidden}
-  .ld-ci .dot{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:11px;flex:0 0 auto;color:#fff}
-  .ld-ci.ok .dot{background:var(--good)}.ld-ci.no .dot{background:var(--md-sys-color-outline)}
-  .ld-ci .dot .mi{font-size:12px;color:#fff}
-  /* label 1 baris; kalau tak muat -> potong dgn fade-out (bukan titik-titik) */
-  .ld-ci .lb{flex:1;min-width:0;white-space:nowrap;overflow:hidden;-webkit-mask:linear-gradient(90deg,#000 calc(100% - 22px),transparent);mask:linear-gradient(90deg,#000 calc(100% - 22px),transparent)}
-  .ld-ci.no{opacity:.75}
-  .ld-act{flex:0 0 auto;background:linear-gradient(0deg,var(--md-sys-color-surface) 78%,transparent);padding:10px 20px 14px;display:flex;gap:8px}
-  .ld-btn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:99px;padding:10px 18px;font:var(--md-sys-typescale-label-large);font-size:13px;font-weight:800;cursor:pointer;transition:transform .12s,filter .2s}
+  .ld-sec{display:flex;align-items:baseline;gap:8px;margin:6px 2px 9px}
+  .ld-sec:not(:first-child){margin-top:20px}
+  .ld-sec .t{font-size:15px;font-weight:800;color:var(--md-sys-color-on-surface)}
+  .ld-sec .n{margin-left:auto;font-size:12.5px;font-weight:800;color:var(--md-sys-color-on-surface-variant)}
+  .ld-sec .n.warnc{color:var(--bad)}.ld-sec .n.okc{color:var(--good)}
+  .ld-act{display:flex;align-items:center;gap:12px;background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-surface-container-high);border-radius:16px;padding:13px 14px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  .ld-act .txt{min-width:0;flex:1}
+  .ld-act .h{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--md-sys-color-on-surface)}
+  .ld-act .s{font-size:12px;color:var(--md-sys-color-on-surface-variant);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ld-add{flex:0 0 auto;width:38px;height:38px;border-radius:12px;border:none;background:var(--warn-bg);color:var(--warn);font-size:20px;cursor:pointer;display:grid;place-items:center}
+  .ld-add:hover{filter:brightness(.97)}.ld-add:disabled{opacity:.5;cursor:default}
+  .ld-done{display:flex;align-items:center;gap:12px;background:var(--md-sys-color-surface-container);border-radius:16px;padding:11px 14px;cursor:pointer}
+  .ld-stack{display:flex;flex:0 0 auto}
+  .ld-stack .th{width:34px;height:34px;border-radius:9px;border:2px solid var(--md-sys-color-surface);margin-left:-10px;object-fit:cover;box-shadow:0 1px 2px rgba(0,0,0,.10);background:var(--md-sys-color-surface-container-highest)}
+  .ld-stack .th:first-child{margin-left:0}
+  .ld-stack .more{width:34px;height:34px;border-radius:9px;border:2px solid var(--md-sys-color-surface);margin-left:-10px;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);display:grid;place-items:center;font-size:12px;font-weight:800}
+  .ld-done .txt{min-width:0;flex:1}.ld-done .h{font-weight:700;font-size:14px;color:var(--md-sys-color-on-surface)}
+  .ld-done .s{font-size:12px;color:var(--md-sys-color-on-surface-variant);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ld-done .chev{color:var(--md-sys-color-on-surface-variant);font-size:20px}
+  .ld-dev{display:flex;align-items:center;gap:10px;background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-surface-container-high);border-radius:14px;padding:11px 14px;margin-bottom:7px}
+  .ld-dev .h{font-weight:700;font-size:14px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--md-sys-color-on-surface)}
+  .ld-dev .sn{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;font-weight:700;color:var(--md-sys-color-on-surface-variant);background:var(--md-sys-color-surface-container-high);padding:3px 8px;border-radius:7px}
+  .ld-dev .qty{font-size:12px;font-weight:800;color:var(--md-sys-color-primary);background:var(--md-sys-color-primary-container,var(--pri-c,#9cf1f6));padding:3px 9px;border-radius:99px}
+  .ld-dev.miss{background:var(--bad-bg)}
+  .ld-dev.miss .h,.ld-dev.miss .sn,.ld-dev.miss .qty{color:var(--bad)}
+  .ld-dev.miss .qty{background:color-mix(in srgb,var(--bad) 12%,transparent)}
+  /* ===== FOOT ===== */
+  .ld-foot{flex:0 0 auto;padding:12px 16px 16px;background:linear-gradient(0deg,var(--md-sys-color-surface) 80%,transparent)}
+  .ld-btn{width:100%;display:inline-flex;align-items:center;justify-content:center;gap:9px;border:none;border-radius:16px;padding:15px;font:inherit;font-size:15px;font-weight:800;cursor:pointer;background:#0c2e2b;color:#fff;transition:transform .12s,filter .2s}
   .ld-btn .mi{font-size:18px}
-  .ld-btn:active{transform:scale(.97)}
-  .ld-btn.pri{background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary)}
   .ld-btn.req{background:transparent;color:var(--md-sys-color-primary);border:1.5px solid var(--md-sys-color-outline)}
-  .ld-btn.req:hover{background:color-mix(in srgb,var(--md-sys-color-primary) 8%,transparent)}
-  .ld-btn:disabled{opacity:.55;cursor:default}
+  .ld-btn:active{transform:scale(.985)}
+  .ld-btn:disabled{opacity:.6;cursor:default}
 
   /* ===== Dashboard (bento) ===== */
   .dash{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
@@ -1826,21 +1827,11 @@
 <!-- Drawer detail cepat Log Lokasi -->
 <div class="ldrawer-scrim" id="ldScrim"></div>
 <aside class="ldrawer" id="ldDrawer" aria-hidden="true">
-  <div class="ld-top">
-    <div class="ld-hrow"><span class="mi acc" style="font-size:20px">description</span><b>Detail BAA</b>
-      <span class="ld-ro-wrap" id="ldRo"></span>
-      <md-icon-button class="ld-x" id="ldClose"><span>close</span></md-icon-button></div>
-    <div id="ldHead"></div>
-    <div id="ldSum"></div>
-  </div>
-  <div class="ld-scroll">
-    <div id="ldBody"></div>
-  </div>
-  <div class="ld-act">
-    <button class="ld-btn pri" id="ldEdit"><span class="mi">edit</span>Edit di Entry BAA</button>
-    <button class="ld-btn req" id="ldReq"><span class="mi">lock_open</span>Request edit</button>
-  </div>
+  <div class="ld-hero" id="ldHero"></div>
+  <div class="ld-scroll"><div id="ldBody"></div></div>
+  <div class="ld-foot" id="ldFoot"></div>
 </aside>
+<input type="file" id="ldFile" accept="image/*" multiple hidden>
 
 <!-- Guard: perubahan belum disimpan (Opsi B) -->
 <div class="uns-ov" id="unsOv"><div class="uns-box">
@@ -3283,71 +3274,80 @@ async function openLocDrawer(id){
 }
 function closeLocDrawer(){$('#ldDrawer').classList.remove('on');$('#ldScrim').classList.remove('on');
   $('#ldDrawer').setAttribute('aria-hidden','true');$$('#loc-table tr.lrow').forEach(r=>r.classList.remove('sel'));LD_CUR=-1;}
+const LD_STAT_SHORT={tanggal:'Aktivasi',teknisi:'Teknisi',pic:'PIC'};
 function fillLocDrawer(loc){
-  const st=locDetailState(loc);const C=163.4,off=(C*(1-st.pct/100)).toFixed(1);
-  const full=st.pct>=100;
+  const st=locDetailState(loc);const C=226,off=(C*(1-st.pct/100)).toFixed(1);
   const nama=(loc.data&&loc.data.nama_lokasi)||loc.name||'(tanpa nama)';
   const owner=loc.owner_name||'—';
-  const stEn=loc.status==='selesai'?'Done':'Draft';
-  const readOnly=loc.can_edit===false;
-  // Read Only sejajar judul di header
-  $('#ldRo').innerHTML=readOnly?'<span class="ld-ro"><span class="mi">lock</span>Read Only</span>':'';
-  $('#ldHead').innerHTML=`<div class="ld-name">${esc(nama)}</div><span class="ld-code">${esc(loc.code||'')}</span>`;
-  // inventory wajib (default items) — tandai yg kurang merah
-  const reqNames=(S.invItems&&S.invItems.length?S.invItems:['Kit Starlink','Router','Access Point']);
-  const inv=loc.inventory||[];
-  const rowComplete=r=>[r.nama_barang,r.merk_type,r.jumlah,r.sn_tagging,r.keterangan].every(v=>((v||'')+'').trim());
-  const haveComplete=new Set(inv.filter(rowComplete).map(r=>((r.nama_barang||'')+'').trim()));
-  const missInv=reqNames.filter(n=>!haveComplete.has(n));
-  const invHave=reqNames.filter(n=>haveComplete.has(n)).length;const reqInv=reqNames.length;
-  const invLess=invHave<reqInv;
-  const fields=S.locFields||[];const data=loc.data||{};
-  const cats=S.cats||[];
-  const fieldsHtml=fields.map(f=>{const v=((data[f.key])||'').trim();const miss=!v;
-    return `<div class="ld-frow ${miss?'miss':''}"><span class="k">${esc(f.label)}</span><span class="v">${esc(v||'—')}</span></div>`;}).join('');
-  const invRows=inv.map(r=>{const miss=!rowComplete(r);
-    return `<tr class="${miss?'imiss':''}"><td><b>${esc(r.nama_barang||'—')}</b></td><td>${esc(r.sn_tagging||'—')}</td><td>${esc(r.jumlah||'—')}</td><td>${esc(r.keterangan||'—')}</td></tr>`;}).join('');
-  const invMissRows=missInv.map(n=>`<tr class="imiss"><td><b>${esc(n)}</b></td><td>—</td><td>—</td><td>Belum ada</td></tr>`).join('');
-  const chkHtml=cats.map(c=>`<div class="ld-ci ${st.byCat[c.key]?'ok':'no'}"><span class="dot"><span class="mi">${st.byCat[c.key]?'check':'remove'}</span></span><span class="lb">${esc(c.label)}</span></div>`).join('');
-  // kartu ringkasan (fixed) — donut · teks · chips By/Status
-  $('#ldSum').innerHTML=`<div class="ld-sum">
-      <div class="ld-ring ${full?'full':''}"><svg viewBox="0 0 60 60"><circle class="trk" cx="30" cy="30" r="26"/><circle class="prg" cx="30" cy="30" r="26" style="stroke-dashoffset:${C}"/></svg><span class="pv">${st.pct}%</span></div>
-      <div class="ld-mid">
-        <div class="bigp">${st.pct}% lengkap</div>
-        <div class="stx ${invLess?'miss':''}">Inventory <b>${invHave} dari ${reqInv} item</b></div>
-        <div class="stx">Foto terupload <b>${st.fotoDone} dari ${st.nCats}</b></div>
-      </div>
-      <div class="ld-schips">
-        <span class="ld-chip by"><span class="ld-ava">${esc((owner[0]||'?').toUpperCase())}</span>By: <span class="ld-byname">${esc(owner)}</span></span>
-        <span class="ld-chip ${loc.status==='selesai'?'st-done':'st-draft'}">${stEn}</span>
-      </div>
-    </div>`;
-  $('#ldBody').innerHTML=`<div class="ld-body">
-    <div class="ld-sect"><span class="mi">location_on</span>Data Lokasi</div>
-    ${fieldsHtml}
-    <div class="ld-sect"><span class="mi">inventory_2</span>Inventory<span class="n ${invLess?'miss':''}">${invHave}/${reqInv} item</span></div>
-    <table class="ld-itab"><tr><th>Barang</th><th>SN</th><th>Qty</th><th>Ket</th></tr>${invRows}${invMissRows}</table>
-    <div class="ld-sect"><span class="mi">photo_library</span>Checklist Foto<span class="n">${st.fotoDone}/${st.nCats}</span></div>
-    <div class="ld-chk">${chkHtml}</div>
-  </div>`;
-  requestAnimationFrame(()=>{const p=$('#ldSum .ld-ring .prg');if(p)p.style.strokeDashoffset=off;});
-  // tombol aksi
   const canEdit=loc.can_edit!==false;
-  const eb=$('#ldEdit'),rb=$('#ldReq');
-  eb.style.display=canEdit?'':'none';rb.style.display=canEdit?'none':'';
-  eb.onclick=()=>{closeLocDrawer();openFromLog(loc.id);};
-  if(!canEdit){
-    if(loc.my_request==='pending'){rb.disabled=true;rb.innerHTML='<span class="mi">hourglass_top</span>Menunggu persetujuan';}
-    else{rb.disabled=false;rb.innerHTML='<span class="mi">lock_open</span>Request edit';rb.onclick=()=>sendEditReq(loc.id,rb);}
-  }
+  const stEn=loc.status==='selesai'?'DONE':'DRAFT';
+  const data=loc.data||{};const fields=S.locFields||[];const cats=S.cats||[];
+  // stat cells: field non-nama (maks 3)
+  const statFields=fields.filter(f=>f.key!=='nama_lokasi').slice(0,3);
+  const statsHtml=statFields.map(f=>{const v=((data[f.key])||'').trim();const miss=!v;
+    return `<div class="ld-hstat ${miss?'miss':''}"><div class="l">${esc(LD_STAT_SHORT[f.key]||f.label)}</div><div class="v">${esc(v||'—')}</div></div>`;}).join('');
+  // HERO
+  $('#ldHero').innerHTML=`
+    <div class="ld-htop"><span>BAA</span><span>·</span><span class="cd">${esc(loc.code||'')}</span>
+      <button class="ld-x" onclick="closeLocDrawer()"><span class="mi">✕</span></button></div>
+    <div class="ld-hmain">
+      <div class="ld-ring"><svg viewBox="0 0 84 84"><circle class="trk" cx="42" cy="42" r="36"/><circle class="prg" cx="42" cy="42" r="36" style="stroke-dashoffset:${C}"/></svg><span class="pv">${st.pct}%</span></div>
+      <div class="ld-hinfo"><div class="ld-name">${esc(nama)}</div>
+        <div class="ld-hmeta"><span class="ld-hchip ${loc.status==='selesai'?'done':'draft'}">${stEn}</span><span class="ld-hby">oleh ${esc(owner)}</span>
+          ${canEdit?'':'<span class="ld-ro"><span class="mi">lock</span>Read Only</span>'}</div>
+      </div>
+    </div>
+    ${statsHtml?`<div class="ld-hstats">${statsHtml}</div>`:''}`;
+  // inventory wajib
+  const reqNames=(S.invItems&&S.invItems.length?S.invItems:['Kit Starlink','Router','Access Point']);
+  const inv=loc.inventory||[];const reqInv=reqNames.length;
+  const rowComplete=r=>[r.nama_barang,r.merk_type,r.jumlah,r.sn_tagging,r.keterangan].every(v=>((v||'')+'').trim());
+  const invHave=reqNames.filter(n=>inv.some(r=>((r.nama_barang||'')+'').trim()===n&&rowComplete(r))).length;
+  // BODY — perlu tindakan (foto belum) + foto lengkap + perangkat
+  const missCats=cats.filter(c=>!st.byCat[c.key]);
+  const actHtml=missCats.map(c=>`<div class="ld-act"><div class="txt"><div class="h">${esc(c.label)}</div><div class="s">Belum diunggah</div></div>${canEdit?`<button class="ld-add" onclick="ldPickPhoto(${loc.id},'${c.key}')">+</button>`:''}</div>`).join('');
+  const thumbs=(loc.photos||[]).slice(0,4).map(p=>`<img class="th" src="/api/photos/${p.id}/file" loading="lazy">`).join('');
+  const moreN=st.fotoDone-4;
+  const doneHtml=st.fotoDone?`<div class="ld-done" onclick="closeLocDrawer();openFromLog(${loc.id})">
+      <div class="ld-stack">${thumbs}${moreN>0?`<span class="more">+${moreN}</span>`:''}</div>
+      <div class="txt"><div class="h">${st.fotoDone} foto lengkap</div><div class="s">Ketuk untuk lihat di Entry BAA</div></div>
+      <span class="mi chev">›</span></div>`:'';
+  const devHtml=reqNames.map(n=>{const r=inv.find(x=>((x.nama_barang||'')+'').trim()===n);
+    if(r&&rowComplete(r))return `<div class="ld-dev"><span class="h">${esc(n)}</span><span class="sn">${esc(r.sn_tagging||'—')}</span><span class="qty">×${esc(r.jumlah||'1')}</span></div>`;
+    return `<div class="ld-dev miss"><span class="h">${esc(n)}</span><span class="sn">—</span><span class="qty">belum</span></div>`;}).join('');
+  $('#ldBody').innerHTML=`<div class="ld-body">
+    ${missCats.length?`<div class="ld-sec"><span class="t">Perlu tindakan</span><span class="n warnc">${missCats.length} foto</span></div>${actHtml}`:''}
+    ${doneHtml}
+    <div class="ld-sec"><span class="t">Perangkat terpasang</span><span class="n ${invHave<reqInv?'warnc':'okc'}">${invHave}/${reqInv} baik</span></div>
+    ${devHtml}
+  </div>`;
+  requestAnimationFrame(()=>{const p=$('#ldHero .ld-ring .prg');if(p)p.style.strokeDashoffset=off;});
+  // FOOT
+  const foot=$('#ldFoot');
+  if(canEdit){foot.innerHTML=`<button class="ld-btn" onclick="closeLocDrawer();openFromLog(${loc.id})"><span class="mi">edit</span>Edit di Entry BAA</button>`;}
+  else if(loc.my_request==='pending'){foot.innerHTML=`<button class="ld-btn req" disabled><span class="mi">hourglass_top</span>Menunggu persetujuan</button>`;}
+  else{foot.innerHTML=`<button class="ld-btn req" id="ldReq"><span class="mi">lock_open</span>Request edit</button>`;$('#ldReq').onclick=()=>sendEditReq(loc.id,$('#ldReq'));}
 }
+/* "+" pada kartu Perlu tindakan → unggah foto langsung ke kategori itu */
+let LD_UP={id:null,cat:null};
+function ldPickPhoto(id,cat){LD_UP={id,cat};const f=$('#ldFile');f.value='';f.click();}
+$('#ldFile').addEventListener('change',async e=>{
+  const files=[...e.target.files];if(!files.length||!LD_UP.id)return;
+  const fd=new FormData();files.forEach(f=>fd.append('files',f));fd.append('category',LD_UP.cat);
+  toast('Mengunggah…');
+  try{const r=await fetch('/api/locations/'+LD_UP.id+'/photos',{method:'POST',credentials:'same-origin',body:fd});
+    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||('HTTP '+r.status));
+    toast('Foto terunggah ✓');
+    const loc=await api('/api/locations/'+LD_UP.id);if(LD_CUR===LD_UP.id)fillLocDrawer(loc);
+    loadLocations();if(S.loc&&S.loc.id===LD_UP.id){S.loc=loc;if(typeof renderPhotos==='function')renderPhotos();if(typeof updateSummary==='function')updateSummary();}
+  }catch(err){toast('Gagal: '+err.message);}
+});
 async function sendEditReq(id,btn){
   try{const r=await api('/api/edit-requests',{method:'POST',body:JSON.stringify({location_id:id})});
     if(btn){btn.disabled=true;btn.innerHTML='<span class="mi">hourglass_top</span>Menunggu persetujuan';}
     toast(r.duplicate?'Permintaan sudah terkirim sebelumnya':'Permintaan edit dikirim ke admin ✓');}
   catch(e){toast('Gagal: '+e.message);}
 }
-$('#ldClose').addEventListener('click',closeLocDrawer);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#ldDrawer').classList.contains('on'))closeLocDrawer();});
 
 /* ===== Notifikasi (permintaan edit) — admin ===== */
