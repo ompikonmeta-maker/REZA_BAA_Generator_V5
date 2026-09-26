@@ -327,6 +327,18 @@ def build_workbook(template_path: str, template_config: dict, locations: list[di
         by_cat: dict[str, list] = {}
         for p in photos:
             by_cat.setdefault(p.get("category", "uncategorized"), []).append(p)
+
+        # --- status foto per kategori: SUDAH (ada >=1 foto) / BELUM ---
+        for cat, scell in (cfg["detail"].get("photo_status", {}) or {}).items():
+            if not scell:
+                continue
+            has_photo = any(
+                pp.get("path") and Path(pp["path"]).exists() for pp in by_cat.get(cat, [])
+            )
+            try:
+                ws[scell] = "SUDAH" if has_photo else "BELUM"
+            except Exception:
+                pass
         for cat, plist in by_cat.items():
             anchor = photo_anchors.get(cat)
             if not anchor or not plist:
