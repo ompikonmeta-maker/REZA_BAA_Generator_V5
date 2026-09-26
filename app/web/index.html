@@ -1681,16 +1681,9 @@
                 </div>
                 <div class="fgrid" style="margin-top:12px"><div><label class="muted">Baris mulai inventory</label><input id="map-invstart" class="maptab-inp" style="width:100%" type="number" value="32"></div><div><label class="muted">Maks baris inventory</label><input id="map-invmax" class="maptab-inp" style="width:100%" type="number" value="5"></div></div>
 
-                <div class="map-sub"><div><div class="t"><span class="mi">image</span>Image mapping</div>
-                  <div class="map-hint">Tiap kategori: <b>sel gambar</b> → lalu <b>sel status</b> (opsional, diisi otomatis <b>SUDAH</b>/<b>BELUM</b> sesuai ada tidaknya foto). Kategori dari Pengaturan → Field Photo &amp; Capture.</div></div></div>
+                <div class="map-sub"><div><div class="t"><span class="mi">fact_check</span>Status foto (header gambar)</div>
+                  <div class="map-hint">Tiap header gambar dipetakan ke <b>sel/kolom status</b>. Gambar <b>tidak</b> ditempel — sel diisi otomatis: <b>kosong</b> bila foto ada, tanda <b>X</b> bila belum. Kategori dari Pengaturan → Field Photo &amp; Capture.</div></div></div>
                 <div class="mrows" id="map-imgrows"></div>
-
-                <div class="map-sub"><div><div class="t"><span class="mi">aspect_ratio</span>Ukuran foto</div>
-                  <div class="map-hint">Rasio <b id="map-ratio">4:3</b> · foto di-letterbox &amp; di-center di sel anchor.</div></div></div>
-                <div class="fgrid" style="margin-top:12px">
-                  <div><label class="muted">Lebar max px</label><input id="map-pw" class="maptab-inp" style="width:100%" type="number" value="320"></div>
-                  <div><label class="muted">Tinggi max px</label><input id="map-ph" class="maptab-inp" style="width:100%" type="number" value="240"></div>
-                </div>
               </div>
             </div>
           </div>
@@ -3563,13 +3556,10 @@ window.openMapping=async id=>{S.mapTplId=id;const tpl=await api('/api/templates/
   renderTxtRows();
   $('#map-invstart').value=map.detail.inventory.start_row||32;$('#map-invmax').value=map.detail.inventory.max_rows||5;
   $('#map-invstart').oninput=()=>{mapDirty();mapSteps();};$('#map-invmax').oninput=()=>{mapDirty();mapSteps();};
-  MAP_IMG=S.cats.map(c=>({key:c.key,label:c.label,ocr:c.ocr,cell:((map.detail.photos||{})[c.key]||''),scell:((map.detail.photo_status||{})[c.key]||'')}));
+  // cell = sel/kolom status foto (photo_status). Fallback ke anchor lama (photos) utk template lama.
+  MAP_IMG=S.cats.map(c=>({key:c.key,label:c.label,ocr:c.ocr,cell:((map.detail.photo_status||{})[c.key]||(map.detail.photos||{})[c.key]||'')}));
   renderImgRows();
-  $('#map-pw').value=map.detail.photo_max_w||320;$('#map-ph').value=map.detail.photo_max_h||240;
-  const PMR=4/3;
-  $('#map-pw').oninput=()=>{const w=parseInt($('#map-pw').value);if(w>0)$('#map-ph').value=Math.round(w/PMR);mapDirty();mapRatio();};
-  $('#map-ph').oninput=()=>{const h=parseInt($('#map-ph').value);if(h>0)$('#map-pw').value=Math.round(h*PMR);mapDirty();mapRatio();};
-  mapRatio();mapSteps();
+  mapSteps();
   $('#tpltab-map').disabled=false;mapSwitchTab('map');mapSaved();
   $$('.mstep').forEach((z,k)=>z.classList.toggle('on',k===0));
   window.scrollTo({top:0,behavior:'smooth'});};
@@ -3626,19 +3616,13 @@ $('#map-add-text')&&$('#map-add-text').addEventListener('click',()=>{MAP_TXT.pus
 /* ---- Sheet Detail: Image mapping ---- */
 function renderImgRows(){
   $('#map-imgrows').innerHTML=MAP_IMG.map((p,i)=>`<div class="mrow"><div class="mk"><span class="mtag img">${p.ocr?'OCR':'Foto'}</span><span class="kt" title="${esc(p.label)}">${esc(p.label)}</span></div>
-    <div class="mv"><span class="mi arrow">arrow_forward</span><input class="maptab-inp" data-i="${i}" data-role="cell" placeholder="B10" value="${esc(p.cell)}" data-tip="Sel gambar">
-      <span class="mi arrow sdiv" data-tip="Sel status SUDAH/BELUM (opsional)">fact_check</span>
-      <input class="maptab-inp scell" data-i="${i}" data-role="scell" placeholder="status" value="${esc(p.scell||'')}" data-tip="Sel status SUDAH/BELUM (opsional)"></div></div>`).join('')
+    <div class="mv"><span class="mi arrow">arrow_forward</span><input class="maptab-inp" data-i="${i}" data-role="cell" placeholder="B10" value="${esc(p.cell)}" data-tip="Sel/kolom status — kosong bila foto ada, X bila belum"></div></div>`).join('')
     ||'<p class="muted" style="font:var(--md-sys-typescale-label-small)">Belum ada kategori. Tambahkan di Pengaturan → Field Photo &amp; Capture.</p>';
   $$('#map-imgrows [data-role=cell]').forEach(inp=>inp.oninput=()=>{MAP_IMG[+inp.dataset.i].cell=inp.value.trim().toUpperCase();mapDirty();mapConflict();mapSteps();});
-  $$('#map-imgrows [data-role=scell]').forEach(inp=>inp.oninput=()=>{MAP_IMG[+inp.dataset.i].scell=inp.value.trim().toUpperCase();mapDirty();});
   bindTips();mapConflict();}
 
 function mapConflict(){const seen={},dup=new Set();MAP_IMG.forEach(p=>{const v=(p.cell||'').toUpperCase();if(v){if(seen[v])dup.add(v);seen[v]=1;}});
   $$('#map-imgrows [data-role=cell]').forEach(el=>el.classList.toggle('conflict',dup.has(el.value.trim().toUpperCase())&&!!el.value.trim()));}
-
-function mapRatio(){const w=parseInt($('#map-pw').value)||1,h=parseInt($('#map-ph').value)||1;
-  const g=(a,b)=>b?g(b,a%b):a,d=g(w,h)||1;$('#map-ratio').textContent=`${w/d}:${h/d}`;mapSteps();}
 
 function mapSteps(){
   const logT=MAP_LOGH.length,logDone=MAP_LOGH.filter(r=>r.target).length;
@@ -3646,7 +3630,7 @@ function mapSteps(){
   const phN=MAP_IMG.filter(p=>p.cell).length,phT=MAP_IMG.length;
   $('#mstep1').textContent=(mapLogSel.getValue()||'?')+' · '+(mapDetailSel.getValue()||'?');
   $('#mstep2').textContent=logT?logDone+'/'+logT+' header':'belum baca';
-  $('#mstep3').textContent=(txtDone)+' teks · '+phN+'/'+phT+' foto';
+  $('#mstep3').textContent=(txtDone)+' teks · '+phN+'/'+phT+' status foto';
   $('.mstep[data-go=ms2]').classList.toggle('done',logDone>0);
   $('.mstep[data-go=ms3]').classList.toggle('done',phT>0&&phN===phT);
   const filled=logDone+txtDone+phN,total=(logT+txtT+phT)||1,pct=Math.round(filled/total*100);
@@ -3665,8 +3649,8 @@ $('#map-save')&&$('#map-save').addEventListener('click',async()=>{const cfg=stru
     else if(r.kind==='data'){if(r.ref&&r.cell)cfg.detail.location_cells[r.cell.toUpperCase()]=r.ref;}
     else{if(r.ref!==''&&r.cell)cfg.detail.static_cells[r.cell.toUpperCase()]=r.ref;}});
   cfg.detail.inventory.start_row=parseInt($('#map-invstart').value)||32;cfg.detail.inventory.max_rows=parseInt($('#map-invmax').value)||5;
-  cfg.detail.photos={};cfg.detail.photo_status={};MAP_IMG.forEach(p=>{if(p.cell)cfg.detail.photos[p.key]=p.cell.toUpperCase();if(p.scell)cfg.detail.photo_status[p.key]=p.scell.toUpperCase();});
-  cfg.detail.photo_max_w=parseInt($('#map-pw').value)||320;cfg.detail.photo_max_h=parseInt($('#map-ph').value)||240;
+  // Header gambar dipetakan ke sel status (kosong/X). Tidak menempel gambar lagi.
+  cfg.detail.photos={};cfg.detail.photo_status={};MAP_IMG.forEach(p=>{if(p.cell)cfg.detail.photo_status[p.key]=p.cell.toUpperCase();});
   try{await api('/api/templates/'+S.mapTplId+'/mapping',{method:'PUT',body:JSON.stringify({config:cfg,sheet_log:mapLogSel.getValue(),sheet_detail:mapDetailSel.getValue()})});mapSaved();toast('Mapping tersimpan');loadTemplates();}catch(e){toast('Gagal: '+e.message);}});
 $('#map-close')&&$('#map-close').addEventListener('click',()=>mapSwitchTab('list'));
 

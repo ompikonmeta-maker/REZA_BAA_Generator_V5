@@ -323,12 +323,13 @@ def build_workbook(template_path: str, template_config: dict, locations: list[di
                     pass
 
         # --- foto per kategori ---
-        photo_anchors = cfg["detail"].get("photos", {})
         by_cat: dict[str, list] = {}
         for p in photos:
             by_cat.setdefault(p.get("category", "uncategorized"), []).append(p)
 
-        # --- status foto per kategori: SUDAH (ada >=1 foto) / BELUM ---
+        # --- status foto per kategori (tanpa menempel gambar) ---
+        # Sel yang dipetakan ke tiap header foto diisi: kosong bila foto ada,
+        # tanda "X" bila belum ada foto terupload untuk kategori itu.
         for cat, scell in (cfg["detail"].get("photo_status", {}) or {}).items():
             if not scell:
                 continue
@@ -336,33 +337,9 @@ def build_workbook(template_path: str, template_config: dict, locations: list[di
                 pp.get("path") and Path(pp["path"]).exists() for pp in by_cat.get(cat, [])
             )
             try:
-                ws[scell] = "SUDAH" if has_photo else "BELUM"
+                ws[scell] = "" if has_photo else "X"
             except Exception:
                 pass
-        for cat, plist in by_cat.items():
-            anchor = photo_anchors.get(cat)
-            if not anchor or not plist:
-                if not anchor:
-                    warnings.append(f"{ws.title}: anchor foto '{cat}' belum dikalibrasi")
-                continue
-            p = plist[0]
-            path = p.get("path")
-            if not path or not Path(path).exists():
-                continue
-            box_w = cfg["detail"]["photo_max_w"]
-            box_h = cfg["detail"]["photo_max_h"]
-            try:
-                # Letterbox -> semua foto berukuran seragam (box_w x box_h)
-                try:
-                    src = _letterbox(path, box_w, box_h)
-                    xi = XLImage(src)
-                    _img_keep.append(src)          # jaga buffer sampai wb.save()
-                except Exception:
-                    xi = XLImage(path)             # fallback: foto asli
-                xi.width, xi.height = box_w, box_h
-                _place_photo(ws, xi, anchor)
-            except Exception as e:
-                warnings.append(f"{ws.title}: gagal sisip foto '{cat}': {e}")
 
     # Hapus sheet template detail (yang sudah diganti nama) bila sudah ada salinan
     if locations and _tpl_title in wb.sheetnames and len(wb.sheetnames) > 1:
