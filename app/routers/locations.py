@@ -57,6 +57,13 @@ def _location_dict(conn: sqlite3.Connection, row, user=None) -> dict:
                          (owner_id,)).fetchone()
         owner_name = o["nm"] if o else None
     can_edit = bool(user) and (user["role"] == "admin" or (user["role"] == "operator" and owner_id == user["id"]))
+    my_request = None
+    if user:
+        rr = conn.execute(
+            "SELECT status FROM edit_requests WHERE location_id=? AND requester_id=? "
+            "ORDER BY id DESC LIMIT 1", (row["id"], user["id"]),
+        ).fetchone()
+        my_request = rr["status"] if rr else None
     inv = conn.execute(
         "SELECT id,nama_barang,merk_type,jumlah,sn_tagging,keterangan,sort_order "
         "FROM inventory_items WHERE location_id=? ORDER BY sort_order,id", (row["id"],)
@@ -70,6 +77,7 @@ def _location_dict(conn: sqlite3.Connection, row, user=None) -> dict:
         "data": json.loads(row["data_json"]), "status": row["status"],
         "created_at": row["created_at"], "updated_at": row["updated_at"],
         "owner_id": owner_id, "owner_name": owner_name, "can_edit": can_edit,
+        "my_request": my_request,
         "inventory": [dict(i) for i in inv],
         "photos": [dict(p) for p in photos],
     }
@@ -144,6 +152,7 @@ def list_locations(
             "owner_id": r["owner_id"], "owner_name": r["owner_name"],
             "photo_cats": (r["photo_cats"].split(",") if r["photo_cats"] else []),
             "inv_ok": r["inv_count"] > 0 and r["inv_bad"] == 0,
+            "inv_full": max(0, r["inv_count"] - r["inv_bad"]),
             "can_delete": is_admin or r["owner_id"] == user["id"],
         }
         for r in rows

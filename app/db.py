@@ -89,6 +89,18 @@ CREATE TABLE IF NOT EXISTS settings (
     value_json TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS edit_requests (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    location_id  INTEGER NOT NULL REFERENCES locations(id) ON DELETE CASCADE,
+    requester_id INTEGER NOT NULL REFERENCES users(id),
+    owner_id     INTEGER REFERENCES users(id),      -- pemilik saat request dibuat
+    message      TEXT DEFAULT '',
+    status       TEXT NOT NULL DEFAULT 'pending',   -- pending | approved | rejected
+    created_at   TEXT NOT NULL,
+    resolved_at  TEXT,
+    resolved_by  INTEGER REFERENCES users(id)
+);
+
 CREATE TABLE IF NOT EXISTS audit_log (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id    INTEGER REFERENCES users(id),
