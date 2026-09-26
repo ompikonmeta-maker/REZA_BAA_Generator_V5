@@ -2031,7 +2031,12 @@ function isSetDirty(){return !!SETFS_SAVE[curSetSub]&&_visible('v-settings')&&$(
 function isEntryDirty(){return _visible('v-entry')&&entryDirty&&!!S.loc;}
 function dirtyCtx(){if(isEntryDirty())return 'entry';if(isSetDirty())return 'set';return null;}
 let _unsGo=null,_unsCtx=null,_unsCancel=null;
-function guardLeave(go,dest,onCancel){const ctx=dirtyCtx();if(!ctx){go();return;}_unsGo=go;_unsCtx=ctx;_unsCancel=onCancel||null;
+function guardLeave(go,dest,onCancel){
+  if(isDraft()&&_visible('v-entry')){                    // draft belum punya kode
+    if(!S._creating&&!draftHasData()){toast('Belum ada data diisi — lokasi baru dibatalkan');S.loc=null;entryDirty=false;go();return;}
+    entryDirty=true;                                     // ada isian/among creating -> perlakukan sbg perubahan belum disimpan
+  }
+  const ctx=dirtyCtx();if(!ctx){go();return;}_unsGo=go;_unsCtx=ctx;_unsCancel=onCancel||null;
   const to=dest?(' ke <b>'+esc(dest)+'</b>'):'';
   $('#unsBody').innerHTML='Kamu punya perubahan di halaman ini yang belum disimpan. Simpan dulu sebelum pindah'+to+'?';
   const o=$('#unsOv');o.style.display='flex';requestAnimationFrame(()=>requestAnimationFrame(()=>o.classList.add('on')));}
@@ -2397,16 +2402,44 @@ async function refreshPicker(){const r=await api('/api/locations/options');const
   $('#loc-count').textContent=r.total||'';
   pickerSel.setOptions(opts.map(l=>({value:String(l.id),code:l.code,nama:l.nama||'',status:l.status||'draft'})));
   if(S.loc)pickerSel.setValue(String(S.loc.id));}
+/* ---- Draft-first (#23): kode dibuat hanya saat ada data pertama ---- */
+function isDraft(){return !!(S.loc&&!S.loc.id);}
+function draftHasData(){if(!isDraft())return false;
+  const d=computeState().data||{};
+  const anyField=Object.values(d).some(v=>String(v==null?'':v).trim());
+  const anyInv=collectInventory().some(it=>Object.values(it).some(v=>String(v==null?'':v).trim()));
+  const anyPhoto=((S.loc&&S.loc.photos)||[]).length>0;
+  return anyField||anyInv||anyPhoto;}
+function newDraft(){
+  S.loc={id:null,code:'',name:'',data:{},status:'draft',can_edit:true,
+    owner_name:(S.user&&S.user.full_name)||null,photos:[],inventory:[]};
+  S._creating=null;
+  $('#entry-empty').classList.add('hidden');$('#entry-form').classList.remove('hidden');
+  if(pickerSel){pickerSel.setValue('');const v=$('#picker .lp-val');
+    if(v){v.innerHTML='<span class="lp-nm-main">Lokasi baru</span><span class="lp-code">belum disimpan</span>';v.classList.remove('ph');}}
+  updateLocNav();
+  renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();
+  entryDirty=false;
+  requestAnimationFrame(()=>revealCards($('#v-entry')));
+  const f=$('#loc-fields input');if(f)setTimeout(()=>f.focus(),120);}
+async function ensureLoc(){                                  // buat lokasi (kode) bila masih draft
+  if(S.loc&&S.loc.id)return S.loc;
+  if(S._creating)return S._creating;
+  S._creating=(async()=>{try{
+      if(S.settingsReady)await S.settingsReady;
+      const st=computeState();
+      const loc=await api('/api/locations',{method:'POST',body:JSON.stringify({name:st.data.nama_lokasi||'',data:st.data,status:'draft'})});
+      if(!S.loc)S.loc={};
+      S.loc.id=loc.id;S.loc.code=loc.code;S.loc.owner_name=loc.owner_name;S.loc.can_edit=loc.can_edit;
+      await refreshPicker();pickerSel.setValue(String(loc.id));
+      updateLocNav();updateSummary();loadLocations();
+      toast('Lokasi '+loc.code+' dibuat');
+      return S.loc;
+    }finally{S._creating=null;}})();
+  return S._creating;}
 $('#entry-new').addEventListener('click',()=>{const btn=$('#entry-new');
   if(btn.hasAttribute('disabled'))return;
-  const run=async()=>{btn.setAttribute('disabled','');
-    try{if(S.settingsReady)await S.settingsReady;               /* tunggu settings siap (first-run) */
-      const loc=await api('/api/locations',{method:'POST',body:JSON.stringify({name:'',data:{},status:'draft'})});
-      await refreshPicker();                                     /* pastikan opsi dropdown termasuk lokasi baru dulu */
-      await openLoc(loc.id);                                     /* baru set aktif -> dropdown sinkron dgn kode lokasi */
-      loadLocations();toast('Lokasi '+loc.code+' dibuat');
-    }catch(e){toast('Gagal: '+e.message);}finally{btn.removeAttribute('disabled');}};
-  guardLeave(run,'lokasi baru');});
+  guardLeave(()=>newDraft(),'lokasi baru');});
 /* ---- Navigasi Prev/Next antar lokasi (#22) ---- */
 function locIndex(){if(!pickerSel||!pickerSel.items||!S.loc)return -1;
   return pickerSel.items.findIndex(o=>String(o.value)===String(S.loc.id));}
@@ -2609,6 +2642,7 @@ $('#loc-fields').addEventListener('keydown',e=>{if(e.key!==' '&&e.key!=='Spaceba
   const df=e.target.closest&&e.target.closest('.datefield');if(df){e.preventDefault();dpOpenFor(df);}});
 function collectData(){const d={};$$('[data-lf]').forEach(el=>d[el.dataset.lf]=el.value);return d;}
 $('#entry-form').addEventListener('input',e=>{if(S.loc)entryDirty=true;updateSummary();
+  if(isDraft()&&e.target&&String(e.target.value||'').trim())ensureLoc();   // data pertama -> buat kode
   const nm=e.target.closest('[data-lf="nama_lokasi"]');if(nm&&pickerSel)pickerSel.updateCurrentName(nm.value.trim());});
 $('#entry-form').addEventListener('change',()=>{if(S.loc)entryDirty=true;});
 /* Highlight kartu aktif (andal walau field di dalam shadow DOM) */
@@ -2640,7 +2674,7 @@ function updateSummary(){
     _sc.classList.remove('sum-lvl-low','sum-lvl-mid','sum-lvl-high','sum-lvl-done');_sc.classList.add('sum-lvl-'+lvl);}
   const C=226.19;$('#sum-ring-prg').style.strokeDashoffset=(C*(1-pct/100)).toFixed(1);
   $('#sum-status').textContent='Status: '+(S.loc.status||'draft');
-  $('#sum-locid-code').textContent=S.loc.code||'—';
+  $('#sum-locid-code').textContent=S.loc.code||(isDraft()?'belum disimpan':'—');
   const nmEl=$('[data-lf="nama_lokasi"]');const liveName=nmEl?(nmEl.value||'').trim():'';
   $('#sum-locid-name').textContent=liveName||((S.loc.data&&S.loc.data.nama_lokasi)||S.loc.name||'').trim();
   const setRow=(rowId,icId,valEl,done,valText)=>{
@@ -2824,9 +2858,11 @@ function upCount(total,pct){const s=$('#upSub');if(s)s.textContent=Math.min(tota
 function upDone(n,ok){const p=$('#upProg');if(!p)return;p.classList.add('done');$('#upIcon').textContent=ok?'check_circle':'error';
   $('#upTxt').textContent=ok?'Selesai':'Gagal';$('#upSub').textContent=ok?(n+' foto terunggah'):'';upSet(100);
   setTimeout(()=>{p.classList.remove('on','done');dzBusy=false;dzScheduleMini(1200);},950);}   // beri jeda lalu collapse
-function doUpload(files,category,relpaths){return new Promise(resolve=>{
+function doUpload(files,category,relpaths){return new Promise(async resolve=>{
   const arr=files?[...files]:[];if(!arr.length)return resolve();
   if(roActive()){toast('Mode lihat — tidak bisa mengunggah');return resolve();}
+  if(isDraft()){try{await ensureLoc();}catch(e){toast('Gagal membuat lokasi: '+e.message);return resolve();}}  // foto pertama -> buat kode dulu
+  if(!S.loc||!S.loc.id)return resolve();
   const fd=new FormData();arr.forEach(f=>fd.append('files',f));if(category)fd.append('category',category);
   const rp=(relpaths&&relpaths.length)?relpaths:arr.map(f=>f.webkitRelativePath||f.name);
   fd.append('relpaths',JSON.stringify(rp));
@@ -2960,7 +2996,10 @@ $('#sn-save').addEventListener('click',async()=>{const val=$('#sn-serial').value
     $('#snDlg').close();toast('SN disimpan'+(val?': '+val:''));}catch(e){toast('Gagal: '+e.message);}});
 
 /* save + export (selalu lokasi aktif) */
-$('#save-btn').addEventListener('click',async()=>{try{const st=computeState();
+$('#save-btn').addEventListener('click',async()=>{try{
+  if(isDraft())await ensureLoc();                     // draft -> buat kode dulu sebelum simpan
+  if(!S.loc||!S.loc.id){toast('Isi data dulu');return;}
+  const st=computeState();
   const status=st.complete?'selesai':'draft';
   await api('/api/locations/'+S.loc.id,{method:'PUT',body:JSON.stringify({name:st.data.nama_lokasi||'',data:st.data,status})});
   await api('/api/locations/'+S.loc.id+'/inventory',{method:'PUT',body:JSON.stringify({items:collectInventory()})});
@@ -2969,6 +3008,7 @@ $('#save-btn').addEventListener('click',async()=>{try{const st=computeState();
 /* Export selalu untuk lokasi yang sedang aktif; konfirmasi dulu sebelum unduh */
 function askExport(kind){        // kind: 'excel' | 'pdf'
   if(!S.loc)return toast('Pilih lokasi dulu');
+  if(!S.loc.id)return toast('Simpan lokasi dulu sebelum ekspor');
   const nm=(S.loc.data&&S.loc.data.nama_lokasi)||S.loc.name||'';
   const lbl=kind==='excel'?'Excel':'PDF';
   confirmDo('Unduh '+lbl,
