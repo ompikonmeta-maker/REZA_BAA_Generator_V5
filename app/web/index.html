@@ -365,15 +365,43 @@
   .ac-item b{color:var(--md-sys-color-primary);font-weight:700}
 
   /* foto — uniform cards */
-  .drop{position:relative;border:2px dashed var(--md-sys-color-outline-variant);border-radius:16px;padding:16px;text-align:center;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;
-    transition:border-color .18s,background .18s,transform .18s}
+  .drop{position:relative;overflow:hidden;border:2px dashed var(--md-sys-color-outline-variant);border-radius:16px;padding:16px;text-align:center;color:var(--md-sys-color-on-surface-variant);margin-bottom:14px;
+    transition:border-color .25s var(--md-sys-motion-easing-emphasized,cubic-bezier(.2,0,0,1)),background .25s,box-shadow .3s,padding .4s cubic-bezier(.2,0,0,1)}
   .drop .mi{font-size:28px;color:var(--md-sys-color-primary)}
-  .drop-actions{display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+  .drop-actions{display:flex;gap:8px;justify-content:center;align-items:center;margin-top:8px;flex-wrap:wrap;transition:margin .4s cubic-bezier(.2,0,0,1)}
   .count{background:var(--md-sys-color-primary-container);color:var(--md-sys-color-on-primary-container);border-radius:99px;padding:3px 12px;font:var(--md-sys-typescale-label-medium)}
-  /* Drag & drop: sorot dropzone saat file diseret masuk */
-  .drop.drag{border-color:var(--md-sys-color-primary);border-style:solid;background:color-mix(in srgb,var(--md-sys-color-primary) 8%,transparent);transform:translateY(-1px)}
+  /* Bagian yang collapse saat mini (ikon + deskripsi) */
+  .drop-expand{max-height:180px;opacity:1;overflow:hidden;
+    transition:max-height .45s cubic-bezier(.2,0,0,1),opacity .28s ease,margin .4s cubic-bezier(.2,0,0,1)}
+  .dz-cloud{display:inline-block;transition:transform .45s cubic-bezier(.34,1.56,.64,1)}
+  /* Hint kompak (tampil hanya saat mini) */
+  .dz-hint{display:none;align-items:center;gap:5px;font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant);
+    padding-left:4px;opacity:.9}
+  .dz-hint .mi{font-size:17px;color:var(--md-sys-color-primary)}
+  /* ---- State MINI: dock kompak, hanya tombol + hint ---- */
+  .drop.mini{padding:10px 14px}
+  .drop.mini .drop-expand{max-height:0;opacity:0;margin:0}
+  .drop.mini .drop-actions{margin-top:0}
+  .drop.mini .dz-hint{display:inline-flex;animation:dzidle 2.6s ease-in-out infinite}
+  .drop.mini .dz-cloud{transform:scale(.5)}
+  @keyframes dzidle{0%,100%{opacity:.55}50%{opacity:1}}
+  /* Overlay 'Lepaskan untuk mengunggah' saat drag */
+  .dz-drophint{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;z-index:6;
+    color:var(--md-sys-color-primary);font:var(--md-sys-typescale-title-small);font-weight:700;pointer-events:none;
+    background:color-mix(in srgb,var(--md-sys-color-primary) 14%,var(--md-sys-color-surface));border-radius:13px}
+  .dz-drophint .mi{font-size:34px;color:var(--md-sys-color-primary);animation:dropbounce .7s ease-in-out infinite}
+  .drop.drag .dz-drophint{display:flex;animation:upfade .18s ease}
+  .drop.drag .drop-expand,.drop.drag .drop-actions{opacity:0;transition:opacity .12s ease}   /* sembunyikan konten di balik overlay drag */
+  /* Drag & drop: sorot + glow yang menarik perhatian */
+  .drop.drag{border-color:var(--md-sys-color-primary);border-style:solid;background:color-mix(in srgb,var(--md-sys-color-primary) 9%,transparent);transform:translateY(-2px) scale(1.006);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--md-sys-color-primary) 26%,transparent),0 12px 30px color-mix(in srgb,var(--md-sys-color-primary) 22%,transparent);
+    animation:dzglow 1.4s ease-in-out infinite}
   .drop.drag .mi{animation:dropbounce .7s ease-in-out infinite}
   @keyframes dropbounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  @keyframes dzglow{0%,100%{box-shadow:0 0 0 3px color-mix(in srgb,var(--md-sys-color-primary) 22%,transparent),0 10px 26px color-mix(in srgb,var(--md-sys-color-primary) 16%,transparent)}
+    50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--md-sys-color-primary) 34%,transparent),0 16px 38px color-mix(in srgb,var(--md-sys-color-primary) 26%,transparent)}}
+  @media(prefers-reduced-motion:reduce){.drop,.drop-expand,.drop-actions,.dz-cloud{transition:none}
+    .drop.drag,.drop.mini .dz-hint,.dz-drophint .mi,.drop.drag .mi{animation:none}}
   /* Overlay progres unggah */
   .upprog{position:absolute;inset:0;border-radius:14px;background:color-mix(in srgb,var(--md-sys-color-surface) 92%,transparent);
     backdrop-filter:blur(2px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:5}
@@ -1336,16 +1364,20 @@
               <div class="sec"><span class="mi acc">photo_camera</span><h3>Foto &amp; Capture</h3><span class="grow"></span>
                 <button class="clrall" id="btn-clrall" onclick="clearAllPhotos()" disabled><span class="mi">delete_sweep</span>Hapus semua</button>
                 <span class="count" id="foto-count">0 / 0</span></div>
-              <div class="drop">
-                <span class="mi">cloud_upload</span>
-                <div class="muted" style="margin-top:4px">Unggah — kategori otomatis dari nama file, SN langsung di-OCR</div>
-                <div class="muted" style="margin-top:4px;font:var(--md-sys-typescale-label-small)"><span class="mi" style="font-size:14px;vertical-align:-2px">info</span> Foto yang diunggah sekaligus disimpan apa adanya (rasio asli, tanpa dipotong). Klik <b>Edit</b> pada foto untuk crop 4:3 kapan saja.</div>
+              <div class="drop" id="dropZone">
+                <div class="drop-expand" id="dropExpand">
+                  <span class="mi dz-cloud">cloud_upload</span>
+                  <div class="muted" style="margin-top:4px">Unggah — kategori otomatis dari nama file, SN langsung di-OCR</div>
+                  <div class="muted" style="margin-top:4px;font:var(--md-sys-typescale-label-small)"><span class="mi" style="font-size:14px;vertical-align:-2px">info</span> Foto yang diunggah sekaligus disimpan apa adanya (rasio asli, tanpa dipotong). Klik <b>Edit</b> pada foto untuk crop 4:3 kapan saja.</div>
+                </div>
                 <div class="drop-actions">
                   <md-button variant="tonal" icon="upload" id="btn-auto">Unggah otomatis</md-button>
                   <md-button variant="text" icon="folder" id="btn-folder">Pilih folder</md-button>
+                  <span class="dz-hint"><span class="mi">drag_pan</span>seret &amp; lepas foto ke sini</span>
                 </div>
                 <input id="file-auto" type="file" multiple accept="image/*" class="hidden">
                 <input id="file-folder" type="file" multiple webkitdirectory class="hidden">
+                <div class="dz-drophint"><span class="mi">cloud_upload</span>Lepaskan untuk mengunggah</div>
                 <div class="upprog" id="upProg">
                   <div class="ring"><svg viewBox="0 0 60 60"><circle class="trk" cx="30" cy="30" r="26"/><circle class="prg" id="upRing" cx="30" cy="30" r="26"/></svg><span class="mi" id="upIcon">cloud_upload</span></div>
                   <div class="ptxt" id="upTxt">Mengunggah…</div>
@@ -2584,7 +2616,7 @@ function renderPhotos(){
   const filled=S.cats.filter(c=>(activeByCat[c.key]||[]).length).length;
   $('#foto-count').textContent=filled+' / '+S.cats.length;
   const clr=$('#btn-clrall');if(clr)clr.disabled=roActive()||activePhotos().length===0;
-  bindDropzone();
+  bindDropzone();dzInit();
   $('#photo-slots').className='ptgrid';
   $('#photo-slots').innerHTML=S.cats.map(c=>{
     const ph=(activeByCat[c.key]||[])[0];
@@ -2718,15 +2750,26 @@ window.replacePhoto=(oldId,cat)=>{if(roActive())return;pickFiles(false,files=>{c
       S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();toast('Foto diganti');}catch(e){toast('Gagal: '+e.message);}});});};
 window.reassignMenu=(btn,pid)=>openMenu(btn,S.cats.map(c=>({icon:c.ocr?'tag':'image',label:c.label,fn:async()=>{await api('/api/photos/'+pid,{method:'PATCH',body:JSON.stringify({category:c.key})});S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();toast('Dipindah');}})));
 function roActive(){const f=$('#entry-form');return !!(f&&f.classList.contains('ro'));}
+/* ---- Dropzone dinamis: minimize/expand (#19) ---- */
+let dzMiniTimer=null,dzBusy=false;
+function dzExpand(){const dz=$('#dropZone');if(dz)dz.classList.remove('mini');clearTimeout(dzMiniTimer);}
+function dzMinimize(){const dz=$('#dropZone');if(!dz||dzBusy||dz.classList.contains('drag'))return;
+  if(activePhotos().length>0&&!roActive())dz.classList.add('mini');}
+function dzScheduleMini(delay){clearTimeout(dzMiniTimer);dzMiniTimer=setTimeout(dzMinimize,delay||1500);}
+function dzInit(){const dz=$('#dropZone');if(!dz)return;
+  // state awal: mini bila sudah ada foto (hemat ruang), penuh bila kosong
+  if(dzBusy||dz.classList.contains('drag'))return;
+  if(activePhotos().length>0&&!roActive())dz.classList.add('mini');else dz.classList.remove('mini');}
 /* ---- Overlay progres unggah (#17) ---- */
 const UP_C=2*Math.PI*26;                                        // keliling ring r=26 ≈163.4
-function upShow(total){const p=$('#upProg');if(!p)return;p.classList.add('on');p.classList.remove('done');
+function upShow(total){const p=$('#upProg');if(!p)return;dzBusy=true;dzExpand();     // buka penuh saat mengunggah
+  p.classList.add('on');p.classList.remove('done');
   $('#upIcon').textContent='cloud_upload';$('#upTxt').textContent='Mengunggah…';$('#upSub').textContent=total+' foto';upSet(0);}
 function upSet(pct){const r=$('#upRing'),b=$('#upBar');if(r)r.style.strokeDashoffset=(UP_C*(1-pct/100)).toFixed(1);if(b)b.style.width=Math.max(0,Math.min(100,pct)).toFixed(0)+'%';}
 function upCount(total,pct){const s=$('#upSub');if(s)s.textContent=Math.min(total,Math.max(1,Math.round(pct/100*total)))+' / '+total+' foto · '+Math.round(pct)+'%';}
 function upDone(n,ok){const p=$('#upProg');if(!p)return;p.classList.add('done');$('#upIcon').textContent=ok?'check_circle':'error';
   $('#upTxt').textContent=ok?'Selesai':'Gagal';$('#upSub').textContent=ok?(n+' foto terunggah'):'';upSet(100);
-  setTimeout(()=>{p.classList.remove('on','done');},950);}
+  setTimeout(()=>{p.classList.remove('on','done');dzBusy=false;dzScheduleMini(1200);},950);}   // beri jeda lalu collapse
 function doUpload(files,category,relpaths){return new Promise(resolve=>{
   const arr=files?[...files]:[];if(!arr.length)return resolve();
   if(roActive()){toast('Mode lihat — tidak bisa mengunggah');return resolve();}
@@ -2770,8 +2813,10 @@ function _collectEntries(items){const out=[];
   return Promise.all([...items].map(it=>{const e=it.webkitGetAsEntry&&it.webkitGetAsEntry();return walk(e,'');})).then(()=>out);}
 function bindDropzone(){const dz=$('#entry-form .drop');if(!dz||dz._dnd)return;dz._dnd=true;
   const stop=e=>{e.preventDefault();e.stopPropagation();};
-  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{stop(e);if(!roActive())dz.classList.add('drag');}));
-  ['dragleave','dragend'].forEach(ev=>dz.addEventListener(ev,e=>{stop(e);if(e.type==='dragleave'&&dz.contains(e.relatedTarget))return;dz.classList.remove('drag');}));
+  ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{stop(e);if(!roActive()){dzExpand();dz.classList.add('drag');}}));  // magnetic: buka penuh saat file mendekat
+  ['dragleave','dragend'].forEach(ev=>dz.addEventListener(ev,e=>{stop(e);if(e.type==='dragleave'&&dz.contains(e.relatedTarget))return;dz.classList.remove('drag');if(!dzBusy)dzScheduleMini(600);}));
+  // klik area mini (bukan tombol) -> buka penuh
+  dz.addEventListener('click',e=>{if(dz.classList.contains('mini')&&!e.target.closest('md-button')){dzExpand();dzScheduleMini(4000);}});
   dz.addEventListener('drop',async e=>{stop(e);dz.classList.remove('drag');if(roActive())return;
     const dt=e.dataTransfer;if(!dt)return;let files=[],relpaths=[];
     const items=dt.items?[...dt.items]:[];
