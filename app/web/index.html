@@ -3013,7 +3013,7 @@ function askExport(kind){        // kind: 'excel' | 'pdf'
   const lbl=kind==='excel'?'Excel':'PDF';
   confirmDo('Unduh '+lbl,
     `Unduh dokumen BAA <b>${lbl}</b> untuk lokasi <b>${esc(S.loc.code)}</b>${nm?' · '+esc(nm):''}?`,
-    ()=>{location.href=`/api/export/${kind}?scope=one&loc_id=${S.loc.id}`;});
+    ()=>downloadExport(`/api/export/${kind}?scope=one&loc_id=${S.loc.id}`));
 }
 $('#exp-xlsx').addEventListener('click',()=>askExport('excel'));
 $('#exp-pdf').addEventListener('click',()=>askExport('pdf'));
@@ -3093,7 +3093,7 @@ $('#expOk').addEventListener('click',()=>{
   if(scope==='filter'&&!LOC_TOTAL){toast('Tidak ada lokasi pada filter ini');return;}
   const base=_expKind==='pdfzip'?'/api/export/pdf-zip':'/api/export/excel';
   const url=scope==='all'?`${base}?scope=all`:`${base}?scope=filter&${locFilterParams()}`;
-  $('#expBulkDlg').close();toast('Menyiapkan file…');location.href=url;});
+  $('#expBulkDlg').close();downloadExport(url);});
 /* Daftar kekurangan: foto + field lokasi kosong + inventory belum lengkap (inv_ok dari server) */
 function locLack(l){
   const parts=[];
@@ -3123,8 +3123,8 @@ async function loadCreators(){if(!locCreatorSel)return;
     const cur=locCreatorSel.getValue();if(cur&&!ids.includes(cur))locCreatorSel.setValue('');else locCreatorSel.setValue(cur||'');}catch(e){}}
 window.locMenu=(btn,l)=>{const items=[
   {icon:'edit',label:'Buka / Edit',fn:()=>{gotoEntry();openLoc(l.id);}},
-  {icon:'grid_on',label:'Export Excel',fn:()=>location.href='/api/export/excel?scope=one&loc_id='+l.id},
-  {icon:'picture_as_pdf',label:'Export PDF',fn:()=>location.href='/api/export/pdf?scope=one&loc_id='+l.id}];
+  {icon:'grid_on',label:'Export Excel',fn:()=>downloadExport('/api/export/excel?scope=one&loc_id='+l.id)},
+  {icon:'picture_as_pdf',label:'Export PDF',fn:()=>downloadExport('/api/export/pdf?scope=one&loc_id='+l.id)}];
   if(S.user&&S.user.role==='admin')items.push({icon:'swap_horiz',label:'Transfer ke…',fn:()=>transferMenu(btn,l)});
   if(l.cd)items.push({icon:'delete',label:'Hapus',fn:()=>confirmDelete(l.id,l.code,false)});openMenu(btn,items);};
 function transferMenu(btn,l){const targets=(USR_ROWS||[]).filter(u=>u.active&&u.role!=='viewer');
@@ -3204,7 +3204,28 @@ $('#delOk').addEventListener('click',async()=>{try{await api('/api/locations/'+d
 
 /* Dialog konfirmasi & input generik */
 let _cfmFn=null,_inpFn=null;
-window.confirmDo=(title,msg,fn)=>{_cfmFn=fn;$('#cfmTitle').textContent=title;$('#cfmMsg').innerHTML=msg;$('#cfmDlg').show();};
+window.confirmDo=(title,msg,fn,opts)=>{opts=opts||{};_cfmFn=fn;$('#cfmTitle').textContent=title;$('#cfmMsg').innerHTML=msg;
+  $('#cfmOk').textContent=opts.okLabel||'Ya';$('#cfmCancel').style.display=opts.hideCancel?'none':'';$('#cfmDlg').show();};
+/* ---- Unduh ekspor via fetch: kalau ada ketidakkonsistenan -> dialog rapi (bukan JSON mentah) ---- */
+async function downloadExport(url){toast('Menyiapkan file…');
+  try{const r=await fetch(url,{credentials:'same-origin'});
+    if(!r.ok){let detail='';try{detail=(await r.json()).detail||'';}catch(e){detail='Gagal ekspor ('+r.status+')';}exportFail(detail);return;}
+    const blob=await r.blob();const cd=r.headers.get('Content-Disposition')||'';
+    const fn=decodeURIComponent((cd.match(/filename\*?=(?:UTF-8''|")?([^";]+)/)||[])[1]||'export');
+    const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=fn;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),4000);
+    const w=r.headers.get('X-Export-Warnings');toast(w?('Terunduh · '+w+' peringatan gambar'):'Terunduh ✓');
+  }catch(e){exportFail(e.message||'Koneksi terputus');}}
+function exportFail(detail){const isTpl=/template/i.test(detail||'');const isAdmin=S.user&&S.user.role==='admin';
+  if(isTpl&&isAdmin)confirmDo('Template belum siap',
+    '<div style="display:flex;gap:12px;align-items:flex-start"><span class="mi" style="font-size:26px;color:var(--md-sys-color-primary)">description</span><div><b>Belum ada template aktif.</b><br>Ekspor Excel membutuhkan template BAA yang terdaftar &amp; aktif. Daftarkan atau aktifkan template dulu di menu Template.</div></div>',
+    ()=>{try{openSettings('templates');}catch(e){}},{okLabel:'Buka menu Template'});
+  else if(isTpl)confirmDo('Template belum siap',
+    '<div style="display:flex;gap:12px;align-items:flex-start"><span class="mi" style="font-size:26px;color:var(--md-sys-color-primary)">info</span><div>Ekspor Excel membutuhkan template BAA. Minta <b>admin</b> mendaftarkan template lebih dulu.</div></div>',
+    ()=>{},{okLabel:'Mengerti',hideCancel:true});
+  else confirmDo('Gagal mengekspor',
+    '<div style="display:flex;gap:12px;align-items:flex-start"><span class="mi" style="font-size:26px;color:var(--md-sys-color-error)">error</span><div>'+esc(detail||'Terjadi ketidakkonsistenan pada data ekspor.')+'</div></div>',
+    ()=>{},{okLabel:'Mengerti',hideCancel:true});}
 $('#cfmCancel').addEventListener('click',()=>$('#cfmDlg').close());
 $('#cfmOk').addEventListener('click',()=>{$('#cfmDlg').close();const f=_cfmFn;_cfmFn=null;if(f)f();});
 window.askInput=(title,cur,fn)=>{_inpFn=fn;$('#inpTitle').textContent=title;const f=$('#inpField');f.setAttribute('value',cur||'');$('#inpDlg').show();setTimeout(()=>f.focus&&f.focus(),60);};
