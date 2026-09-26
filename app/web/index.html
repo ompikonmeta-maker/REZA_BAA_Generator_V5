@@ -663,32 +663,38 @@
     transform:translateX(calc(100% + 22px));transition:transform .44s cubic-bezier(.34,1.2,.5,1);
     display:flex;flex-direction:column;overflow:hidden}
   .ldrawer.on{transform:none}
-  .ld-wrap{flex:1;overflow-y:auto;padding:0 20px 18px;display:flex;flex-direction:column}
-  .ld-head{position:sticky;top:0;background:linear-gradient(180deg,var(--md-sys-color-surface) 86%,transparent);padding:16px 0 10px;z-index:2}
-  .ld-hrow{display:flex;align-items:center;gap:10px;font:var(--md-sys-typescale-title-small)}
-  .ld-x{margin-left:auto}
-  .ld-name{font:var(--md-sys-typescale-headline-small);font-weight:800;letter-spacing:-.5px;line-height:1.1;margin-top:10px;word-break:break-word}
-  .ld-code{font-family:ui-monospace,Consolas,monospace;font-size:12px;font-weight:600;color:var(--md-sys-color-on-surface-variant)}
-  .ld-chips{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-top:11px}
-  .ld-chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:99px;font:var(--md-sys-typescale-label-medium);font-weight:700;white-space:nowrap}
+  /* area atas FIXED (tak ikut scroll): header, nama, donut — rata tengah */
+  .ld-top{flex:0 0 auto;padding:16px 20px 12px;text-align:center}
+  .ld-hrow{display:flex;align-items:center;gap:10px;font:var(--md-sys-typescale-title-small);text-align:left}
+  .ld-ro-wrap{margin-left:auto;display:flex;align-items:center}
+  .ld-ro{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 10px;border-radius:99px;font:var(--md-sys-typescale-label-medium);font-weight:700;white-space:nowrap;background:var(--warn-bg);color:var(--warn)}
+  .ld-ro .mi{font-size:14px}
+  .ld-x{flex:0 0 auto}
+  .ld-scroll{flex:1;overflow-y:auto;padding:2px 20px 8px}  /* scroll mulai SETELAH donut */
+  .ld-name{font:var(--md-sys-typescale-headline-small);font-weight:800;letter-spacing:-.4px;line-height:1.15;margin-top:10px;word-break:break-word;overflow:hidden;text-overflow:ellipsis}
+  .ld-code{display:block;font-family:ui-monospace,Consolas,monospace;font-size:12px;font-weight:600;color:var(--md-sys-color-on-surface-variant);margin-top:2px}
+  .ld-body{animation:ldswap .34s cubic-bezier(.2,0,0,1)}
+  @keyframes ldswap{from{opacity:0;transform:translateY(8px)}}
+  /* kartu ringkasan: [donut] [teks %/inv/foto] [chips By/Status bersusun di kanan] */
+  .ld-sum{display:flex;align-items:center;gap:12px;margin:14px 0 2px;padding:12px 14px;border-radius:16px;background:var(--md-sys-color-surface-container);text-align:left}
+  .ld-mid{min-width:0}
+  .ld-schips{display:flex;flex-direction:column;gap:5px;align-items:flex-start;margin-left:auto;flex:0 0 auto}
+  .ld-chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:99px;font:var(--md-sys-typescale-label-medium);font-weight:700;white-space:nowrap}
   .ld-chip.by{padding-left:4px;background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface-variant)}
   .ld-chip.st-done{background:var(--good-bg);color:var(--good)}
   .ld-chip.st-draft{background:var(--warn-bg);color:var(--warn)}
-  .ld-chip.ro{background:var(--warn-bg);color:var(--warn)}
-  .ld-ava{width:24px;height:24px;border-radius:50%;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);display:grid;place-items:center;font-size:12px;font-weight:800}
-  .ld-body{animation:ldswap .34s cubic-bezier(.2,0,0,1)}
-  @keyframes ldswap{from{opacity:0;transform:translateY(8px)}}
-  .ld-sum{display:flex;align-items:center;gap:16px;margin:14px 0 4px;padding:14px;border-radius:16px;background:var(--md-sys-color-surface-container)}
-  .ld-ring{position:relative;width:88px;height:88px;flex:0 0 auto}
-  .ld-ring svg{width:88px;height:88px;transform:rotate(-90deg)}
-  .ld-ring circle{fill:none;stroke-width:9}
+  .ld-ava{width:22px;height:22px;border-radius:50%;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);display:grid;place-items:center;font-size:11px;font-weight:800}
+  .ld-byname{display:inline-block;max-width:104px;overflow:hidden;white-space:nowrap;vertical-align:bottom;-webkit-mask:linear-gradient(90deg,#000 calc(100% - 14px),transparent);mask:linear-gradient(90deg,#000 calc(100% - 14px),transparent)}
+  .ld-ring{position:relative;width:60px;height:60px;flex:0 0 auto}
+  .ld-ring svg{width:60px;height:60px;transform:rotate(-90deg)}
+  .ld-ring circle{fill:none;stroke-width:7}
   .ld-ring .trk{stroke:var(--md-sys-color-surface-container-highest)}
-  .ld-ring .prg{stroke:var(--md-sys-color-primary);stroke-linecap:round;stroke-dasharray:232;transition:stroke-dashoffset 1s cubic-bezier(.2,0,0,1)}
+  .ld-ring .prg{stroke:var(--md-sys-color-primary);stroke-linecap:round;stroke-dasharray:163.4;transition:stroke-dashoffset 1s cubic-bezier(.2,0,0,1)}
   .ld-ring.full .prg{stroke:var(--good)}
-  .ld-ring .pv{position:absolute;inset:0;display:grid;place-items:center;font:var(--md-sys-typescale-title-medium);font-weight:800;color:var(--md-sys-color-primary)}
+  .ld-ring .pv{position:absolute;inset:0;display:grid;place-items:center;font:var(--md-sys-typescale-label-large);font-weight:800;color:var(--md-sys-color-primary)}
   .ld-ring.full .pv{color:var(--good)}
-  .ld-sum .bigp{font:var(--md-sys-typescale-headline-small);font-weight:800;line-height:1.05}
-  .ld-sum .stx{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-body-small);margin-top:3px}
+  .ld-sum .bigp{font:var(--md-sys-typescale-title-large);font-weight:800;line-height:1.05;white-space:nowrap}
+  .ld-sum .stx{color:var(--md-sys-color-on-surface-variant);font-size:12px;margin-top:3px;white-space:nowrap}
   .ld-sum .stx b{color:var(--md-sys-color-on-surface);font-weight:700}
   .ld-sum .stx.miss,.ld-sum .stx.miss b{color:var(--bad)}
   .ld-sect{display:flex;align-items:center;gap:8px;font:var(--md-sys-typescale-label-large);font-weight:800;color:var(--md-sys-color-on-surface);margin:18px 0 8px}
@@ -705,14 +711,15 @@
   .ld-itab td{padding:6px 8px;border-bottom:1px solid var(--md-sys-color-surface-container-high)}
   .ld-itab tr.imiss td{color:var(--bad);background:var(--bad-bg)}
   .ld-chk{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-  .ld-ci{display:flex;align-items:center;gap:7px;padding:4px 9px;border-radius:9px;background:var(--md-sys-color-surface-container);font:var(--md-sys-typescale-label-medium)}
+  .ld-ci{display:flex;align-items:center;gap:7px;padding:4px 9px;border-radius:9px;background:var(--md-sys-color-surface-container);font:var(--md-sys-typescale-label-medium);min-width:0;overflow:hidden}
   .ld-ci .dot{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:11px;flex:0 0 auto;color:#fff}
   .ld-ci.ok .dot{background:var(--good)}.ld-ci.no .dot{background:var(--md-sys-color-outline)}
   .ld-ci .dot .mi{font-size:12px;color:#fff}
-  .ld-ci .lb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* label 1 baris; kalau tak muat -> potong dgn fade-out (bukan titik-titik) */
+  .ld-ci .lb{flex:1;min-width:0;white-space:nowrap;overflow:hidden;-webkit-mask:linear-gradient(90deg,#000 calc(100% - 22px),transparent);mask:linear-gradient(90deg,#000 calc(100% - 22px),transparent)}
   .ld-ci.no{opacity:.75}
-  .ld-act{position:sticky;bottom:0;margin-top:auto;background:linear-gradient(0deg,var(--md-sys-color-surface) 78%,transparent);padding:12px 0 4px;display:flex;gap:10px}
-  .ld-btn{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:99px;padding:13px;font:var(--md-sys-typescale-label-large);font-weight:800;cursor:pointer;transition:transform .12s,filter .2s}
+  .ld-act{flex:0 0 auto;background:linear-gradient(0deg,var(--md-sys-color-surface) 78%,transparent);padding:10px 20px 14px;display:flex;gap:8px}
+  .ld-btn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:none;border-radius:99px;padding:10px 18px;font:var(--md-sys-typescale-label-large);font-size:13px;font-weight:800;cursor:pointer;transition:transform .12s,filter .2s}
   .ld-btn .mi{font-size:18px}
   .ld-btn:active{transform:scale(.97)}
   .ld-btn.pri{background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary)}
@@ -1819,17 +1826,19 @@
 <!-- Drawer detail cepat Log Lokasi -->
 <div class="ldrawer-scrim" id="ldScrim"></div>
 <aside class="ldrawer" id="ldDrawer" aria-hidden="true">
-  <div class="ld-wrap">
-    <div class="ld-head">
-      <div class="ld-hrow"><span class="mi acc" style="font-size:20px">description</span><b>Detail BAA</b>
-        <md-icon-button class="ld-x" id="ldClose"><span>close</span></md-icon-button></div>
-      <div id="ldHead"></div>
-    </div>
+  <div class="ld-top">
+    <div class="ld-hrow"><span class="mi acc" style="font-size:20px">description</span><b>Detail BAA</b>
+      <span class="ld-ro-wrap" id="ldRo"></span>
+      <md-icon-button class="ld-x" id="ldClose"><span>close</span></md-icon-button></div>
+    <div id="ldHead"></div>
+    <div id="ldSum"></div>
+  </div>
+  <div class="ld-scroll">
     <div id="ldBody"></div>
-    <div class="ld-act">
-      <button class="ld-btn pri" id="ldEdit"><span class="mi">edit</span>Edit di Entry BAA</button>
-      <button class="ld-btn req" id="ldReq"><span class="mi">lock_open</span>Request edit</button>
-    </div>
+  </div>
+  <div class="ld-act">
+    <button class="ld-btn pri" id="ldEdit"><span class="mi">edit</span>Edit di Entry BAA</button>
+    <button class="ld-btn req" id="ldReq"><span class="mi">lock_open</span>Request edit</button>
   </div>
 </aside>
 
@@ -3275,18 +3284,15 @@ async function openLocDrawer(id){
 function closeLocDrawer(){$('#ldDrawer').classList.remove('on');$('#ldScrim').classList.remove('on');
   $('#ldDrawer').setAttribute('aria-hidden','true');$$('#loc-table tr.lrow').forEach(r=>r.classList.remove('sel'));LD_CUR=-1;}
 function fillLocDrawer(loc){
-  const st=locDetailState(loc);const C=232,off=(C*(1-st.pct/100)).toFixed(1);
+  const st=locDetailState(loc);const C=163.4,off=(C*(1-st.pct/100)).toFixed(1);
   const full=st.pct>=100;
   const nama=(loc.data&&loc.data.nama_lokasi)||loc.name||'(tanpa nama)';
   const owner=loc.owner_name||'—';
   const stEn=loc.status==='selesai'?'Done':'Draft';
   const readOnly=loc.can_edit===false;
-  $('#ldHead').innerHTML=`<div class="ld-name">${esc(nama)}</div><span class="ld-code">${esc(loc.code||'')}</span>
-    <div class="ld-chips">
-      <span class="ld-chip by"><span class="ld-ava">${esc((owner[0]||'?').toUpperCase())}</span>By: ${esc(owner)}</span>
-      <span class="ld-chip ${loc.status==='selesai'?'st-done':'st-draft'}">${stEn}</span>
-      ${readOnly?'<span class="ld-chip ro"><span class="mi" style="font-size:14px">lock</span>Read Only</span>':''}
-    </div>`;
+  // Read Only sejajar judul di header
+  $('#ldRo').innerHTML=readOnly?'<span class="ld-ro"><span class="mi">lock</span>Read Only</span>':'';
+  $('#ldHead').innerHTML=`<div class="ld-name">${esc(nama)}</div><span class="ld-code">${esc(loc.code||'')}</span>`;
   // inventory wajib (default items) — tandai yg kurang merah
   const reqNames=(S.invItems&&S.invItems.length?S.invItems:['Kit Starlink','Router','Access Point']);
   const inv=loc.inventory||[];
@@ -3303,13 +3309,20 @@ function fillLocDrawer(loc){
     return `<tr class="${miss?'imiss':''}"><td><b>${esc(r.nama_barang||'—')}</b></td><td>${esc(r.sn_tagging||'—')}</td><td>${esc(r.jumlah||'—')}</td><td>${esc(r.keterangan||'—')}</td></tr>`;}).join('');
   const invMissRows=missInv.map(n=>`<tr class="imiss"><td><b>${esc(n)}</b></td><td>—</td><td>—</td><td>Belum ada</td></tr>`).join('');
   const chkHtml=cats.map(c=>`<div class="ld-ci ${st.byCat[c.key]?'ok':'no'}"><span class="dot"><span class="mi">${st.byCat[c.key]?'check':'remove'}</span></span><span class="lb">${esc(c.label)}</span></div>`).join('');
-  $('#ldBody').innerHTML=`<div class="ld-body">
-    <div class="ld-sum">
-      <div class="ld-ring ${full?'full':''}"><svg viewBox="0 0 88 88"><circle class="trk" cx="44" cy="44" r="37"/><circle class="prg" cx="44" cy="44" r="37" style="stroke-dashoffset:${C}"/></svg><span class="pv">${st.pct}%</span></div>
-      <div><div class="bigp">${st.pct}% lengkap</div>
+  // kartu ringkasan (fixed) — donut · teks · chips By/Status
+  $('#ldSum').innerHTML=`<div class="ld-sum">
+      <div class="ld-ring ${full?'full':''}"><svg viewBox="0 0 60 60"><circle class="trk" cx="30" cy="30" r="26"/><circle class="prg" cx="30" cy="30" r="26" style="stroke-dashoffset:${C}"/></svg><span class="pv">${st.pct}%</span></div>
+      <div class="ld-mid">
+        <div class="bigp">${st.pct}% lengkap</div>
         <div class="stx ${invLess?'miss':''}">Inventory <b>${invHave} dari ${reqInv} item</b></div>
-        <div class="stx">Foto terupload <b>${st.fotoDone} dari ${st.nCats}</b></div></div>
-    </div>
+        <div class="stx">Foto terupload <b>${st.fotoDone} dari ${st.nCats}</b></div>
+      </div>
+      <div class="ld-schips">
+        <span class="ld-chip by"><span class="ld-ava">${esc((owner[0]||'?').toUpperCase())}</span>By: <span class="ld-byname">${esc(owner)}</span></span>
+        <span class="ld-chip ${loc.status==='selesai'?'st-done':'st-draft'}">${stEn}</span>
+      </div>
+    </div>`;
+  $('#ldBody').innerHTML=`<div class="ld-body">
     <div class="ld-sect"><span class="mi">location_on</span>Data Lokasi</div>
     ${fieldsHtml}
     <div class="ld-sect"><span class="mi">inventory_2</span>Inventory<span class="n ${invLess?'miss':''}">${invHave}/${reqInv} item</span></div>
@@ -3317,7 +3330,7 @@ function fillLocDrawer(loc){
     <div class="ld-sect"><span class="mi">photo_library</span>Checklist Foto<span class="n">${st.fotoDone}/${st.nCats}</span></div>
     <div class="ld-chk">${chkHtml}</div>
   </div>`;
-  requestAnimationFrame(()=>{const p=$('#ldBody .ld-ring .prg');if(p)p.style.strokeDashoffset=off;});
+  requestAnimationFrame(()=>{const p=$('#ldSum .ld-ring .prg');if(p)p.style.strokeDashoffset=off;});
   // tombol aksi
   const canEdit=loc.can_edit!==false;
   const eb=$('#ldEdit'),rb=$('#ldReq');
