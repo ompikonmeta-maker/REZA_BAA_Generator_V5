@@ -1211,7 +1211,7 @@
   .me-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center}
   .me-next{margin-top:14px;display:flex;align-items:center;gap:14px;background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline-variant);border-radius:16px;padding:12px 14px;max-width:640px}
   .me-acts{display:flex;flex-direction:column;gap:8px}
-  .me-wk{display:flex;flex-direction:column}.me-days{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;flex:1;min-height:120px;max-height:260px;margin-top:14px}
+  .me-wk{display:flex;flex-direction:column}.me-days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;flex:1;min-height:120px;max-height:260px;margin-top:14px}
   .me-dd{display:flex;flex-direction:column;text-align:center;font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant)}
   .me-dd .b{flex:1;border-radius:10px;background:var(--md-sys-color-surface-container-high);display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;margin-bottom:4px;min-height:60px}
   .me-dd .b i{display:block;background:var(--md-sys-color-primary);border-radius:6px 6px 0 0}.me-dd.today{color:var(--md-sys-color-on-surface);font-weight:600}.me-dd.today .b{outline:2px solid var(--md-sys-color-primary);outline-offset:1px}
@@ -2640,9 +2640,9 @@ async function loadMyDash(){let d;try{d=await api('/api/dash/me');}catch(e){retu
           <div class="pg-miss">${next.missing.slice(0,3).map(m=>`<span class="pg-m">${esc(m)}</span>`).join('')}</div></div>
         <md-button variant="filled" id="meCont">Continue</md-button></div>`:'<div class="me-next"><span class="mut">No open drafts — start a new location.</span></div>'}</div>
     <div class="me-acts"><md-button variant="filled" icon="add" id="meNew">New location</md-button><md-button variant="tonal" icon="table_rows" id="meLog">Location Log</md-button></div></div>`;
-  const mxE=Math.max(1,...d.week.map(w=>w.edits));const DN=['Mon','Tue','Wed','Thu','Fri'];
+  const mxE=Math.max(1,...d.week.map(w=>w.edits));const DN=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const week=`<div class="card s5 me-wk"><div class="ct">My week</div>
-    <div class="cd">${d.week_part?`Your part of the team target: <b>${d.week_part} BAA</b> this week (Mon–Fri).`:'Done this week (Mon–Fri). The target appears once admin sets a target date.'}</div>
+    <div class="cd">${d.week_part?`Your part of the team target: <b>${d.week_part} BAA</b> this week.`:'Done this week.'}</div>
     <div style="display:flex;align-items:baseline;gap:14px"><span class="pg-big" style="font-size:36px">${d.week_done}${d.week_part?` <small>/ ${d.week_part} done</small>`:' <small>done</small>'}</span>
       ${d.week_part?`<span class="mut">${d.week_done>=d.week_part?'Your part is done ✓':(d.week_part-d.week_done)+' more to reach your part'}</span>`:''}</div>
     <div class="me-days">${d.week.map((w,i)=>`<div class="me-dd ${w.today?'today':''}" data-h="${DN[i]} · ${w.edits} edit${w.edits===1?'':'s'} · ${w.done} done"><div class="b">${w.future?'':`<i style="height:${Math.max(4,w.edits/mxE*100)}%;opacity:${w.done?1:.45}"></i>`}</div>${DN[i]}${w.done?' · ✓'+w.done:''}</div>`).join('')}</div>

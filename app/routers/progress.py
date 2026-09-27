@@ -18,6 +18,7 @@ from ..deps import audit, current_user, get_db, require_admin
 router = APIRouter(prefix="/api", tags=["progress"])
 
 DEFAULT_AGING = {"fresh": 2, "warm": 7, "stale": 14}
+DEFAULT_GOAL = {"total": 5000, "target_date": "2026-12-31"}
 CONTENT_KINDS = ("create", "data", "inventory", "photo_add", "photo_del", "photo_move", "sn", "done", "reopen")
 
 
@@ -100,7 +101,8 @@ def _streak(days_with_done: set[date], today: date) -> tuple[int, int]:
 # ---------- setting ----------
 def _goal(conn) -> dict:
     g = db.get_setting(conn, "progress_goal", None) or {}
-    return {"total": g.get("total"), "target_date": g.get("target_date")}
+    return {"total": g.get("total") or DEFAULT_GOAL["total"],
+            "target_date": g.get("target_date") or DEFAULT_GOAL["target_date"]}
 
 
 def _aging(conn) -> dict:
@@ -405,7 +407,7 @@ def my_dash(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_use
     dd = _done_days(conn, "AND owner_id=?", (user["id"],))
     wk0 = today - timedelta(days=today.weekday())
     week = []
-    for i in range(5):
+    for i in range(7):                      # Senin–Minggu
         d = wk0 + timedelta(days=i)
         n_ed = conn.execute("SELECT COUNT(*) c FROM activity WHERE user_id=? AND created_at>=? AND created_at<?",
                             (user["id"], datetime.combine(d, datetime.min.time()).astimezone().astimezone(timezone.utc).isoformat(),
