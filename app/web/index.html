@@ -100,7 +100,7 @@
   .navitem.active .mi{font-variation-settings:'FILL' 1}
   .navitem .mi{flex:0 0 auto}
   .navitem .lbl{font:var(--md-sys-typescale-label-large);margin-right:auto;overflow:hidden;transition:opacity .2s,max-width .3s;max-width:150px}
-  .navitem .pill{background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);border-radius:99px;font:var(--md-sys-typescale-label-small);padding:2px 8px}
+  .navitem .pill{background:#e6a52e;color:#2a1c00;border-radius:99px;font:var(--md-sys-typescale-label-small);font-weight:700;padding:2px 8px}
   /* RAIL: item jadi kotak center => ikon tepat di tengah highlight */
   .shell.rail .navitem{flex-direction:column;width:56px;height:auto;min-height:50px;padding:7px 0 5px;margin:0 auto;gap:3px;justify-content:center;border-radius:16px}
   .shell.rail .navitem .lbl{opacity:0;max-width:0;margin:0;height:0}
@@ -652,6 +652,13 @@
   #loc-table tr.lrow{cursor:pointer;transition:background .15s}
   #loc-table tr.lrow:hover{background:var(--md-sys-color-surface-container)}
   #loc-table tr.lrow.sel{background:color-mix(in srgb,var(--md-sys-color-primary) 10%,transparent);box-shadow:inset 3px 0 0 var(--md-sys-color-primary)}
+  .lc-date{white-space:nowrap;color:var(--md-sys-color-on-surface-variant);cursor:default}
+  /* Tombol tambah lokasi: extended (ikon + label) saat lebar, ikon saja saat sempit */
+  .addloc{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 18px 0 14px;border-radius:99px;border:none;cursor:pointer;
+    background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);font:var(--md-sys-typescale-label-large);font-weight:600;transition:background .2s,transform .12s}
+  .addloc:hover{filter:brightness(.97)}.addloc:active{transform:scale(.97)}
+  .addloc .mi{font-size:20px}
+  @media(max-width:1080px){.addloc{width:40px;padding:0;justify-content:center;gap:0}.addloc .albl{display:none}}
 
   /* ===== Drawer detail cepat Log Lokasi ===== */
   .ldrawer-scrim{position:fixed;inset:0;background:rgba(0,0,0,.20);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;z-index:60;pointer-events:none} /* visual saja: klik baris lain tetap tembus utk update in-place */
@@ -1192,12 +1199,12 @@
     transition:border-color .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s cubic-bezier(.2,.8,.2,1),background .22s}
   .pcinp:focus{border-color:var(--md-sys-color-primary);background:var(--md-sys-color-surface);box-shadow:0 0 0 3px color-mix(in srgb,var(--md-sys-color-primary) 14%,transparent)}
   /* label: bobot sedang, boleh membungkus 2 baris agar nama utuh */
-  .pcinp.pclbl{background:transparent;font-weight:600;font-size:13.5px;line-height:1.25;white-space:normal}
+  .pcinp.pclbl{background:transparent;font-weight:500;font-size:13.5px;line-height:1.25;white-space:normal}
   .pcinp.pclbl:focus{background:var(--md-sys-color-surface-container-highest)}
-  .pckey{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;font-weight:700;color:var(--md-sys-color-on-surface-variant);background:var(--md-sys-color-surface-container-high);border-radius:9px;padding:6px 11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%}
+  .pckey{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;font-weight:600;color:var(--md-sys-color-on-surface-variant);background:var(--md-sys-color-surface-container-high);border-radius:9px;padding:6px 11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%}
   /* Kata kunci: editor chip (× hapus, + tambah lewat input inline) */
   .pckw{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
-  .kwchip{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 5px 0 11px;border-radius:99px;background:var(--sec-c,var(--md-sys-color-secondary-container));color:var(--md-sys-color-on-secondary-container,#0b3d38);font-size:12.5px;font-weight:600;white-space:nowrap}
+  .kwchip{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 5px 0 11px;border-radius:99px;background:var(--sec-c,var(--md-sys-color-secondary-container));color:var(--md-sys-color-on-secondary-container,#0b3d38);font-size:12.5px;font-weight:500;white-space:nowrap}
   .kwchip .x{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;cursor:pointer;opacity:.55;font-size:13px}
   .kwchip .x:hover{opacity:1;background:rgba(0,0,0,.10)}
   .kwadd{width:28px;height:28px;border-radius:50%;border:1.6px dashed var(--md-sys-color-outline);background:transparent;color:var(--md-sys-color-on-surface-variant);cursor:pointer;font-size:16px;display:grid;place-items:center;flex:0 0 auto;padding:0}
@@ -1323,7 +1330,7 @@
           <md-icon-button id="loc-next" data-tip="Lokasi berikutnya"><span>chevron_right</span></md-icon-button>
         </span>
         <span class="grow"></span>
-        <md-icon-button id="entry-new" variant="tonal" data-tip="Lokasi baru"><span>add</span></md-icon-button>
+        <button class="addloc" id="entry-new" data-tip="Lokasi baru"><span class="mi">add</span><span class="albl">Tambah Lokasi</span></button>
       </span>
       <span class="rowflex hidden" id="locTools" style="margin-left:auto;gap:8px;align-items:center">
         <span class="exp-lbl">EXPORT MASSAL</span>
@@ -3149,6 +3156,15 @@ const _IDMON=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov',
 function fmtDateTime(iso){if(!iso)return '—';const d=new Date(iso);if(isNaN(d))return '—';
   const p=n=>String(n).padStart(2,'0');
   return `${p(d.getDate())}-${_IDMON[d.getMonth()]}-${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;}
+/* Ringkas: hari ini/kemarin/x hari lalu (<=5 hari), lalu tanggal (tanpa tahun bila tahun berjalan). Full di tooltip. */
+function fmtDateRel(iso){if(!iso)return {t:'—',full:'—'};const d=new Date(iso);if(isNaN(d))return {t:'—',full:'—'};
+  const p=n=>String(n).padStart(2,'0');const now=new Date();
+  const days=Math.round((new Date(now.getFullYear(),now.getMonth(),now.getDate())-new Date(d.getFullYear(),d.getMonth(),d.getDate()))/86400000);
+  const sameYear=d.getFullYear()===now.getFullYear();
+  const dateShort=`${d.getDate()} ${_IDMON[d.getMonth()]}${sameYear?'':' '+d.getFullYear()}`;
+  let t;
+  if(days<=0)t='Hari ini';else if(days===1)t='Kemarin';else if(days<=5)t=days+' hari lalu';else t=dateShort;
+  return {t,full:`${d.getDate()} ${_IDMON[d.getMonth()]} ${d.getFullYear()} · ${p(d.getHours())}:${p(d.getMinutes())}`};}
 function fetchLocPage(page){
   const q=encodeURIComponent(($('#loc-search').value||'').trim());
   const st=S.locFilter||'all';
@@ -3167,7 +3183,7 @@ function renderLocTable(){
     return `<tr class="lrow" data-i="${l.id}" onclick='openLocDrawer(${l.id})'><td><a class="loc-link mono">${esc(l.code)}</a></td>
     <td>${esc(l.data.nama_lokasi||l.name||'')}</td>
     <td>${esc(l.creator_name||'—')}</td>
-    <td class="mono" style="white-space:nowrap">${fmtDateTime(l.created_at)}</td>
+    <td class="lc-date" title="${esc((fmtDateRel(l.created_at)).full)}">${esc((fmtDateRel(l.created_at)).t)}</td>
     <td>${l.inv_count}</td><td>${present}/${S.cats.length}</td>
     <td><span class="loc-st ${stCls}">${esc(l.status)}</span></td>
     <td>${locKel(l)}</td>
