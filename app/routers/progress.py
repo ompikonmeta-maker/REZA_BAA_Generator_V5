@@ -77,24 +77,34 @@ def _last_wds(today: date, n: int) -> list[date]:
 
 
 def _streak(days_with_done: set[date], today: date) -> tuple[int, int]:
-    """(streak sekarang, rekor) dalam hari kerja. Hari ini belum selesai tidak memutus streak."""
-    d = today
-    while not _is_wd(d):
-        d -= timedelta(days=1)
-    if d not in days_with_done:
-        d -= timedelta(days=1)
-        while not _is_wd(d):
+    """(streak sekarang, rekor). Tiap hari dengan BAA selesai menambah streak
+    (termasuk Sabtu/Minggu). Hari kerja tanpa selesai memutus streak; akhir pekan
+    tanpa selesai dilewati. Hari ini yang belum selesai tidak memutus streak."""
+    def run_back(d: date, skip_today: bool) -> int:
+        n = 0
+        while True:
+            if d in days_with_done:
+                n += 1
+            elif not _is_wd(d) or (skip_today and d == today):
+                pass
+            else:
+                return n
             d -= timedelta(days=1)
-    cur = 0
-    while d in days_with_done:
-        cur += 1
-        d -= timedelta(days=1)
-        while not _is_wd(d):
-            d -= timedelta(days=1)
-    best, run, prev = 0, 0, None
-    for x in sorted(x for x in days_with_done if _is_wd(x)):
-        run = run + 1 if prev and _wd_between(prev, x) == 1 else 1
-        best, prev = max(best, run), x
+            if n == 0 and d < today - timedelta(days=10):
+                return 0
+            if days_with_done and d < min(days_with_done):
+                return n
+    cur = run_back(today, True) if days_with_done else 0
+    best, run = 0, 0
+    if days_with_done:
+        d, end = min(days_with_done), max(days_with_done)
+        while d <= end:
+            if d in days_with_done:
+                run += 1
+                best = max(best, run)
+            elif _is_wd(d):
+                run = 0
+            d += timedelta(days=1)
     return cur, max(best, cur)
 
 
