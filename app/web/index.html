@@ -69,6 +69,13 @@
   .lg-greet h1{font:var(--md-sys-typescale-display-small);font-weight:600;color:#eafaf9;opacity:0;transform:translateY(12px) scale(.97);filter:blur(6px)}
   .lg-greet.on h1{animation:lggin .8s cubic-bezier(.2,.8,.2,1) forwards}
   @keyframes lggin{to{opacity:1;transform:none;filter:blur(0)}}
+  /* akhir sapaan: teks naik & memudar, lalu layar login crossfade ke aplikasi */
+  .lg-greet.out h1{animation:lggout .5s cubic-bezier(.4,0,1,1) forwards}
+  @keyframes lggout{from{opacity:1;transform:none;filter:blur(0)}to{opacity:0;transform:translateY(-14px) scale(1.02);filter:blur(6px)}}
+  #login.leaving{position:fixed;inset:0;z-index:1000;opacity:0;transition:opacity .7s cubic-bezier(.4,0,.2,1)}
+  #app.app-enter{animation:appin .8s cubic-bezier(.05,.7,.1,1) both}
+  @keyframes appin{from{opacity:0;transform:scale(.985);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+  @media(prefers-reduced-motion:reduce){#login.leaving{transition:none}#app.app-enter,.lg-greet.out h1{animation:none}}
   @media(prefers-reduced-motion:reduce){.lgcard,.lg-spot,.lg-iris,.lg-greet h1{animation:none!important}.lgcard{opacity:1;transform:none}}
   .brand .dot{width:36px;height:36px;border-radius:11px;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);display:grid;place-items:center}
 
@@ -2228,8 +2235,8 @@ $('#lg-btn').addEventListener('click',async()=>{const el=$('#lg-err');el.classLi
     const nm=(S.user.full_name||S.user.username||'').trim()||'Teman';
     $('#lgCard').classList.add('gone');$('#lgIris').classList.add('on');
     setTimeout(()=>{$('#lgGreetTxt').textContent='Hi, '+nm;$('#lgGreet').classList.add('on');},700);
-    setTimeout(()=>$('#lgGreet').classList.remove('on'),2300);
-    setTimeout(()=>{showApp();$('#lgGreet').classList.remove('on');$('#lgIris').classList.remove('on');$('#lgCard').classList.remove('gone');},2750);
+    setTimeout(()=>$('#lgGreet').classList.add('out'),2150);
+    setTimeout(()=>showApp(true),2450);
   }catch(e){const c=$('#lgCard');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');
     const msg=/401|unauthorized|invalid|salah|incorrect/i.test(e.message||'')?'Wrong username or password.':(e.message||'Sign-in failed, try again.');
     el.textContent=msg;el.classList.remove('hidden');$('#lg-pass').focus();$('#lg-pass').select&&$('#lg-pass').select();
@@ -2241,7 +2248,10 @@ window.addEventListener('beforeunload',e=>{if(ldPending()||tplDirty()){e.prevent
 $('#themeBtn').addEventListener('click',()=>{const c=MD3.getTheme();MD3.setTheme(c==='dark'?'light':'dark');applyCalm();});
 $('#railBtn').addEventListener('click',()=>{$('#app').classList.toggle('rail');if(typeof flyHide==='function')flyHide(true);});
 
-async function showApp(){$('#login').classList.add('hidden');$('#app').classList.remove('hidden');
+async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remove('hidden');
+  if(fromLogin&&!reduced){lg.classList.add('leaving');$('#app').classList.add('app-enter');
+    setTimeout(()=>{lg.classList.add('hidden');lg.classList.remove('leaving');$('#lgGreet').classList.remove('on','out');$('#lgIris').classList.remove('on');$('#lgCard').classList.remove('gone');$('#app').classList.remove('app-enter');},800);}
+  else{lg.classList.add('hidden');$('#lgGreet').classList.remove('on','out');$('#lgIris').classList.remove('on');$('#lgCard').classList.remove('gone');}
   S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.keterangan=s.inventory_keterangan||[];S.appTitle=s.app_title||'BAA Generator';});
   await S.settingsReady;
   if(S.user.role!=='admin')$$('.admin-only').forEach(x=>x.classList.add('hidden'));
