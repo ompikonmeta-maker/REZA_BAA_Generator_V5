@@ -1594,7 +1594,7 @@
                 </div>
                 <div class="vwmain">
                   <p class="big" id="vwBig">—</p>
-                  <p class="eta">At the current pace, all locations are projected to finish around <b id="vwEtaDate">—</b> (± <span id="vwEtaWeeks">—</span> weeks to go).</p>
+                  <p class="eta" id="vwEta">—</p>
                   <div class="vwbar"><i id="vwBar" style="width:0%"></i></div>
                   <div class="vwmark"><span>0</span><span id="vwTarget">Target</span></div>
                   <div class="vwwf"><span class="mi">tune</span><span>Pace scenario</span><input type="range" id="vwWf" min="4" max="80" value="20"><span class="val" id="vwWfVal">20/wk</span></div>
@@ -2609,22 +2609,25 @@ async function loadViewer(){
   $('#vwBig').textContent=remain?`${remain} locations to the finish line`:'All locations are done 🎯'.replace(' 🎯','');
   $('#vwBar').style.width=(m.pct||0)+'%';$('#vwTarget').textContent='Target '+total;
   // what-if ETA
-  const vel=Math.max(1,m.vel_this||0);const wf=$('#vwWf');
-  wf.min=2;wf.max=Math.max(20,vel*3);wf.value=vel;
-  const paintEta=v=>{const wk=remain?Math.ceil(remain/Math.max(1,v)):0;const dt=new Date();dt.setDate(dt.getDate()+wk*7);
-    $('#vwWfVal').textContent=v+'/wk';
-    $('#vwEtaDate').textContent=remain?vwFullDate(dt):'all done';$('#vwEtaWeeks').textContent=wk;
-    vwSetKpiEta(remain?(_IDMON[dt.getMonth()]+' '+dt.getFullYear()):'—');};
-  paintEta(vel);wf.oninput=e=>paintEta(+e.target.value);
+  // pace nyata = selesai minggu ini, atau minggu lalu bila minggu ini 0; tanpa data -> tidak ditebak
+  const realVel=(m.vel_this||0)||(m.vel_prev||0),vel=Math.max(1,realVel);const wf=$('#vwWf');
+  wf.min=1;wf.max=Math.max(20,vel*3);wf.value=vel;
+  const paintEta=(v,scen)=>{$('#vwWfVal').textContent=v+'/wk';
+    if(!remain){$('#vwEta').textContent='All locations are done.';vwSetKpiEta('—');return;}
+    if(!realVel&&!scen){$('#vwEta').textContent='Not enough data yet — the forecast appears after the first location is done. Move the slider to try a pace.';vwSetKpiEta('—');return;}
+    const wk=Math.ceil(remain/Math.max(1,v));const dt=new Date();dt.setDate(dt.getDate()+wk*7);
+    $('#vwEta').innerHTML=(scen?`At <b>${v} per week</b>, all locations would finish around `:'At the current pace, all locations are projected to finish around ')+`<b>${vwFullDate(dt)}</b> (± ${wk} week${wk>1?'s':''} to go).`;
+    if(!scen)vwSetKpiEta(_IDMON[dt.getMonth()]+' '+dt.getFullYear());};
+  paintEta(vel,false);wf.oninput=e=>paintEta(+e.target.value,+e.target.value!==realVel);
   // KPI strip
-  const etaW=remain?Math.ceil(remain/vel):0;const etaD=new Date();etaD.setDate(etaD.getDate()+etaW*7);
+  const etaW=remain&&realVel?Math.ceil(remain/realVel):0;const etaD=new Date();etaD.setDate(etaD.getDate()+etaW*7);
   $('#vwStrip').innerHTML=[
     ['table_rows','Total Locations',total,''],
     ['task_alt','Done',done,(m.pct||0)+'% of target'],
     ['pending_actions','Remaining',remain,'in progress'],
     ['speed','Pace',(m.vel_this||0)+'<span style="font-size:12px">/wk</span>',vwWow(m)],
     ['timer','Average',(m.cycle||0)+'<span style="font-size:12px"> d</span>','per location'],
-    ['event_available','Forecast',remain?`<span style="font-size:18px">${_IDMON[etaD.getMonth()]} ${etaD.getFullYear()}</span>`:'—','estimated finish'],
+    ['event_available','Forecast',remain&&realVel?`<span style="font-size:18px">${_IDMON[etaD.getMonth()]} ${etaD.getFullYear()}</span>`:'—',remain&&!realVel?'no pace yet':'estimated finish'],
   ].map(k=>`<div class="sk"><div class="t"><span class="mi">${k[0]}</span>${k[1]}</div><div class="n">${k[2]}</div><div class="d">${k[3]||'&nbsp;'}</div></div>`).join('');
   // momentum
   $('#vwStreakN').textContent=(d.streak||0)+((d.streak||0)===1?' day':' days');
