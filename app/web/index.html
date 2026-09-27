@@ -620,7 +620,9 @@
   .exp-bar .lbl .mi{font-size:18px}
   .exp-bar .cnt{font:var(--md-sys-typescale-label-medium)}
   .exp-bar .grow{flex:1}
-  .is-viewer #loc-exp-bar{display:none}
+  .is-viewer #locTools{display:none}
+  #locTools .exp-lbl{font:var(--md-sys-typescale-label-small);font-weight:700;letter-spacing:.5px;color:var(--md-sys-color-on-surface-variant)}
+  @media(max-width:900px){#locTools .exp-lbl{display:none}}
   .exp-scope{display:flex;flex-direction:column;gap:8px}
   .exp-opt{display:flex;gap:11px;align-items:flex-start;border:1.5px solid var(--md-sys-color-outline-variant);border-radius:13px;padding:11px 13px;cursor:pointer;transition:border-color .15s,background .15s}
   .exp-opt.sel{border-color:var(--md-sys-color-primary);background:color-mix(in srgb,var(--md-sys-color-primary) 8%,transparent)}
@@ -636,19 +638,16 @@
   .loc-st{font-weight:600}.loc-st.ok{color:var(--md-sys-color-primary)}.loc-st.warn{color:var(--warn)}
   .loc-lack{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-body-small);max-width:280px}
   /* kolom Kelengkapan: mini-ring + persentase + chip grup yang kurang */
-  .kel{display:flex;align-items:center;gap:11px;max-width:300px}
-  .kel-ring{position:relative;width:34px;height:34px;flex:0 0 auto}
-  .kel-ring svg{width:34px;height:34px;transform:rotate(-90deg)}
-  .kel-ring circle{fill:none;stroke-width:4.5}
-  .kel-ring .trk{stroke:var(--md-sys-color-surface-container-highest)}
-  .kel-ring .prg{stroke:var(--md-sys-color-primary);stroke-linecap:round;stroke-dasharray:91;transition:stroke-dashoffset .8s var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1))}
-  .kel.full .kel-ring .prg{stroke:var(--good)}
-  .kel-txt{min-width:0}
-  .kel-pv{font:var(--md-sys-typescale-title-small);font-weight:800;line-height:1.05}
+  .kel{max-width:300px}
+  .kbar{display:flex;align-items:center;gap:9px}
+  .kbar .track{flex:1;min-width:60px;max-width:120px;height:7px;border-radius:99px;background:var(--md-sys-color-surface-container-highest);overflow:hidden}
+  .kbar .track i{display:block;height:100%;border-radius:99px;background:var(--md-sys-color-primary);transition:width .6s var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1))}
+  .kbar.full .track i{background:var(--good)}
+  .kel-pv{font:var(--md-sys-typescale-label-large);font-weight:800;line-height:1;color:var(--md-sys-color-on-surface)}
   .kel.full .kel-pv{color:var(--good)}
-  .kel-done{display:inline-flex;align-items:center;gap:4px;font:var(--md-sys-typescale-label-small);font-weight:700;color:var(--good);margin-top:1px}
+  .kel-done{display:inline-flex;align-items:center;gap:4px;font:var(--md-sys-typescale-label-small);font-weight:700;color:var(--good)}
   .kel-done .mi{font-size:14px}
-  .kel-miss{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px}
+  .kel-miss{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
   .mchip{display:inline-flex;align-items:center;font:var(--md-sys-typescale-label-small);font-weight:700;color:var(--bad);background:var(--bad-bg);border-radius:99px;padding:2px 8px;white-space:nowrap}
   #loc-table tr.lrow{cursor:pointer;transition:background .15s}
   #loc-table tr.lrow:hover{background:var(--md-sys-color-surface-container)}
@@ -1326,6 +1325,11 @@
         <span class="grow"></span>
         <md-icon-button id="entry-new" variant="tonal" data-tip="Lokasi baru"><span>add</span></md-icon-button>
       </span>
+      <span class="rowflex hidden" id="locTools" style="margin-left:auto;gap:8px;align-items:center">
+        <span class="exp-lbl">EXPORT MASSAL</span>
+        <md-button variant="outlined" icon="grid_on" id="loc-exp-xlsx">Excel (template)</md-button>
+        <md-button variant="outlined" icon="picture_as_pdf" id="loc-exp-pdf">PDF per-lokasi (ZIP)</md-button>
+      </span>
       <span class="hidden" id="setSaveWrap">
         <span class="set-status ok" id="setStatus"><span class="dot"></span><span id="setStatusTxt">Tersimpan</span></span>
         <button class="set-savebtn" id="setSaveBtn" disabled><span class="mi">save</span> <span id="setSaveLbl">Simpan</span></button>
@@ -1588,13 +1592,6 @@
             <md-button variant="text" id="loc-clear" icon="filter_alt_off">Reset</md-button>
             <span class="grow"></span>
             <md-segmented-button id="loc-filter"><button data-value="all" selected>Semua</button><button data-value="draft">Draft</button><button data-value="selesai">Selesai</button></md-segmented-button>
-          </div>
-          <div class="exp-bar" id="loc-exp-bar">
-            <span class="lbl"><span class="mi">download</span> Export massal</span>
-            <span class="cnt muted" id="loc-exp-cnt"></span>
-            <span class="grow"></span>
-            <md-button variant="outlined" icon="grid_on" id="loc-exp-xlsx">Excel (template)</md-button>
-            <md-button variant="outlined" icon="picture_as_pdf" id="loc-exp-pdf">PDF per-lokasi (ZIP)</md-button>
           </div>
           <table><thead><tr><th>Kode</th><th>Nama Lokasi</th><th>Pembuat</th><th>Dibuat</th><th>INV</th><th>Foto</th><th>Status</th><th>Kelengkapan</th><th></th></tr></thead><tbody id="loc-table"></tbody></table>
           <div class="rowflex" style="margin-top:12px;align-items:center">
@@ -2182,7 +2179,7 @@ $$('.navitem[data-view]').forEach(n=>n.addEventListener('click',()=>{
     $$('.navitem[data-view]').forEach(x=>x.classList.remove('active'));n.classList.add('active');
     $('#setToggle').classList.remove('active');$('#navSettings').classList.remove('open');  /* tutup accordion Pengaturan */
     const v=n.dataset.view;['dashboard','entry','locations','import','trash','notif','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!==v);});
-    $('#pageTitle').textContent=n.querySelector('.lbl').textContent;$('#entryTools').classList.toggle('hidden',v!=='entry');$('#setSaveWrap').classList.add('hidden');
+    $('#pageTitle').textContent=n.querySelector('.lbl').textContent;$('#entryTools').classList.toggle('hidden',v!=='entry');$('#locTools').classList.toggle('hidden',v!=='locations');$('#setSaveWrap').classList.add('hidden');
     $('#pageTitle').classList.toggle('hidden',v==='entry');$('#topGrow').classList.toggle('hidden',v==='entry');
     if(v==='dashboard')loadDashboard();if(v==='locations')loadLocations();if(v==='templates')loadTemplates();if(v==='trash')loadTrash();if(v==='import')loadImport();if(v==='notif')loadNotif();
     revealCards($('#v-'+v));};
@@ -2216,7 +2213,7 @@ function openSettings(sub){
   sub=sub||curSetSub;
   $$('.navitem[data-view]').forEach(x=>x.classList.remove('active'));
   $('#setToggle').classList.add('active');$('#navSettings').classList.add('open');
-  $('#entryTools').classList.add('hidden');
+  $('#entryTools').classList.add('hidden');$('#locTools').classList.add('hidden');
   $$('.subnav').forEach(s=>s.classList.toggle('active',s.dataset.sub===sub));
   curSetSub=sub;
   const sv=SET_VIEWS[sub];
@@ -3243,7 +3240,7 @@ function locPct(l){
 }
 /* Sel kolom "Kelengkapan": 100% -> hanya persentase; kurang -> % + chip grup yg kurang (mirror donut) */
 function locKel(l){
-  const c=locPct(l);const full=c.pct>=100;const C=91,off=(C*(1-c.pct/100)).toFixed(1);
+  const c=locPct(l);const full=c.pct>=100;
   const reqInv=((S.invItems&&S.invItems.length)||3);
   const invHave=Math.max(0,Math.min(reqInv,(l.inv_full!=null?l.inv_full:(c.invOk?reqInv:0))));
   let inner;
@@ -3254,8 +3251,8 @@ function locKel(l){
     if(c.fotoDone<c.nCats)arr.push('Foto '+c.fotoDone+'/'+c.nCats);
     inner='<div class="kel-miss">'+arr.map(x=>`<span class="mchip">${x}</span>`).join('')+'</div>';}
   return `<div class="kel ${full?'full':''}">
-    <div class="kel-ring"><svg viewBox="0 0 34 34"><circle class="trk" cx="17" cy="17" r="14.5"/><circle class="prg" cx="17" cy="17" r="14.5" style="stroke-dashoffset:${off}"/></svg></div>
-    <div class="kel-txt"><div class="kel-pv">${c.pct}%</div>${inner}</div></div>`;}
+    <div class="kbar"><div class="track"><i style="width:${c.pct}%"></i></div><span class="kel-pv">${c.pct}%</span></div>
+    ${inner}</div>`;}
 window.openFromLog=id=>{gotoEntry();openLoc(id);};
 
 /* ===== Drawer detail cepat Log Lokasi ===== */
