@@ -80,8 +80,16 @@ def _sheet_render(ws, max_rows: int = 300, max_cols: int = 78) -> dict:
                     info["b"] = 1
                 if c.font.sz and float(c.font.sz) != 11:
                     info["sz"] = float(c.font.sz)
-            if c.alignment is not None and c.alignment.horizontal:
-                info["h"] = c.alignment.horizontal
+            a = c.alignment
+            if a is not None:
+                if a.horizontal:
+                    info["h"] = a.horizontal
+                if a.vertical:
+                    info["va"] = a.vertical
+                if a.text_rotation:
+                    info["rot"] = int(a.text_rotation)
+                if a.wrap_text:
+                    info["wr"] = 1
             if info:
                 cells[c.coordinate] = info
     return {"name": ws.title, "cols": cols, "rows": rows, "cells": cells,
@@ -150,11 +158,20 @@ def register_template(body: RegisterIn, conn: sqlite3.Connection = Depends(get_d
 
 @router.get("")
 def list_templates(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
+    import json
     rows = conn.execute(
-        "SELECT id,name,filename,sheet_log,sheet_detail,active,created_at "
+        "SELECT id,name,filename,sheet_log,sheet_detail,active,created_at,config_json "
         "FROM templates ORDER BY id DESC"
     ).fetchall()
-    return [dict(r) for r in rows]
+    out = []
+    for r in rows:
+        d = dict(r)
+        try:
+            d["mapped"] = bool(json.loads(d.pop("config_json") or "{}").get("mapped"))
+        except Exception:
+            d["mapped"] = False
+        out.append(d)
+    return out
 
 
 @router.post("/{tpl_id}/activate")
@@ -315,28 +332,25 @@ def _trial_build(tpl_id: int, body: TrialIn, conn: sqlite3.Connection) -> tuple[
 @router.post("/{tpl_id}/preview")
 def template_preview(tpl_id: int, body: TrialIn, conn: sqlite3.Connection = Depends(get_db),
                      user=Depends(require_admin)):
-    """Hasil sheet LOG dari mapping yang sedang diedit (tanpa menyimpan)."""
+    """Sheet LOG hasil mapping yang sedang diedit (tanpa menyimpan), digambar
+    seperti Excel: header asli template + baris data lokasi terbaru."""
     import openpyxl
-    from openpyxl.utils import get_column_letter
     out, res, cfg = _trial_build(tpl_id, body, conn)
     try:
-        wb = openpyxl.load_workbook(str(out), data_only=True)
+        wb = openpyxl.load_workbook(str(out))
         ws = wb[body.sheet_log]
         hr = int(cfg["log"].get("header_row") or 2)
         sr = int(cfg["log"].get("start_row") or hr + 1)
-        nc = min(ws.max_column or 1, 78)
-        heads = [{"col": get_column_letter(c), "text": str(ws.cell(hr, c).value or "")}
-                 for c in range(1, nc + 1)]
-        rows = []
-        for r in range(sr, min(ws.max_row or sr, sr + 60) + 1):
-            vals = ["" if ws.cell(r, c).value is None else str(ws.cell(r, c).value)
-                    for c in range(1, nc + 1)]
-            if any(vals):
-                rows.append(vals)
+        last = sr
+        for r in range(sr, min(ws.max_row or sr, sr + 80) + 1):
+            if any(ws.cell(r, c).value not in (None, "") for c in range(1, (ws.max_column or 1) + 1)):
+                last = r
+        render = _sheet_render(ws, max_rows=last)
         wb.close()
     finally:
         out.unlink(missing_ok=True)
-    return {"headers": heads, "rows": rows, "start_row": sr, "warnings": res.get("warnings", [])}
+    return {"sheet": render, "header_row": hr, "start_row": sr, "last_row": last,
+            "warnings": res.get("warnings", [])}
 
 
 @router.post("/{tpl_id}/test-export")
