@@ -1,0 +1,95 @@
+name: Build Windows EXE
+
+# Build exe portabel. Unduh hasilnya di tab Actions -> run terkait -> Artifacts.
+on:
+  # Hemat menit Actions: build HANYA saat diminta.
+  workflow_dispatch:        # tombol "Run workflow" manual di tab Actions
+  push:
+    tags:
+      - "v*"               # atau saat menandai rilis (mis. git tag v1.0.0)
+
+permissions:
+  contents: write        # butuh untuk membuat/menempel GitHub Release
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller==6.11.1
+
+      - name: Build one-file executable
+        run: pyinstaller rezabaa.spec --noconfirm --clean
+
+      - name: Install Tesseract (for bundling)
+        shell: pwsh
+        run: choco install tesseract --no-progress -y
+
+      - name: Stage release folder
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release | Out-Null
+          Copy-Item dist/BAA_Generator.exe release/
+          Copy-Item docs/Template_BAA.xlsx release/ -ErrorAction SilentlyContinue
+          # Bundle Tesseract portable (OCR aktif tanpa install di komputer user)
+          $ts = "C:\Program Files\Tesseract-OCR"
+          if (Test-Path $ts) { Copy-Item $ts release/tesseract -Recurse -Force }
+          @"
+          BAA Generator — cara pakai
+          ================================
+          1. Jalankan BAA_Generator.exe (klik dua kali). Tanpa install, tanpa admin.
+          2. Buka browser: http://localhost:8000  (login awal: admin / admin, wajib ganti).
+          3. User lain di jaringan yang sama: buka http://<IP-komputer-ini>:8000
+          4. Data tersimpan di folder 'data' yang muncul di samping .exe.
+
+          OCR (opsional): letakkan folder 'tesseract' (berisi tesseract.exe) di samping
+          .exe, atau set variabel REZA_BAA_TESSERACT ke path tesseract.exe.
+          "@ | Out-File -FilePath release/CARA_PAKAI.txt -Encoding utf8
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BAA_Generator-windows
+          path: release/
+          retention-days: 30
+
+      - name: Zip release folder
+        shell: pwsh
+        run: Compress-Archive -Path release/* -DestinationPath BAA_Generator-windows.zip -Force
+
+      - name: Compute release tag
+        id: rel
+        shell: pwsh
+        run: |
+          # Nama branch bisa mengandung '/', tidak valid untuk tag → ganti ke '-'
+          $safe = "${{ github.ref_name }}" -replace '[^A-Za-z0-9._-]', '-'
+          "tag=build-$safe"        | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "name=BAA Generator ($safe)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.rel.outputs.tag }}
+          name: ${{ steps.rel.outputs.name }}
+          prerelease: true
+          # Rolling release per-branch: tag yang sama di-update tiap build
+          files: |
+            release/BAA_Generator.exe
+            BAA_Generator-windows.zip
+          body: |
+            Build otomatis dari commit ${{ github.sha }} (branch `${{ github.ref_name }}`).
+
+            Unduh `BAA_Generator.exe` (portabel) atau `BAA_Generator-windows.zip`
+            (berisi exe + Tesseract OCR + Template_BAA.xlsx + CARA_PAKAI.txt).
