@@ -33,7 +33,15 @@ jobs:
       - name: Build one-file executable
         run: pyinstaller rezabaa.spec --noconfirm --clean
 
+      - name: Cache Tesseract
+        id: tess
+        uses: actions/cache@v4
+        with:
+          path: C:\Program Files\Tesseract-OCR
+          key: tesseract-win-v1
+
       - name: Install Tesseract (for bundling)
+        if: steps.tess.outputs.cache-hit != 'true'
         shell: pwsh
         run: choco install tesseract --no-progress -y
 
@@ -63,7 +71,7 @@ jobs:
         with:
           name: BAA_Generator-windows
           path: release/
-          retention-days: 30
+          retention-days: 7
 
       - name: Zip release folder
         shell: pwsh
