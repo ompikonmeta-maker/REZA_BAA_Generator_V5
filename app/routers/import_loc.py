@@ -209,7 +209,8 @@ async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True),
              user["id"], user["id"], now, now),
         )
         lid = cur.lastrowid
-        conn.execute("UPDATE locations SET code=? WHERE id=?", (_format_code(lid), lid))
+        conn.execute("UPDATE locations SET code=?, modified_at=?, modified_by=? WHERE id=?",
+                     (_format_code(lid), now, user["id"], lid))
         for i, it in enumerate(loc["inventory"]):
             conn.execute(
                 "INSERT INTO inventory_items(location_id,nama_barang,merk_type,jumlah,"

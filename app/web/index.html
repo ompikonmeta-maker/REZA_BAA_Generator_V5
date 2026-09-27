@@ -653,7 +653,9 @@
   #loc-table tr.lrow{cursor:pointer;transition:background .15s}
   #loc-table tr.lrow:hover{background:var(--md-sys-color-surface-container)}
   #loc-table tr.lrow.sel{background:color-mix(in srgb,var(--md-sys-color-primary) 10%,transparent);box-shadow:inset 3px 0 0 var(--md-sys-color-primary)}
-  .lc-date{white-space:nowrap;color:var(--md-sys-color-on-surface-variant);cursor:default}
+  .lc-date{white-space:nowrap;cursor:default}.lc-t{display:block}.lc-f{display:block;font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant)}
+  .lc-none{color:var(--md-sys-color-on-surface-variant);cursor:help}
+  .loc-tw{overflow-x:auto;scrollbar-width:thin}.loc-tw table{min-width:1080px}.loc-tw td,.loc-tw th{white-space:nowrap}
   /* Tombol tambah lokasi: extended (ikon + label) saat lebar, ikon saja saat sempit */
   .addloc{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 18px 0 14px;border-radius:99px;border:none;cursor:pointer;
     background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);font:var(--md-sys-typescale-label-large);font-weight:600;transition:background .2s,transform .12s}
@@ -664,7 +666,7 @@
   /* ===== Drawer detail cepat Log Lokasi ===== */
   .ldrawer-scrim{position:fixed;inset:0;background:rgba(0,0,0,.20);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s;z-index:60;pointer-events:none} /* visual saja: klik baris lain tetap tembus utk update in-place */
   .ldrawer-scrim.on{opacity:1;visibility:visible}
-  .ldrawer{position:fixed;top:14px;right:14px;bottom:14px;width:min(480px,94vw);z-index:70;
+  .ldrawer{position:fixed;top:14px;right:14px;max-height:calc(100vh - 28px);width:min(480px,94vw);z-index:70;
     background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline-variant);border-radius:24px;
     box-shadow:-10px 18px 60px rgba(0,0,0,.28),0 2px 10px rgba(0,0,0,.16);
     transform:translateX(calc(100% + 22px));transition:transform .44s cubic-bezier(.34,1.2,.5,1);
@@ -698,7 +700,13 @@
   .ld-hstat .v{font-size:13.5px;font-weight:600;color:#fff;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ld-hstat.miss .v{color:#ffb4ab}
   /* ===== BODY (terang, scroll) ===== */
-  .ld-scroll{flex:1;overflow-y:auto;padding:16px 16px 8px}
+  .ld-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:16px 16px 8px}
+  .ld-act.pend{border-color:color-mix(in srgb,var(--md-sys-color-primary) 40%,transparent);background:color-mix(in srgb,var(--md-sys-color-primary) 6%,var(--md-sys-color-surface))}
+  .ld-act.pend .s{color:var(--md-sys-color-primary)}
+  .ld-pth{width:52px;height:40px;border-radius:9px;object-fit:cover;flex:0 0 auto}
+  .ld-pbtn{flex:0 0 auto;border:0;cursor:pointer;border-radius:999px;font:var(--md-sys-typescale-label-large);font-weight:600}
+  .ld-pbtn.x{background:none;color:var(--md-sys-color-on-surface-variant);width:34px;height:34px;display:grid;place-items:center}.ld-pbtn.x .mi{font-size:18px}
+  .ld-pbtn.save{background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);padding:8px 16px}
   .ld-body{animation:ldswap .34s cubic-bezier(.2,0,0,1)}
   @keyframes ldswap{from{opacity:0;transform:translateY(8px)}}
   .ld-sec{display:flex;align-items:baseline;gap:8px;margin:6px 2px 9px}
@@ -1086,6 +1094,11 @@
   .msheet .selb{position:absolute;outline:2px dashed var(--md-sys-color-primary);background:color-mix(in srgb,var(--md-sys-color-primary) 10%,transparent);pointer-events:none;display:none}
   .msheet .hov{position:absolute;outline:1.5px solid var(--md-sys-color-primary);pointer-events:none;display:none}
   .mvp.picking{cursor:crosshair}
+  .mvwrap{position:relative;min-width:0}
+  .mhc,.mhr,.mhk{position:absolute;overflow:hidden;pointer-events:none;z-index:3}
+  .mhc .in,.mhr .in{position:relative;transform-origin:0 0}
+  .mhc .hx,.mhr .hx{position:absolute;display:flex;align-items:center;justify-content:center;background:var(--md-sys-color-surface-container-low);color:var(--md-sys-color-on-surface-variant);font:600 10px ui-monospace,Consolas,monospace;border-right:1px solid var(--md-sys-color-outline-variant);border-bottom:1px solid var(--md-sys-color-outline-variant)}
+  .mhk{background:var(--md-sys-color-surface-container-low);border-right:1px solid var(--md-sys-color-outline-variant);border-bottom:1px solid var(--md-sys-color-outline-variant);z-index:4}
   .tplverify{margin-top:16px;padding:14px;border-radius:14px;background:var(--md-sys-color-surface-container-low)}
   .tv-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}.tv-head .mi{color:var(--md-sys-color-primary)}.tv-head small{display:block;color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small)}
   .tv-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
@@ -1720,7 +1733,7 @@
             <span class="grow"></span>
             <md-segmented-button id="loc-filter"><button data-value="all" selected>All</button><button data-value="draft">Draft</button><button data-value="selesai">Done</button></md-segmented-button>
           </div>
-          <table><thead><tr><th>Code</th><th>Location</th><th>Created by</th><th>Created</th><th>INV</th><th>Photos</th><th>Status</th><th>Completeness</th><th></th></tr></thead><tbody id="loc-table"></tbody></table>
+          <div class="loc-tw"><table><thead><tr><th>Code</th><th>Location</th><th>Created by</th><th>Created</th><th>Last modified</th><th>Modified by</th><th>INV</th><th>Photos</th><th>Status</th><th>Completeness</th><th></th></tr></thead><tbody id="loc-table"></tbody></table></div>
           <div class="rowflex" style="margin-top:12px;align-items:center">
             <span id="loc-info" class="muted" style="font:var(--md-sys-typescale-body-small)"></span>
             <span class="grow"></span>
@@ -1802,11 +1815,11 @@
                 <div class="mgrid2" id="map-logrows"></div>
                 <div class="mnote" id="map-lognote"></div>
                 <div class="mph" style="margin-top:18px"><h3 style="font-size:15px">Preview</h3><span class="muted" id="map-pvsub">latest 2 locations · unsaved mapping</span><span class="grow"></span>
-                  <span class="muted">Identity cells</span><div class="mseg" id="map-ident"><button data-v="first" class="on">First row only</button><button data-v="merge">Merge per location</button></div>
+                  <span class="muted">Identity cells</span><div class="mseg" id="map-ident"><button data-v="first" class="on" data-tip="No, Location and Location code on the first item row only">First row only</button><button data-v="repeat" data-tip="No, Location and Location code on every item row">Repeat data</button></div>
                   <md-button id="map-pvbtn" variant="tonal" size="xs" icon="refresh">Refresh</md-button>
                   <md-button id="map-testx" variant="outlined" size="xs" icon="download">Test .xlsx</md-button></div>
                 <div class="mvp mpvp" id="map-pvvp"><div class="msheet" id="map-pvsheet"></div></div>
-                <div class="mnote">1 location = 1 row per inventory item. Identity cells (No, Location, Foto Lengkap, photo status, data fields) are filled once per location. The start row's format is copied to every new row.</div>
+                <div class="mnote">1 location = 1 row per inventory item. The start row's format is copied to every new row.</div>
                 <div class="mnote" id="map-pvwarn"></div>
               </div></div>
               <!-- 3 SHEET DETAIL -->
@@ -2275,7 +2288,8 @@ $('#lg-btn').addEventListener('click',async()=>{const el=$('#lg-err');el.classLi
   }finally{btn.removeAttribute('disabled');btn.style.opacity='';}});
 ['#lg-user','#lg-pass'].forEach(s=>$(s).addEventListener('input',()=>$('#lg-err').classList.add('hidden')));
 $('#lg-pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('#lg-btn').click()});
-$('#logoutBtn').addEventListener('click',async()=>{await api('/api/auth/logout',{method:'POST'});location.reload();});
+$('#logoutBtn').addEventListener('click',()=>guardLeave(async()=>{await api('/api/auth/logout',{method:'POST'});location.reload();},'sign out'));
+window.addEventListener('beforeunload',e=>{if(ldPending()||tplDirty()){e.preventDefault();e.returnValue='';}});
 $('#themeBtn').addEventListener('click',()=>{const c=MD3.getTheme();MD3.setTheme(c==='dark'?'light':'dark');applyCalm();});
 $('#railBtn').addEventListener('click',()=>{$('#app').classList.toggle('rail');if(typeof flyHide==='function')flyHide(true);});
 
@@ -2292,7 +2306,8 @@ let entryDirty=false;
 function _visible(id){const el=$('#'+id);return el&&!el.classList.contains('hidden');}
 function isSetDirty(){return !!SETFS_SAVE[curSetSub]&&_visible('v-settings')&&$('#setSaveBtn')&&!$('#setSaveBtn').disabled;}
 function isEntryDirty(){return _visible('v-entry')&&entryDirty&&!!S.loc;}
-function dirtyCtx(){if(isEntryDirty())return 'entry';if(isSetDirty())return 'set';return null;}
+function dirtyCtx(){if(isEntryDirty())return 'entry';if(isSetDirty())return 'set';if(ldPending())return 'drawer';if(tplDirty())return 'tpl';return null;}
+function tplDirty(){return typeof M!=='undefined'&&M.dirty&&!!S.mapTplId&&_visible('v-templates');}
 let _unsGo=null,_unsCtx=null,_unsCancel=null;
 function guardLeave(go,dest,onCancel){
   if(isDraft()&&_visible('v-entry')){                    // draft belum punya kode
@@ -2301,14 +2316,18 @@ function guardLeave(go,dest,onCancel){
   }
   const ctx=dirtyCtx();if(!ctx){go();return;}_unsGo=go;_unsCtx=ctx;_unsCancel=onCancel||null;
   const to=dest?(' to <b>'+esc(dest)+'</b>'):'';
-  $('#unsBody').innerHTML='You have unsaved changes on this page. Save before moving'+to+'?';
+  $('#unsBody').innerHTML=ctx==='drawer'?ldPendMsg():'You have unsaved changes on this page. Save before moving'+to+'?';
   const o=$('#unsOv');o.style.display='flex';requestAnimationFrame(()=>requestAnimationFrame(()=>o.classList.add('on')));}
 function _unsClose(){const o=$('#unsOv');o.classList.remove('on');setTimeout(()=>{o.style.display='none';},430);}
 function _unsStay(){const cb=_unsCancel;_unsGo=null;_unsCancel=null;_unsClose();if(cb)cb();}
 $('#unsStay').addEventListener('click',_unsStay);
-$('#unsDiscard').addEventListener('click',()=>{if(_unsCtx==='entry')entryDirty=false;else setSaveDirty(false);
+$('#unsDiscard').addEventListener('click',()=>{if(_unsCtx==='entry')entryDirty=false;else if(_unsCtx==='drawer')ldClearPend();
+  else if(_unsCtx==='tpl'){mapSaved();M.reload=true;}else setSaveDirty(false);
   const go=_unsGo;_unsGo=null;_unsCancel=null;_unsClose();if(go)go();});
-$('#unsSave').addEventListener('click',()=>{if(_unsCtx==='entry'){entryDirty=false;$('#save-btn').click();}else{$('#setSaveBtn').click();}
+$('#unsSave').addEventListener('click',async()=>{
+  if(_unsCtx==='drawer'){if(!await ldSaveAll())return;}
+  else if(_unsCtx==='tpl'){if(!await mapSaveNow()){_unsStay();return;}}
+  else if(_unsCtx==='entry'){entryDirty=false;$('#save-btn').click();}else{$('#setSaveBtn').click();}
   const go=_unsGo;_unsGo=null;_unsCancel=null;_unsClose();if(go)go();});
 $('#unsOv').addEventListener('click',e=>{if(e.target.id==='unsOv')_unsStay();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#unsOv').classList.contains('on'))_unsStay();});
@@ -3302,6 +3321,11 @@ function fmtDateRel(iso){if(!iso)return {t:'—',full:'—'};const d=new Date(is
   let t;
   if(days<=0)t='Today';else if(days===1)t='Yesterday';else if(days<=5)t=days+' days ago';else t=dateShort;
   return {t,full:`${d.getDate()} ${_IDMON[d.getMonth()]} ${d.getFullYear()} · ${p(d.getHours())}:${p(d.getMinutes())}`};}
+/* Created / Last modified: waktu relatif + tanggal·jam di baris kedua */
+function lcWhen(iso){const d=new Date(iso||'');if(!iso||isNaN(d))return '—';
+  const m=Math.floor((Date.now()-d)/60000),f=fmtDateRel(iso);
+  const t=m<1?'Just now':m<60?m+' min ago':m<24*60&&f.t==='Today'?Math.floor(m/60)+' h ago':f.t;
+  return `<span class="lc-t">${esc(t)}</span><span class="lc-f">${esc(f.full)}</span>`;}
 function fetchLocPage(page){
   const q=encodeURIComponent(($('#loc-search').value||'').trim());
   const st=S.locFilter||'all';
@@ -3320,11 +3344,13 @@ function renderLocTable(){
     return `<tr class="lrow" data-i="${l.id}" onclick='openLocDrawer(${l.id})'><td><a class="loc-link mono">${esc(l.code)}</a></td>
     <td>${esc(l.data.nama_lokasi||l.name||'')}</td>
     <td>${esc(l.creator_name||'—')}</td>
-    <td class="lc-date" title="${esc((fmtDateRel(l.created_at)).full)}">${esc((fmtDateRel(l.created_at)).t)}</td>
+    <td class="lc-date">${lcWhen(l.created_at)}</td>
+    <td class="lc-date">${lcWhen(l.modified_at)}</td>
+    <td>${l.modifier_name?esc(l.modifier_name):'<span class="lc-none" data-tip="No record yet — shows after the next edit">—</span>'}</td>
     <td>${l.inv_count}</td><td>${present}/${S.cats.length}</td>
     <td><span class="loc-st ${stCls}">${esc(l.status)}</span></td>
     <td>${locKel(l)}</td>
-    <td style="text-align:right"><md-icon-button data-tip="Actions" onclick='event.stopPropagation();locMenu(this,${JSON.stringify({id:l.id,code:l.code,cd:l.can_delete,owner_id:l.owner_id,owner_name:l.owner_name})})'><span>more_vert</span></md-icon-button></td></tr>`;}).join('')||'<tr><td colspan=9 class="muted">No data</td></tr>';
+    <td style="text-align:right"><md-icon-button data-tip="Actions" onclick='event.stopPropagation();locMenu(this,${JSON.stringify({id:l.id,code:l.code,cd:l.can_delete,owner_id:l.owner_id,owner_name:l.owner_name})})'><span>more_vert</span></md-icon-button></td></tr>`;}).join('')||'<tr><td colspan=11 class="muted">No data</td></tr>';
   $('#loc-info').textContent=LOC_TOTAL?`Showing ${Math.min(LOC_ROWS.length,LOC_TOTAL)} of ${LOC_TOTAL}`:'';
   const cnt=$('#loc-exp-cnt');if(cnt)cnt.textContent=LOC_TOTAL?`${LOC_TOTAL} locations match filter`:'No locations';
   $('#loc-more').classList.toggle('hidden',LOC_ROWS.length>=LOC_TOTAL);bindTips();}
@@ -3425,13 +3451,34 @@ function locDetailState(loc){
   return {pct:Math.min(100,Math.round(done/total*100)),filledF,nFields:fields.length,invOk,items,fotoDone,nCats:cats.length,byCat};
 }
 async function openLocDrawer(id){
+  if(ldPending()&&id!==LD_CUR){ldGuard(()=>openLocDrawer(id));return;}
   $$('#loc-table tr.lrow').forEach(r=>r.classList.toggle('sel',+r.dataset.i===id));
   $('#ldScrim').classList.add('on');$('#ldDrawer').classList.add('on');$('#ldDrawer').setAttribute('aria-hidden','false');
-  try{const loc=await api('/api/locations/'+id);LD_CUR=id;fillLocDrawer(loc);}
-  catch(e){toast('Failed to load: '+e.message);closeLocDrawer();}
+  try{const loc=await api('/api/locations/'+id);LD_CUR=id;LD_LOC=loc;fillLocDrawer(loc);}
+  catch(e){toast('Failed to load: '+e.message);_closeLocDrawer();}
 }
-function closeLocDrawer(){$('#ldDrawer').classList.remove('on');$('#ldScrim').classList.remove('on');
+function _closeLocDrawer(){ldClearPend();$('#ldDrawer').classList.remove('on');$('#ldScrim').classList.remove('on');
   $('#ldDrawer').setAttribute('aria-hidden','true');$$('#loc-table tr.lrow').forEach(r=>r.classList.remove('sel'));LD_CUR=-1;}
+function closeLocDrawer(then){ldGuard(()=>{_closeLocDrawer();if(then)then();});}
+/* foto yang dipilih di drawer menunggu Save (belum dikirim ke server) */
+let LD_PEND=[],LD_LOC=null,_ldPid=0;
+function ldPending(){return LD_PEND.length>0&&$('#ldDrawer').classList.contains('on');}
+function ldPendMsg(){const n=LD_PEND.length;return `${n} photo${n>1?'s':''} ${n>1?"haven't":"hasn't"} been saved. Save before closing?`;}
+function ldClearPend(){LD_PEND.forEach(p=>URL.revokeObjectURL(p.url));LD_PEND=[];}
+function ldGuard(fn){if(!ldPending())return fn();guardLeave(fn);}
+function ldRefill(){if(LD_LOC&&LD_CUR===LD_LOC.id)fillLocDrawer(LD_LOC);}
+async function ldSaveOne(pid,quiet){const p=LD_PEND.find(x=>x.id===pid);if(!p)return true;
+  const fd=new FormData();fd.append('files',p.file);fd.append('category',p.cat);
+  try{const r=await fetch('/api/locations/'+p.loc+'/photos',{method:'POST',credentials:'same-origin',body:fd});
+    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||('HTTP '+r.status));
+    URL.revokeObjectURL(p.url);LD_PEND=LD_PEND.filter(x=>x.id!==pid);
+    const loc=await api('/api/locations/'+p.loc);if(LD_CUR===p.loc){LD_LOC=loc;fillLocDrawer(loc);}
+    loadLocations();if(S.loc&&S.loc.id===p.loc){S.loc=loc;if(typeof renderPhotos==='function')renderPhotos();if(typeof updateSummary==='function')updateSummary();}
+    if(!quiet)toast('Photo saved ✓');return true;}
+  catch(err){toast('Failed: '+err.message);return false;}}
+async function ldSaveAll(){for(const p of [...LD_PEND]){if(!await ldSaveOne(p.id,true))return false;}toast('Photos saved ✓');return true;}
+window.ldSavePend=pid=>ldSaveOne(pid);
+window.ldDropPend=pid=>{const p=LD_PEND.find(x=>x.id===pid);if(p)URL.revokeObjectURL(p.url);LD_PEND=LD_PEND.filter(x=>x.id!==pid);ldRefill();};
 const LD_STAT_SHORT={tanggal:'Activation',teknisi:'Teknisi',pic:'PIC'};
 function fillLocDrawer(loc){
   const st=locDetailState(loc);const C=226,off=(C*(1-st.pct/100)).toFixed(1);
@@ -3463,10 +3510,13 @@ function fillLocDrawer(loc){
   const invHave=reqNames.filter(n=>inv.some(r=>((r.nama_barang||'')+'').trim()===n&&rowComplete(r))).length;
   // BODY — perlu tindakan (foto belum) + foto lengkap + perangkat
   const missCats=cats.filter(c=>!st.byCat[c.key]);
-  const actHtml=missCats.map(c=>`<div class="ld-act"><div class="txt"><div class="h">${esc(c.label)}</div><div class="s">Not uploaded</div></div>${canEdit?`<button class="ld-add" onclick="ldPickPhoto(${loc.id},'${c.key}')">+</button>`:''}</div>`).join('');
+  const actHtml=missCats.map(c=>{const pend=LD_PEND.filter(p=>p.loc===loc.id&&p.cat===c.key);
+    if(pend.length)return pend.map(p=>`<div class="ld-act pend"><img class="ld-pth" src="${p.url}" alt=""><div class="txt"><div class="h">${esc(c.label)}</div><div class="s">${esc(p.file.name)} · not saved</div></div>
+      <button class="ld-pbtn x" onclick="ldDropPend(${p.id})" aria-label="Remove"><span class="mi">close</span></button><button class="ld-pbtn save" onclick="ldSavePend(${p.id})">Save</button></div>`).join('');
+    return `<div class="ld-act"><div class="txt"><div class="h">${esc(c.label)}</div><div class="s">Not uploaded</div></div>${canEdit?`<button class="ld-add" onclick="ldPickPhoto(${loc.id},'${c.key}')">+</button>`:''}</div>`;}).join('');
   const thumbs=(loc.photos||[]).slice(0,4).map(p=>`<img class="th" src="/api/photos/${p.id}/file" loading="lazy">`).join('');
   const moreN=st.fotoDone-4;
-  const doneHtml=st.fotoDone?`<div class="ld-done" onclick="closeLocDrawer();openFromLog(${loc.id})">
+  const doneHtml=st.fotoDone?`<div class="ld-done" onclick="closeLocDrawer(()=>openFromLog(${loc.id}))">
       <div class="ld-stack">${thumbs}${moreN>0?`<span class="more">+${moreN}</span>`:''}</div>
       <div class="txt"><div class="h">${st.fotoDone} photos complete</div><div class="s">Tap to view in BAA Entry</div></div>
       <span class="mi chev">›</span></div>`:'';
@@ -3482,23 +3532,16 @@ function fillLocDrawer(loc){
   requestAnimationFrame(()=>{const p=$('#ldHero .ld-ring .prg');if(p)p.style.strokeDashoffset=off;});
   // FOOT
   const foot=$('#ldFoot');
-  if(canEdit){foot.innerHTML=`<button class="ld-btn" onclick="closeLocDrawer();openFromLog(${loc.id})"><span class="mi">edit</span>Edit in BAA Entry</button>`;}
+  if(canEdit){foot.innerHTML=`<button class="ld-btn" onclick="closeLocDrawer(()=>openFromLog(${loc.id}))"><span class="mi">edit</span>Edit in BAA Entry</button>`;}
   else if(loc.my_request==='pending'){foot.innerHTML=`<button class="ld-btn req" disabled><span class="mi">hourglass_top</span>Awaiting approval</button>`;}
   else{foot.innerHTML=`<button class="ld-btn req" id="ldReq"><span class="mi">lock_open</span>Request edit</button>`;$('#ldReq').onclick=()=>sendEditReq(loc.id,$('#ldReq'));}
 }
 /* "+" pada kartu Perlu tindakan → unggah foto langsung ke kategori itu */
 let LD_UP={id:null,cat:null};
 function ldPickPhoto(id,cat){LD_UP={id,cat};const f=$('#ldFile');f.value='';f.click();}
-$('#ldFile').addEventListener('change',async e=>{
+$('#ldFile').addEventListener('change',e=>{
   const files=[...e.target.files];if(!files.length||!LD_UP.id)return;
-  const fd=new FormData();files.forEach(f=>fd.append('files',f));fd.append('category',LD_UP.cat);
-  toast('Uploading…');
-  try{const r=await fetch('/api/locations/'+LD_UP.id+'/photos',{method:'POST',credentials:'same-origin',body:fd});
-    if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||('HTTP '+r.status));
-    toast('Photo uploaded ✓');
-    const loc=await api('/api/locations/'+LD_UP.id);if(LD_CUR===LD_UP.id)fillLocDrawer(loc);
-    loadLocations();if(S.loc&&S.loc.id===LD_UP.id){S.loc=loc;if(typeof renderPhotos==='function')renderPhotos();if(typeof updateSummary==='function')updateSummary();}
-  }catch(err){toast('Failed: '+err.message);}
+  files.forEach(f=>LD_PEND.push({id:++_ldPid,loc:LD_UP.id,cat:LD_UP.cat,file:f,url:URL.createObjectURL(f)}));ldRefill();
 });
 async function sendEditReq(id,btn){
   try{const r=await api('/api/edit-requests',{method:'POST',body:JSON.stringify({location_id:id})});
@@ -3506,11 +3549,11 @@ async function sendEditReq(id,btn){
     toast(r.duplicate?'Request already sent earlier':'Edit request sent to admin ✓');}
   catch(e){toast('Failed: '+e.message);}
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#ldDrawer').classList.contains('on'))closeLocDrawer();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#ldDrawer').classList.contains('on')&&$('#unsOv').style.display!=='flex')closeLocDrawer();});
 /* Klik di luar drawer (bukan pada baris tabel) -> tutup; klik baris tetap update in-place */
 document.addEventListener('click',e=>{const dr=$('#ldDrawer');
   if(!dr||!dr.classList.contains('on'))return;
-  if(e.target.closest('#ldDrawer')||e.target.closest('#loc-table tr.lrow'))return;
+  if(e.target.closest('#ldDrawer')||e.target.closest('#loc-table tr.lrow')||e.target.closest('#unsOv')||e.target.id==='ldFile')return;
   closeLocDrawer();});
 
 /* ===== Notifikasi (permintaan edit) — admin ===== */
@@ -3699,7 +3742,7 @@ async function loadTemplates(openId){const rows=await api('/api/templates');S.tp
   $$('.msteps .mstep').forEach((x,k)=>x.classList.toggle('dis',!rows.length&&k>0));
   $('#map-wsbox').classList.toggle('hidden',!rows.length);
   if(!rows.length){S.mapTplId=null;$('#tpl-up').classList.remove('hidden');mapGo(0,true);return rows;}
-  if(cur!==S.mapTplId||openId)await openMapping(cur,true);return rows;}
+  if(cur!==S.mapTplId||openId||M.reload){M.reload=false;await openMapping(cur,true);}return rows;}
 function renderTplList(sel){const rows=S.tplRows||[];
   $('#tpl-list').innerHTML=rows.map(t=>`<div class="mtr ${t.id===sel?'sel':''}" data-id="${t.id}"><span class="rad"></span>
     <div style="min-width:0"><span class="nm" title="${esc(t.name)}">${esc(t.name)}</span><small>${esc(t.filename||'')} · ${esc(t.sheet_log)} · ${esc(t.sheet_detail)} · ${t.mapped?'Mapped':'Not mapped yet'}</small></div>
@@ -3741,7 +3784,7 @@ function mapGo(i,instant){const stage=$('#map-stage'),from=$(`.mpane[data-p="${M
 function mapPaneShown(i){if(i===1)mapPreview();if(i===2){if(!M.userZoom)requestAnimationFrame(mapFit);}}
 $$('.msteps .mstep').forEach(s=>s.addEventListener('click',()=>mapGo(+s.dataset.p)));
 window.addEventListener('resize',()=>{if(!$('#v-templates').classList.contains('hidden'))mapHl(M.step);});
-if(window.ResizeObserver)new ResizeObserver(()=>{if(M.step===2&&!M.userZoom)mapFit();}).observe($('#map-vp'));
+if(window.ResizeObserver)new ResizeObserver(()=>{if(M.step===2){if(!M.userZoom)mapFit();else stickySync($('#map-vp'));}}).observe($('#map-vp'));
 
 let MAP_LOGH=[]; // [{col,text,target}] — header Log sheet -> 'f:<field>' | 'd:<datakey>' | 'p:<cat>' | ''
 let MAP_TXT=[];  // [{kind:'inv'|'data'|'text',ref,cell}]
@@ -3767,6 +3810,7 @@ function guessPhoto(text){const ht=' '+_tok(text).join(' ')+' ';let best='',scor
 function guessTarget(text){const t=(text||'').toLowerCase();
   if(/lengkap|complete/.test(t))return 'f:foto_lengkap';
   if(/foto|capture|photo|gambar|screenshot/.test(t)){const p=guessPhoto(text);if(p)return 'p:'+p;}
+  if(/\b(kode|code)\b/.test(t))return 'f:kode';
   const rx={no:/^no\.?$|nomor/,lokasi:/lokasi|site|location/,nama_barang:/nama barang|barang|item|perangkat|inventory/,merk_type:/merk|type|tipe|model|brand/,jumlah:/qty|jumlah|jml|quantity/,sn_tagging:/\bsn\b|serial|tagging/,keterangan:/ket|remark|catatan|notes?/};
   for(const k in rx)if(rx[k].test(t))return 'f:'+k;
   const lf=(S.locFields||[]).find(f=>_tok(f.label).some(w=>t.includes(w)));return lf?'d:'+lf.key:'';}
@@ -3792,7 +3836,7 @@ window.openMapping=async(id,force)=>{const go=async()=>{
   MAP_IMG=(S.cats||[]).map(c=>({key:c.key,label:c.label,ocr:c.ocr,a:((d.photos||{})[c.key]||'').toUpperCase()}));
   M.act=null;M.userZoom=false;M.render=null;M.merges=[];
   renderLogRows();renderTxtRows();renderImgRows();mapSteps();
-  M.identity=map.log.identity==='merge'?'merge':'first';$$('#map-ident button').forEach(b=>b.classList.toggle('on',b.dataset.v===M.identity));
+  M.identity=map.log.identity==='repeat'?'repeat':'first';$$('#map-ident button').forEach(b=>b.classList.toggle('on',b.dataset.v===M.identity));
   mapSaved();renderTplList(id);mapCurCard();if(M.step!==0)mapGo(0);else mapGo(0,true);
   loadDetailRender();};
   if(M.dirty&&!force)mapLeave(go);else await go();};
@@ -3814,7 +3858,7 @@ const tgtGroup=v=>!v?'':v.startsWith('p:')?'p':v==='f:foto_lengkap'?'c':(v.start
 function logTargetOpts(sel){
   const grp=(lbl,items)=>`<optgroup label="${lbl}">`+items.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(l)}</option>`).join('')+`</optgroup>`;
   return `<option value="">— Ignore —</option>`
-    +grp('Data',[['f:no','No'],['f:lokasi','Location']].concat((S.locFields||[]).map(x=>['d:'+x.key,x.label])))
+    +grp('Data',[['f:no','No'],['f:kode','Location code'],['f:lokasi','Location']].concat((S.locFields||[]).map(x=>['d:'+x.key,x.label])))
     +grp('Inventory',INV_FIELDS.map(f=>['f:'+f,INV_LABELS[f]||f]))
     +grp('Photo status (X if missing)',(S.cats||[]).map(c=>['p:'+c.key,c.label]))
     +grp('Photos complete (SUDAH/BELUM)',[['f:foto_lengkap','All photo categories']]);}
@@ -3835,12 +3879,12 @@ function mapSchedPreview(){if(M.step!==1)return;clearTimeout(M.pvT);M.pvT=setTim
 function trialBody(){return JSON.stringify({config:buildMapCfg(),sheet_log:mapLogSel.getValue(),sheet_detail:mapDetailSel.getValue(),limit:2});}
 async function mapPreview(){if(!S.mapTplId)return;const el=$('#map-pvsheet');
   try{const d=await api('/api/templates/'+S.mapTplId+'/preview',{method:'POST',body:trialBody()});M.pv=d;
-    const g=drawSheet(el,d.sheet,{hiliteX:true});M.pvW=g.W;M.pvH=g.H;mapPvFit();
+    const g=drawSheet(el,d.sheet,{hiliteX:true});M.pvG=g;M.pvW=g.W;M.pvH=g.H;mapPvFit();
     $('#map-pvsub').textContent=`latest 2 locations · rows ${d.start_row}–${d.last_row} · unsaved mapping`;
     $('#map-pvwarn').textContent=(d.warnings||[]).length?'⚠ '+d.warnings.join(' · '):'';}
   catch(e){el.style.width='';el.style.height='';el.style.transform='';el.innerHTML=`<div class="muted" style="padding:16px">${esc(e.message)}</div>`;$('#map-pvwarn').textContent='';}}
 function mapPvFit(){const vp=$('#map-pvvp'),el=$('#map-pvsheet');if(!M.pvW||!vp.clientWidth)return;const z=Math.max(.75,Math.min(1,(vp.clientWidth-4)/M.pvW));
-  el.style.transform=`scale(${z})`;el.style.marginRight=(-(1-z)*M.pvW)+'px';el.style.marginBottom=(-(1-z)*M.pvH)+'px';}
+  el.style.transform=`scale(${z})`;el.style.marginRight=(-(1-z)*M.pvW)+'px';el.style.marginBottom=(-(1-z)*M.pvH)+'px';if(M.pvG)stickyHeads(vp,M.pvG,z);}
 if(window.ResizeObserver)new ResizeObserver(()=>{if(M.step===1)mapPvFit();}).observe($('#map-pvvp'));
 $$('#map-ident button').forEach(b=>b.addEventListener('click',()=>{if(b.classList.contains('on'))return;M.identity=b.dataset.v;
   $$('#map-ident button').forEach(x=>x.classList.toggle('on',x===b));mapDirty();mapPreview();}));
@@ -3867,8 +3911,9 @@ function imgState(a){const v=(a||'').toUpperCase();if(!v)return['',''];
   if(!RX_CELL.test(v))return['err','?'];
   if(!M.render)return['ok','cell'];const[c,r]=pRef(v);return mergeAt(c,r)?['ok','merge']:['warn','range?'];}
 function cellBox(st,val,ph){return `<span class="mcell ${st[0]}"><input value="${esc(val||'')}" placeholder="${ph}" spellcheck="false"><span class="k">${st[1]}</span></span>`;}
+const dataFields=()=>[{key:'kode',label:'Location code'}].concat(S.locFields||[]);
 function renderTxtRows(){
-  const dopts=sel=>`<option value="">— field —</option>`+(S.locFields||[]).map(f=>`<option value="${esc(f.key)}" ${f.key===sel?'selected':''}>${esc(f.label)}</option>`).join('');
+  const dopts=sel=>`<option value="">— field —</option>`+dataFields().map(f=>`<option value="${esc(f.key)}" ${f.key===sel?'selected':''}>${esc(f.label)}</option>`).join('');
   const iopts=sel=>`<option value="">— field —</option>`+INV_FIELDS.map(f=>`<option value="${f}" ${f===sel?'selected':''}>${esc(INV_LABELS[f]||f)}</option>`).join('');
   $('#map-txtrows').innerHTML=MAP_TXT.map((r,i)=>{const act=M.act&&M.act.l==='t'&&M.act.i===i;
     const src=r.kind==='inv'?`<i class="mdot i"></i><select data-role="ref">${iopts(r.ref)}</select>`
@@ -3915,9 +3960,26 @@ function drawSheet(el,d,opt){opt=opt||{};const X=[HX],Y=[HY];d.cols.forEach(w=>X
     const cls='xc'+(rot?' rot':'')+(c.wr?' wr':'')+(opt.hiliteX&&v==='X'?' x':'');
     h+=`<div class="${cls}" style="left:${b.l}px;top:${b.t}px;width:${b.w}px;height:${b.h}px;border-top:${B('t')};border-right:${B('r')};border-bottom:${B('b')};border-left:${B('l')};justify-content:${j};align-items:${va};${j==='center'?'text-align:center;':''}${c.b?'font-weight:700;':''}${c.f?'background:'+c.f+';color:#222;':''}${c.sz?'font-size:'+c.sz+'px;':''}"><span>${esc(v)}</span></div>`;}
   el.innerHTML=h+(opt.extra||'');return{X,Y,W,H,merges};}
+/* header kolom (A,B,C…) & baris (1,2,3…) tetap terlihat saat viewport digeser */
+function stickyHeads(vp,g,z){let w=vp.parentNode;
+  if(!w.classList.contains('mvwrap')){w=document.createElement('div');w.className='mvwrap';vp.parentNode.insertBefore(w,vp);w.appendChild(vp);}
+  let hc=w.querySelector(':scope>.mhc'),hr=w.querySelector(':scope>.mhr'),hk=w.querySelector(':scope>.mhk');
+  if(!hc){hc=document.createElement('div');hc.className='mhc';hr=document.createElement('div');hr.className='mhr';hk=document.createElement('div');hk.className='mhk';w.append(hc,hr,hk);
+    vp.addEventListener('scroll',()=>stickySync(vp),{passive:true});}
+  const X=g.X,Y=g.Y;let c='',rr='';
+  for(let i=1;i<X.length;i++){const wd=X[i]-X[i-1];if(wd)c+=`<div class="hx" style="left:${X[i-1]}px;top:0;width:${wd}px;height:${HY}px">${idxToCol(i)}</div>`;}
+  for(let i=1;i<Y.length;i++){const h=Y[i]-Y[i-1];if(h)rr+=`<div class="hx" style="left:0;top:${Y[i-1]}px;width:${HX}px;height:${h}px">${i}</div>`;}
+  hc.innerHTML=`<div class="in" style="width:${g.W}px;height:${HY}px">${c}</div>`;hr.innerHTML=`<div class="in" style="width:${HX}px;height:${g.H}px">${rr}</div>`;
+  vp._sz={z,g};stickySync(vp);}
+function stickySync(vp){const d=vp._sz;if(!d)return;const w=vp.parentNode,z=d.z,T=vp.offsetTop+vp.clientTop,L=vp.offsetLeft+vp.clientLeft;
+  const hc=w.querySelector(':scope>.mhc'),hr=w.querySelector(':scope>.mhr'),hk=w.querySelector(':scope>.mhk');
+  Object.assign(hc.style,{top:T+'px',left:L+'px',width:(vp.clientWidth)+'px',height:(HY*z)+'px'});
+  Object.assign(hr.style,{top:T+'px',left:L+'px',width:(HX*z)+'px',height:(vp.clientHeight)+'px'});
+  Object.assign(hk.style,{top:T+'px',left:L+'px',width:(HX*z)+'px',height:(HY*z)+'px'});
+  hc.firstChild.style.transform=`translateX(${-vp.scrollLeft}px) scale(${z})`;hr.firstChild.style.transform=`translateY(${-vp.scrollTop}px) scale(${z})`;}
 function renderSheet(){const g=drawSheet($('#map-sheet'),M.render,{extra:'<div id="map-ovs"></div><div class="selb" id="map-selb"></div><div class="hov" id="map-hov"></div>'});
   CX=g.X;CY=g.Y;M.W=g.W;M.H=g.H;renderOverlays();setZoom(M.zoom);}
-function setZoom(z){M.zoom=Math.max(.2,Math.min(1.5,z));const sh=$('#map-sheet');if(!M.W)return;
+function setZoom(z){M.zoom=Math.max(.2,Math.min(1.5,z));const sh=$('#map-sheet');if(!M.W)return;requestAnimationFrame(()=>stickyHeads($('#map-vp'),{X:CX,Y:CY,W:M.W,H:M.H},M.zoom));
   sh.style.transform=`scale(${M.zoom})`;sh.style.marginRight=(-(1-M.zoom)*M.W)+'px';sh.style.marginBottom=(-(1-M.zoom)*M.H)+'px';$('#map-zl').textContent=Math.round(M.zoom*100)+'%';}
 function mapFit(){const vp=$('#map-vp');if(!M.W||!vp.clientWidth)return;setZoom((vp.clientWidth-6)/M.W);}
 $('#map-zi').addEventListener('click',()=>{M.userZoom=true;setZoom(M.zoom+.1);});
@@ -3926,7 +3988,7 @@ function mapAreas(){const out=[];if(!M.render)return out;
   const invS=parseInt($('#map-invstart').value)||1,invN=parseInt($('#map-invmax').value)||1;
   MAP_TXT.forEach((r,i)=>{const v=(r.cell||'').toUpperCase(),[st]=txtState(r);if(st!=='ok')return;
     let R;if(r.kind==='inv'){const c=colToIdx(v);R={c1:c,r1:invS,c2:c,r2:invS+invN-1};}else{const[c,rr]=pRef(v);R=mergeAt(c,rr)||{c1:c,r1:rr,c2:c,r2:rr};}
-    const lbl=r.kind==='inv'?(INV_LABELS[r.ref]||r.ref):r.kind==='data'?((S.locFields||[]).find(f=>f.key===r.ref)||{}).label||r.ref:(r.ref||'Text');
+    const lbl=r.kind==='inv'?(INV_LABELS[r.ref]||r.ref):r.kind==='data'?(dataFields().find(f=>f.key===r.ref)||{}).label||r.ref:(r.ref||'Text');
     out.push({l:'t',i,k:r.kind==='inv'?'i':r.kind==='data'?'d':'t',R,lbl});});
   MAP_IMG.forEach((p,i)=>{const v=(p.a||'').toUpperCase(),[st]=imgState(v);if(st!=='ok'&&st!=='warn')return;
     let R;if(v.includes(':'))R=pRange(v);else{const[c,r]=pRef(v);R=mergeAt(c,r)||{c1:c,r1:r,c2:c,r2:r};}out.push({l:'m',i,k:'p',R,lbl:p.label});});
@@ -3946,7 +4008,7 @@ function bindPickRow(el,l,i){
 function mapActItem(){return M.act?(M.act.l==='t'?MAP_TXT[M.act.i]:MAP_IMG[M.act.i]):null;}
 function mapPickHint(){const it=mapActItem();$('#map-vp').classList.toggle('picking',!!it);
   if(!it){$('#map-pick').textContent='Rendered from the template file';return;}
-  const name=M.act.l==='m'?it.label:it.kind==='inv'?(INV_LABELS[it.ref]||'inventory field'):it.kind==='data'?(((S.locFields||[]).find(f=>f.key===it.ref)||{}).label||'data field'):'static text';
+  const name=M.act.l==='m'?it.label:it.kind==='inv'?(INV_LABELS[it.ref]||'inventory field'):it.kind==='data'?((dataFields().find(f=>f.key===it.ref)||{}).label||'data field'):'static text';
   $('#map-pick').innerHTML=`Pick for <b>${esc(name)}</b> — ${M.act.l==='m'?'click a merged cell or drag an area':it.kind==='inv'?'click any cell in the column':'click a cell'}`;}
 const cellAt=(x,y)=>{const c=CX.findIndex((v,k)=>k>0&&x<v),r=CY.findIndex((v,k)=>k>0&&y<v);return c>0&&r>0?[c,r]:null;};
 const sheetPos=e=>{const b=$('#map-sheet').getBoundingClientRect();return[(e.clientX-b.left)/M.zoom,(e.clientY-b.top)/M.zoom];};
@@ -3965,7 +4027,7 @@ window.addEventListener('mouseup',e=>{if(!_drag)return;const it=mapActItem();con
   if(M.act.l==='m')val=(single||inOne)?tl:`${idxToCol(R.c1)}${R.r1}:${idxToCol(R.c2)}${R.r2}`;
   else if(it.kind==='inv')val=idxToCol(R.c1);else val=tl;
   if(M.act.l==='m')it.a=val;else it.cell=val;
-  const nm=M.act.l==='m'?it.label:it.kind==='inv'?(INV_LABELS[it.ref]||it.ref):it.kind==='data'?(((S.locFields||[]).find(f=>f.key===it.ref)||{}).label||'Data'):(it.ref||'Text');M.act=null;
+  const nm=M.act.l==='m'?it.label:it.kind==='inv'?(INV_LABELS[it.ref]||it.ref):it.kind==='data'?((dataFields().find(f=>f.key===it.ref)||{}).label||'Data'):(it.ref||'Text');M.act=null;
   renderTxtRows();renderImgRows();renderOverlays();mapPickHint();mapDirty();mapSteps();toast(`${nm} → ${val}`);});
 
 /* ---- ringkasan langkah + progres ---- */
@@ -3997,12 +4059,13 @@ function buildMapCfg(){const n=(s,d)=>parseInt($(s).value)||d;
     else if(r.ref!=='')cfg.detail.static_cells[c]=r.ref;});
   MAP_IMG.forEach(p=>{if(imgState(p.a)[0]==='ok')cfg.detail.photos[p.key]=p.a.toUpperCase();});
   return cfg;}
-$('#map-save').addEventListener('click',async()=>{const s=mapSteps();
-  if(!s.wsOk){mapGo(0);return toast('Log and Detail must be different sheets');}
-  if(s.bad){mapGo(1);return toast('Fix the duplicate targets in the Log sheet first');}
-  if(s.imErr){mapGo(2);return toast('Fix the highlighted cells in the Detail sheet first');}
+async function mapSaveNow(){const s=mapSteps();
+  if(!s.wsOk){mapGo(0);toast('Log and Detail must be different sheets');return false;}
+  if(s.bad){mapGo(1);toast('Fix the duplicate targets in the Log sheet first');return false;}
+  if(s.imErr){mapGo(2);toast('Fix the highlighted cells in the Detail sheet first');return false;}
   try{await api('/api/templates/'+S.mapTplId+'/mapping',{method:'PUT',body:JSON.stringify({config:buildMapCfg(),sheet_log:mapLogSel.getValue(),sheet_detail:mapDetailSel.getValue()})});
-    M.mapped=true;mapSaved();toast('Mapping saved');loadTemplates();}catch(e){toast('Failed: '+e.message);}});
+    M.mapped=true;mapSaved();toast('Mapping saved');loadTemplates();return true;}catch(e){toast('Failed: '+e.message);return false;}}
+$('#map-save').addEventListener('click',mapSaveNow);
 $('#map-discard').addEventListener('click',()=>{if(!M.dirty)return toast('Nothing to discard');confirmDo('Discard changes','Reload the last saved mapping?',()=>{M.dirty=false;openMapping(S.mapTplId,true);},{okLabel:'Discard'});});
 
 let USR_ROWS=[],editUserId=null;

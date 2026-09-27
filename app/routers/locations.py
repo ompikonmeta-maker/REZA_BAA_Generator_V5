@@ -125,7 +125,8 @@ def list_locations(
     offset = (page - 1) * size
     rows = conn.execute(
         f"""SELECT l.id, l.code, l.name, l.status, l.data_json, l.created_by, l.owner_id,
-              l.created_at, l.updated_at,
+              l.created_at, l.updated_at, l.modified_at, l.modified_by,
+              COALESCE(NULLIF(TRIM(m.full_name),''), m.username) AS modifier_name,
               COALESCE(NULLIF(TRIM(u.full_name),''), u.username, '—') AS creator_name,
               COALESCE(NULLIF(TRIM(o.full_name),''), o.username, '—') AS owner_name,
               (SELECT COUNT(*) FROM photos p WHERE p.location_id = l.id) AS photo_count,
@@ -137,6 +138,7 @@ def list_locations(
                    TRIM(COALESCE(i.keterangan,'')) = '')) AS inv_bad
             FROM locations l LEFT JOIN users u ON u.id = l.created_by
                               LEFT JOIN users o ON o.id = l.owner_id
+                              LEFT JOIN users m ON m.id = l.modified_by
             {wsql} ORDER BY l.id DESC LIMIT ? OFFSET ?""",
         params + [size, offset],
     ).fetchall()
@@ -148,6 +150,7 @@ def list_locations(
             "data": json.loads(r["data_json"]), "photo_count": r["photo_count"],
             "inv_count": r["inv_count"], "updated_at": r["updated_at"],
             "created_at": r["created_at"], "created_by": r["created_by"],
+            "modified_at": r["modified_at"], "modifier_name": r["modifier_name"],
             "creator_name": r["creator_name"],
             "owner_id": r["owner_id"], "owner_name": r["owner_name"],
             "photo_cats": (r["photo_cats"].split(",") if r["photo_cats"] else []),
@@ -211,7 +214,8 @@ def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db)
          user["id"], user["id"], now, now),
     )
     code = _format_code(cur.lastrowid)
-    conn.execute("UPDATE locations SET code=? WHERE id=?", (code, cur.lastrowid))
+    conn.execute("UPDATE locations SET code=?, modified_at=?, modified_by=? WHERE id=?",
+                 (code, now, user["id"], cur.lastrowid))
     conn.commit()
     audit(conn, user, "create", "location", cur.lastrowid, code)
     row = conn.execute("SELECT * FROM locations WHERE id=?", (cur.lastrowid,)).fetchone()
@@ -268,11 +272,15 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
         raise HTTPException(404, "Location not found")
     if not _can_write(user, row):
         raise HTTPException(403, "Not your location")
+    new_json = json.dumps(body.data, ensure_ascii=False)
+    changed = (body.name != row["name"] or body.status != row["status"]
+               or json.loads(new_json) != json.loads(row["data_json"] or "{}"))
     conn.execute(
         "UPDATE locations SET name=?,data_json=?,status=?,updated_at=? WHERE id=?",
-        (body.name, json.dumps(body.data, ensure_ascii=False), body.status,
-         db.now_iso(), loc_id),
+        (body.name, new_json, body.status, db.now_iso(), loc_id),
     )
+    if changed:
+        db.touch_modified(conn, loc_id, user["id"])
     conn.commit()
     audit(conn, user, "update", "location", loc_id, row["code"])
     return _location_dict(conn, conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone(), user)
@@ -286,6 +294,10 @@ def save_inventory(loc_id: int, body: InventoryIn, conn: sqlite3.Connection = De
         raise HTTPException(404, "Location not found")
     if not _can_write(user, row):
         raise HTTPException(403, "Not your location")
+    cols = ("nama_barang", "merk_type", "jumlah", "sn_tagging", "keterangan")
+    old = [tuple(str(r[c] or "") for c in cols) for r in conn.execute(
+        "SELECT * FROM inventory_items WHERE location_id=? ORDER BY sort_order,id", (loc_id,)).fetchall()]
+    new = [tuple(str(getattr(it, c) or "") for c in cols) for it in body.items]
     conn.execute("DELETE FROM inventory_items WHERE location_id=?", (loc_id,))
     for i, it in enumerate(body.items):
         conn.execute(
@@ -293,7 +305,8 @@ def save_inventory(loc_id: int, body: InventoryIn, conn: sqlite3.Connection = De
             "sn_tagging,keterangan,sort_order) VALUES(?,?,?,?,?,?,?)",
             (loc_id, it.nama_barang, it.merk_type, it.jumlah, it.sn_tagging, it.keterangan, i),
         )
-    conn.execute("UPDATE locations SET updated_at=? WHERE id=?", (db.now_iso(), loc_id))
+    if old != new:
+        db.touch_modified(conn, loc_id, user["id"])
     conn.commit()
     audit(conn, user, "save_inventory", "location", loc_id, f"{len(body.items)} item")
     return {"ok": True, "count": len(body.items)}

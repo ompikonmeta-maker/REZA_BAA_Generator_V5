@@ -23,9 +23,8 @@ DEFAULT_CONFIG = {
         },
         "sources": {},
         "value": {},
-        # sel identitas lokasi (No, Lokasi, Foto Lengkap, status foto, field data):
-        # "first" = hanya di baris pertama lokasi, "merge" = di-merge vertikal
-        # selebar baris item lokasi tsb
+        # "first" = No/Lokasi/Kode hanya di baris pertama lokasi,
+        # "repeat" = No/Lokasi/Kode diulang di setiap baris item
         "identity": "first",
         # kolom status foto per kategori: "X" bila belum ada foto, kosong bila ada
         "photo_status": {
@@ -303,20 +302,6 @@ def _copy_row_style(ws, src_row: int, dst_row: int, max_col: int) -> None:
         ws.row_dimensions[dst_row].height = h
 
 
-def _merge_identity(ws, cols, r1: int, r2: int) -> None:
-    """Merge vertikal sel identitas satu lokasi (r1..r2), isi di tengah."""
-    from openpyxl.styles import Alignment
-    for col in cols:
-        try:
-            ws.merge_cells(f"{col}{r1}:{col}{r2}")
-            c = ws[f"{col}{r1}"]
-            a = c.alignment
-            c.alignment = Alignment(horizontal=a.horizontal or "center", vertical="center",
-                                    wrap_text=a.wrap_text, text_rotation=a.text_rotation)
-        except Exception:
-            pass
-
-
 def _has_photo(plist: list) -> bool:
     return any(p.get("path") and Path(p["path"]).exists() for p in plist or [])
 
@@ -361,11 +346,7 @@ def build_workbook(template_path: str, template_config: dict, locations: list[di
         if col:
             log_ws[f"{col}{row}"] = value
 
-    merge_ident = (logc.get("identity") or "first") == "merge"
-    ident_cols = {c for c in (
-        [log_cols.get(k) for k in ("no", "lokasi", "foto_lengkap")]
-        + [log_cols.get(f) for f, src in log_sources.items() if src == "data"]
-        + list(log_photo.values())) if c}
+    repeat_ident = (logc.get("identity") or "first") == "repeat"
 
     for i, loc in enumerate(locations, start=1):
         data = loc.get("data", {})
@@ -379,12 +360,13 @@ def build_workbook(template_path: str, template_config: dict, locations: list[di
 
         # --- baris LOG: satu baris per item inventory (list semua) ---
         rows_inv = inv if inv else [{}]          # lokasi tanpa inventory tetap 1 baris
-        loc_first = log_row
         for j, item in enumerate(rows_inv):
             _copy_row_style(log_ws, start_row, log_row, log_maxc)
-            if j == 0:                           # kolom identitas hanya di baris pertama
+            if j == 0 or repeat_ident:           # No/Lokasi/Kode: baris pertama (atau diulang)
                 _setc(log_row, log_cols.get("no"), i)
                 _setc(log_row, log_cols.get("lokasi"), nama)
+                _setc(log_row, log_cols.get("kode"), loc.get("code", ""))
+            if j == 0:                           # kolom identitas lain hanya di baris pertama
                 _setc(log_row, log_cols.get("foto_lengkap"), "SUDAH" if complete else "BELUM")
                 # status foto per kategori: "X" bila belum ada, kosong bila ada
                 for cat, col in log_photo.items():
@@ -397,8 +379,6 @@ def build_workbook(template_path: str, template_config: dict, locations: list[di
                 if _src == "data" and j == 0:
                     _setc(log_row, log_cols.get(_f), data.get(log_value.get(_f, _f), ""))
             log_row += 1
-        if merge_ident and log_row - 1 > loc_first:
-            _merge_identity(log_ws, ident_cols, loc_first, log_row - 1)
 
         # --- sheet detail per lokasi (duplikasi template) ---
         ws = wb.copy_worksheet(detail_tpl)
@@ -408,7 +388,7 @@ def build_workbook(template_path: str, template_config: dict, locations: list[di
 
         for cell, field in cfg["detail"].get("location_cells", {}).items():
             try:
-                ws[cell] = data.get(field, "")
+                ws[cell] = loc.get("code", "") if field == "kode" else data.get(field, "")
             except Exception:
                 pass
 

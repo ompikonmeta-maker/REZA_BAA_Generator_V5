@@ -188,7 +188,21 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE locations ADD COLUMN deleted_at TEXT")
     if not _has_column(conn, "locations", "deleted_by"):
         conn.execute("ALTER TABLE locations ADD COLUMN deleted_by INTEGER REFERENCES users(id)")
+    # Last modified / Modified by: hanya perubahan isi (data, inventory, foto).
+    # Data lama: waktu diambil dari updated_at, pengubah belum tercatat (NULL).
+    if not _has_column(conn, "locations", "modified_at"):
+        conn.execute("ALTER TABLE locations ADD COLUMN modified_at TEXT")
+        conn.execute("UPDATE locations SET modified_at = updated_at WHERE modified_at IS NULL")
+    if not _has_column(conn, "locations", "modified_by"):
+        conn.execute("ALTER TABLE locations ADD COLUMN modified_by INTEGER REFERENCES users(id)")
     conn.commit()
+
+
+def touch_modified(conn: sqlite3.Connection, loc_id: int, user_id) -> None:
+    """Catat perubahan isi lokasi (data, inventory, foto): waktu + pengubah."""
+    now = now_iso()
+    conn.execute("UPDATE locations SET modified_at=?, modified_by=?, updated_at=? WHERE id=?",
+                 (now, user_id, now, loc_id))
 
 
 def init_db() -> None:
