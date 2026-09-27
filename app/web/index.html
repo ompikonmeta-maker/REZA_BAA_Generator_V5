@@ -1195,7 +1195,15 @@
   /* label: bobot sedang, boleh membungkus 2 baris agar nama utuh */
   .pcinp.pclbl{background:transparent;font-weight:600;font-size:13.5px;line-height:1.25;white-space:normal}
   .pcinp.pclbl:focus{background:var(--md-sys-color-surface-container-highest)}
-  .pckey{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--md-sys-color-on-surface-variant);background:var(--md-sys-color-surface-container-highest);border-radius:8px;padding:8px 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+  .pckey{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;font-weight:700;color:var(--md-sys-color-on-surface-variant);background:var(--md-sys-color-surface-container-high);border-radius:9px;padding:6px 11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;max-width:100%}
+  /* Kata kunci: editor chip (× hapus, + tambah lewat input inline) */
+  .pckw{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-width:0}
+  .kwchip{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 5px 0 11px;border-radius:99px;background:var(--sec-c,var(--md-sys-color-secondary-container));color:var(--md-sys-color-on-secondary-container,#0b3d38);font-size:12.5px;font-weight:600;white-space:nowrap}
+  .kwchip .x{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;cursor:pointer;opacity:.55;font-size:13px}
+  .kwchip .x:hover{opacity:1;background:rgba(0,0,0,.10)}
+  .kwadd{width:28px;height:28px;border-radius:50%;border:1.6px dashed var(--md-sys-color-outline);background:transparent;color:var(--md-sys-color-on-surface-variant);cursor:pointer;font-size:16px;display:grid;place-items:center;flex:0 0 auto;padding:0}
+  .kwadd:hover{border-color:var(--md-sys-color-primary);color:var(--md-sys-color-primary)}
+  .kwin{height:28px;border:1.6px solid var(--md-sys-color-primary);border-radius:99px;padding:0 12px;font:inherit;font-size:12.5px;outline:none;min-width:110px;background:var(--md-sys-color-surface)}
   .pcocrlink{transition:opacity .3s cubic-bezier(.2,.8,.2,1),filter .3s;min-width:0}
   .pcocrlink.off{opacity:.4;filter:grayscale(.4);pointer-events:none}
   .pctr.removing{animation:pcout .3s cubic-bezier(.4,0,1,1) forwards}
@@ -3776,7 +3784,7 @@ function pcRowT(c={}){const isNew=!c.key;const off=c.ocr?'':' off';
     <div class="pcno"></div>
     <div class="c-label"><input class="pcinp pclbl" data-k="label" placeholder="Nama kategori" value="${esc(c.label||'')}" oninput="pcLabel(this)"></div>
     <div class="c-key"><span class="pckey" title="Key otomatis (read-only)">${esc(c.key||pcSlug(c.label||''))}</span><input type="hidden" data-k="key" value="${esc(c.key||'')}"></div>
-    <div class="c-kw"><input class="pcinp" data-k="keywords" placeholder="mis. plang, depan" value="${esc((c.keywords||[]).join(', '))}"></div>
+    <div class="c-kw"><div class="pckw"></div><input type="hidden" data-k="keywords" value="${esc((c.keywords||[]).join(', '))}"></div>
     <div class="c-ocr"><label class="tg pctg${c.ocr?' on':''}"><input type="checkbox" data-k="ocr" ${c.ocr?'checked':''} hidden onchange="pcOcr(this)"><span class="sw"></span></label></div>
     <div class="c-prefix pcocrlink${off}"><input class="pcinp" data-k="prefixes" placeholder="AP, TLSAT" value="${esc((c.prefixes||[]).join(', '))}"></div>
     <div class="c-auto pcocrlink${off}"><input class="pcinp" data-k="sn_item" placeholder="nama barang" value="${esc(c.sn_item||'')}"></div>
@@ -3793,13 +3801,34 @@ function renderPC(){$('#pc-list').innerHTML=`<div class="pctable"><div class="pc
     <div class="c-auto">Auto-isi SN ${pcHelp('sn_item')}</div>
     <div></div>
   </div><div id="pc-rows"></div></div>`;
-  $('#pc-rows').innerHTML=(S.cats||[]).map(pcRowT).join('');pcRenumber();bindTips();}
+  $('#pc-rows').innerHTML=(S.cats||[]).map(pcRowT).join('');pcRenumber();bindTips();
+  $$('#pc-rows .pckw').forEach(pcKwRender);}
+/* ---- Kata kunci: editor chip ---- */
+function pcKwHidden(wrap){return wrap.parentElement.querySelector('input[data-k="keywords"]');}
+function pcKwList(h){return (h.value||'').split(',').map(s=>s.trim()).filter(Boolean);}
+function pcKwSet(h,list){h.value=[...new Set(list.map(s=>(s||'').toLowerCase().trim().replace(/\s+/g,' ')).filter(Boolean))].join(', ');
+  h.dispatchEvent(new Event('input',{bubbles:true}));}
+window.pcKwRender=wrap=>{const h=pcKwHidden(wrap);const list=pcKwList(h);
+  wrap.innerHTML=list.map(w=>`<span class="kwchip">${esc(w)}<span class="x" title="Hapus">✕</span></span>`).join('')
+    +`<button type="button" class="kwadd" title="Tambah kata kunci">+</button>`;
+  wrap.querySelectorAll('.kwchip .x').forEach((x,idx)=>x.onclick=()=>{const l=pcKwList(h);l.splice(idx,1);pcKwSet(h,l);pcKwRender(wrap);});
+  wrap.querySelector('.kwadd').onclick=()=>pcKwStartAdd(wrap);};
+function pcKwStartAdd(wrap){const h=pcKwHidden(wrap);const btn=wrap.querySelector('.kwadd');
+  const inp=document.createElement('input');inp.className='kwin';inp.placeholder='ketik, Enter…';
+  wrap.insertBefore(inp,btn);btn.style.display='none';inp.focus();
+  const commit=keep=>{const parts=inp.value.split(',').map(s=>s.trim()).filter(Boolean);
+    if(parts.length)pcKwSet(h,pcKwList(h).concat(parts));pcKwRender(wrap);if(keep)pcKwStartAdd(wrap);};
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'||e.key===','){e.preventDefault();if(inp.value.trim())commit(true);}
+    else if(e.key==='Escape'){pcKwRender(wrap);}
+    else if(e.key==='Backspace'&&!inp.value){const l=pcKwList(h);if(l.length){l.pop();pcKwSet(h,l);pcKwRender(wrap);pcKwStartAdd(wrap);}}});
+  inp.addEventListener('blur',()=>{if(inp.value.trim())commit(false);else pcKwRender(wrap);});}
 function pcRenumber(){$$('#pc-rows .pctr').forEach((r,i)=>r.querySelector('.pcno').textContent=i+1);}
 window.pcLabel=el=>{const tr=el.closest('.pctr');if(tr.dataset.new){const k=pcSlug(el.value);tr.querySelector('.pckey').textContent=k;tr.querySelector('[data-k="key"]').value=k;}};
 window.pcOcr=chk=>{const tr=chk.closest('.pctr');tr.querySelectorAll('.pcocrlink').forEach(c=>c.classList.toggle('off',!chk.checked));};
 window.pcDel=btn=>{const tr=btn.closest('.pctr');tr.classList.add('removing');setTimeout(()=>{tr.remove();pcRenumber();},300);};
 $('#pc-add').addEventListener('click',()=>{$('#pc-rows').insertAdjacentHTML('beforeend',pcRowT());pcRenumber();bindTips();
-  const rows=$$('#pc-rows .pctr');rows[rows.length-1].querySelector('.pclbl').focus();});
+  const rows=$$('#pc-rows .pctr');const last=rows[rows.length-1];const w=last.querySelector('.pckw');if(w)pcKwRender(w);last.querySelector('.pclbl').focus();});
 $('#pc-save').addEventListener('click',async()=>{const categories=$$('#pc-rows .pctr').map(r=>{const g=k=>r.querySelector(`[data-k="${k}"]`);
   const label=(g('label').value||'').trim();let key=(g('key').value||'').trim();if(!key)key=pcSlug(label);
   return {key,label,ocr:g('ocr').checked,required:true,
