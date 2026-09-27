@@ -762,10 +762,58 @@
   .dtile .th{font:var(--md-sys-typescale-title-small);font-weight:600;margin:0 0 14px;display:flex;align-items:center;gap:9px}
   .dtile .th .grow{margin-left:auto}.dtile .th .lk{font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-primary);cursor:pointer}
   /* hero */
-  .dhero{position:relative;overflow:hidden;border:none;display:flex;align-items:center;gap:20px;min-height:128px;padding:26px 28px}
-  .dhero .sky,.dhero .stars{position:absolute;inset:0;z-index:0}
-  .dhero .orb{position:absolute;border-radius:50%;width:120px;height:120px;right:-18px;top:-30px;z-index:0;opacity:.9}
-  .dhero .star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff}
+  .dhero{position:relative;overflow:hidden;border:none;display:flex;align-items:center;gap:20px;min-height:150px;padding:26px 28px}
+  /* greeting ambience (Horizon BTS) — pagi/siang/sore/malam by local hour */
+  .amb-host{position:relative;overflow:hidden;isolation:isolate;container-type:inline-size;border:none;color:var(--amb-ink);
+    --amb-ink:#12201f;--amb-sub:#3d4c4b;--amb-glass:rgba(255,255,255,.55);--amb-glass-b:rgba(255,255,255,.7)}
+  .amb-host.amb-dk{--amb-ink:#eef6f6;--amb-sub:#c3d2d2;--amb-glass:rgba(10,20,30,.35);--amb-glass-b:rgba(255,255,255,.14)}
+  .pg .amb-host .mut,.amb-host .mut,.amb-host .lcode{color:var(--amb-sub)}
+  .amb{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+  :root[data-theme="dark"] .amb{filter:brightness(.84) saturate(.92)}
+  .amb .sky{position:absolute;inset:0}
+  .amb-pagi .sky{background:linear-gradient(180deg,#b9c8e4 0%,#f3cfc2 58%,#ffe2c2 100%)}
+  .amb-siang .sky{background:linear-gradient(180deg,#8fd0f0 0%,#c6e9f8 55%,#eaf8fc 100%)}
+  .amb-sore .sky{background:linear-gradient(180deg,#f9c9a0 0%,#f7a986 50%,#e98e86 100%)}
+  .amb-malam .sky{background:linear-gradient(180deg,#0a1528 0%,#13233f 100%)}
+  .amb .hills{position:absolute;left:0;right:0;bottom:0;width:100%;height:62%}
+  .amb .houses{position:absolute;bottom:10px;left:73%;width:80px;height:36px}
+  .amb .tower{position:absolute;bottom:14px;left:64%;height:82%;max-height:170px;aspect-ratio:100/204;overflow:visible}
+  .amb .sig{fill:none;stroke-width:5;stroke-linecap:round;animation:ambSig 2.4s ease-out infinite}.amb .sig.s2{animation-delay:.3s}.amb .sig.s3{animation-delay:.6s}
+  .amb-malam .amb .sig{filter:drop-shadow(0 0 4px #7fd9ff)}
+  .amb .lamp{animation:ambBlink 2.4s infinite}
+  .amb .sun,.amb .moon,.amb .rays{position:absolute;border-radius:50%;animation:ambRise 1.6s cubic-bezier(.05,.7,.1,1) both}
+  .amb .rays i{position:absolute;inset:0;border-radius:50%}
+  .amb-pagi .sun{width:74px;height:74px;left:calc(76% - 37px);bottom:34px;background:radial-gradient(circle,#fff6e6 30%,#ffd29a 62%,rgba(255,190,120,0) 72%);box-shadow:0 0 90px 40px rgba(255,200,140,.45)}
+  .amb-pagi .rays{width:900px;height:900px;left:calc(76% - 450px);bottom:calc(71px - 450px)}
+  .amb-pagi .rays i{background:repeating-conic-gradient(from 3deg,rgba(255,236,205,.75) 0 5deg,rgba(255,236,205,0) 7deg 15deg);
+    -webkit-mask:radial-gradient(circle,#000 4%,rgba(0,0,0,.5) 22%,transparent 52%);mask:radial-gradient(circle,#000 4%,rgba(0,0,0,.5) 22%,transparent 52%);filter:blur(3px);animation:ambSpin 160s linear infinite}
+  .amb-pagi .rays i+i{background:repeating-conic-gradient(from 10deg,rgba(255,215,170,.5) 0 3deg,rgba(255,215,170,0) 5deg 23deg);animation:ambSpinR 220s linear infinite,ambBreathe 6s ease-in-out infinite}
+  .amb-siang .sun{width:150px;height:150px;left:calc(80% - 75px);top:-58px;
+    background:radial-gradient(circle,#fff 0 28%,#fffbe6 36%,#fff0b8 46%,rgba(255,236,170,.75) 54%,rgba(200,232,250,.7) 62%,rgba(160,215,240,0) 72%)}
+  .amb-siang .rays{width:520px;height:520px;left:calc(80% - 260px);top:calc(17px - 260px)}
+  .amb-siang .rays i{background:repeating-conic-gradient(from 0deg,rgba(255,250,225,.9) 0 .7deg,transparent .7deg 9deg);
+    -webkit-mask:radial-gradient(circle,#000 12%,rgba(0,0,0,.35) 32%,transparent 62%);mask:radial-gradient(circle,#000 12%,rgba(0,0,0,.35) 32%,transparent 62%);animation:ambSpin 140s linear infinite}
+  .amb-sore .sun{width:84px;height:84px;left:calc(76% - 42px);bottom:30px;background:radial-gradient(circle,#fff0c9 28%,#ff9a52 64%,rgba(255,150,80,0) 72%);box-shadow:0 0 110px 50px rgba(255,150,80,.35)}
+  .amb-malam .moon{left:calc(80% - 20px);top:24px;width:40px;height:40px;box-shadow:inset -11px -3px 0 0 #e8eefc}
+  .amb .star{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;animation:ambTw 3.2s ease-in-out infinite}
+  .amb .cloud{position:absolute;height:18px;border-radius:20px;background:rgba(255,255,255,.9);animation:ambDrift 26s ease-in-out infinite alternate}
+  .amb .cloud::before{content:"";position:absolute;left:18%;top:-10px;width:28px;height:24px;border-radius:50%;background:inherit}
+  .amb .fog{position:absolute;left:-20%;right:-20%;bottom:6px;height:44px;background:rgba(255,255,255,.6);filter:blur(14px);animation:ambMist 16s ease-in-out infinite alternate}
+  .amb .bird{position:absolute;right:-30px;animation:ambFly 24s linear infinite}
+  .amb .bird i{display:block;width:14px;height:6px;border:2px solid rgba(70,30,30,.6);border-bottom:0;border-radius:50% 50% 0 0/100% 100% 0 0;animation:ambFlap .6s ease-in-out infinite}
+  @keyframes ambSig{0%,100%{opacity:.18}20%{opacity:1}60%{opacity:.18}}
+  @keyframes ambBlink{0%,70%,100%{opacity:.2}75%,90%{opacity:1}}
+  @keyframes ambRise{from{transform:translateY(70px);opacity:0}to{transform:none;opacity:1}}
+  @keyframes ambSpin{to{transform:rotate(360deg)}}@keyframes ambSpinR{to{transform:rotate(-360deg)}}
+  @keyframes ambBreathe{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+  @keyframes ambTw{0%,100%{opacity:.15}50%{opacity:.95}}
+  @keyframes ambDrift{from{transform:translateX(-30px)}to{transform:translateX(30px)}}
+  @keyframes ambMist{from{transform:translateX(-10%)}to{transform:translateX(10%)}}
+  @keyframes ambFly{from{transform:translate(0,0)}to{transform:translate(-700px,-30px)}}@keyframes ambFlap{0%,100%{transform:scaleY(1)}50%{transform:scaleY(-.6)}}
+  @container (max-width:900px){.amb .tower,.amb .houses{display:none}}
+  @media (prefers-reduced-motion:reduce){.amb *{animation:none!important}}
+  .amb-host .me-next{background:var(--amb-glass);border-color:var(--amb-glass-b);backdrop-filter:blur(10px);color:var(--amb-ink)}
+  .dhero.amb-host .hchip{background:var(--amb-glass);border-color:var(--amb-glass-b)}
   .dhero .htxt{position:relative;z-index:2}
   .dhero h1{font:var(--md-sys-typescale-headline-medium);font-weight:600;margin:0;letter-spacing:-.5px}
   .dhero .date{margin:4px 0 0;font:var(--md-sys-typescale-body-medium);opacity:.9}
@@ -1571,7 +1619,7 @@
     <div class="canvas-body">
       <section id="v-dashboard">
         <div class="dtile dhero" id="dHero" style="margin-bottom:14px">
-          <div class="sky" id="dSky"></div><div class="stars" id="dStars"></div><div class="orb" id="dOrb"></div>
+          <div class="amb" id="dAmb"></div>
           <div class="htxt"><h1 id="dHello">Welcome</h1><p class="date" id="dDate"></p></div>
           <div class="hstat"><span class="hchip" id="dChip"><span class="mi">bolt</span> <span id="dChipTxt"></span></span></div>
         </div>
@@ -2378,15 +2426,36 @@ window.addEventListener('resize',()=>{if(_fly.classList.contains('on'))_flyPos()
 function navTo(v){const n=document.querySelector('.navitem[data-view="'+v+'"]');if(n)n.click();}
 
 /* ===== DASHBOARD ===== */
-function greetWord(){const h=new Date().getHours();return h<11?'Good morning':h<15?'Good afternoon':h<18?'Good evening':'Good night';}
-function paintDashSky(){
-  const h=new Date().getHours();let sky,orb,ink='#0d1f1e',stars=false;
-  if(h<11){sky='linear-gradient(120deg,#ffe6c4,#ffd0b0 32%,#9fd8cf)';orb='radial-gradient(circle,#fff3d6,#ffd27a)';}
-  else if(h<15){sky='linear-gradient(120deg,#cdeeee,#a9dced 55%,#7fc7e6)';orb='radial-gradient(circle,#fff,#ffe9a8)';}
-  else if(h<18){sky='linear-gradient(120deg,#ffd9a8,#f4a98c 55%,#c77e86)';orb='radial-gradient(circle,#fff0d0,#ff9d5c)';}
-  else{sky='linear-gradient(120deg,#0b2733,#0f3a3a 60%,#123f3e)';orb='radial-gradient(circle,#eaf6ff,#b9d6e6)';ink='#eafaf9';stars=true;}
-  $('#dSky').style.background=sky;$('#dOrb').style.background=orb;$('#dHero').style.color=ink;$('#dChip').style.color=ink;
-  $('#dStars').innerHTML=stars?Array.from({length:24},()=>`<span class="star" style="left:${Math.random()*100}%;top:${Math.random()*100}%;opacity:${(.3+Math.random()*.6).toFixed(2)}"></span>`).join(''):'';
+function ambBand(){const h=new Date().getHours();return h>=4&&h<11?'pagi':h>=11&&h<15?'siang':h>=15&&h<18?'sore':'malam';}
+function greetWord(){return {pagi:'Good morning',siang:'Good afternoon',sore:'Good evening',malam:'Good night'}[ambBand()];}
+const AMB_COL={pagi:['#a5b2cc','#7e8dab','#56627f','#3a4560'],siang:['#9fd4b2','#6fb08d','#3f8a6b','#24473c'],sore:['#c47a74','#96525f','#643447','#3e1f2d'],malam:['#1f3252','#182843','#0f1c33','#6f86b0']};
+function ambTower(t){const k=AMB_COL[t][3],w=y=>9+(y-80)/116*25,L=y=>(50-w(y)).toFixed(1),R=y=>(50+w(y)).toFixed(1),ys=[80,108,146,196];let g='';
+  for(let i=0;i<3;i++){const a=ys[i],b=ys[i+1];g+=`M${L(a)} ${a}L${R(b)} ${b}M${R(a)} ${a}L${L(b)} ${b}M${L(b)} ${b}H${R(b)}`;}
+  g+=`M${L(80)} 80L${L(196)} 196M${R(80)} 80L${R(196)} 196`;
+  const arc=(r,c)=>{const a1=-40*Math.PI/180,a2=220*Math.PI/180;
+    return `<path class="sig ${c}" stroke="${k}" d="M${(50+r*Math.cos(a1)).toFixed(1)} ${(34-r*Math.sin(a1)).toFixed(1)}A${r} ${r} 0 1 0 ${(50+r*Math.cos(a2)).toFixed(1)} ${(34-r*Math.sin(a2)).toFixed(1)}"/>`;};
+  return `<svg class="tower" viewBox="0 -4 100 204">${arc(13,'s1')}${arc(23,'s2')}${arc(33,'s3')}
+    <g fill="none" stroke="${k}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="50" cy="34" r="5" fill="${t==='malam'?'#ff5a4e':k}" stroke="none"${t==='malam'?' class="lamp"':''}/>
+    <path d="M50 40V66"/><rect x="39" y="66" width="22" height="14" rx="2"/><path d="${g}"/></g></svg>`;}
+function ambHTML(t){const c=AMB_COL[t],r=(a,b)=>(a+Math.random()*(b-a)).toFixed(1);
+  const stars=(n,top)=>Array.from({length:n},()=>`<span class="star" style="left:${r(0,100)}%;top:${r(0,top)}%;animation-delay:${r(0,3)}s"></span>`).join('');
+  let s='<div class="sky"></div>';
+  if(t==='malam')s+=stars(34,60)+'<div class="moon"></div>';
+  if(t==='pagi')s+=stars(8,30)+'<div class="rays"><i></i><i></i></div><div class="sun"></div>';
+  if(t==='siang')s+='<div class="rays"><i></i></div><div class="sun"></div><div class="cloud" style="width:74px;left:48%;top:24%"></div><div class="cloud" style="width:52px;left:88%;top:44%;animation-duration:32s"></div>';
+  if(t==='sore')s+='<div class="sun"></div>'+[[0,30],[-2,36],[-1,24]].map(([d,y])=>`<div class="bird" style="top:${y}%;animation-delay:${d}s"><i></i></div>`).join('');
+  s+=`<svg class="hills" viewBox="0 0 1000 120" preserveAspectRatio="none">
+    <path d="M0 70 C150 40 300 58 450 46 C600 34 720 60 860 40 C930 30 970 36 1000 34 V120 H0Z" fill="${c[0]}"/>
+    <path d="M0 92 C180 70 360 86 540 74 C700 62 840 86 1000 70 V120 H0Z" fill="${c[1]}"/>
+    <path d="M0 120 C220 100 440 114 660 102 C820 94 920 106 1000 100 V120Z" fill="${c[2]}"/></svg>
+    <svg class="houses" viewBox="0 0 90 40"><g fill="${c[2]}"><rect x="8" y="20" width="26" height="18"/><path d="M4 21 L21 8 L38 21Z"/><rect x="52" y="26" width="20" height="14"/><path d="M48 27 L62 17 L76 27Z"/></g>
+    ${t==='malam'?'<rect x="15" y="26" width="6" height="6" fill="#ffd27a"/><rect x="58" y="30" width="5" height="5" fill="#ffd27a"/>':''}</svg>${ambTower(t)}`;
+  if(t==='pagi')s+='<div class="fog"></div>';
+  return s;}
+function ambHost(t){return `amb-host amb-${t}${t==='malam'?' amb-dk':''}`;}
+function paintDashSky(){const t=ambBand(),h=$('#dHero');
+  h.className='dtile dhero '+ambHost(t)+(h.classList.contains('hidden')?' hidden':'');$('#dAmb').innerHTML=ambHTML(t);
   const d=new Date(),days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],mo=['January','February','March','April','May','June','July','August','September','October','November','December'];
   $('#dDate').textContent=`${days[d.getDay()]}, ${d.getDate()} ${mo[d.getMonth()]} ${d.getFullYear()}`;
 }
@@ -2648,10 +2717,11 @@ async function loadMyDash(){let d;try{d=await api('/api/dash/me');}catch(e){retu
   const el=$('#dashMe'),t=d.team,next=d.drafts[0];
   $('#dHero').classList.add('hidden');
   const C=2*Math.PI*16;
-  const hero=`<div class="card s12 me-hero" style="background:linear-gradient(135deg,color-mix(in srgb,var(--md-sys-color-primary) 10%,var(--md-sys-color-surface)),var(--md-sys-color-surface))">
+  const amb=ambBand();
+  const hero=`<div class="card s12 me-hero ${ambHost(amb)}"><div class="amb">${ambHTML(amb)}</div>
     <div><h2 style="margin:0;font:var(--md-sys-typescale-headline-small);font-weight:600">${greetWord()}, ${esc(d.name)}</h2>
       <div class="mut">${vwFullDate(new Date())} · ${d.drafts.length} open draft${d.drafts.length===1?'':'s'}</div>
-      ${next?`<div class="me-next"><svg width="54" height="54" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="var(--md-sys-color-surface-container-highest)" stroke-width="5"/><circle cx="20" cy="20" r="16" fill="none" stroke="var(--md-sys-color-primary)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-next.pct/100)}" transform="rotate(-90 20 20)"/><text x="20" y="24" text-anchor="middle" font-size="10" font-weight="600" fill="var(--md-sys-color-on-surface)">${next.pct}%</text></svg>
+      ${next?`<div class="me-next"><svg width="54" height="54" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="var(--md-sys-color-surface-container-highest)" stroke-width="5"/><circle cx="20" cy="20" r="16" fill="none" stroke="var(--md-sys-color-primary)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-next.pct/100)}" transform="rotate(-90 20 20)"/><text x="20" y="24" text-anchor="middle" font-size="10" font-weight="600" fill="currentColor">${next.pct}%</text></svg>
         <div style="flex:1;min-width:0"><div class="mut">Closest to done</div><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${locLbl(next)}</div>
           <div class="pg-miss">${next.missing.slice(0,3).map(m=>`<span class="pg-m">${esc(m)}</span>`).join('')}</div></div>
         <md-button variant="filled" id="meCont">Continue</md-button></div>`:'<div class="me-next"><span class="mut">No open drafts — start a new location.</span></div>'}</div>
