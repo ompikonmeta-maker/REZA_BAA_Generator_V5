@@ -16,32 +16,37 @@ from pathlib import Path
 
 
 def _recenter_shapes(wb, anchor_cells=None) -> None:
-    """Pusatkan tiap gambar tepat di tengah sel merge tempatnya (unit points,
-    diambil dari Excel => bebas font). Skalakan turun bila lebih besar dari sel.
+    """Pusatkan tiap gambar tepat di tengah area fotonya (unit points, diambil
+    dari Excel => bebas font). Skalakan turun bila lebih besar dari area.
 
-    Bila ``anchor_cells`` diberikan, hanya gambar yang berada di sel-merge anchor
-    tsb yang dipusatkan (agar logo/gambar bawaan template tidak ikut dipindah)."""
+    Area = range eksplisit ("B12:H26") atau MergeArea dari sel anchor tunggal.
+    Bila ``anchor_cells`` diberikan, hanya gambar di area anchor tsb yang
+    dipusatkan (agar logo/gambar bawaan template tidak ikut dipindah)."""
     for ws in wb.Worksheets:
         try:
             shapes = list(ws.Shapes)
         except Exception:
             continue
-        allowed = None
-        if anchor_cells:
-            allowed = set()
-            for a in anchor_cells:
-                try:
-                    allowed.add(ws.Range(a).MergeArea.Address)
-                except Exception:
-                    pass
+        areas = []
+        for a in (anchor_cells or []):
+            try:
+                areas.append(ws.Range(a) if ":" in a else ws.Range(a).MergeArea)
+            except Exception:
+                pass
         for shp in shapes:
             try:
                 if shp.Type != 13:            # 13 = msoPicture
                     continue
                 cell = shp.TopLeftCell
-                area = cell.MergeArea          # sel merge (atau sel tunggal)
-                if allowed is not None and area.Address not in allowed:
-                    continue                   # bukan sel foto kita -> lewati
+                area = None
+                for ar in areas:
+                    if ws.Application.Intersect(cell, ar) is not None:
+                        area = ar
+                        break
+                if area is None:
+                    if anchor_cells:
+                        continue               # bukan area foto kita -> lewati
+                    area = cell.MergeArea
                 aw, ah = float(area.Width), float(area.Height)
                 shp.LockAspectRatio = True     # -1 (msoTrue) juga boleh
                 w, h = float(shp.Width), float(shp.Height)

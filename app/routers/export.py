@@ -94,7 +94,12 @@ def _active_template(conn: sqlite3.Connection):
     return tpl, tcfg
 
 
-def _template_pdf(tpl, tcfg, locs, out_pdf: Path) -> bool:
+def _photo_anchors(tcfg: dict) -> list[str]:
+    """Anchor/area foto efektif (mengikuti config ter-mapping atau default)."""
+    return [a for a in (excel_svc.resolve_config(tcfg)["detail"].get("photos") or {}).values() if a]
+
+
+def _template_pdf(tpl, tcfg, locs, out_pdf: Path, cats=None) -> bool:
     """Isi template -> xlsx (detail saja, tanpa LOG) -> konversi PDF (Excel/LO).
     True bila berhasil; False agar pemanggil fallback ke reportlab."""
     if not xlsx2pdf.available():
@@ -103,13 +108,13 @@ def _template_pdf(tpl, tcfg, locs, out_pdf: Path) -> bool:
     tmp_xlsx = out_pdf.with_suffix(".xlsx")
     ok = False
     try:
-        excel_svc.build_workbook(tpl["path"], tcfg, locs, str(tmp_xlsx))
+        excel_svc.build_workbook(tpl["path"], tcfg, locs, str(tmp_xlsx), cats)
         wb = openpyxl.load_workbook(str(tmp_xlsx))
         log_name = tcfg.get("sheet_log")
         if log_name and log_name in wb.sheetnames and len(wb.sheetnames) > 1:
             del wb[log_name]                  # PDF hanya halaman detail lokasi
         wb.save(str(tmp_xlsx))
-        anchors = list((tcfg.get("detail", {}).get("photos", {}) or {}).values())
+        anchors = _photo_anchors(tcfg)
         ok = xlsx2pdf.xlsx_to_pdf(str(tmp_xlsx), str(out_pdf), anchors)
     except Exception:
         ok = False
@@ -125,7 +130,7 @@ def _render_pdf(conn, locs, out_pdf: Path, cats, title) -> str:
     """PDF mengikuti template aktif bila memungkinkan; jika tidak, pakai
     generator bawaan (reportlab). Mengembalikan 'template' atau 'builtin'."""
     tpl, tcfg = _active_template(conn)
-    if tpl and _template_pdf(tpl, tcfg, locs, out_pdf):
+    if tpl and _template_pdf(tpl, tcfg, locs, out_pdf, cats):
         return "template"
     pdf_svc.build_pdf(locs, cats, str(out_pdf), app_title=title)
     return "builtin"
@@ -147,10 +152,11 @@ def export_excel(scope: str = Query("one"), loc_id: int | None = None,
     tcfg["sheet_detail"] = tpl["sheet_detail"]
     prefix = locs[0]["code"] if scope == "one" else "Log_BAA"
     out = _stamp(prefix, "xlsx")
-    res = excel_svc.build_workbook(tpl["path"], tcfg, locs, str(out))
+    cats = db.get_setting(conn, "photo_categories", [])
+    res = excel_svc.build_workbook(tpl["path"], tcfg, locs, str(out), cats)
     # Pusatkan foto secara akurat via Excel (bila tersedia) — bebas font/render
     try:
-        anchors = list((tcfg.get("detail", {}).get("photos", {}) or {}).values())
+        anchors = _photo_anchors(tcfg)
         xlsx2pdf.recenter_images_excel(str(out), anchors)
     except Exception:
         pass

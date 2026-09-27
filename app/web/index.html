@@ -272,7 +272,7 @@
   .topbar .page-title{font:var(--md-sys-typescale-headline-small);margin:0}
   .canvas-body{padding:22px;overflow-y:auto;scrollbar-gutter:stable}
   /* Batasi lebar konten submenu (Pengaturan/Users/Template) di layar besar */
-  #v-settings,#v-users,#v-templates{max-width:1200px;margin-inline:auto}
+  #v-settings,#v-users{max-width:1200px;margin-inline:auto}
   .code-chip{display:inline-flex;align-items:center;gap:6px;background:var(--md-sys-color-surface-container-highest);color:var(--md-sys-color-on-surface-variant);border-radius:9px;padding:4px 10px;font:var(--md-sys-typescale-label-medium)}
   .code-chip .mi{font-size:16px}
 
@@ -976,7 +976,7 @@
   .map-hint{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small);margin:3px 0 0 27px}
   .maptab-inp{width:96px;height:36px;border:1px solid var(--md-sys-color-outline-variant);border-radius:9px;padding:0 10px;background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface);font-family:ui-monospace,Consolas,monospace;text-transform:uppercase}
   .maptab-inp:focus{outline:2px solid color-mix(in srgb,var(--md-sys-color-primary) 30%,transparent);border-color:var(--md-sys-color-primary)}
-  .maptab-inp.conflict{border-color:var(--md-sys-color-error);background:var(--badbg)}
+  .maptab-inp.conflict{border-color:var(--md-sys-color-error);background:var(--bad-bg)}
   .maptab-inp::placeholder{text-transform:none;color:var(--md-sys-color-on-surface-variant);opacity:.7}
   .maptab-inp.scell{width:78px}
   .mrow .mv .sdiv{font-size:15px;color:var(--md-sys-color-primary);opacity:.75}
@@ -998,10 +998,102 @@
   .mtag.text{background:var(--md-sys-color-on-surface-variant)}
   .mtag.img{background:var(--md-sys-color-primary)}
   .mdel{border:none;background:transparent;color:var(--md-sys-color-on-surface-variant);cursor:pointer;border-radius:8px;padding:5px;flex:0 0 auto}
-  .mdel:hover{color:var(--md-sys-color-error);background:var(--badbg)}
+  .mdel:hover{color:var(--md-sys-color-error);background:var(--bad-bg)}
   .maddbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
   .mreadbox{background:var(--md-sys-color-surface-container-low);border-radius:13px;padding:13px 15px;margin-top:12px;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant);display:flex;gap:10px;align-items:flex-start}
   .mreadbox .mi{color:var(--md-sys-color-primary);flex:0 0 auto}
+  /* ===== Template Mapping v4: rail + stage (1 pane aktif) ===== */
+  .msteps{position:relative}
+  .msteps .mstep{position:relative;z-index:1;background:transparent!important;border-color:transparent!important}
+  .mhl{position:absolute;left:0;right:0;top:0;height:0;border-radius:14px;background:var(--md-sys-color-secondary-container);border:1.5px solid color-mix(in srgb,var(--md-sys-color-primary) 30%,transparent);transition:transform .45s var(--md-sys-motion-easing-emphasized-decelerate,cubic-bezier(.05,.7,.1,1)),height .45s var(--md-sys-motion-easing-emphasized-decelerate,cubic-bezier(.05,.7,.1,1));z-index:0}
+  .mstep .num{transition:background .3s,color .3s}
+  .mstep.warn small{color:var(--md-sys-color-error)}
+  .mstage{position:relative;min-width:0;transition:height .45s var(--md-sys-motion-easing-emphasized-decelerate,cubic-bezier(.05,.7,.1,1))}
+  .mpane{margin-bottom:0;will-change:transform,opacity}
+  .mpane[hidden]{display:none}
+  .mpane.leave{position:absolute;inset:0 0 auto 0;pointer-events:none;animation:mpOut .22s var(--md-sys-motion-easing-standard,cubic-bezier(.2,0,0,1)) forwards}
+  .mpane.enter{animation:mpIn .5s var(--md-sys-motion-easing-emphasized-decelerate,cubic-bezier(.05,.7,.1,1)) both}
+  .mpane.enter .mpin>*{animation:mpRise .5s var(--md-sys-motion-easing-emphasized-decelerate,cubic-bezier(.05,.7,.1,1)) both}
+  .mpane.enter .mpin>*:nth-child(2){animation-delay:.04s}.mpane.enter .mpin>*:nth-child(3){animation-delay:.08s}.mpane.enter .mpin>*:nth-child(n+4){animation-delay:.12s}
+  @keyframes mpOut{to{opacity:0;transform:translateY(calc(var(--mdir,1) * -18px)) scale(.985);filter:blur(2px)}}
+  @keyframes mpIn{from{opacity:0;transform:translateY(calc(var(--mdir,1) * 28px)) scale(.985);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+  @keyframes mpRise{from{opacity:0;transform:translateY(10px)}}
+  @media (prefers-reduced-motion:reduce){.mpane.enter,.mpane.leave,.mpane.enter .mpin>*{animation:none}.mhl,.mstage{transition:none}}
+  .mph{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}.mph h3{margin:0;font:var(--md-sys-typescale-title-medium);font-weight:700}
+  .mph .muted{font:var(--md-sys-typescale-label-small)}
+  .mbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--md-sys-color-surface-container-low);border:1px solid var(--md-sys-color-outline-variant);border-radius:12px;padding:8px 12px;margin-bottom:12px;font:var(--md-sys-typescale-label-medium)}
+  .mbar label{display:inline-flex;align-items:center;gap:6px;color:var(--md-sys-color-on-surface-variant)}
+  .mbar .grow,.mph .grow,.mlh .grow,.mctool .grow{flex:1}
+  .mnum{width:62px;height:30px;border:1px solid var(--md-sys-color-outline-variant);border-radius:8px;text-align:center;font:600 13px ui-monospace,Consolas,monospace;background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface)}
+  .mnum.ro{display:inline-grid;place-items:center;background:var(--md-sys-color-surface-container-highest);color:var(--md-sys-color-on-surface-variant)}
+  .mnum:focus{outline:2px solid color-mix(in srgb,var(--md-sys-color-primary) 30%,transparent);border-color:var(--md-sys-color-primary)}
+  .mpill{padding:4px 10px;border-radius:999px;background:var(--md-sys-color-surface-container-highest);font:600 12px ui-monospace,Consolas,monospace}
+  .mlegend{display:flex;gap:12px;flex-wrap:wrap;color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small)}.mlegend span{display:inline-flex;align-items:center;gap:5px}
+  .mdot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:0 0 auto;background:var(--md-sys-color-outline-variant)}
+  .mdot.d{background:var(--md-sys-color-tertiary)}.mdot.i{background:var(--md-sys-color-secondary)}.mdot.p{background:var(--warn)}.mdot.c{background:var(--good)}
+  .mgrid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px}
+  .mlist{border:1px solid var(--md-sys-color-outline-variant);border-radius:14px;overflow:hidden;background:var(--md-sys-color-surface)}
+  .mr{display:grid;grid-template-columns:30px minmax(0,1fr) 16px minmax(0,1fr);gap:8px;align-items:center;padding:0 12px;min-height:40px;border-bottom:1px solid var(--md-sys-color-surface-container-high);transition:background .2s}
+  .mr:last-child{border-bottom:0}.mr:hover{background:var(--md-sys-color-surface-container-low)}
+  .mr .mc{font:600 11px ui-monospace,Consolas,monospace;color:var(--md-sys-color-on-surface-variant)}
+  .mr .mt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:var(--md-sys-typescale-body-medium)}
+  .mr .ma{color:var(--md-sys-color-outline);font-size:16px}
+  .mtg{display:flex;align-items:center;gap:6px;min-width:0}
+  .mtg select{flex:1;min-width:0;height:30px;border:1px solid var(--md-sys-color-outline-variant);border-radius:8px;padding:0 6px;background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-body-medium)}
+  .mtg.none select{border-style:dashed;color:var(--md-sys-color-on-surface-variant)}
+  .mtg.bad select{border-color:var(--md-sys-color-error);background:var(--bad-bg)}
+  .mnote{margin-top:8px;font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant)}.mnote.err{color:var(--md-sys-color-error);font-weight:700}
+  .mpv{overflow:auto;border:1px solid var(--md-sys-color-outline-variant);border-radius:14px;padding:10px;max-height:340px}
+  .mpv table{border-collapse:collapse;font:var(--md-sys-typescale-label-medium);width:100%}
+  .mpv th,.mpv td{border:1px solid var(--md-sys-color-outline-variant);padding:4px 8px;text-align:center;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+  .mpv th{background:var(--md-sys-color-surface-container-low);font-weight:700}
+  .mpv th small{display:block;font-weight:400;color:var(--md-sys-color-on-surface-variant);max-width:140px;overflow:hidden;text-overflow:ellipsis}
+  .msplit{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:14px;align-items:start}
+  @media(max-width:1100px){.msplit{grid-template-columns:1fr}.mcanvas{position:static!important}}
+  .mlists{display:grid;gap:12px;min-width:0}
+  .mlh{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--md-sys-color-outline-variant);background:var(--md-sys-color-surface-container-low);font:var(--md-sys-typescale-label-medium)}
+  .mlh .muted{font:var(--md-sys-typescale-label-small)}
+  .mlnk{white-space:nowrap;border:0;background:none;color:var(--md-sys-color-primary);font:var(--md-sys-typescale-label-medium);font-weight:700;cursor:pointer;padding:2px 4px;border-radius:6px}
+  .mlnk:hover{background:color-mix(in srgb,var(--md-sys-color-primary) 10%,transparent)}
+  .mlfoot{padding:8px 12px;font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant);border-top:1px solid var(--md-sys-color-surface-container-high)}
+  .mm{display:grid;grid-template-columns:minmax(0,1fr) 16px 118px 22px;gap:8px;align-items:center;padding:0 10px 0 12px;min-height:40px;border-bottom:1px solid var(--md-sys-color-surface-container-high);cursor:pointer;transition:background .2s}
+  .mm:last-child{border-bottom:0}.mm:hover{background:var(--md-sys-color-surface-container-low)}
+  .mm.act{background:color-mix(in srgb,var(--md-sys-color-primary) 10%,transparent)}
+  .mm .ml{display:flex;align-items:center;gap:7px;min-width:0;font:var(--md-sys-typescale-body-medium)}
+  .mm .ml select,.mm .ml input{flex:1;min-width:0;height:28px;border:1px solid var(--md-sys-color-outline-variant);border-radius:7px;padding:0 6px;background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-body-medium)}
+  .mm .ml .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mm .ml small{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small)}
+  .mm .ma{color:var(--md-sys-color-outline);font-size:16px}
+  .mcell{position:relative}
+  .mcell input{width:100%;height:30px;border:1px solid var(--md-sys-color-outline-variant);border-radius:8px;padding:0 34px 0 8px;font:600 12px ui-monospace,Consolas,monospace;text-transform:uppercase;background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface);transition:border-color .2s,box-shadow .2s}
+  .mcell input::placeholder{text-transform:none;font-weight:400;color:var(--md-sys-color-on-surface-variant);opacity:.7}
+  .mcell .k{position:absolute;right:7px;top:50%;transform:translateY(-50%);font:10px ui-monospace,Consolas,monospace;color:var(--md-sys-color-on-surface-variant);pointer-events:none}
+  .mcell.ok .k{color:var(--good)}.mcell.warn input{border-color:var(--warn)}.mcell.warn .k{color:var(--warn)}.mcell.err input{border-color:var(--md-sys-color-error);background:var(--bad-bg)}.mcell.err .k{color:var(--md-sys-color-error)}
+  .mm.act .mcell input{border-color:var(--md-sys-color-primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--md-sys-color-primary) 22%,transparent)}
+  .mwarn[hidden]{display:none}.mwarn{grid-column:1/-1;margin:-4px 0 6px;font:var(--md-sys-typescale-label-small);color:var(--warn)}
+  .mcanvas{border:1px solid var(--md-sys-color-outline-variant);border-radius:14px;overflow:hidden;position:sticky;top:14px;min-width:0;background:var(--md-sys-color-surface)}
+  .mctool{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--md-sys-color-outline-variant);background:var(--md-sys-color-surface-container-low);font:var(--md-sys-typescale-label-medium)}
+  .mctool .muted{font:var(--md-sys-typescale-label-small)}.mctool .muted b{color:var(--md-sys-color-primary)}
+  .mzb{width:28px;height:28px;border-radius:8px;border:1px solid var(--md-sys-color-outline-variant);background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface);cursor:pointer;font-weight:700}
+  .mvp{overflow:auto;height:min(72vh,780px);background:var(--md-sys-color-surface-container-high);user-select:none}
+  .msheet{position:relative;transform-origin:0 0;background:var(--md-sys-color-surface-container-lowest);transition:transform .35s var(--md-sys-motion-easing-emphasized-decelerate,cubic-bezier(.05,.7,.1,1))}
+  .msheet .gl{position:absolute;background-image:linear-gradient(var(--md-sys-color-surface-container-high) 1px,transparent 1px),linear-gradient(90deg,var(--md-sys-color-surface-container-high) 1px,transparent 1px)}
+  .msheet .hx{position:absolute;display:flex;align-items:center;justify-content:center;background:var(--md-sys-color-surface-container-low);color:var(--md-sys-color-on-surface-variant);font:600 10px ui-monospace,Consolas,monospace;border-right:1px solid var(--md-sys-color-outline-variant);border-bottom:1px solid var(--md-sys-color-outline-variant)}
+  .msheet .xc{position:absolute;display:flex;align-items:center;padding:0 3px;overflow:hidden;white-space:pre-wrap;line-height:1.15;font:11px Calibri,Carlito,Arial,sans-serif;color:var(--md-sys-color-on-surface);border-color:var(--md-sys-color-on-surface)}
+  .msheet .ov{position:absolute;border-radius:3px;pointer-events:none;transition:all .35s var(--md-sys-motion-easing-emphasized-decelerate,cubic-bezier(.05,.7,.1,1))}
+  .msheet .ov.p{background:color-mix(in srgb,var(--warn) 12%,transparent);outline:2px solid color-mix(in srgb,var(--warn) 80%,transparent)}
+  .msheet .ov.i{background:color-mix(in srgb,var(--md-sys-color-secondary) 12%,transparent);outline:2px solid color-mix(in srgb,var(--md-sys-color-secondary) 75%,transparent)}
+  .msheet .ov.d,.msheet .ov.t{background:color-mix(in srgb,var(--md-sys-color-tertiary) 14%,transparent);outline:2px solid color-mix(in srgb,var(--md-sys-color-tertiary) 80%,transparent)}
+  .msheet .ov.act{outline-width:3px;outline-color:var(--md-sys-color-primary);background:color-mix(in srgb,var(--md-sys-color-primary) 16%,transparent);box-shadow:0 0 0 6px color-mix(in srgb,var(--md-sys-color-primary) 18%,transparent)}
+  .msheet .ov .tg{position:absolute;left:3px;top:3px;font:600 10px Roboto,system-ui,sans-serif;background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface);border-radius:6px;padding:1px 6px;box-shadow:var(--md-sys-elevation-level1);white-space:nowrap}
+  .msheet .selb{position:absolute;outline:2px dashed var(--md-sys-color-primary);background:color-mix(in srgb,var(--md-sys-color-primary) 10%,transparent);pointer-events:none;display:none}
+  .msheet .hov{position:absolute;outline:1.5px solid var(--md-sys-color-primary);pointer-events:none;display:none}
+  .mvp.picking{cursor:crosshair}
+  .tplverify{margin-top:16px;padding:14px;border-radius:14px;background:var(--md-sys-color-surface-container-low)}
+  .tv-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}.tv-head .mi{color:var(--md-sys-color-primary)}.tv-head small{display:block;color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small)}
+  .tv-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .tv-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;font:var(--md-sys-typescale-label-small);font-weight:700;background:var(--good-bg);color:var(--good)}
+  .tv-chip.bad{background:var(--bad-bg);color:var(--md-sys-color-error)}.tv-chip .mi{font-size:15px}
   /* ===== Dashboard Viewer (Mode Bos) ===== */
   .vw-hero{background:linear-gradient(140deg,var(--md-sys-color-primary),var(--md-sys-color-tertiary));color:var(--md-sys-color-on-primary);border:none;position:relative;overflow:hidden}
   .vw-hero .th{color:color-mix(in srgb,var(--md-sys-color-on-primary) 88%,transparent)}.vw-hero .th .mi{color:inherit}
@@ -1631,13 +1723,14 @@
               </div>
               <md-text-field id="tpl-name" variant="outlined" label="Template name"></md-text-field>
             </div>
-            <div style="margin-top:12px"><md-button id="tpl-inspect" variant="filled">Inspect worksheet</md-button></div>
-            <div id="tpl-register" class="hidden" style="margin-top:14px">
+            <div id="tpl-register" class="tplverify hidden">
+              <div class="tv-head"><span class="mi">fact_check</span><div><b id="tpl-detected">Worksheets detected</b><small>Verify which worksheet is the Log sheet and which is the Detail sheet.</small></div></div>
               <div class="fgrid">
                 <div class="md-select" id="tpl-log"></div>
                 <div class="md-select" id="tpl-detail"></div>
               </div>
-              <div style="margin-top:12px"><md-button id="tpl-do-register" variant="filled">Register template</md-button></div>
+              <div class="tv-chips" id="tpl-chk"></div>
+              <div style="margin-top:12px"><md-button id="tpl-do-register" variant="filled" icon="verified">Verify &amp; save</md-button></div>
             </div>
           </div>
           <div class="card"><div class="sec"><span class="mi acc">description</span><h3>Registered templates</h3></div>
@@ -1649,9 +1742,11 @@
           <div class="map-ws">
             <nav class="map-steps card">
               <div class="rtitle">Steps</div>
-              <div class="mstep on" data-go="ms1"><span class="num">1</span><div><div class="lbl">Worksheet</div><small id="mstep1">—</small></div></div>
-              <div class="mstep" data-go="ms2"><span class="num">2</span><div><div class="lbl">Log Sheet</div><small id="mstep2">—</small></div></div>
-              <div class="mstep" data-go="ms3"><span class="num">3</span><div><div class="lbl">Detail Sheet</div><small id="mstep3">—</small></div></div>
+              <div class="msteps"><div class="mhl" id="map-hl"></div>
+                <div class="mstep on" data-p="0"><span class="num">1</span><div><div class="lbl">Worksheet</div><small id="mstep1">—</small></div></div>
+                <div class="mstep" data-p="1"><span class="num">2</span><div><div class="lbl">Log Sheet</div><small id="mstep2">—</small></div></div>
+                <div class="mstep" data-p="2"><span class="num">3</span><div><div class="lbl">Detail Sheet</div><small id="mstep3">—</small></div></div>
+              </div>
               <div class="raildiv"></div>
               <div class="rprog">
                 <svg class="ring" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="var(--md-sys-color-surface-container-highest)" stroke-width="5"/><circle id="map-ring" cx="20" cy="20" r="16" fill="none" stroke="var(--md-sys-color-primary)" stroke-width="5" stroke-linecap="round" transform="rotate(-90 20 20)"/></svg>
@@ -1662,49 +1757,60 @@
                 <md-button id="map-close" variant="text">Close</md-button>
               </div>
             </nav>
-            <div class="map-col">
+            <div class="mstage" id="map-stage">
               <!-- 1 WORKSHEET -->
-              <div class="card map-sec" id="ms1">
-                <div class="sec"><span class="mi acc">tab</span><h3>1. Worksheet — <span id="map-tpl-name" class="mono"></span></h3></div>
+              <div class="card mpane" data-p="0"><div class="mpin">
+                <div class="mph"><h3>Worksheet</h3><span class="muted" id="map-tpl-name"></span></div>
                 <div class="fgrid">
                   <div class="md-select" id="map-log"></div>
                   <div class="md-select" id="map-detail"></div>
                 </div>
-              </div>
+                <div class="tv-chips" id="map-wschk"></div>
+              </div></div>
               <!-- 2 SHEET LOG -->
-              <div class="card map-sec" id="ms2">
-                <div class="sec"><span class="mi acc">table_rows</span><h3>2. Log Sheet</h3></div>
-                <div class="fgrid" style="grid-template-columns:1fr 1fr auto;align-items:end">
-                  <div><label class="muted">Header row</label><input id="map-headerrow" class="maptab-inp" style="width:100%" type="number" value="2"></div>
-                  <div><label class="muted">Data start row (LOG)</label><input id="map-logstart" class="maptab-inp" style="width:100%" type="number" value="3"></div>
-                  <md-button id="map-baca" variant="tonal" icon="table_view">Read header</md-button>
+              <div class="card mpane" data-p="1" hidden><div class="mpin">
+                <div class="mph"><h3>Log Sheet</h3><span class="muted">template header → field</span></div>
+                <div class="mbar">
+                  <span class="mpill" id="map-logname">LOG</span>
+                  <label>Header row<input id="map-headerrow" class="mnum" type="number" min="1" value="2"></label>
+                  <label>Data starts<input id="map-logstart" class="mnum" type="number" min="1" value="3"></label>
+                  <span class="grow"></span>
+                  <div class="mlegend"><span><i class="mdot d"></i>Data</span><span><i class="mdot i"></i>Inventory</span><span><i class="mdot p"></i>Photo status</span><span><i class="mdot c"></i>Photos complete</span></div>
                 </div>
-                <div id="map-loghint" class="mreadbox"><span class="mi">lightbulb</span>
-                  <div>Click <b>Read header</b> to read the cells in the header row (offline, from the file). Then each detected <b>header</b> is mapped to a <b>field in this tool</b> (Data / Inventory).</div></div>
-                <div id="map-logmap" class="hidden">
-                  <div class="map-sub"><div><div class="t"><span class="mi">conversion_path</span>LOG column mapping</div>
-                    <div class="map-hint">Each header in the Log sheet → map it to a field in this tool (Data / Inventory).</div></div></div>
-                  <div class="mrows" id="map-logrows"></div>
-                </div>
-              </div>
+                <div class="mgrid2" id="map-logrows"></div>
+                <div class="mnote" id="map-lognote"></div>
+                <div class="mph" style="margin-top:18px"><h3 style="font-size:15px">Preview</h3><span class="muted" id="map-pvsub">latest 2 locations · unsaved mapping</span><span class="grow"></span>
+                  <md-button id="map-pvbtn" variant="tonal" size="xs" icon="refresh">Refresh</md-button>
+                  <md-button id="map-testx" variant="outlined" size="xs" icon="download">Test .xlsx</md-button></div>
+                <div class="mpv"><table id="map-pv"></table></div>
+                <div class="mnote" id="map-pvwarn"></div>
+              </div></div>
               <!-- 3 SHEET DETAIL -->
-              <div class="card map-sec" id="ms3">
-                <div class="sec"><span class="mi acc">description</span><h3>3. Detail Sheet</h3></div>
-
-                <div class="map-sub"><div><div class="t"><span class="mi">match_case</span>Text mapping</div>
-                  <div class="map-hint">Text value → target cell/column. Source: Inventory, data field, or static text.</div></div></div>
-                <div class="mrows" id="map-txtrows"></div>
-                <div class="maddbar">
-                  <md-button id="map-add-inv" variant="outlined" size="xs" icon="inventory_2">Inventory field</md-button>
-                  <md-button id="map-add-data" variant="outlined" size="xs" icon="badge">Data field</md-button>
-                  <md-button id="map-add-text" variant="outlined" size="xs" icon="text_fields">Static text</md-button>
+              <div class="card mpane" data-p="2" hidden><div class="mpin">
+                <div class="mph"><h3>Detail Sheet</h3><span class="muted">field → cell · select a row, then click (or drag) on the sheet</span></div>
+                <div class="mbar">
+                  <span class="mpill" id="map-detname">Detail</span>
+                  <label>Inventory row<input id="map-invstart" class="mnum" type="number" min="1" value="32"></label>
+                  <label>max<input id="map-invmax" class="mnum" type="number" min="1" value="5"></label>
+                  <span class="grow"></span>
+                  <label>Photo size<input id="map-photow" class="mnum" type="number" min="80" value="600"></label><span class="muted">×</span><span class="mnum ro" id="map-photoh">450</span><span class="muted">px · 4:3</span>
                 </div>
-                <div class="fgrid" style="margin-top:12px"><div><label class="muted">Inventory start row</label><input id="map-invstart" class="maptab-inp" style="width:100%" type="number" value="32"></div><div><label class="muted">Max inventory rows</label><input id="map-invmax" class="maptab-inp" style="width:100%" type="number" value="5"></div></div>
-
-                <div class="map-sub"><div><div class="t"><span class="mi">fact_check</span>Photo status (image header)</div>
-                  <div class="map-hint">Each image header maps to a <b>status cell/column</b>. Images are <b>not</b> pasted — the cell is filled automatically: <b>empty</b> when the photo exists, an <b>X</b> when missing. Categories come from Settings → Photo &amp; Capture Fields.</div></div></div>
-                <div class="mrows" id="map-imgrows"></div>
-              </div>
+                <div class="msplit">
+                  <div class="mlists">
+                    <div class="mlist"><div class="mlh"><b>Text</b><span class="muted">field → cell</span><span class="grow"></span>
+                      <button class="mlnk" id="map-add-inv">+ Inventory</button><button class="mlnk" id="map-add-data">+ Data</button><button class="mlnk" id="map-add-text">+ Text</button></div>
+                      <div id="map-txtrows"></div></div>
+                    <div class="mlist"><div class="mlh"><b>Images</b><span class="muted">category → anchor</span></div>
+                      <div id="map-imgrows"></div>
+                      <div class="mlfoot">Merged area → one cell (its top-left). Not merged → a range, e.g. <b>B12:H26</b>. The photo is centered in the area.</div></div>
+                  </div>
+                  <div class="mcanvas">
+                    <div class="mctool"><b id="map-cvname">—</b><span class="muted" id="map-pick">Rendered from the template file</span><span class="grow"></span>
+                      <button class="mzb" id="map-zo" aria-label="Zoom out">−</button><span id="map-zl" class="muted">100%</span><button class="mzb" id="map-zi" aria-label="Zoom in">+</button></div>
+                    <div class="mvp" id="map-vp"><div class="msheet" id="map-sheet"></div></div>
+                  </div>
+                </div>
+              </div></div>
             </div>
           </div>
         </div>
@@ -2003,8 +2109,10 @@ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const LOG_FIELDS=["no","lokasi","nama_barang","merk_type","jumlah","sn_tagging","keterangan","foto_lengkap"];
 const INV_FIELDS=["nama_barang","merk_type","jumlah","sn_tagging","keterangan"];
-const DEFAULT_MAP={log:{header_row:2,start_row:3,columns:{no:"A",lokasi:"B",nama_barang:"C",merk_type:"D",jumlah:"E",sn_tagging:"F",keterangan:"G",foto_lengkap:"H"},sources:{},value:{}},
-  detail:{location_cells:{},static_cells:{},inventory:{start_row:32,max_rows:5,cols:{nama_barang:"B",merk_type:"C",jumlah:"E",sn_tagging:"F",keterangan:"H"}},photos:{},photo_status:{},photo_max_w:320,photo_max_h:240}};
+const DEFAULT_MAP={log:{header_row:2,start_row:3,columns:{no:"A",lokasi:"B",nama_barang:"C",merk_type:"D",jumlah:"E",sn_tagging:"F",keterangan:"G",foto_lengkap:"H"},sources:{},value:{},
+    photo_status:{dashboard:"I",tampak_depan:"J",teknisi:"K",outdoor:"L",indoor:"M",sn_kit:"N",sn_router:"O",sn_ap:"P",ping:"Q",speed:"R",simkopdes:"S"}},
+  detail:{location_cells:{},static_cells:{},inventory:{start_row:32,max_rows:5,cols:{nama_barang:"B",merk_type:"C",jumlah:"E",sn_tagging:"F",keterangan:"H"}},
+    photos:{dashboard:"B12:H26",tampak_depan:"B59:H73",teknisi:"B76:H90",outdoor:"K11:Q25",indoor:"K28:Q42",sn_kit:"K59:Q73",sn_router:"K76:Q90",sn_ap:"T9:Z23",ping:"T28:Z42",speed:"T59:Z73",simkopdes:"T76:Z90"},photo_w:600}};
 let S={user:null,cats:[],locFields:[],ocr:false,loc:null,scope:'one',pending:null,mapTplId:null,sheets:[]};
 
 /* calm palette */
@@ -2106,10 +2214,10 @@ async function boot(){paint();
     if(isEntryDirty()&&S.loc&&id!==S.loc.id)
       guardLeave(()=>openLoc(id),'another location',()=>{try{pickerSel.setValue(String(S.loc.id));}catch(e){}});
     else openLoc(id);},onNew:()=>$('#entry-new').click()});
-  tplLogSel=new MDSelect($('#tpl-log'),{label:'Worksheet LOG'});
-  tplDetailSel=new MDSelect($('#tpl-detail'),{label:'Worksheet Detail'});
-  mapLogSel=new MDSelect($('#map-log'),{label:'Sheet LOG',onChange:()=>{if(typeof mapDirty==='function'){mapDirty();mapSteps();if($('#map-logmap')&&!$('#map-logmap').classList.contains('hidden'))bacaHeader();}}});
-  mapDetailSel=new MDSelect($('#map-detail'),{label:'Sheet Detail',onChange:()=>{if(typeof mapDirty==='function'){mapDirty();mapSteps();}}});
+  tplLogSel=new MDSelect($('#tpl-log'),{label:'Log sheet',onChange:()=>tplVerify()});
+  tplDetailSel=new MDSelect($('#tpl-detail'),{label:'Detail sheet',onChange:()=>tplVerify()});
+  mapLogSel=new MDSelect($('#map-log'),{label:'Log sheet',onChange:()=>onMapLogSheet()});
+  mapDetailSel=new MDSelect($('#map-detail'),{label:'Detail sheet',onChange:()=>onMapDetailSheet()});
   // role user kini via kartu (uRoles), bukan dropdown
   locCreatorSel=new MDSelect($('#loc-creator'),{label:'Created by',placeholder:'All creators',onChange:()=>loadLocations()});locCreatorSel.setOptions([{value:'',label:'All creators'}]).setValue('');
   try{S.user=await api('/api/auth/me');showApp();}catch{$('#login').classList.remove('hidden');bindTips();}}
@@ -2226,7 +2334,7 @@ function openSettings(sub){
   const sv=SET_VIEWS[sub];
   if(sv){
     ['dashboard','entry','locations','import','trash','notif','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!==sv.view);});
-    $('#pageTitle').textContent='Pengaturan · '+sv.title;$('#pageTitle').classList.remove('hidden');$('#topGrow').classList.remove('hidden');$('#setSaveWrap').classList.add('hidden');sv.load();revealCards($('#v-'+sv.view));
+    $('#pageTitle').textContent='Settings · '+sv.title;$('#pageTitle').classList.remove('hidden');$('#topGrow').classList.remove('hidden');$('#setSaveWrap').classList.add('hidden');sv.load();revealCards($('#v-'+sv.view));
   }else{
     ['dashboard','entry','locations','import','trash','notif','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!=='settings');});
     loadSettingsPage();showSetSub(sub);
@@ -3536,17 +3644,28 @@ $('#inpOk').addEventListener('click',()=>{$('#inpDlg').close();const v=$('#inpFi
 
 /* TEMPLATES + MAPPING */
 $('#tpl-file-btn')&&$('#tpl-file-btn').addEventListener('click',()=>$('#tpl-file').click());
-$('#tpl-file')&&$('#tpl-file').addEventListener('change',e=>{$('#tpl-file-name').textContent=e.target.files[0]?.name||'No file yet';});
-$('#tpl-inspect')&&$('#tpl-inspect').addEventListener('click',async()=>{const f=$('#tpl-file').files[0];if(!f)return toast('Pick a file');
+/* Upload -> worksheet terdeteksi otomatis -> admin verifikasi Log/Detail -> simpan */
+$('#tpl-file')&&$('#tpl-file').addEventListener('change',async e=>{const f=e.target.files[0];$('#tpl-file-name').textContent=f?.name||'No file yet';
+  $('#tpl-register').classList.add('hidden');S.pending=null;if(!f)return;
+  if(!$('#tpl-name').value)$('#tpl-name').value=f.name.replace(/\.(xlsx|xlsm)$/i,'');
   const fd=new FormData();fd.append('file',f);
   try{const r=await fetch('/api/templates/inspect',{method:'POST',credentials:'same-origin',body:fd});if(!r.ok)throw new Error((await r.json()).detail);
     const d=await r.json();S.pending=d;const opts=d.sheets.map(s=>({value:s.name,label:s.name}));
-    tplLogSel.setOptions(opts).setValue(opts[0]?.value||'');tplDetailSel.setOptions(opts).setValue((opts[1]||opts[0])?.value||'');
-    $('#tpl-register').classList.remove('hidden');toast(d.sheets.length+' worksheet');}catch(e){toast('Failed: '+e.message);}});
-$('#tpl-do-register')&&$('#tpl-do-register').addEventListener('click',async()=>{const d=S.pending;if(!d)return;
-  try{await api('/api/templates/register',{method:'POST',body:JSON.stringify({pending_file:d.pending_file,name:$('#tpl-name').value||d.orig_name,orig_name:d.orig_name,sheet_log:tplLogSel.getValue(),sheet_detail:tplDetailSel.getValue(),activate:false})});
-    $('#tpl-register').classList.add('hidden');$('#tpl-file').value='';$('#tpl-file-name').textContent='No file yet';$('#tpl-name').value='';toast('Registered — set up Mapping then Activate');loadTemplates();}catch(e){toast('Failed: '+e.message);}});
-async function loadTemplates(){const rows=await api('/api/templates');
+    const logGuess=(d.sheets.find(s=>/log/i.test(s.name))||d.sheets[0])?.name||'';
+    const detGuess=(d.sheets.find(s=>s.name!==logGuess)||d.sheets[0])?.name||'';
+    tplLogSel.setOptions(opts).setValue(logGuess);tplDetailSel.setOptions(opts).setValue(detGuess);
+    $('#tpl-detected').textContent=d.sheets.length+' worksheet'+(d.sheets.length===1?'':'s')+' detected';
+    $('#tpl-register').classList.remove('hidden');tplVerify();}catch(err){toast('Failed: '+err.message);}});
+function tplVerify(){const a=tplLogSel.getValue(),b=tplDetailSel.getValue(),ok=a&&b&&a!==b;
+  const first=!(S.tplRows||[]).some(t=>t.active);
+  $('#tpl-chk').innerHTML=(ok?'<span class="tv-chip"><span class="mi">check</span>Log ≠ Detail</span>':'<span class="tv-chip bad"><span class="mi">error</span>Log and Detail must be different sheets</span>')
+    +(first?'<span class="tv-chip"><span class="mi">bolt</span>First template → activated automatically</span>':'');
+  return ok;}
+$('#tpl-do-register')&&$('#tpl-do-register').addEventListener('click',async()=>{const d=S.pending;if(!d)return;if(!tplVerify())return toast('Log and Detail must be different sheets');
+  try{const res=await api('/api/templates/register',{method:'POST',body:JSON.stringify({pending_file:d.pending_file,name:$('#tpl-name').value||d.orig_name,orig_name:d.orig_name,sheet_log:tplLogSel.getValue(),sheet_detail:tplDetailSel.getValue(),activate:false})});
+    $('#tpl-register').classList.add('hidden');$('#tpl-file').value='';$('#tpl-file-name').textContent='No file yet';$('#tpl-name').value='';S.pending=null;
+    toast(res.active?'Saved & activated — set up the mapping':'Saved — set up the mapping');await loadTemplates();openMapping(res.id);}catch(e){toast('Failed: '+e.message);}});
+async function loadTemplates(){const rows=await api('/api/templates');S.tplRows=rows;
   $('#tpl-table').innerHTML=rows.map(t=>`<tr><td>${esc(t.name)}</td><td class="mono">${esc(t.sheet_log)}</td><td class="mono">${esc(t.sheet_detail)}</td>
     <td>${t.active?'<span class="count">active</span>':''}</td><td style="text-align:right">
     <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;flex-wrap:nowrap">
@@ -3559,144 +3678,285 @@ window.renameTpl=(id,cur)=>{askInput('Rename template',cur,async nv=>{const name
   try{await api('/api/templates/'+id,{method:'PATCH',body:JSON.stringify({name})});toast('Name updated');loadTemplates();}catch(e){toast('Failed: '+e.message);}});};
 window.deleteTpl=(id,name)=>{confirmDo('Delete template','Delete template “'+name+'” and its file? This cannot be undone.',async()=>{
   try{await api('/api/templates/'+id,{method:'DELETE'});toast('Template deleted');loadTemplates();}catch(e){toast('Failed: '+e.message);}});};
+
 /* --- Tab Daftar/Mapping --- */
+const M={step:0,dirty:false,render:null,merges:[],zoom:1,userZoom:false,act:null,pvT:0};
 function mapSwitchTab(t){const map=t==='map';
   $('#tpl-tab-list').classList.toggle('hidden',map);$('#tpl-tab-map').classList.toggle('hidden',!map);
-  $$('.tpltab').forEach(x=>x.classList.toggle('on',x.dataset.tt===t));}
-$$('.tpltab').forEach(x=>x.addEventListener('click',()=>{if(x.disabled)return;mapSwitchTab(x.dataset.tt);}));
-$$('.mstep').forEach(s=>s.addEventListener('click',()=>{$$('.mstep').forEach(z=>z.classList.remove('on'));s.classList.add('on');
-  const el=$('#'+s.dataset.go);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}));
-function mapDirty(){$('#tpl-save').classList.add('dirty');$('#tpl-saveTxt').textContent='Unsaved changes';}
-function mapSaved(){$('#tpl-save').classList.remove('dirty');$('#tpl-saveTxt').textContent='All changes saved';}
+  $$('.tpltab').forEach(x=>x.classList.toggle('on',x.dataset.tt===t));if(map)requestAnimationFrame(()=>mapHl(M.step));}
+function mapLeave(fn){if(!M.dirty)return fn();
+  confirmDo('Unsaved changes','The mapping has changes that are not saved yet. Discard them?',()=>{mapSaved();fn();},{okLabel:'Discard'});}
+$$('.tpltab').forEach(x=>x.addEventListener('click',()=>{if(x.disabled||x.classList.contains('on'))return;
+  if(x.dataset.tt==='list')mapLeave(()=>mapSwitchTab('list'));else mapSwitchTab('map');}));
+function mapDirty(){M.dirty=true;$('#tpl-save').classList.add('dirty');$('#tpl-saveTxt').textContent='Unsaved changes';}
+function mapSaved(){M.dirty=false;$('#tpl-save').classList.remove('dirty');$('#tpl-saveTxt').textContent='All changes saved';}
 
-let MAP_LOGH=[]; // [{col,text,target}] — header Log sheet -> field tool ('f:<logfield>' | 'd:<datakey>' | '')
-let _logRev={};  // reverse map dari config: kolom -> target
+/* langkah: hanya 1 pane aktif + transisi halus */
+function mapHl(i){const st=$$('.msteps .mstep')[i];if(!st||!st.offsetHeight)return;const hl=$('#map-hl');hl.style.transform=`translateY(${st.offsetTop}px)`;hl.style.height=st.offsetHeight+'px';}
+function mapGo(i,instant){const stage=$('#map-stage'),from=$(`.mpane[data-p="${M.step}"]`),to=$(`.mpane[data-p="${i}"]`);
+  $$('.msteps .mstep').forEach((s,k)=>s.classList.toggle('on',k===i));mapHl(i);
+  if(i===M.step||instant||reduced){$$('.mpane').forEach(p=>{p.hidden=p!==to;p.classList.remove('enter','leave');});M.step=i;mapPaneShown(i);return;}
+  const dir=i>M.step?1:-1;stage.style.setProperty('--mdir',dir);stage.style.height=stage.offsetHeight+'px';
+  from.classList.remove('enter');from.classList.add('leave');
+  to.hidden=false;to.classList.remove('leave');void to.offsetWidth;to.classList.add('enter');
+  requestAnimationFrame(()=>{stage.style.height=to.offsetHeight+'px';});
+  clearTimeout(M.goT);M.goT=setTimeout(()=>{from.hidden=true;from.classList.remove('leave');stage.style.height='';},460);
+  M.step=i;mapPaneShown(i);}
+function mapPaneShown(i){if(i===1)mapPreview();if(i===2){if(!M.userZoom)requestAnimationFrame(mapFit);}}
+$$('.msteps .mstep').forEach(s=>s.addEventListener('click',()=>mapGo(+s.dataset.p)));
+window.addEventListener('resize',()=>{if(!$('#tpl-tab-map').classList.contains('hidden'))mapHl(M.step);});
+if(window.ResizeObserver)new ResizeObserver(()=>{if(M.step===2&&!M.userZoom)mapFit();}).observe($('#map-vp'));
+
+let MAP_LOGH=[]; // [{col,text,target}] — header Log sheet -> 'f:<field>' | 'd:<datakey>' | 'p:<cat>' | ''
 let MAP_TXT=[];  // [{kind:'inv'|'data'|'text',ref,cell}]
-let MAP_IMG=[];  // [{key,label,ocr,cell}]
+let MAP_IMG=[];  // [{key,label,ocr,a}] — anchor: sel (merge) atau range
 
-const LOG_LABELS={no:'No',lokasi:'Location',nama_barang:'Item',merk_type:'Brand / Type',jumlah:'Qty',sn_tagging:'SN / Tagging',keterangan:'Notes',foto_lengkap:'Photos Complete'};
 const INV_LABELS={nama_barang:'Item',merk_type:'Brand / Type',jumlah:'Qty',sn_tagging:'SN / Tagging',keterangan:'Notes'};
+const EMPTY_MAP={log:{header_row:2,start_row:3,columns:{},sources:{},value:{},photo_status:{}},
+  detail:{location_cells:{},static_cells:{},inventory:{start_row:32,max_rows:5,cols:{}},photos:{},photo_w:600}};
 function colToIdx(s){let n=0;for(const ch of s.toUpperCase())n=n*26+(ch.charCodeAt(0)-64);return n;}
+function idxToCol(n){let s='';while(n>0){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=(n-m-1)/26;}return s;}
 function detectedHeaders(){
   const sheet=S.sheets.find(x=>x.name===mapLogSel.getValue())||S.sheets[0];
   const hr=parseInt($('#map-headerrow').value)||1;const out=[];
   if(sheet)sheet.cells.forEach(c=>{const m=c.ref.match(/^([A-Z]+)(\d+)$/);if(m&&+m[2]===hr&&(c.text||'').trim())out.push({col:m[1],text:c.text.trim()});});
   out.sort((a,b)=>colToIdx(a.col)-colToIdx(b.col));return out;}
 
-window.openMapping=async id=>{S.mapTplId=id;const tpl=await api('/api/templates/'+id);const sh=await api('/api/templates/'+id+'/sheets');S.sheets=sh.sheets;
-  const map=deepMerge(structuredClone(DEFAULT_MAP),tpl.config||{});$('#map-tpl-name').textContent=tpl.name;
+/* tebakan target awal dari teks header */
+const _stop=new Set(['foto','capture','di','dan','the','of','lokasi','+','/','-','tes']);
+const _tok=t=>(t||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').split(' ').filter(w=>w.length>1&&!_stop.has(w));
+function guessPhoto(text){const ht=' '+_tok(text).join(' ')+' ';let best='',score=0;
+  (S.cats||[]).forEach(c=>{const toks=new Set([..._tok(c.label),...(c.keywords||[]).flatMap(_tok)]);let sc=0;toks.forEach(w=>{if(ht.includes(' '+w+' '))sc++;});if(sc>score){score=sc;best=c.key;}});
+  return score?best:'';}
+function guessTarget(text){const t=(text||'').toLowerCase();
+  if(/lengkap|complete/.test(t))return 'f:foto_lengkap';
+  if(/foto|capture|photo|gambar|screenshot/.test(t)){const p=guessPhoto(text);if(p)return 'p:'+p;}
+  const rx={no:/^no\.?$|nomor/,lokasi:/lokasi|site|location/,nama_barang:/nama barang|barang|item|perangkat|inventory/,merk_type:/merk|type|tipe|model|brand/,jumlah:/qty|jumlah|jml|quantity/,sn_tagging:/\bsn\b|serial|tagging/,keterangan:/ket|remark|catatan|notes?/};
+  for(const k in rx)if(rx[k].test(t))return 'f:'+k;
+  const lf=(S.locFields||[]).find(f=>_tok(f.label).some(w=>t.includes(w)));return lf?'d:'+lf.key:'';}
+function logRevFromCfg(map){const rev={},cols=map.log.columns||{},src=map.log.sources||{},val=map.log.value||{};
+  Object.keys(cols).forEach(f=>{const c=(cols[f]||'').toUpperCase();if(c)rev[c]=src[f]==='data'?'d:'+(val[f]||f):'f:'+f;});
+  Object.entries(map.log.photo_status||{}).forEach(([k,c])=>{if(c)rev[c.toUpperCase()]='p:'+k;});return rev;}
+
+window.openMapping=async id=>{const go=async()=>{
+  try{await S.settingsReady;}catch(e){}
+  const tpl=await api('/api/templates/'+id);const sh=await api('/api/templates/'+id+'/sheets');S.sheets=sh.sheets;S.mapTplId=id;
+  const cfg=tpl.config||{};const map=deepMerge(structuredClone(cfg.mapped?EMPTY_MAP:DEFAULT_MAP),cfg);M.mapped=!!cfg.mapped;
+  $('#map-tpl-name').textContent=tpl.name;
   const opts=S.sheets.map(s=>({value:s.name,label:s.name}));mapLogSel.setOptions(opts).setValue(tpl.sheet_log);mapDetailSel.setOptions(opts).setValue(tpl.sheet_detail);
   $('#map-headerrow').value=map.log.header_row||2;$('#map-logstart').value=map.log.start_row||3;
-  $('#map-headerrow').oninput=mapDirty;$('#map-logstart').oninput=mapDirty;
-  _logRev=logRevFromCfg(map);
-  const hasLog=Object.keys(_logRev).length>0;
-  $('#map-loghint').classList.toggle('hidden',hasLog);$('#map-logmap').classList.toggle('hidden',!hasLog);
-  if(hasLog){MAP_LOGH=detectedHeaders().map(h=>({col:h.col,text:h.text,target:_logRev[h.col]||''}));renderLogRows();}
-  else MAP_LOGH=[];
-  MAP_TXT=[];
-  INV_FIELDS.forEach(f=>MAP_TXT.push({kind:'inv',ref:f,cell:(map.detail.inventory.cols&&map.detail.inventory.cols[f])||''}));
-  Object.entries(map.detail.location_cells||{}).forEach(([cell,field])=>MAP_TXT.push({kind:'data',ref:field,cell}));
-  Object.entries(map.detail.static_cells||{}).forEach(([cell,text])=>MAP_TXT.push({kind:'text',ref:text,cell}));
-  renderTxtRows();
-  $('#map-invstart').value=map.detail.inventory.start_row||32;$('#map-invmax').value=map.detail.inventory.max_rows||5;
-  $('#map-invstart').oninput=()=>{mapDirty();mapSteps();};$('#map-invmax').oninput=()=>{mapDirty();mapSteps();};
-  // cell = sel/kolom status foto (photo_status). Fallback ke anchor lama (photos) utk template lama.
-  MAP_IMG=S.cats.map(c=>({key:c.key,label:c.label,ocr:c.ocr,cell:((map.detail.photo_status||{})[c.key]||(map.detail.photos||{})[c.key]||'')}));
-  renderImgRows();
-  mapSteps();
-  $('#tpltab-map').disabled=false;mapSwitchTab('map');mapSaved();
-  $$('.mstep').forEach((z,k)=>z.classList.toggle('on',k===0));
-  window.scrollTo({top:0,behavior:'smooth'});};
+  const rev=M.mapped?logRevFromCfg(map):{};
+  MAP_LOGH=detectedHeaders().map(h=>({col:h.col,text:h.text,target:M.mapped?(rev[h.col]||''):guessTarget(h.text)}));
+  const d=map.detail;MAP_TXT=[];
+  INV_FIELDS.forEach(f=>MAP_TXT.push({kind:'inv',ref:f,cell:((d.inventory.cols||{})[f]||'').toUpperCase()}));
+  Object.entries(d.location_cells||{}).forEach(([cell,field])=>MAP_TXT.push({kind:'data',ref:field,cell}));
+  Object.entries(d.static_cells||{}).forEach(([cell,text])=>MAP_TXT.push({kind:'text',ref:text,cell}));
+  $('#map-invstart').value=d.inventory.start_row||32;$('#map-invmax').value=d.inventory.max_rows||5;
+  $('#map-photow').value=d.photo_w||600;mapPhotoH();
+  MAP_IMG=(S.cats||[]).map(c=>({key:c.key,label:c.label,ocr:c.ocr,a:((d.photos||{})[c.key]||'').toUpperCase()}));
+  M.act=null;M.userZoom=false;M.render=null;M.merges=[];
+  renderLogRows();renderTxtRows();renderImgRows();mapSteps();
+  $('#tpltab-map').disabled=false;mapSwitchTab('map');mapSaved();mapGo(0,true);
+  loadDetailRender();window.scrollTo({top:0,behavior:'smooth'});};
+  if(M.dirty&&S.mapTplId!==id)mapLeave(go);else go();};
 
-/* ---- Sheet Log: header Log sheet -> field tool ---- */
-const LOG_STD_DATA=[['no','No'],['lokasi','Location'],['foto_lengkap','Photos Complete']];
-function logRevFromCfg(map){const rev={},cols=(map.log&&map.log.columns)||{},src=(map.log&&map.log.sources)||{},val=(map.log&&map.log.value)||{};
-  Object.keys(cols).forEach(f=>{const c=(cols[f]||'').toUpperCase();if(!c)return;
-    rev[c]=(src[f]==='data')?('d:'+(val[f]||f)):('f:'+f);});return rev;}
+/* ---- 1. Worksheet ---- */
+function mapWsCheck(){const a=mapLogSel.getValue(),b=mapDetailSel.getValue(),ok=a&&b&&a!==b;
+  $('#map-wschk').innerHTML=ok?'<span class="tv-chip"><span class="mi">check</span>Log ≠ Detail</span><span class="tv-chip"><span class="mi">print</span>Print area &amp; page setup kept from the template</span>'
+    :'<span class="tv-chip bad"><span class="mi">error</span>Log and Detail must be different sheets</span>';
+  $('#map-logname').textContent=a||'—';$('#map-detname').textContent=b||'—';$('#map-cvname').textContent=b||'—';return ok;}
+function onMapLogSheet(){mapDirty();mapRereadHeaders();mapSteps();}
+function onMapDetailSheet(){mapDirty();loadDetailRender();mapSteps();}
+
+/* ---- 2. Log sheet: header -> field ---- */
+function mapRereadHeaders(){const prev={};MAP_LOGH.forEach(r=>prev[r.col]=r.target);
+  MAP_LOGH=detectedHeaders().map(h=>({col:h.col,text:h.text,target:(h.col in prev)?prev[h.col]:guessTarget(h.text)}));renderLogRows();mapSchedPreview();}
+$('#map-headerrow').addEventListener('input',()=>{mapDirty();clearTimeout(M.hrT);M.hrT=setTimeout(()=>{mapRereadHeaders();mapSteps();},250);});
+$('#map-logstart').addEventListener('input',()=>{mapDirty();mapSchedPreview();});
+const tgtGroup=v=>!v?'':v.startsWith('p:')?'p':v==='f:foto_lengkap'?'c':(v.startsWith('f:')&&INV_FIELDS.includes(v.slice(2)))?'i':'d';
 function logTargetOpts(sel){
-  const data=LOG_STD_DATA.map(([k,l])=>['f:'+k,l]).concat((S.locFields||[]).map(x=>['d:'+x.key,x.label]));
-  const inv=INV_FIELDS.map(f=>['f:'+f,INV_LABELS[f]||f]);
-  const grp=(lbl,items)=>`<optgroup label="${lbl}">`+items.map(([v,l])=>`<option value="${v}" ${v===sel?'selected':''}>${esc(l)}</option>`).join('')+`</optgroup>`;
-  return `<option value="">— (ignore) —</option>`+grp('Data / general',data)+grp('Inventory',inv);}
-function bacaHeader(){
-  const heads=detectedHeaders();
-  const rx={no:/^no\.?$|nomor/,lokasi:/lokasi|site/,nama_barang:/nama|barang|item|perangkat/,merk_type:/merk|type|tipe|model/,jumlah:/qty|jumlah|jml|quantity/,sn_tagging:/\bsn\b|serial|tagging/,keterangan:/ket|remark|catatan/,foto_lengkap:/foto/};
-  const prev={};MAP_LOGH.forEach(r=>{if(r.target)prev[r.col]=r.target;});
-  const guess=h=>{if(prev[h.col])return prev[h.col];if(_logRev[h.col])return _logRev[h.col];
-    const t=(h.text||'').toLowerCase();for(const k in rx){if(rx[k].test(t))return 'f:'+k;}return '';};
-  MAP_LOGH=heads.map(h=>({col:h.col,text:h.text,target:guess(h)}));
-  $('#map-loghint').classList.add('hidden');$('#map-logmap').classList.remove('hidden');
-  renderLogRows();mapDirty();mapSteps();
-  toast(heads.length?heads.length+' headers read':'No text in that header row — check the number');}
-$('#map-baca')&&$('#map-baca').addEventListener('click',bacaHeader);
+  const grp=(lbl,items)=>`<optgroup label="${lbl}">`+items.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(l)}</option>`).join('')+`</optgroup>`;
+  return `<option value="">— Ignore —</option>`
+    +grp('Data',[['f:no','No'],['f:lokasi','Location']].concat((S.locFields||[]).map(x=>['d:'+x.key,x.label])))
+    +grp('Inventory',INV_FIELDS.map(f=>['f:'+f,INV_LABELS[f]||f]))
+    +grp('Photo status (X if missing)',(S.cats||[]).map(c=>['p:'+c.key,c.label]))
+    +grp('Photos complete (SUDAH/BELUM)',[['f:foto_lengkap','All photo categories']]);}
+function logConflicts(){const n={};MAP_LOGH.forEach(r=>{if(r.target)n[r.target]=(n[r.target]||0)+1;});return new Set(Object.keys(n).filter(k=>n[k]>1));}
+function renderLogRows(){const bad=logConflicts();
+  const row=(r,i)=>{const g=tgtGroup(r.target);return `<div class="mr"><span class="mc">${esc(r.col)}</span><span class="mt" title="${esc(r.text)}">${esc(r.text)}</span><span class="mi ma">arrow_forward</span>
+    <span class="mtg ${g?'':'none'} ${bad.has(r.target)?'bad':''}"><i class="mdot ${g}"></i><select data-i="${i}">${logTargetOpts(r.target)}</select></span></div>`;};
+  const half=Math.ceil(MAP_LOGH.length/2);
+  $('#map-logrows').innerHTML=MAP_LOGH.length?`<div class="mlist">${MAP_LOGH.slice(0,half).map((r,i)=>row(r,i)).join('')}</div>`+(MAP_LOGH.length>1?`<div class="mlist">${MAP_LOGH.slice(half).map((r,i)=>row(r,i+half)).join('')}</div>`:'')
+    :'<p class="muted" style="font:var(--md-sys-typescale-label-small)">No text in that header row — check the header row number.</p>';
+  $$('#map-logrows select').forEach(s=>s.onchange=()=>{MAP_LOGH[+s.dataset.i].target=s.value;mapDirty();renderLogRows();mapSteps();mapSchedPreview();});
+  const nb=bad.size;$('#map-lognote').className='mnote'+(nb?' err':'');
+  $('#map-lognote').textContent=nb?`${nb} field${nb>1?'s are':' is'} mapped to more than one header — each field can be used once.`
+    :`${MAP_LOGH.length} headers read from row ${$('#map-headerrow').value}. Photo headers are matched to photo categories; the start row's format is copied to every new row.`;}
 
-function renderLogRows(){
-  $('#map-logrows').innerHTML=MAP_LOGH.map((r,i)=>
-    `<div class="mrow"><div class="mk"><span class="mtag hdr">Hdr</span><span class="kt" title="${esc(r.col)} — ${esc(r.text)}">${esc(r.col)} — ${esc(r.text)}</span></div>
-      <div class="mv"><span class="mi arrow">arrow_forward</span><select class="msel map-to" data-i="${i}">${logTargetOpts(r.target)}</select></div></div>`).join('')
-    ||'<p class="muted" style="font:var(--md-sys-typescale-label-small)">No headers read. Check the header row number then click Read header.</p>';
-  $$('#map-logrows .map-to').forEach(s=>s.onchange=()=>{MAP_LOGH[+s.dataset.i].target=s.value;mapDirty();mapSteps();});}
+/* preview LOG dari mapping yang sedang diedit */
+function mapSchedPreview(){if(M.step!==1)return;clearTimeout(M.pvT);M.pvT=setTimeout(mapPreview,500);}
+function trialBody(){return JSON.stringify({config:buildMapCfg(),sheet_log:mapLogSel.getValue(),sheet_detail:mapDetailSel.getValue(),limit:2});}
+async function mapPreview(){if(!S.mapTplId)return;const tb=$('#map-pv');
+  try{const d=await api('/api/templates/'+S.mapTplId+'/preview',{method:'POST',body:trialBody()});
+    const used=new Set(MAP_LOGH.map(r=>r.col));const idx=d.headers.map((h,i)=>i).filter(i=>used.has(d.headers[i].col)||d.rows.some(r=>r[i]));
+    tb.innerHTML='<tr>'+idx.map(i=>`<th>${esc(d.headers[i].col)}<small title="${esc(d.headers[i].text)}">${esc(d.headers[i].text)}</small></th>`).join('')+'</tr>'
+      +d.rows.map(r=>'<tr>'+idx.map(i=>`<td title="${esc(r[i])}">${esc(r[i])}</td>`).join('')+'</tr>').join('');
+    $('#map-pvsub').textContent=`latest 2 locations · rows ${d.start_row}–${d.start_row+Math.max(0,d.rows.length-1)} · unsaved mapping`;
+    $('#map-pvwarn').textContent=(d.warnings||[]).length?'⚠ '+d.warnings.join(' · '):'';}
+  catch(e){tb.innerHTML=`<tr><td class="muted" style="border:0;text-align:left">${esc(e.message)}</td></tr>`;$('#map-pvwarn').textContent='';}}
+$('#map-pvbtn').addEventListener('click',mapPreview);
+$('#map-testx').addEventListener('click',async()=>{toast('Preparing test file…');
+  try{const r=await fetch('/api/templates/'+S.mapTplId+'/test-export',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:trialBody()});
+    if(!r.ok){let m='Failed';try{m=(await r.json()).detail||m;}catch(e){}throw new Error(m);}
+    const blob=await r.blob(),a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download='Test_BAA.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Downloaded ✓');}
+  catch(e){toast('Failed: '+e.message);}});
 
-/* ---- Sheet Detail: Text mapping ---- */
+/* ---- 3. Detail sheet: field -> sel ---- */
+const RX_CELL=/^[A-Z]{1,3}[1-9]\d*$/,RX_COL=/^[A-Z]{1,3}$/,RX_RANGE=/^[A-Z]{1,3}[1-9]\d*:[A-Z]{1,3}[1-9]\d*$/;
+const pRef=a=>{const m=a.match(/^([A-Z]+)(\d+)$/);return[colToIdx(m[1]),+m[2]];};
+function pRange(a){const[x,y]=a.split(':');const[c1,r1]=pRef(x),[c2,r2]=pRef(y||x);return{c1:Math.min(c1,c2),r1:Math.min(r1,r2),c2:Math.max(c1,c2),r2:Math.max(r1,r2)};}
+function mergeAt(c,r){return M.merges.find(m=>c>=m.c1&&c<=m.c2&&r>=m.r1&&r<=m.r2)||null;}
+function mapPhotoH(){const w=parseInt($('#map-photow').value)||600;$('#map-photoh').textContent=Math.round(w*3/4);}
+$('#map-photow').addEventListener('input',()=>{mapPhotoH();mapDirty();});
+['#map-invstart','#map-invmax'].forEach(s=>$(s).addEventListener('input',()=>{mapDirty();renderOverlays();mapSteps();}));
+function txtState(r){const v=(r.cell||'').toUpperCase();if(!v)return['',''];
+  if(r.kind==='inv')return RX_COL.test(v)?['ok','col']:['err','col?'];
+  return RX_CELL.test(v)?['ok','cell']:['err','?'];}
+function imgState(a){const v=(a||'').toUpperCase();if(!v)return['',''];
+  if(RX_RANGE.test(v))return['ok','range'];
+  if(!RX_CELL.test(v))return['err','?'];
+  if(!M.render)return['ok','cell'];const[c,r]=pRef(v);return mergeAt(c,r)?['ok','merge']:['warn','range?'];}
+function cellBox(st,val,ph){return `<span class="mcell ${st[0]}"><input value="${esc(val||'')}" placeholder="${ph}" spellcheck="false"><span class="k">${st[1]}</span></span>`;}
 function renderTxtRows(){
-  const dopts=sel=>`<option value="">— select field —</option>`+(S.locFields||[]).map(f=>`<option value="${esc(f.key)}" ${f.key===sel?'selected':''}>${esc(f.label)}</option>`).join('');
-  const iopts=sel=>`<option value="">— select field —</option>`+INV_FIELDS.map(f=>`<option value="${f}" ${f===sel?'selected':''}>${esc(INV_LABELS[f]||f)}</option>`).join('');
-  const del=i=>`<button class="mdel" data-i="${i}"><span class="mi">close</span></button>`;
-  $('#map-txtrows').innerHTML=MAP_TXT.map((r,i)=>{
-    if(r.kind==='inv')return `<div class="mrow"><div class="mk"><span class="mtag inv">Inv</span><select class="msel" data-i="${i}" data-role="ref">${iopts(r.ref)}</select></div>
-      <div class="mv"><span class="mi arrow">arrow_forward</span><input class="maptab-inp" data-i="${i}" data-role="cell" placeholder="column" value="${esc(r.cell)}">${del(i)}</div></div>`;
-    if(r.kind==='data')return `<div class="mrow"><div class="mk"><span class="mtag data">Data</span><select class="msel" data-i="${i}" data-role="ref">${dopts(r.ref)}</select></div>
-      <div class="mv"><span class="mi arrow">arrow_forward</span><input class="maptab-inp" data-i="${i}" data-role="cell" placeholder="C5" value="${esc(r.cell)}">${del(i)}</div></div>`;
-    return `<div class="mrow"><div class="mk"><span class="mtag text">Text</span><input class="msel" data-i="${i}" data-role="reftext" placeholder="static text" style="text-transform:none;font-family:inherit" value="${esc(r.ref)}"></div>
-      <div class="mv"><span class="mi arrow">arrow_forward</span><input class="maptab-inp" data-i="${i}" data-role="cell" placeholder="A1" value="${esc(r.cell)}">${del(i)}</div></div>`;}).join('');
-  $$('#map-txtrows [data-role=ref]').forEach(s=>s.onchange=()=>{MAP_TXT[+s.dataset.i].ref=s.value;mapDirty();mapSteps();});
-  $$('#map-txtrows [data-role=reftext]').forEach(inp=>inp.oninput=()=>{MAP_TXT[+inp.dataset.i].ref=inp.value;mapDirty();mapSteps();});
-  $$('#map-txtrows [data-role=cell]').forEach(inp=>inp.oninput=()=>{MAP_TXT[+inp.dataset.i].cell=inp.value.trim().toUpperCase();mapDirty();mapSteps();});
-  $$('#map-txtrows .mdel').forEach(b=>b.onclick=()=>{MAP_TXT.splice(+b.dataset.i,1);renderTxtRows();mapDirty();mapSteps();});}
-$('#map-add-inv')&&$('#map-add-inv').addEventListener('click',()=>{MAP_TXT.push({kind:'inv',ref:'',cell:''});renderTxtRows();mapDirty();mapSteps();});
-$('#map-add-data')&&$('#map-add-data').addEventListener('click',()=>{MAP_TXT.push({kind:'data',ref:'',cell:''});renderTxtRows();mapDirty();mapSteps();});
-$('#map-add-text')&&$('#map-add-text').addEventListener('click',()=>{MAP_TXT.push({kind:'text',ref:'',cell:''});renderTxtRows();mapDirty();mapSteps();});
-
-/* ---- Sheet Detail: Image mapping ---- */
+  const dopts=sel=>`<option value="">— field —</option>`+(S.locFields||[]).map(f=>`<option value="${esc(f.key)}" ${f.key===sel?'selected':''}>${esc(f.label)}</option>`).join('');
+  const iopts=sel=>`<option value="">— field —</option>`+INV_FIELDS.map(f=>`<option value="${f}" ${f===sel?'selected':''}>${esc(INV_LABELS[f]||f)}</option>`).join('');
+  $('#map-txtrows').innerHTML=MAP_TXT.map((r,i)=>{const act=M.act&&M.act.l==='t'&&M.act.i===i;
+    const src=r.kind==='inv'?`<i class="mdot i"></i><select data-role="ref">${iopts(r.ref)}</select>`
+      :r.kind==='data'?`<i class="mdot d"></i><select data-role="ref">${dopts(r.ref)}</select>`
+      :`<i class="mdot"></i><input data-role="reftext" placeholder="static text" value="${esc(r.ref)}">`;
+    return `<div class="mm ${act?'act':''}" data-l="t" data-i="${i}"><span class="ml">${src}</span><span class="mi ma">arrow_forward</span>${cellBox(txtState(r),r.cell,r.kind==='inv'?'column':'C5')}<button class="mdel" aria-label="Remove"><span class="mi">close</span></button></div>`;}).join('');
+  $$('#map-txtrows .mm').forEach(el=>{const i=+el.dataset.i,r=MAP_TXT[i];
+    const ref=el.querySelector('[data-role=ref]');if(ref)ref.onchange=()=>{r.ref=ref.value;mapDirty();renderOverlays();mapSteps();};
+    const rt=el.querySelector('[data-role=reftext]');if(rt)rt.oninput=()=>{r.ref=rt.value;mapDirty();mapSteps();};
+    const inp=el.querySelector('.mcell input');inp.oninput=()=>{r.cell=inp.value.trim().toUpperCase();const st=txtState(r);const box=inp.parentNode;box.className='mcell '+st[0];box.querySelector('.k').textContent=st[1];mapDirty();renderOverlays();mapSteps();};
+    el.querySelector('.mdel').onclick=ev=>{ev.stopPropagation();MAP_TXT.splice(i,1);if(M.act&&M.act.l==='t')M.act=null;renderTxtRows();renderOverlays();mapDirty();mapSteps();};
+    bindPickRow(el,'t',i);});}
+['inv','data','text'].forEach(k=>$('#map-add-'+k).addEventListener('click',()=>{MAP_TXT.push({kind:k,ref:'',cell:''});M.act={l:'t',i:MAP_TXT.length-1};renderTxtRows();renderOverlays();mapPickHint();mapDirty();mapSteps();}));
 function renderImgRows(){
-  $('#map-imgrows').innerHTML=MAP_IMG.map((p,i)=>`<div class="mrow"><div class="mk"><span class="mtag img">${p.ocr?'OCR':'Photo'}</span><span class="kt" title="${esc(p.label)}">${esc(p.label)}</span></div>
-    <div class="mv"><span class="mi arrow">arrow_forward</span><input class="maptab-inp" data-i="${i}" data-role="cell" placeholder="B10" value="${esc(p.cell)}" data-tip="Status cell/column — empty if photo exists, X if missing"></div></div>`).join('')
-    ||'<p class="muted" style="font:var(--md-sys-typescale-label-small)">No categories yet. Add them in Settings → Photo &amp; Capture Fields.</p>';
-  $$('#map-imgrows [data-role=cell]').forEach(inp=>inp.oninput=()=>{MAP_IMG[+inp.dataset.i].cell=inp.value.trim().toUpperCase();mapDirty();mapConflict();mapSteps();});
-  bindTips();mapConflict();}
+  $('#map-imgrows').innerHTML=MAP_IMG.map((p,i)=>{const act=M.act&&M.act.l==='m'&&M.act.i===i,st=imgState(p.a);
+    return `<div class="mm ${act?'act':''}" data-l="m" data-i="${i}"><span class="ml"><i class="mdot p"></i><span class="t" title="${esc(p.label)}">${esc(p.label)}</span>${p.ocr?'<small>OCR</small>':''}</span><span class="mi ma">arrow_forward</span>${cellBox(st,p.a,'B12 or B12:H26')}<span></span>
+      <div class="mwarn" ${st[0]==='warn'?'':'hidden'}>Not a merged cell — enter a range (e.g. B12:H26) or drag on the sheet.</div></div>`;}).join('')
+    ||'<p class="muted" style="font:var(--md-sys-typescale-label-small);padding:10px 12px">No photo categories yet. Add them in Settings → Photo &amp; Capture Fields.</p>';
+  $$('#map-imgrows .mm').forEach(el=>{const i=+el.dataset.i,p=MAP_IMG[i];const inp=el.querySelector('.mcell input');
+    inp.oninput=()=>{p.a=inp.value.trim().toUpperCase();const st=imgState(p.a),box=inp.parentNode;box.className='mcell '+st[0];box.querySelector('.k').textContent=st[1];
+      el.querySelector('.mwarn').hidden=st[0]!=='warn';mapDirty();renderOverlays();mapSteps();};
+    bindPickRow(el,'m',i);});}
 
-function mapConflict(){const seen={},dup=new Set();MAP_IMG.forEach(p=>{const v=(p.cell||'').toUpperCase();if(v){if(seen[v])dup.add(v);seen[v]=1;}});
-  $$('#map-imgrows [data-role=cell]').forEach(el=>el.classList.toggle('conflict',dup.has(el.value.trim().toUpperCase())&&!!el.value.trim()));}
+/* ---- Pick on sheet: gambar worksheet Detail dari file template ---- */
+async function loadDetailRender(){mapWsCheck();const sheet=mapDetailSel.getValue();if(!S.mapTplId||!sheet)return;
+  try{const d=await api(`/api/templates/${S.mapTplId}/render?sheet=${encodeURIComponent(sheet)}`);M.render=d;
+    M.merges=d.merged.map(pRange);renderSheet();renderImgRows();mapSteps();if(M.step===2&&!M.userZoom)mapFit();}
+  catch(e){M.render=null;$('#map-sheet').innerHTML=`<div class="muted" style="padding:16px">${esc(e.message)}</div>`;}}
+const HX=34,HY=20;let CX=[HX],CY=[HY];
+function aBox(R){return{l:CX[R.c1-1],t:CY[R.r1-1],w:CX[Math.min(R.c2,CX.length-1)]-CX[R.c1-1],h:CY[Math.min(R.r2,CY.length-1)]-CY[R.r1-1]};}
+function renderSheet(){const d=M.render,sh=$('#map-sheet');CX=[HX];CY=[HY];d.cols.forEach(w=>CX.push(CX.at(-1)+w));d.rows.forEach(h=>CY.push(CY.at(-1)+h));
+  const W=CX.at(-1),H=CY.at(-1);sh.style.width=W+'px';sh.style.height=H+'px';M.W=W;M.H=H;
+  let h=`<div class="gl" style="left:${HX}px;top:${HY}px;right:0;bottom:0;background-size:64px 20px"></div>`;
+  const top={},cov=new Set();M.merges.forEach(m=>{top[idxToCol(m.c1)+m.r1]=m;for(let c=m.c1;c<=m.c2;c++)for(let r=m.r1;r<=m.r2;r++)if(c!==m.c1||r!==m.r1)cov.add(idxToCol(c)+r);});
+  d.cols.forEach((w,i)=>{if(w)h+=`<div class="hx" style="left:${CX[i]}px;top:0;width:${w}px;height:${HY}px">${idxToCol(i+1)}</div>`;});
+  d.rows.forEach((v,i)=>{if(v)h+=`<div class="hx" style="left:0;top:${CY[i]}px;width:${HX}px;height:${v}px">${i+1}</div>`;});
+  for(const[ref,c]of Object.entries(d.cells)){if(cov.has(ref))continue;const[ci,ri]=pRef(ref);if(ci>d.cols.length||ri>d.rows.length)continue;
+    const R=top[ref]||{c1:ci,r1:ri,c2:ci,r2:ri},b=aBox(R);if(!b.w||!b.h)continue;const bd=c.bd||'',B=k=>bd.includes(k)?'1px solid':'0';
+    const j=/center/.test(c.h||'')?'center':c.h==='right'?'flex-end':'flex-start';
+    h+=`<div class="xc" style="left:${b.l}px;top:${b.t}px;width:${b.w}px;height:${b.h}px;border-top:${B('t')};border-right:${B('r')};border-bottom:${B('b')};border-left:${B('l')};justify-content:${j};${j==='center'?'text-align:center;':''}${c.b?'font-weight:700;':''}${c.f?'background:'+c.f+';color:#222;':''}${c.sz?'font-size:'+c.sz+'px;':''}">${esc(c.v||'')}</div>`;}
+  h+='<div id="map-ovs"></div><div class="selb" id="map-selb"></div><div class="hov" id="map-hov"></div>';sh.innerHTML=h;renderOverlays();setZoom(M.zoom);}
+function setZoom(z){M.zoom=Math.max(.2,Math.min(1.5,z));const sh=$('#map-sheet');if(!M.W)return;
+  sh.style.transform=`scale(${M.zoom})`;sh.style.marginRight=(-(1-M.zoom)*M.W)+'px';sh.style.marginBottom=(-(1-M.zoom)*M.H)+'px';$('#map-zl').textContent=Math.round(M.zoom*100)+'%';}
+function mapFit(){const vp=$('#map-vp');if(!M.W||!vp.clientWidth)return;setZoom((vp.clientWidth-6)/M.W);}
+$('#map-zi').addEventListener('click',()=>{M.userZoom=true;setZoom(M.zoom+.1);});
+$('#map-zo').addEventListener('click',()=>{M.userZoom=true;setZoom(M.zoom-.1);});
+function mapAreas(){const out=[];if(!M.render)return out;
+  const invS=parseInt($('#map-invstart').value)||1,invN=parseInt($('#map-invmax').value)||1;
+  MAP_TXT.forEach((r,i)=>{const v=(r.cell||'').toUpperCase(),[st]=txtState(r);if(st!=='ok')return;
+    let R;if(r.kind==='inv'){const c=colToIdx(v);R={c1:c,r1:invS,c2:c,r2:invS+invN-1};}else{const[c,rr]=pRef(v);R=mergeAt(c,rr)||{c1:c,r1:rr,c2:c,r2:rr};}
+    const lbl=r.kind==='inv'?(INV_LABELS[r.ref]||r.ref):r.kind==='data'?((S.locFields||[]).find(f=>f.key===r.ref)||{}).label||r.ref:(r.ref||'Text');
+    out.push({l:'t',i,k:r.kind==='inv'?'i':r.kind==='data'?'d':'t',R,lbl});});
+  MAP_IMG.forEach((p,i)=>{const v=(p.a||'').toUpperCase(),[st]=imgState(v);if(st!=='ok'&&st!=='warn')return;
+    let R;if(v.includes(':'))R=pRange(v);else{const[c,r]=pRef(v);R=mergeAt(c,r)||{c1:c,r1:r,c2:c,r2:r};}out.push({l:'m',i,k:'p',R,lbl:p.label});});
+  return out;}
+function renderOverlays(){const el=$('#map-ovs');if(!el)return;
+  el.innerHTML=mapAreas().map(o=>{const b=aBox(o.R),act=M.act&&M.act.l===o.l&&M.act.i===o.i;
+    return `<div class="ov ${o.k} ${act?'act':''}" data-l="${o.l}" data-i="${o.i}" style="left:${b.l}px;top:${b.t}px;width:${b.w}px;height:${b.h}px"><span class="tg">${esc(o.lbl)}</span></div>`;}).join('');}
+function ovFor(l,i){return $(`#map-ovs .ov[data-l="${l}"][data-i="${i}"]`);}
+function bindPickRow(el,l,i){
+  el.addEventListener('click',ev=>{if(ev.target.closest('select,.mdel,[data-role=reftext]'))return;
+    const same=M.act&&M.act.l===l&&M.act.i===i;M.act=same?null:{l,i};
+    $$('#map-txtrows .mm,#map-imgrows .mm').forEach(x=>x.classList.toggle('act',!!M.act&&x.dataset.l===M.act.l&&+x.dataset.i===M.act.i));
+    renderOverlays();mapPickHint();const o=M.act&&ovFor(l,i);
+    if(o){const vp=$('#map-vp');vp.scrollTo({top:Math.max(0,parseFloat(o.style.top)*M.zoom-60),left:Math.max(0,parseFloat(o.style.left)*M.zoom-60),behavior:reduced?'auto':'smooth'});}});
+  el.addEventListener('mouseenter',()=>{const o=ovFor(l,i);if(o)o.classList.add('act');});
+  el.addEventListener('mouseleave',()=>{if(M.act&&M.act.l===l&&M.act.i===i)return;const o=ovFor(l,i);if(o)o.classList.remove('act');});}
+function mapActItem(){return M.act?(M.act.l==='t'?MAP_TXT[M.act.i]:MAP_IMG[M.act.i]):null;}
+function mapPickHint(){const it=mapActItem();$('#map-vp').classList.toggle('picking',!!it);
+  if(!it){$('#map-pick').textContent='Rendered from the template file';return;}
+  const name=M.act.l==='m'?it.label:it.kind==='inv'?(INV_LABELS[it.ref]||'inventory field'):it.kind==='data'?(((S.locFields||[]).find(f=>f.key===it.ref)||{}).label||'data field'):'static text';
+  $('#map-pick').innerHTML=`Pick for <b>${esc(name)}</b> — ${M.act.l==='m'?'click a merged cell or drag an area':it.kind==='inv'?'click any cell in the column':'click a cell'}`;}
+const cellAt=(x,y)=>{const c=CX.findIndex((v,k)=>k>0&&x<v),r=CY.findIndex((v,k)=>k>0&&y<v);return c>0&&r>0?[c,r]:null;};
+const sheetPos=e=>{const b=$('#map-sheet').getBoundingClientRect();return[(e.clientX-b.left)/M.zoom,(e.clientY-b.top)/M.zoom];};
+let _drag=null;
+function selRect(a,b){return{c1:Math.min(a[0],b[0]),r1:Math.min(a[1],b[1]),c2:Math.max(a[0],b[0]),r2:Math.max(a[1],b[1])};}
+function placeBox(el,R){const b=aBox(R);Object.assign(el.style,{display:'block',left:b.l+'px',top:b.t+'px',width:b.w+'px',height:b.h+'px'});}
+$('#map-vp').addEventListener('mousemove',e=>{if(!M.render)return;const p=cellAt(...sheetPos(e)),hv=$('#map-hov');if(!hv)return;
+  if(!p||!mapActItem()){hv.style.display='none';}else{const m=mergeAt(p[0],p[1]);placeBox(hv,m||{c1:p[0],r1:p[1],c2:p[0],r2:p[1]});}
+  if(_drag&&p)placeBox($('#map-selb'),selRect(_drag,p));});
+$('#map-vp').addEventListener('mouseleave',()=>{const hv=$('#map-hov');if(hv)hv.style.display='none';});
+$('#map-vp').addEventListener('mousedown',e=>{if(!mapActItem()||e.button!==0)return;const p=cellAt(...sheetPos(e));if(!p)return;_drag=p;e.preventDefault();});
+window.addEventListener('mouseup',e=>{if(!_drag)return;const it=mapActItem();const p=cellAt(...sheetPos(e))||_drag;const R=selRect(_drag,p);_drag=null;
+  const sb=$('#map-selb');if(sb)sb.style.display='none';if(!it)return;
+  const m0=mergeAt(R.c1,R.r1),inOne=m0&&R.c2<=m0.c2&&R.r2<=m0.r2,single=R.c1===R.c2&&R.r1===R.r2;
+  const tl=m0?idxToCol(m0.c1)+m0.r1:idxToCol(R.c1)+R.r1;let val;
+  if(M.act.l==='m')val=(single||inOne)?tl:`${idxToCol(R.c1)}${R.r1}:${idxToCol(R.c2)}${R.r2}`;
+  else if(it.kind==='inv')val=idxToCol(R.c1);else val=tl;
+  if(M.act.l==='m')it.a=val;else it.cell=val;
+  const nm=M.act.l==='m'?it.label:it.kind==='inv'?(INV_LABELS[it.ref]||it.ref):it.kind==='data'?(((S.locFields||[]).find(f=>f.key===it.ref)||{}).label||'Data'):(it.ref||'Text');M.act=null;
+  renderTxtRows();renderImgRows();renderOverlays();mapPickHint();mapDirty();mapSteps();toast(`${nm} → ${val}`);});
 
-function mapSteps(){
-  const logT=MAP_LOGH.length,logDone=MAP_LOGH.filter(r=>r.target).length;
-  const txtT=MAP_TXT.length,txtDone=MAP_TXT.filter(r=>r.cell&&r.ref!=='').length;
-  const phN=MAP_IMG.filter(p=>p.cell).length,phT=MAP_IMG.length;
+/* ---- ringkasan langkah + progres ---- */
+function mapSteps(){const wsOk=mapWsCheck();
+  const logT=MAP_LOGH.length,logDone=MAP_LOGH.filter(r=>r.target).length,bad=logConflicts().size;
+  const txtT=MAP_TXT.length,txtDone=MAP_TXT.filter(r=>r.ref!==''&&txtState(r)[0]==='ok').length;
+  const imT=MAP_IMG.length,imDone=MAP_IMG.filter(p=>imgState(p.a)[0]==='ok').length,imErr=MAP_IMG.filter(p=>['err','warn'].includes(imgState(p.a)[0])).length+MAP_TXT.filter(r=>txtState(r)[0]==='err').length;
   $('#mstep1').textContent=(mapLogSel.getValue()||'?')+' · '+(mapDetailSel.getValue()||'?');
-  $('#mstep2').textContent=logT?logDone+'/'+logT+' headers':'not read';
-  $('#mstep3').textContent=(txtDone)+' text · '+phN+'/'+phT+' photo status';
-  $('.mstep[data-go=ms2]').classList.toggle('done',logDone>0);
-  $('.mstep[data-go=ms3]').classList.toggle('done',phT>0&&phN===phT);
-  const filled=logDone+txtDone+phN,total=(logT+txtT+phT)||1,pct=Math.round(filled/total*100);
-  $('#map-pct').textContent=pct+'% filled';
-  const C=2*Math.PI*16;$('#map-ring').style.strokeDasharray=C;$('#map-ring').style.strokeDashoffset=C*(1-filled/total);}
+  $('#mstep2').textContent=logT?`${logDone}/${logT} headers`+(bad?` · ${bad} conflict`:''):'no headers';
+  $('#mstep3').textContent=`${txtDone} text · ${imDone}/${imT} images`+(imErr?` · ${imErr} to fix`:'');
+  const st=$$('.msteps .mstep');
+  st[0].classList.toggle('done',!!wsOk);st[0].classList.toggle('warn',!wsOk);
+  st[1].classList.toggle('done',logDone>0&&!bad);st[1].classList.toggle('warn',!!bad);
+  st[2].classList.toggle('done',imT>0&&imDone===imT&&!imErr);st[2].classList.toggle('warn',!!imErr);
+  const filled=logDone+txtDone+imDone,total=(logT+txtT+imT)||1,C=2*Math.PI*16;
+  $('#map-pct').textContent=Math.round(filled/total*100)+'% filled';
+  $('#map-ring').style.strokeDasharray=C;$('#map-ring').style.strokeDashoffset=C*(1-filled/total);
+  requestAnimationFrame(()=>mapHl(M.step));
+  return{wsOk,bad,imErr};}
 
-$('#map-save')&&$('#map-save').addEventListener('click',async()=>{const cfg=structuredClone(DEFAULT_MAP);
-  cfg.log.header_row=parseInt($('#map-headerrow').value)||2;cfg.log.start_row=parseInt($('#map-logstart').value)||3;
-  cfg.log.columns={};cfg.log.sources={};cfg.log.value={};
-  MAP_LOGH.forEach(r=>{if(!r.target)return;const p=r.target.indexOf(':'),kind=r.target.slice(0,p),key=r.target.slice(p+1);
-    if(!key)return;cfg.log.columns[key]=(r.col||'').toUpperCase();
-    if(kind==='d'){cfg.log.sources[key]='data';cfg.log.value[key]=key;}});
-  cfg.detail.inventory.cols={};cfg.detail.location_cells={};cfg.detail.static_cells={};
-  MAP_TXT.forEach(r=>{
-    if(r.kind==='inv'){if(r.ref&&r.cell)cfg.detail.inventory.cols[r.ref]=r.cell.toUpperCase();}
-    else if(r.kind==='data'){if(r.ref&&r.cell)cfg.detail.location_cells[r.cell.toUpperCase()]=r.ref;}
-    else{if(r.ref!==''&&r.cell)cfg.detail.static_cells[r.cell.toUpperCase()]=r.ref;}});
-  cfg.detail.inventory.start_row=parseInt($('#map-invstart').value)||32;cfg.detail.inventory.max_rows=parseInt($('#map-invmax').value)||5;
-  // Header gambar dipetakan ke sel status (kosong/X). Tidak menempel gambar lagi.
-  cfg.detail.photos={};cfg.detail.photo_status={};MAP_IMG.forEach(p=>{if(p.cell)cfg.detail.photo_status[p.key]=p.cell.toUpperCase();});
-  try{await api('/api/templates/'+S.mapTplId+'/mapping',{method:'PUT',body:JSON.stringify({config:cfg,sheet_log:mapLogSel.getValue(),sheet_detail:mapDetailSel.getValue()})});mapSaved();toast('Mapping saved');loadTemplates();}catch(e){toast('Failed: '+e.message);}});
-$('#map-close')&&$('#map-close').addEventListener('click',()=>mapSwitchTab('list'));
+function buildMapCfg(){const n=(s,d)=>parseInt($(s).value)||d;
+  const cfg={mapped:true,log:{header_row:n('#map-headerrow',2),start_row:n('#map-logstart',3),columns:{},sources:{},value:{},photo_status:{}},
+    detail:{location_cells:{},static_cells:{},inventory:{start_row:n('#map-invstart',32),max_rows:n('#map-invmax',5),cols:{}},photos:{},photo_w:n('#map-photow',600)}};
+  MAP_LOGH.forEach(r=>{if(!r.target)return;const k=r.target[0],key=r.target.slice(2);if(!key)return;
+    if(k==='p')cfg.log.photo_status[key]=r.col;else{cfg.log.columns[key]=r.col;if(k==='d'){cfg.log.sources[key]='data';cfg.log.value[key]=key;}}});
+  MAP_TXT.forEach(r=>{const c=(r.cell||'').toUpperCase();if(txtState(r)[0]!=='ok')return;
+    if(r.kind==='inv'){if(r.ref)cfg.detail.inventory.cols[r.ref]=c;}
+    else if(r.kind==='data'){if(r.ref)cfg.detail.location_cells[c]=r.ref;}
+    else if(r.ref!=='')cfg.detail.static_cells[c]=r.ref;});
+  MAP_IMG.forEach(p=>{if(imgState(p.a)[0]==='ok')cfg.detail.photos[p.key]=p.a.toUpperCase();});
+  return cfg;}
+$('#map-save').addEventListener('click',async()=>{const s=mapSteps();
+  if(!s.wsOk){mapGo(0);return toast('Log and Detail must be different sheets');}
+  if(s.bad){mapGo(1);return toast('Fix the duplicate targets in the Log sheet first');}
+  if(s.imErr){mapGo(2);return toast('Fix the highlighted cells in the Detail sheet first');}
+  try{await api('/api/templates/'+S.mapTplId+'/mapping',{method:'PUT',body:JSON.stringify({config:buildMapCfg(),sheet_log:mapLogSel.getValue(),sheet_detail:mapDetailSel.getValue()})});
+    M.mapped=true;mapSaved();toast('Mapping saved');loadTemplates();}catch(e){toast('Failed: '+e.message);}});
+$('#map-close').addEventListener('click',()=>mapLeave(()=>mapSwitchTab('list')));
 
 let USR_ROWS=[],editUserId=null;
 async function loadUsers(){try{USR_ROWS=await api('/api/users');
