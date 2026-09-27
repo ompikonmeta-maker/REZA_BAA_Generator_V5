@@ -156,7 +156,7 @@ def supervisor(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_
     """
     from fastapi import HTTPException
     if user["role"] not in ("admin", "viewer"):
-        raise HTTPException(403, "Khusus admin atau viewer")
+        raise HTTPException(403, "Admins and viewers only")
     import json
     today = date.today()
     monday = today - timedelta(days=today.weekday())      # Senin minggu ini
@@ -228,9 +228,9 @@ def supervisor(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_
         if vp > 0 and vt < vp:
             reasons.append(f"velocity −{round((vp - vt) / vp * 100)}%")
         if vt == 0 and load > 0:
-            reasons.append("0 selesai minggu ini")
+            reasons.append("0 done this week")
         if stalled_u > 0:
-            reasons.append(f"{stalled_u} draft mangkrak")
+            reasons.append(f"{stalled_u} stalled drafts")
         users.append({
             "id": u["id"], "name": u["nm"], "done": d, "total": t,
             "pct": round(d / t * 100), "vel": vel, "load": load,
@@ -266,9 +266,9 @@ def supervisor(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_
             field_bad += 1
     items = [(l, c, "foto") for l, c in miss.items() if c > 0]
     if inv_bad:
-        items.append(("Inventory belum lengkap", inv_bad, "inv"))
+        items.append(("Inventory incomplete", inv_bad, "inv"))
     if field_bad:
-        items.append(("Field lokasi kosong", field_bad, "data"))
+        items.append(("Empty location fields", field_bad, "data"))
     items.sort(key=lambda x: -x[1])
     bottleneck = [{"label": l, "count": c, "total": nd,
                    "pct": round(c / nd * 100), "kind": k}

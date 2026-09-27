@@ -2185,7 +2185,7 @@ class LocationPicker{
     this.panel=document.createElement('div');this.panel.className='lp-panel';
     this.panel.innerHTML=`<div class="lp-search"><span class="mi">search</span><input type="text" placeholder="Search code / location name…" autocomplete="off"></div>
       <div class="lp-list"></div>
-      <div class="lp-foot"><span class="lp-cnt"></span><button type="button" class="lp-new"><span class="mi">add</span>Buat lokasi baru</button></div>`;
+      <div class="lp-foot"><span class="lp-cnt"></span><button type="button" class="lp-new"><span class="mi">add</span>New location</button></div>`;
     document.body.appendChild(this.panel);
     this.q=this.panel.querySelector('input');this.list=this.panel.querySelector('.lp-list');
     el.addEventListener('click',()=>this.toggle());
@@ -2541,7 +2541,7 @@ async function loadSupervisor(name){
   const att=SUP_USERS.filter(u=>u.health!=='g').sort((a,b)=>(a.health==='b'?0:1)-(b.health==='b'?0:1));
   $('#supAtt').innerHTML=att.length?att.map(u=>`<div class="satt" onclick="supDrill(${u.id})">
     <span class="sup-ava" style="background:${SUP_COL[u.id%SUP_COL.length]}">${esc((u.name[0]||'?').toUpperCase())}</span>
-    <div class="who"><div class="nm">${esc(u.name)}</div><div class="rs">${esc(u.reason||'perlu dipantau')}</div></div>
+    <div class="who"><div class="nm">${esc(u.name)}</div><div class="rs">${esc(u.reason||'needs a look')}</div></div>
     <span class="spill ${u.health}"><span class="mi">${u.health==='b'?'trending_down':'schedule'}</span>${healthLabel(u.health)}</span></div>`).join('')
     :'<p class="muted" style="padding:10px 4px">All users on-track</p>';
   // bottleneck
@@ -2581,7 +2581,7 @@ let VW_D=null;
 async function loadViewer(){
   let d;try{d=await api('/api/stats/supervisor');}catch(e){return;}
   VW_D=d;const m=d.summary;const total=m.total||0,done=m.done||0,remain=Math.max(0,total-done);
-  $('#vwSub').textContent=`perkembangan pekerjaan · ${done} dari ${total} lokasi selesai`;
+  $('#vwSub').textContent=`progress · ${done} of ${total} locations done`;
   $('#dChipTxt').textContent=remain?`${remain} locations waiting to finish`:'All locations done';
   // ring
   const C=2*Math.PI*63;const fg=$('#vwRingFg');fg.style.strokeDasharray=C.toFixed(1);fg.style.strokeDashoffset=C.toFixed(1);
@@ -2602,13 +2602,13 @@ async function loadViewer(){
   $('#vwStrip').innerHTML=[
     ['table_rows','Total Locations',total,''],
     ['task_alt','Done',done,(m.pct||0)+'% of target'],
-    ['pending_actions','Sisa',remain,'dalam proses'],
+    ['pending_actions','Remaining',remain,'in progress'],
     ['speed','Pace',(m.vel_this||0)+'<span style="font-size:12px">/wk</span>',vwWow(m)],
     ['timer','Average',(m.cycle||0)+'<span style="font-size:12px"> d</span>','per location'],
     ['event_available','Forecast',remain?`<span style="font-size:18px">${_IDMON[etaD.getMonth()]} ${etaD.getFullYear()}</span>`:'—','estimated finish'],
   ].map(k=>`<div class="sk"><div class="t"><span class="mi">${k[0]}</span>${k[1]}</div><div class="n">${k[2]}</div><div class="d">${k[3]||'&nbsp;'}</div></div>`).join('');
   // momentum
-  $('#vwStreakN').textContent=(d.streak||0)+' hari';
+  $('#vwStreakN').textContent=(d.streak||0)+((d.streak||0)===1?' day':' days');
   $('#vwWeek').innerHTML=['S','S','R','K','J','S','M'].map((x,i)=>`<i class="${d.week&&d.week[i]?'on':''} ${i===6?'today':''}"></i>`).join('');
   $('#vwStreakNote').innerHTML=`This week <b style="color:var(--md-sys-color-on-surface)">${m.vel_this||0} locations</b> done${m.vel_prev?` · last week ${m.vel_prev}`:''}.`;
   // donut status
@@ -2616,7 +2616,7 @@ async function loadViewer(){
   const SEG=[['Done',done,'var(--md-sys-color-primary)'],['In progress',proc,'var(--md-sys-color-tertiary)'],['Stalled drafts >7d',m.stalled||0,'var(--md-sys-color-error)']];
   const tot=SEG.reduce((a,b)=>a+b[1],0)||1;let off=0;const R=46,CC=2*Math.PI*R;
   $('#vwDonut').innerHTML=SEG.map(s=>{const f=s[1]/tot;const el=`<circle cx="60" cy="60" r="${R}" fill="none" stroke="${s[2]}" stroke-width="16" stroke-dasharray="${(f*CC).toFixed(1)} ${CC.toFixed(1)}" stroke-dashoffset="${(-off*CC).toFixed(1)}" transform="rotate(-90 60 60)"/>`;off+=f;return el;}).join('')
-    +`<text x="60" y="57" text-anchor="middle" font-size="19" font-weight="800" fill="var(--md-sys-color-on-surface)">${m.pct||0}%</text><text x="60" y="72" text-anchor="middle" font-size="9" fill="var(--md-sys-color-on-surface-variant)">selesai</text>`;
+    +`<text x="60" y="57" text-anchor="middle" font-size="19" font-weight="800" fill="var(--md-sys-color-on-surface)">${m.pct||0}%</text><text x="60" y="72" text-anchor="middle" font-size="9" fill="var(--md-sys-color-on-surface-variant)">done</text>`;
   $('#vwLeg').innerHTML=SEG.map(s=>`<div class="li"><span class="sw" style="background:${s[2]}"></span>${s[0]}<b>${s[1]}</b></div>`).join('');
   // throughput
   const tp=d.throughput||[];const mx=Math.max(...tp,1);
@@ -2637,8 +2637,8 @@ function renderBottleneck(el,list){
   if(!list.length){el.innerHTML='<div class="bnx-empty"><span class="mi">celebration</span>Nothing held up — all locations are complete.</div>';return;}
   const nd=list[0].total||0;const top=list[0];const rest=list.slice(1);
   let h='';
-  if(nd&&nd<5)h+=`<div class="bnx-note"><span class="mi">info</span><div>Baru <b>${nd} lokasi</b> yang berjalan, jadi angka ini belum menggambarkan pola tim. Makin banyak lokasi, makin akurat.</div></div>`;
-  h+=`<div class="bnx-hero"><span class="rank">PENGHAMBAT TERBESAR</span>
+  if(nd&&nd<5)h+=`<div class="bnx-note"><span class="mi">info</span><div>Only <b>${nd} location${nd>1?'s':''}</b> in progress — numbers get more accurate as more come in.</div></div>`;
+  h+=`<div class="bnx-hero" data-tip="The item missing in the most unfinished locations"><span class="rank">TOP BLOCKER</span>
     <span class="ic"><span class="mi">${BNX_ICON[top.kind]||'warning'}</span></span>
     <div class="txt"><div class="t1">${esc(top.label)}</div>
       <div class="t2"><b>${top.count} of ${nd}</b> locations missing this</div>
@@ -2646,11 +2646,11 @@ function renderBottleneck(el,list){
   h+=rest.map(b=>`<div class="bnx-row">
     <span class="ic ${b.kind}"><span class="mi">${BNX_ICON[b.kind]||'warning'}</span></span>
     <div class="mid"><div class="l1">${esc(b.label)} <span class="bnx-chip ${b.kind}">${BNX_WORD[b.kind]||''}</span></div>
-      <div class="l2"><b>${b.count} dari ${nd}</b> lokasi belum lengkap</div>
+      <div class="l2"><b>${b.count} of ${nd}</b> locations missing this</div>
       <div class="bar"><i style="width:${b.pct}%"></i></div></div>
-    <div class="cnt"><div class="big">${b.count}</div><div class="of">lokasi</div></div></div>`).join('');
-  h+=`<div class="bnx-foot"><span class="mi">lightbulb</span>Dorong tim ke <b>${esc(top.label)}</b> dulu untuk dampak tercepat.</div>`;
-  el.innerHTML=h;
+    <div class="cnt"><div class="big">${b.count}</div><div class="of">loc.</div></div></div>`).join('');
+  h+=`<div class="bnx-foot"><span class="mi">lightbulb</span>Push the team on <b>${esc(top.label)}</b> first — quickest win.</div>`;
+  el.innerHTML=h;if(typeof bindTips==='function')bindTips();
 }
 function vwFullDate(dt){return dt.getDate()+' '+_IDMON[dt.getMonth()]+' '+dt.getFullYear();}
 function vwSetKpiEta(txt){const el=document.querySelector('#vwStrip .sk:last-child .n');if(el)el.innerHTML=`<span style="font-size:18px">${txt}</span>`;}
@@ -2737,7 +2737,7 @@ function lockEntry(){
   let ban=$('#ro-banner');
   if(ro){
     if(!ban){ban=document.createElement('div');ban.id='ro-banner';form.prepend(ban);}
-    const who=(S.loc&&S.loc.owner_name)?(' · pekerjaan '+esc(S.loc.owner_name)):'';
+    const who=(S.loc&&S.loc.owner_name)?(' · owner '+esc(S.loc.owner_name)):'';
     ban.innerHTML='<span class="mi">visibility</span>Viewer mode — only the owner or an admin can edit'+who;
     ban.style.display='';
     $$('#entry-form md-text-field, #entry-form input, #entry-form textarea').forEach(el=>el.setAttribute('disabled',''));
@@ -2950,7 +2950,7 @@ function updateSummary(){
     $(icId).textContent=done?'check_circle':'error';
     valEl.textContent=valText;valEl.className='st '+(done?'ok':'warn');};
   const l=$('#sum-loc');
-  setRow('#sum-loc-row','#sum-loc-ic',l,s.locDone,s.locDone?'Lengkap':(s.filledF+'/'+s.fields.length));
+  setRow('#sum-loc-row','#sum-loc-ic',l,s.locDone,s.locDone?'Complete':(s.filledF+'/'+s.fields.length));
   const locCard=$('#loc-fields').closest('.card');if(locCard)locCard.classList.toggle('warn-outline',!s.locDone);
   const iv=$('#sum-inv');
   setRow('#sum-inv-row','#sum-inv-ic',iv,s.invOk,s.items>0?(s.rowsDone+'/'+s.items):'0 item');
@@ -2984,8 +2984,8 @@ function renderPhotos(){
     let strip='';
     if(c.ocr){
       strip=sn
-        ? `<div class="snstrip" data-sn="${esc(sn)}" onclick="tileEditSn(this,${ph.id},'${c.key}')"><span class="mi">tag</span><span class="v" title="${esc(sn)}">${esc(sn)}</span><span class="mi sgo" title="Isi ke Inventory" onclick="event.stopPropagation();applySnToInventory('${c.key}','${esc(sn)}')">arrow_forward</span></div>`
-        : `<div class="snstrip warn" onclick="openSnReader(${ph.id},'${c.key}')"><span class="mi">document_scanner</span><span class="v">SN belum terbaca — Baca SN</span></div>`;
+        ? `<div class="snstrip" data-sn="${esc(sn)}" onclick="tileEditSn(this,${ph.id},'${c.key}')"><span class="mi">tag</span><span class="v" title="${esc(sn)}">${esc(sn)}</span><span class="mi sgo" title="Fill into Inventory" onclick="event.stopPropagation();applySnToInventory('${c.key}','${esc(sn)}')">arrow_forward</span></div>`
+        : `<div class="snstrip warn" onclick="openSnReader(${ph.id},'${c.key}')"><span class="mi">document_scanner</span><span class="v">SN not read yet — Read SN</span></div>`;
     }
     return `<div class="ptile has" data-i="${ph.id}">
       <div class="thumb" onclick="editExisting(${ph.id},'${c.key}')"><img src="/api/photos/${ph.id}/file" loading="lazy"><span class="mi ok">check_circle</span></div>
@@ -3009,14 +3009,14 @@ function renderPhotos(){
 /* menu ⋯ untuk tile berkategori (pakai engine MDMenu) */
 window.photoMenu=(btn,id,cat)=>{const c=S.cats.find(x=>x.key===cat);const ph=(S.loc.photos||[]).find(p=>p.id===id);const sn=ph&&(ph.ocr_serial||'').trim();
   const items=[{icon:'tune',label:'Edit / sesuaikan',fn:()=>editExisting(id,cat)}];
-  if(c&&c.ocr)items.push({icon:'barcode_scanner',label:'Baca SN',fn:()=>openSnReader(id,cat)});
-  if(c&&c.ocr&&sn)items.push({icon:'arrow_forward',label:'Isi SN ke Inventory',fn:()=>applySnToInventory(cat,sn)});
+  if(c&&c.ocr)items.push({icon:'barcode_scanner',label:'Read SN',fn:()=>openSnReader(id,cat)});
+  if(c&&c.ocr&&sn)items.push({icon:'arrow_forward',label:'Fill SN into Inventory',fn:()=>applySnToInventory(cat,sn)});
   items.push({icon:'swap_horiz',label:'Replace photo',fn:()=>replacePhoto(id,cat)},{icon:'delete',label:'Delete',fn:()=>softRemove(id)});
   openMenu(btn,items);};
 window.uncatMenu=(btn,id)=>openMenu(btn,[{icon:'drive_file_move',label:'Move category',fn:()=>reassignMenu(btn,id)},{icon:'delete',label:'Delete',fn:()=>softRemove(id)}]);
 /* koreksi SN inline pada strip tile */
 window.tileEditSn=(strip,id,cat)=>{if(strip.querySelector('input'))return;const cur=strip.dataset.sn||'';
-  strip.innerHTML=`<span class="mi">tag</span><input value="${esc(cur)}"><span class="mi sgo" title="Simpan">check</span>`;
+  strip.innerHTML=`<span class="mi">tag</span><input value="${esc(cur)}"><span class="mi sgo" title="Save">check</span>`;
   const inp=strip.querySelector('input');inp.focus();inp.select();
   let done=false;const commit=async()=>{if(done)return;done=true;const nv=inp.value.trim();
     try{await api('/api/photos/'+id,{method:'PATCH',body:JSON.stringify({ocr_serial:nv})});}catch(e){}
@@ -3059,7 +3059,7 @@ window.softRemove=id=>{
   pendingDel.set(id,setTimeout(()=>commitDelete(id),5000));
   renderPhotos();updateSummary();
 };
-window.undoDel=id=>{const t=pendingDel.get(id);if(t)clearTimeout(t);pendingDel.delete(id);renderPhotos();updateSummary();toast('Dibatalkan');};
+window.undoDel=id=>{const t=pendingDel.get(id);if(t)clearTimeout(t);pendingDel.delete(id);renderPhotos();updateSummary();toast('Undone');};
 async function commitDelete(id){pendingDel.delete(id);
   try{await api('/api/photos/'+id,{method:'DELETE'});S.loc=await api('/api/locations/'+S.loc.id);}catch{}
   renderPhotos();updateSummary();}
@@ -3146,7 +3146,7 @@ function doUpload(files,category,relpaths){return new Promise(async resolve=>{
       const sn=saved.filter(x=>x.ocr_serial).map(x=>x.ocr_serial);
       S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();upDone(saved.length,true);
       let msg='Done · '+saved.length+' photos';
-      if(uncat)msg+=' · '+uncat+' perlu dikategorikan';
+      if(uncat)msg+=' · '+uncat+' need a category';
       if(failed)msg+=' · '+failed+' failed (format/size)';
       if(sn.length)msg+=' · SN: '+sn.join(', ');
       toast(msg);
@@ -3205,7 +3205,7 @@ window.clearAllPhotos=()=>{if(roActive())return;const ph=activePhotos();if(!ph.l
   requestAnimationFrame(()=>{R.style.transition='stroke-dashoffset 5.1s linear';R.style.strokeDashoffset=(2*Math.PI*9.5).toFixed(1);});
   clearTimeout(clrTimer);clrTimer=setTimeout(commitClearAll,5200);};
 window.undoClearAll=()=>{clearTimeout(clrTimer);clrPending.clear();clrIds=[];$('#clrSnack').classList.remove('on');
-  renderPhotos();updateSummary();toast('Dibatalkan');};
+  renderPhotos();updateSummary();toast('Undone');};
 async function commitClearAll(){$('#clrSnack').classList.remove('on');const ids=clrIds.slice();clrIds=[];
   for(const id of ids){try{await fetch('/api/photos/'+id,{method:'DELETE',credentials:'same-origin'});}catch(e){}}
   clrPending.clear();try{S.loc=await api('/api/locations/'+S.loc.id);}catch(e){}renderPhotos();updateSummary();
@@ -3217,17 +3217,17 @@ function catPrefixes(cat){const c=S.cats.find(x=>x.key===cat);return (c&&c.prefi
 function pickByPrefix(cands,prefixes){if(!cands.length)return '';
   for(const p of prefixes){const hit=cands.find(c=>c.startsWith(p.toUpperCase()));if(hit)return hit;}return cands[0];}
 window.openSnReader=(photoId,cat)=>{sn={photoId,cat,rect:null};
-  const c=S.cats.find(x=>x.key===cat);$('#sn-title').textContent='Baca SN — '+(c?c.label:cat);
+  const c=S.cats.find(x=>x.key===cat);$('#sn-title').textContent='Read SN — '+(c?c.label:cat);
   $('#sn-serial').setAttribute('value','');$('#sn-cands').innerHTML='';$('#sn-sel').classList.add('hidden');
   const img=$('#sn-img');img.onload=()=>{tryBarcode();};img.src='/api/photos/'+photoId+'/file?ts='+Date.now();
   $('#snDlg').show();};
 async function tryBarcode(){
-  if(!('BarcodeDetector' in window)){toast('Barcode API tak tersedia — tarik kotak lalu Baca area');return;}
+  if(!('BarcodeDetector' in window)){toast('Barcode scan not supported — draw a box, then Read area');return;}
   try{const bd=new BarcodeDetector({formats:['qr_code','code_128','code_39','ean_13','ean_8','itf','codabar','upc_a','upc_e','data_matrix','pdf417']});
     const codes=await bd.detect($('#sn-img'));
     if(codes&&codes.length){const vals=codes.map(x=>(x.rawValue||'').toUpperCase().replace(/\s+/g,''));
       const best=pickByPrefix(vals,catPrefixes(sn.cat));
-      $('#sn-serial').setAttribute('value',best);showCands(vals);toast('Barcode terbaca');}
+      $('#sn-serial').setAttribute('value',best);showCands(vals);toast('Barcode read');}
   }catch(e){}
 }
 window.snSet=v=>$('#sn-serial').setAttribute('value',v);
@@ -3266,7 +3266,7 @@ $('#sn-save').addEventListener('click',async()=>{const val=$('#sn-serial').value
 /* save + export (selalu lokasi aktif) */
 $('#save-btn').addEventListener('click',async()=>{try{
   if(isDraft())await ensureLoc();                     // draft -> buat kode dulu sebelum simpan
-  if(!S.loc||!S.loc.id){toast('Isi data dulu');return;}
+  if(!S.loc||!S.loc.id){toast('Fill in the location data first');return;}
   const st=computeState();
   const status=st.complete?'selesai':'draft';
   await api('/api/locations/'+S.loc.id,{method:'PUT',body:JSON.stringify({name:st.data.nama_lokasi||'',data:st.data,status})});

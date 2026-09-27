@@ -42,20 +42,20 @@ def backup(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admi
 def restore(file: UploadFile = File(...), conn: sqlite3.Connection = Depends(get_db),
             user=Depends(require_admin)):
     if not (file.filename or "").lower().endswith(".zip"):
-        raise HTTPException(400, "Harus file .zip hasil backup")
+        raise HTTPException(400, "Must be a backup .zip file")
     data = file.file.read()
     try:
         zf = zipfile.ZipFile(io.BytesIO(data))
     except Exception:
-        raise HTTPException(400, "ZIP tidak valid")
+        raise HTTPException(400, "Invalid ZIP")
     # Validasi: hanya path aman di dalam DATA_DIR
     names = zf.namelist()
     if not any(n == "app.db" or n.startswith(("images/", "templates/")) for n in names):
-        raise HTTPException(400, "Isi ZIP tidak dikenali (harus dari fitur Backup)")
+        raise HTTPException(400, "Unknown ZIP content (use a file from Backup)")
     for n in names:
         dest = (config.DATA_DIR / n).resolve()
         if not str(dest).startswith(str(config.DATA_DIR.resolve())):
-            raise HTTPException(400, "Path tidak aman di dalam ZIP")
+            raise HTTPException(400, "Unsafe path inside the ZIP")
     zf.extractall(config.DATA_DIR)
     audit(conn, user, "restore", "data", detail=file.filename or "")
     return {"ok": True, "restart": True,

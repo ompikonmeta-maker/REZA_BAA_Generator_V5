@@ -34,11 +34,11 @@ def list_users(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_
 def create_user(body: UserIn, conn: sqlite3.Connection = Depends(get_db),
                 user=Depends(require_admin)):
     if body.role not in ROLES:
-        raise HTTPException(400, "Role tidak valid")
+        raise HTTPException(400, "Invalid role")
     if conn.execute("SELECT 1 FROM users WHERE username=?", (body.username.strip(),)).fetchone():
-        raise HTTPException(400, "Username sudah dipakai")
+        raise HTTPException(400, "Username already taken")
     if len(body.password) < 4:
-        raise HTTPException(400, "Password minimal 4 karakter")
+        raise HTTPException(400, "Password needs at least 4 characters")
     cur = conn.execute(
         "INSERT INTO users(username,password_hash,role,full_name,active,must_change,created_at) "
         "VALUES(?,?,?,?,?,?,?)",
@@ -54,10 +54,10 @@ def create_user(body: UserIn, conn: sqlite3.Connection = Depends(get_db),
 def update_user(uid: int, body: UserIn, conn: sqlite3.Connection = Depends(get_db),
                 user=Depends(require_admin)):
     if body.role not in ROLES:
-        raise HTTPException(400, "Role tidak valid")
+        raise HTTPException(400, "Invalid role")
     row = conn.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
     if not row:
-        raise HTTPException(404, "User tidak ditemukan")
+        raise HTTPException(404, "User not found")
     conn.execute(
         "UPDATE users SET role=?,full_name=?,active=? WHERE id=?",
         (body.role, body.full_name, 1 if body.active else 0, uid),
@@ -74,10 +74,10 @@ def update_user(uid: int, body: UserIn, conn: sqlite3.Connection = Depends(get_d
 def delete_user(uid: int, conn: sqlite3.Connection = Depends(get_db),
                 user=Depends(require_admin)):
     if uid == user["id"]:
-        raise HTTPException(400, "Tidak bisa menghapus akun sendiri")
+        raise HTTPException(400, "You can't delete your own account")
     row = conn.execute("SELECT * FROM users WHERE id=?", (uid,)).fetchone()
     if not row:
-        raise HTTPException(404, "User tidak ditemukan")
+        raise HTTPException(404, "User not found")
     conn.execute("DELETE FROM users WHERE id=?", (uid,))
     conn.commit()
     audit(conn, user, "delete", "user", uid, row["username"])

@@ -51,10 +51,10 @@ def _gather_locations(conn: sqlite3.Connection, scope: str, loc_id: int | None,
         rows = conn.execute(f"SELECT * FROM locations {wsql} ORDER BY id", params).fetchall()
     else:
         if not loc_id:
-            raise HTTPException(400, "loc_id wajib untuk scope 'one'")
+            raise HTTPException(400, "loc_id is required for scope 'one'")
         rows = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchall()
     if not rows:
-        raise HTTPException(404, "Tidak ada lokasi untuk diekspor")
+        raise HTTPException(404, "No locations to export")
     out = []
     for r in rows:
         inv = conn.execute(
@@ -143,9 +143,9 @@ def export_excel(scope: str = Query("one"), loc_id: int | None = None,
                  conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     tpl = conn.execute("SELECT * FROM templates WHERE active=1 ORDER BY id DESC LIMIT 1").fetchone()
     if not tpl:
-        raise HTTPException(400, "Belum ada template aktif. Daftarkan template dulu di menu Template.")
+        raise HTTPException(400, "No active template. Add one in the Template menu first.")
     if not Path(tpl["path"]).exists():
-        raise HTTPException(400, "File template hilang di server.")
+        raise HTTPException(400, "Template file is missing on the server.")
     locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user)
     tcfg = json.loads(tpl["config_json"]) if tpl["config_json"] else {}
     tcfg["sheet_log"] = tpl["sheet_log"]

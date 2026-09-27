@@ -230,11 +230,11 @@ def transfer_locations(body: TransferIn, conn: sqlite3.Connection = Depends(get_
     tgt = conn.execute("SELECT id, username, full_name, role, active FROM users WHERE id=?",
                        (body.to_user_id,)).fetchone()
     if not tgt:
-        raise HTTPException(404, "User tujuan tidak ditemukan")
+        raise HTTPException(404, "Target user not found")
     if not tgt["active"]:
-        raise HTTPException(400, "User tujuan nonaktif")
+        raise HTTPException(400, "Target user is inactive")
     if tgt["role"] == "viewer":
-        raise HTTPException(400, "User tujuan berperan viewer (tidak bisa mengerjakan lokasi)")
+        raise HTTPException(400, "Target user is a viewer (can't work on locations)")
     n = 0
     for lid in body.ids:
         r = conn.execute("SELECT id FROM locations WHERE id=? AND deleted_at IS NULL", (lid,)).fetchone()
@@ -255,7 +255,7 @@ def get_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
                  user=Depends(current_user)):
     row = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Lokasi tidak ditemukan")
+        raise HTTPException(404, "Location not found")
     return _location_dict(conn, row, user)
 
 
@@ -265,9 +265,9 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
     import json
     row = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Lokasi tidak ditemukan")
+        raise HTTPException(404, "Location not found")
     if not _can_write(user, row):
-        raise HTTPException(403, "Bukan pekerjaan Anda")
+        raise HTTPException(403, "Not your location")
     conn.execute(
         "UPDATE locations SET name=?,data_json=?,status=?,updated_at=? WHERE id=?",
         (body.name, json.dumps(body.data, ensure_ascii=False), body.status,
@@ -283,9 +283,9 @@ def save_inventory(loc_id: int, body: InventoryIn, conn: sqlite3.Connection = De
                    user=Depends(require_editor)):
     row = conn.execute("SELECT owner_id FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Lokasi tidak ditemukan")
+        raise HTTPException(404, "Location not found")
     if not _can_write(user, row):
-        raise HTTPException(403, "Bukan pekerjaan Anda")
+        raise HTTPException(403, "Not your location")
     conn.execute("DELETE FROM inventory_items WHERE location_id=?", (loc_id,))
     for i, it in enumerate(body.items):
         conn.execute(
@@ -306,9 +306,9 @@ def delete_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
     bisa dipulihkan admin). Tidak menghapus baris/relasi/foto."""
     row = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Lokasi tidak ditemukan")
+        raise HTTPException(404, "Location not found")
     if not _can_write(user, row):
-        raise HTTPException(403, "Hanya admin atau pemilik entry yang boleh menghapus")
+        raise HTTPException(403, "Only an admin or the owner can delete this")
     conn.execute("UPDATE locations SET deleted_at=?, deleted_by=? WHERE id=?",
                  (db.now_iso(), user["id"], loc_id))
     conn.commit()
@@ -349,7 +349,7 @@ def restore_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
                      user=Depends(require_admin)):
     row = conn.execute("SELECT code FROM locations WHERE id=? AND deleted_at IS NOT NULL", (loc_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Lokasi terhapus tidak ditemukan")
+        raise HTTPException(404, "Deleted location not found")
     conn.execute("UPDATE locations SET deleted_at=NULL, deleted_by=NULL, updated_at=? WHERE id=?",
                  (db.now_iso(), loc_id))
     conn.commit()
@@ -363,7 +363,7 @@ def purge_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
     """Hapus permanen (baris + relasi + folder foto). Hanya dari trash."""
     row = conn.execute("SELECT code FROM locations WHERE id=? AND deleted_at IS NOT NULL", (loc_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Lokasi terhapus tidak ditemukan")
+        raise HTTPException(404, "Deleted location not found")
     conn.execute("DELETE FROM locations WHERE id=?", (loc_id,))  # cascade -> inventory & photos
     conn.commit()
     shutil.rmtree(config.IMAGES_DIR / row["code"], ignore_errors=True)

@@ -59,9 +59,9 @@ def create_request(body: RequestIn, conn: sqlite3.Connection = Depends(get_db),
     loc = conn.execute("SELECT id, code, owner_id FROM locations WHERE id=? AND deleted_at IS NULL",
                        (body.location_id,)).fetchone()
     if not loc:
-        raise HTTPException(404, "Lokasi tidak ditemukan")
+        raise HTTPException(404, "Location not found")
     if loc["owner_id"] == user["id"]:
-        raise HTTPException(400, "Anda sudah pemilik lokasi ini")
+        raise HTTPException(400, "You already own this location")
     # Dedupe: satu permintaan pending per (lokasi, peminta)
     dup = conn.execute(
         "SELECT id FROM edit_requests WHERE location_id=? AND requester_id=? AND status='pending'",
@@ -114,14 +114,14 @@ def approve_request(rid: int, conn: sqlite3.Connection = Depends(get_db),
                     user=Depends(require_admin)):
     r = _row(conn, rid)
     if not r:
-        raise HTTPException(404, "Permintaan tidak ditemukan")
+        raise HTTPException(404, "Request not found")
     if r["status"] != "pending":
-        raise HTTPException(400, "Permintaan sudah diproses")
+        raise HTTPException(400, "Request already handled")
     if r["loc_deleted"] is not None:
-        raise HTTPException(400, "Lokasi sudah dihapus")
+        raise HTTPException(400, "Location was deleted")
     tgt = conn.execute("SELECT id, active, role FROM users WHERE id=?", (r["requester_id"],)).fetchone()
     if not tgt or not tgt["active"]:
-        raise HTTPException(400, "Peminta tidak aktif")
+        raise HTTPException(400, "Requester is inactive")
     now = db.now_iso()
     # Setujui = alihkan kepemilikan lokasi ke peminta
     conn.execute("UPDATE locations SET owner_id=?, updated_at=? WHERE id=?",
@@ -143,9 +143,9 @@ def reject_request(rid: int, conn: sqlite3.Connection = Depends(get_db),
                    user=Depends(require_admin)):
     r = _row(conn, rid)
     if not r:
-        raise HTTPException(404, "Permintaan tidak ditemukan")
+        raise HTTPException(404, "Request not found")
     if r["status"] != "pending":
-        raise HTTPException(400, "Permintaan sudah diproses")
+        raise HTTPException(400, "Request already handled")
     conn.execute("UPDATE edit_requests SET status='rejected', resolved_at=?, resolved_by=? WHERE id=?",
                  (db.now_iso(), user["id"], rid))
     conn.commit()

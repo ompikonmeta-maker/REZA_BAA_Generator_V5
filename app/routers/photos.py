@@ -24,7 +24,7 @@ def _guard_photo(conn, user, photo_row, *, write: bool):
     loc = conn.execute("SELECT owner_id FROM locations WHERE id=?", (photo_row["location_id"],)).fetchone()
     owner = loc["owner_id"] if loc else None
     if not loc_access(user, owner, write=write):
-        raise HTTPException(403 if write else 404, "Tidak diizinkan" if write else "Foto tidak ditemukan")
+        raise HTTPException(403 if write else 404, "Tidak diizinkan" if write else "Photo not found")
 
 
 def _safe_ext(name: str) -> str:
@@ -43,9 +43,9 @@ def upload_photos(
 ):
     loc = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
     if not loc:
-        raise HTTPException(404, "Lokasi tidak ditemukan")
+        raise HTTPException(404, "Location not found")
     if not loc_access(user, loc["owner_id"], write=True):
-        raise HTTPException(403, "Bukan pekerjaan Anda")
+        raise HTTPException(403, "Not your location")
 
     categories = db.get_setting(conn, "photo_categories", [])
     try:
@@ -132,7 +132,7 @@ def reassign_photo(photo_id: int, payload: dict, conn: sqlite3.Connection = Depe
     """Pindahkan foto ke kategori lain (drag manual). Re-OCR bila perlu."""
     row = conn.execute("SELECT * FROM photos WHERE id=?", (photo_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Foto tidak ditemukan")
+        raise HTTPException(404, "Photo not found")
     _guard_photo(conn, user, row, write=True)
     # Set serial manual (dari barcode/OCR area/edit) tanpa memindah kategori
     if "ocr_serial" in payload and "category" not in payload:
@@ -143,7 +143,7 @@ def reassign_photo(photo_id: int, payload: dict, conn: sqlite3.Connection = Depe
         return {"ok": True, "ocr_serial": str(payload.get("ocr_serial", ""))}
     new_cat = str(payload.get("category", "")).strip()
     if not new_cat:
-        raise HTTPException(400, "category wajib diisi")
+        raise HTTPException(400, "category is required")
     categories = db.get_setting(conn, "photo_categories", [])
     ocr_serial, ocr_text = row["ocr_serial"], row["ocr_text"]
     if autosort.category_needs_ocr(new_cat, categories) and not ocr_serial:
@@ -162,7 +162,7 @@ def reocr_photo(photo_id: int, conn: sqlite3.Connection = Depends(get_db),
                 user=Depends(require_editor)):
     row = conn.execute("SELECT * FROM photos WHERE id=?", (photo_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Foto tidak ditemukan")
+        raise HTTPException(404, "Photo not found")
     _guard_photo(conn, user, row, write=True)
     serial, text = ocr.read_serial(row["path"])
     conn.execute("UPDATE photos SET ocr_serial=?,ocr_text=? WHERE id=?", (serial, text, photo_id))
@@ -175,7 +175,7 @@ def photo_file(photo_id: int, conn: sqlite3.Connection = Depends(get_db),
                user=Depends(current_user)):
     row = conn.execute("SELECT * FROM photos WHERE id=?", (photo_id,)).fetchone()
     if not row or not Path(row["path"]).exists():
-        raise HTTPException(404, "File tidak ditemukan")
+        raise HTTPException(404, "File not found")
     _guard_photo(conn, user, row, write=False)
     return FileResponse(row["path"])
 
@@ -185,7 +185,7 @@ def delete_photo(photo_id: int, conn: sqlite3.Connection = Depends(get_db),
                  user=Depends(require_editor)):
     row = conn.execute("SELECT * FROM photos WHERE id=?", (photo_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Foto tidak ditemukan")
+        raise HTTPException(404, "Photo not found")
     _guard_photo(conn, user, row, write=True)
     try:
         Path(row["path"]).unlink(missing_ok=True)

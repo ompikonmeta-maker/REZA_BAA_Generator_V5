@@ -23,13 +23,13 @@ def current_user(
 ):
     user = auth.get_session_user(conn, reza_baa_session)
     if user is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Belum login")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not signed in")
     return user
 
 
 def require_admin(user=Depends(current_user)):
     if user["role"] != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Butuh hak admin")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin only")
     return user
 
 
@@ -41,7 +41,7 @@ def require_editor(user=Depends(current_user)):
     """
     if user["role"] not in ("admin", "operator"):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Akun ini hanya bisa melihat (viewer)")
+                            detail="This account is view-only")
     return user
 
 

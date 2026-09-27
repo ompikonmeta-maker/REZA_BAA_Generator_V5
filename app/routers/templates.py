@@ -102,7 +102,7 @@ async def inspect_template(file: UploadFile = File(...),
                            user=Depends(require_admin)):
     """Simpan sementara & kembalikan daftar worksheet + preview untuk dipilih."""
     if not (file.filename or "").lower().endswith((".xlsx", ".xlsm")):
-        raise HTTPException(400, "Harus file .xlsx/.xlsm")
+        raise HTTPException(400, "Must be an .xlsx/.xlsm file")
     tmp_name = f"pending_{uuid.uuid4().hex}.xlsx"
     tmp_path = config.TEMPLATES_DIR / tmp_name
     tmp_path.write_bytes(await file.read())
@@ -110,7 +110,7 @@ async def inspect_template(file: UploadFile = File(...),
         sheets = _inspect_workbook(tmp_path)
     except Exception as e:
         tmp_path.unlink(missing_ok=True)
-        raise HTTPException(400, f"Gagal membaca Excel: {e}")
+        raise HTTPException(400, f"Can't read Excel: {e}")
     return {"pending_file": tmp_name, "orig_name": file.filename, "sheets": sheets}
 
 
@@ -129,12 +129,12 @@ def register_template(body: RegisterIn, conn: sqlite3.Connection = Depends(get_d
                       user=Depends(require_admin)):
     import json
     if body.sheet_log == body.sheet_detail:
-        raise HTTPException(400, "Sheet Log dan Detail tidak boleh sama")
+        raise HTTPException(400, "Log and Detail must be different sheets")
     if "/" in body.pending_file or "\\" in body.pending_file:
-        raise HTTPException(400, "Nama file tidak valid")
+        raise HTTPException(400, "Invalid file name")
     src = config.TEMPLATES_DIR / body.pending_file
     if not src.exists():
-        raise HTTPException(400, "File pending tidak ditemukan, upload ulang")
+        raise HTTPException(400, "Upload expired — please upload again")
     final_name = f"tpl_{uuid.uuid4().hex}.xlsx"
     final_path = config.TEMPLATES_DIR / final_name
     src.rename(final_path)
@@ -178,7 +178,7 @@ def list_templates(conn: sqlite3.Connection = Depends(get_db), user=Depends(curr
 def activate_template(tpl_id: int, conn: sqlite3.Connection = Depends(get_db),
                       user=Depends(require_admin)):
     if not conn.execute("SELECT 1 FROM templates WHERE id=?", (tpl_id,)).fetchone():
-        raise HTTPException(404, "Template tidak ditemukan")
+        raise HTTPException(404, "Template not found")
     conn.execute("UPDATE templates SET active=CASE WHEN id=? THEN 1 ELSE 0 END", (tpl_id,))
     conn.commit()
     audit(conn, user, "activate", "template", tpl_id)
@@ -195,9 +195,9 @@ def rename_template(tpl_id: int, body: RenameIn, conn: sqlite3.Connection = Depe
     """Ganti nama template terdaftar."""
     name = body.name.strip()
     if not name:
-        raise HTTPException(400, "Nama tidak boleh kosong")
+        raise HTTPException(400, "Name can't be empty")
     if not conn.execute("SELECT 1 FROM templates WHERE id=?", (tpl_id,)).fetchone():
-        raise HTTPException(404, "Template tidak ditemukan")
+        raise HTTPException(404, "Template not found")
     conn.execute("UPDATE templates SET name=? WHERE id=?", (name, tpl_id))
     conn.commit()
     audit(conn, user, "rename", "template", tpl_id, name)
@@ -210,9 +210,9 @@ def delete_template(tpl_id: int, conn: sqlite3.Connection = Depends(get_db),
     """Hapus template beserta file-nya. Template aktif tidak boleh dihapus."""
     row = conn.execute("SELECT * FROM templates WHERE id=?", (tpl_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Template tidak ditemukan")
+        raise HTTPException(404, "Template not found")
     if row["active"]:
-        raise HTTPException(400, "Template aktif tidak bisa dihapus — aktifkan template lain dulu")
+        raise HTTPException(400, "Can't delete the active template — activate another one first")
     try:
         Path(row["path"]).unlink(missing_ok=True)
     except Exception:
@@ -229,7 +229,7 @@ def get_template(tpl_id: int, conn: sqlite3.Connection = Depends(get_db),
     import json
     row = conn.execute("SELECT * FROM templates WHERE id=?", (tpl_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Template tidak ditemukan")
+        raise HTTPException(404, "Template not found")
     d = dict(row)
     d["config"] = json.loads(row["config_json"]) if row["config_json"] else {}
     d.pop("config_json", None)
@@ -242,9 +242,9 @@ def template_sheets(tpl_id: int, conn: sqlite3.Connection = Depends(get_db),
     """Baca ulang worksheet template terdaftar (untuk UI mapping)."""
     row = conn.execute("SELECT * FROM templates WHERE id=?", (tpl_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Template tidak ditemukan")
+        raise HTTPException(404, "Template not found")
     if not Path(row["path"]).exists():
-        raise HTTPException(400, "File template hilang di server")
+        raise HTTPException(400, "Template file is missing on the server")
     return {"sheets": _inspect_workbook(Path(row["path"]))}
 
 
@@ -260,9 +260,9 @@ def save_mapping(tpl_id: int, body: MappingIn, conn: sqlite3.Connection = Depend
     import json
     row = conn.execute("SELECT * FROM templates WHERE id=?", (tpl_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Template tidak ditemukan")
+        raise HTTPException(404, "Template not found")
     if body.sheet_log and body.sheet_log == body.sheet_detail:
-        raise HTTPException(400, "Sheet Log dan Detail tidak boleh sama")
+        raise HTTPException(400, "Log and Detail must be different sheets")
     fields = ["config_json=?"]
     params: list = [json.dumps(body.config, ensure_ascii=False)]
     if body.sheet_log:
@@ -283,13 +283,13 @@ def template_render(tpl_id: int, sheet: str, conn: sqlite3.Connection = Depends(
     import openpyxl
     row = conn.execute("SELECT path FROM templates WHERE id=?", (tpl_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Template tidak ditemukan")
+        raise HTTPException(404, "Template not found")
     if not Path(row["path"]).exists():
-        raise HTTPException(400, "File template hilang di server")
+        raise HTTPException(400, "Template file is missing on the server")
     wb = openpyxl.load_workbook(row["path"])
     try:
         if sheet not in wb.sheetnames:
-            raise HTTPException(404, "Worksheet tidak ditemukan")
+            raise HTTPException(404, "Worksheet not found")
         return _sheet_render(wb[sheet])
     finally:
         wb.close()
@@ -308,14 +308,14 @@ def _trial_build(tpl_id: int, body: TrialIn, conn: sqlite3.Connection) -> tuple[
     from ..services import excel as excel_svc
     row = conn.execute("SELECT path FROM templates WHERE id=?", (tpl_id,)).fetchone()
     if not row:
-        raise HTTPException(404, "Template tidak ditemukan")
+        raise HTTPException(404, "Template not found")
     if not Path(row["path"]).exists():
-        raise HTTPException(400, "File template hilang di server")
+        raise HTTPException(400, "Template file is missing on the server")
     ids = [r["id"] for r in conn.execute(
         "SELECT id FROM locations WHERE deleted_at IS NULL ORDER BY id DESC LIMIT ?",
         (max(1, min(body.limit, 10)),)).fetchall()]
     if not ids:
-        raise HTTPException(400, "Belum ada data lokasi untuk preview")
+        raise HTTPException(400, "No locations yet to preview")
     locs = []
     for i in reversed(ids):
         locs += _gather_locations(conn, "one", i)

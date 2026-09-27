@@ -89,9 +89,9 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
     try:
         wb = openpyxl.load_workbook(io.BytesIO(data), data_only=True)
     except Exception:
-        raise HTTPException(400, "File tidak bisa dibaca — pastikan berformat .xlsx")
+        raise HTTPException(400, "Can't read the file — make sure it's .xlsx")
     if "Lokasi" not in wb.sheetnames:
-        raise HTTPException(400, "Sheet 'Lokasi' tidak ditemukan. Unduh template dulu.")
+        raise HTTPException(400, "Sheet 'Lokasi' not found. Download the template first.")
 
     rows = list(wb["Lokasi"].iter_rows(values_only=True))
     if not rows:
