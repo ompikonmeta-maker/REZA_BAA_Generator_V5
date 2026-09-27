@@ -216,6 +216,7 @@ def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db)
     code = _format_code(cur.lastrowid)
     conn.execute("UPDATE locations SET code=?, modified_at=?, modified_by=? WHERE id=?",
                  (code, now, user["id"], cur.lastrowid))
+    db.log_activity(conn, cur.lastrowid, user["id"], "create", "", now)
     conn.commit()
     audit(conn, user, "create", "location", cur.lastrowid, code)
     row = conn.execute("SELECT * FROM locations WHERE id=?", (cur.lastrowid,)).fetchone()
@@ -279,8 +280,18 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
         "UPDATE locations SET name=?,data_json=?,status=?,updated_at=? WHERE id=?",
         (body.name, new_json, body.status, db.now_iso(), loc_id),
     )
+    if body.status == "selesai" and row["status"] != "selesai":
+        conn.execute("UPDATE locations SET done_at=? WHERE id=?", (db.now_iso(), loc_id))
+    elif body.status != "selesai" and row["status"] == "selesai":
+        conn.execute("UPDATE locations SET done_at=NULL WHERE id=?", (loc_id,))
     if changed:
-        db.touch_modified(conn, loc_id, user["id"])
+        data_changed = json.loads(new_json) != json.loads(row["data_json"] or "{}") or body.name != row["name"]
+        if body.status != row["status"]:
+            db.touch_modified(conn, loc_id, user["id"], "done" if body.status == "selesai" else "reopen")
+            if data_changed:
+                db.log_activity(conn, loc_id, user["id"], "data")
+        else:
+            db.touch_modified(conn, loc_id, user["id"], "data")
     conn.commit()
     audit(conn, user, "update", "location", loc_id, row["code"])
     return _location_dict(conn, conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone(), user)
@@ -306,7 +317,7 @@ def save_inventory(loc_id: int, body: InventoryIn, conn: sqlite3.Connection = De
             (loc_id, it.nama_barang, it.merk_type, it.jumlah, it.sn_tagging, it.keterangan, i),
         )
     if old != new:
-        db.touch_modified(conn, loc_id, user["id"])
+        db.touch_modified(conn, loc_id, user["id"], "inventory", str(len(new)))
     conn.commit()
     audit(conn, user, "save_inventory", "location", loc_id, f"{len(body.items)} item")
     return {"ok": True, "count": len(body.items)}

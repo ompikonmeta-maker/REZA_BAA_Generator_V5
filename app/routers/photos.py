@@ -121,7 +121,7 @@ def upload_photos(
         })
 
     if results:
-        db.touch_modified(conn, loc_id, user["id"])
+        db.touch_modified(conn, loc_id, user["id"], "photo_add", str(len(results)))
     conn.commit()
     audit(conn, user, "upload_photos", "location", loc_id, f"{len(results)} file")
     return {"ok": True, "results": results, "ocr_available": ocr.available()}
@@ -140,7 +140,7 @@ def reassign_photo(photo_id: int, payload: dict, conn: sqlite3.Connection = Depe
         conn.execute("UPDATE photos SET ocr_serial=? WHERE id=?",
                      (str(payload.get("ocr_serial", "")), photo_id))
         if str(payload.get("ocr_serial", "")) != (row["ocr_serial"] or ""):
-            db.touch_modified(conn, row["location_id"], user["id"])
+            db.touch_modified(conn, row["location_id"], user["id"], "sn")
         conn.commit()
         audit(conn, user, "set_serial", "photo", photo_id, str(payload.get("ocr_serial", "")))
         return {"ok": True, "ocr_serial": str(payload.get("ocr_serial", ""))}
@@ -156,7 +156,7 @@ def reassign_photo(photo_id: int, payload: dict, conn: sqlite3.Connection = Depe
         (new_cat, ocr_serial, ocr_text, photo_id),
     )
     if new_cat != row["category"]:
-        db.touch_modified(conn, row["location_id"], user["id"])
+        db.touch_modified(conn, row["location_id"], user["id"], "photo_move")
     conn.commit()
     audit(conn, user, "reassign_photo", "photo", photo_id, new_cat)
     return {"ok": True, "category": new_cat, "ocr_serial": ocr_serial}
@@ -197,7 +197,7 @@ def delete_photo(photo_id: int, conn: sqlite3.Connection = Depends(get_db),
     except Exception:
         pass
     conn.execute("DELETE FROM photos WHERE id=?", (photo_id,))
-    db.touch_modified(conn, row["location_id"], user["id"])
+    db.touch_modified(conn, row["location_id"], user["id"], "photo_del")
     conn.commit()
     audit(conn, user, "delete_photo", "photo", photo_id)
     return {"ok": True}

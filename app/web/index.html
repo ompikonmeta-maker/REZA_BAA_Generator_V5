@@ -1135,6 +1135,90 @@
   .msheet .xc.rot span{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap}
   .msheet .xc.wr{white-space:normal}
   .msheet .xc.x{color:var(--md-sys-color-error);font-weight:600}
+  /* ===== Progress / Supervisor / My dashboard ===== */
+  :root{--ag1:#f6e7c8;--ag2:#e6b867;--ag3:#c07f1f;--ag4:#7a4a0c;--ag1i:#3a2a12;--ag2i:#3a2a12;--ag3i:#fff;--ag4i:#fff}
+  :root[data-theme="dark"]{--ag1:#3a2f1c;--ag2:#7a5a22;--ag3:#c08a33;--ag4:#f0c27a;--ag1i:#f0d9b0;--ag2i:#fff;--ag3i:#1a1200;--ag4i:#1a1200}
+  .pg{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+  .pg .card{margin:0;min-width:0}
+  .pg .s12{grid-column:span 12}.pg .s8{grid-column:span 8}.pg .s7{grid-column:span 7}.pg .s6{grid-column:span 6}.pg .s5{grid-column:span 5}.pg .s4{grid-column:span 4}
+  @media(max-width:1100px){.pg .s8,.pg .s7,.pg .s6,.pg .s5,.pg .s4{grid-column:span 12}}
+  .pg .ct{display:flex;align-items:center;gap:8px;font:var(--md-sys-typescale-title-small);font-weight:600}
+  .pg .cd{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-body-small);margin:2px 0 12px}
+  .pg .lab{font:var(--md-sys-typescale-label-small);font-weight:600;color:var(--md-sys-color-on-surface-variant);text-transform:uppercase;letter-spacing:.5px}
+  .pg .mut{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-body-small)}
+  .pg-top{display:flex;align-items:center;gap:10px;margin:-4px 0 12px}.pg-top .grow{flex:1}
+  .pg-mis{display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:20px;align-items:center}
+  @media(max-width:1100px){.pg-mis{grid-template-columns:1fr 1fr}}
+  .pg-big{font-size:44px;font-weight:600;letter-spacing:-1px;line-height:1.05}.pg-big small{font-size:20px;font-weight:500;color:var(--md-sys-color-on-surface-variant)}
+  .pg-v{font-size:24px;font-weight:600;line-height:1.2}.pg-v small{font-size:13px;font-weight:500;color:var(--md-sys-color-on-surface-variant)}
+  .pg-ed{display:inline-flex;align-items:center;gap:6px;border:1px dashed var(--md-sys-color-outline-variant);border-radius:10px;padding:2px 8px;background:none;color:inherit;font:inherit;cursor:pointer}
+  .pg-ed:hover{border-color:var(--md-sys-color-primary);color:var(--md-sys-color-primary)}.pg-ed .mi{font-size:15px}
+  .pg-ed.ro{border:0;padding:0;cursor:default}.pg-ed.ro:hover{color:inherit}
+  .pg-edin{display:inline-flex;align-items:center;gap:4px}.pg-edin input{width:120px;font:600 18px inherit;padding:3px 8px;border:1.5px solid var(--md-sys-color-primary);border-radius:9px;background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface)}
+  .pg-edin button{border:0;border-radius:8px;width:30px;height:30px;cursor:pointer;display:grid;place-items:center}.pg-edin .ok{background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary)}.pg-edin .no{background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface-variant)}
+  .pg-edin .mi{font-size:18px}
+  .pg-bar{height:8px;border-radius:6px;background:var(--md-sys-color-surface-container-highest);position:relative;margin-top:12px}
+  .pg-bar i{position:absolute;inset:0 auto 0 0;border-radius:6px;background:var(--md-sys-color-primary);transition:width .8s cubic-bezier(.05,.7,.1,1)}
+  .pg-bar b{position:absolute;top:-4px;width:2px;height:16px;background:var(--md-sys-color-on-surface)}
+  .pg-hist{font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant);margin-top:4px}
+  .pg-chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 10px;font:var(--md-sys-typescale-label-medium);font-weight:600;white-space:nowrap}
+  .pg-chip.good{background:var(--good-bg);color:var(--good)}.pg-chip.warn{background:var(--warn-bg);color:var(--warn)}.pg-chip.bad{background:var(--bad-bg);color:var(--bad)}.pg-chip.mut{background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface-variant)}
+  .pg svg.ch{display:block;width:100%;height:auto;overflow:visible}
+  .pg .ax{stroke:var(--md-sys-color-outline-variant);stroke-width:1}.pg .axt{fill:var(--md-sys-color-on-surface-variant);font-size:11px}
+  .pg-pipe{display:flex;gap:2px;height:44px;border-radius:12px;overflow:hidden;margin:6px 0 14px}
+  .pg-seg{display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;min-width:0;cursor:default}.pg-seg span{overflow:hidden;white-space:nowrap}
+  .pg-leg{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px}.pg-lg{display:flex;gap:9px}.pg-lg .sw{width:12px;height:12px;border-radius:4px;margin-top:4px;flex:0 0 auto}
+  .pg-lg b{display:block;font-size:18px}.pg-lg small{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small)}
+  .pg-call{margin-top:14px;display:flex;gap:10px;align-items:center;background:var(--md-sys-color-surface-container-low);border-radius:12px;padding:10px 12px;font:var(--md-sys-typescale-body-small)}
+  .pg-call .n{font-size:20px;font-weight:600;color:var(--md-sys-color-primary)}
+  .pg-age{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;height:150px}
+  .pg-agcard{display:flex;flex-direction:column}.pg-agcard .pg-age{flex:1;height:auto;min-height:150px}
+  .pg-acol{display:flex;flex-wrap:wrap;align-content:flex-end;justify-content:center;gap:4px;padding:8px;border-radius:12px;background:var(--md-sys-color-surface-container-low);overflow:auto}
+  .pg-dot{width:18px;height:18px;border-radius:5px;cursor:pointer;transition:transform .15s}.pg-dot:hover{transform:scale(1.3)}
+  .pg-alab{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center;margin-top:8px}.pg-alab b{display:block;font-size:13px}.pg-alab small{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small)}
+  .pg-ramp{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant);margin-top:12px}.pg-ramp i{width:20px;height:10px;border-radius:3px;display:inline-block}
+  .pg-gear{margin-left:auto;border:1px solid var(--md-sys-color-outline-variant);background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface-variant);border-radius:10px;width:34px;height:34px;cursor:pointer;display:grid;place-items:center}
+  .pg-pop{position:absolute;right:0;top:40px;z-index:6;background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline-variant);border-radius:16px;box-shadow:var(--md-sys-elevation-level3);padding:14px 16px;width:250px;display:none;flex-direction:column;gap:8px}
+  .pg-pop.on{display:flex;animation:pgPop .3s cubic-bezier(.05,.7,.1,1)}@keyframes pgPop{from{opacity:0;transform:translateY(-6px)}}
+  .pg-pop label{display:flex;align-items:center;gap:8px;font:var(--md-sys-typescale-body-medium)}.pg-pop input{width:60px;margin-left:auto;padding:5px 6px;border:1px solid var(--md-sys-color-outline-variant);border-radius:8px;text-align:center;background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface)}
+  .pg-pop .pa{display:flex;justify-content:flex-end;gap:6px;margin-top:4px}
+  .pg-li{display:grid;grid-template-columns:minmax(0,1fr) 64px 40px auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--md-sys-color-outline-variant);cursor:pointer}
+  .pg-li:last-child{border:0}.pg-li:hover{background:var(--md-sys-color-surface-container-low)}
+  .pg-mini{height:6px;border-radius:4px;background:var(--md-sys-color-surface-container-highest);overflow:hidden}.pg-mini i{display:block;height:100%;background:var(--md-sys-color-primary)}
+  .lnm{font-weight:600}.lcode{font:500 11.5px ui-monospace,Consolas,monospace;color:var(--md-sys-color-on-surface-variant);margin-left:6px;white-space:nowrap}
+  .pg-empty{padding:22px;text-align:center;color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-body-medium)}
+  .pg-tip{position:fixed;pointer-events:none;background:var(--md-sys-color-inverse-surface);color:var(--md-sys-color-inverse-on-surface);font:var(--md-sys-typescale-body-small);padding:7px 10px;border-radius:9px;opacity:0;transition:opacity .15s;z-index:200;white-space:nowrap}
+  .pg-mom{display:flex;align-items:center;gap:22px;flex-wrap:wrap}.pg-mom .n{font-size:26px;font-weight:600}
+  .pg-wk{display:flex;gap:6px}.pg-wk span{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font:600 11px inherit;background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface-variant)}
+  .pg-wk span.on{background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary)}.pg-wk span.today{outline:2px solid var(--md-sys-color-primary);outline-offset:1px}
+  .pg-age-chip{font:var(--md-sys-typescale-label-small);font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .pg-miss{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.pg-m{font:var(--md-sys-typescale-label-small);font-weight:600;padding:2px 8px;border-radius:999px;background:var(--warn-bg);color:var(--warn)}
+  /* supervisor */
+  .sv-strip{display:flex;align-items:center;gap:22px;flex-wrap:wrap}.sv-strip .it{display:flex;flex-direction:column}.sv-strip .sep{width:1px;align-self:stretch;background:var(--md-sys-color-outline-variant)}
+  .sv-tw{overflow-x:auto}.sv-tw table{min-width:960px}.sv-last{max-width:300px;overflow:hidden;text-overflow:ellipsis}.sv-tw td,.sv-tw th{white-space:nowrap}
+  .sv-who{display:flex;align-items:center;gap:10px}.sv-av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:13px;background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-primary);position:relative;flex:0 0 auto}
+  .sv-av i{position:absolute;right:-1px;bottom:-1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--md-sys-color-surface)}
+  .st-online{background:var(--good)}.st-idle{background:var(--ag3)}.st-offline{background:var(--md-sys-color-outline)}
+  .sv-ag{display:flex;gap:2px;height:10px}.sv-ag span{border-radius:3px}
+  .sv-share{display:flex;align-items:center;gap:8px}.sv-sb{width:110px;height:8px;border-radius:5px;background:var(--md-sys-color-surface-container-highest);position:relative}
+  .sv-sb i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}.sv-sb b{position:absolute;top:-3px;width:2px;height:14px;background:var(--md-sys-color-on-surface);left:66%}
+  .sv-hm{display:grid;gap:3px;align-items:center}.sv-hm .c{height:34px;border-radius:6px}.sv-hm .n{font:var(--md-sys-typescale-body-small);padding-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sv-hm .d{font-size:10.5px;color:var(--md-sys-color-on-surface-variant);text-align:center}
+  .sv-fi{display:grid;grid-template-columns:46px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px solid var(--md-sys-color-outline-variant);font:var(--md-sys-typescale-body-medium)}
+  .sv-fi:last-child{border:0}.sv-fi .t{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small);font-variant-numeric:tabular-nums;padding-top:2px}
+  .sv-wl .r{display:grid;grid-template-columns:110px minmax(0,1fr) 34px;gap:10px;align-items:center;padding:6px 0}.sv-wl .bar{display:flex;gap:2px;height:16px}.sv-wl .bar span{border-radius:4px}
+  .sv-flag{color:var(--bad);font-weight:600;font:var(--md-sys-typescale-label-small)}
+  /* my dashboard */
+  .me-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center}
+  .me-next{margin-top:14px;display:flex;align-items:center;gap:14px;background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline-variant);border-radius:16px;padding:12px 14px;max-width:640px}
+  .me-acts{display:flex;flex-direction:column;gap:8px}
+  .me-wk{display:flex;flex-direction:column}.me-days{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;flex:1;min-height:120px;max-height:260px;margin-top:14px}
+  .me-dd{display:flex;flex-direction:column;text-align:center;font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant)}
+  .me-dd .b{flex:1;border-radius:10px;background:var(--md-sys-color-surface-container-high);display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;margin-bottom:4px;min-height:60px}
+  .me-dd .b i{display:block;background:var(--md-sys-color-primary);border-radius:6px 6px 0 0}.me-dd.today{color:var(--md-sys-color-on-surface);font-weight:600}.me-dd.today .b{outline:2px solid var(--md-sys-color-primary);outline-offset:1px}
+  .me-stk{display:flex;align-items:center;gap:12px;margin-top:14px;padding:10px 12px;border-radius:12px;background:var(--md-sys-color-surface-container-low)}.me-stk .n{font-size:26px;font-weight:600;line-height:1}
+  .me-q{display:grid;grid-template-columns:44px minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}.me-q:last-child{border:0}
+  .me-feed{display:grid;grid-template-columns:1fr 1fr;column-gap:28px}@media(max-width:900px){.me-feed{grid-template-columns:1fr}}
+  .pg td.num,.pg th.num{text-align:right}
   /* ===== Dashboard Viewer (Mode Bos) ===== */
   .vw-hero{background:linear-gradient(140deg,var(--md-sys-color-primary),var(--md-sys-color-tertiary));color:var(--md-sys-color-on-primary);border:none;position:relative;overflow:hidden}
   .vw-hero .th{color:color-mix(in srgb,var(--md-sys-color-on-primary) 88%,transparent)}.vw-hero .th .mi{color:inherit}
@@ -1420,6 +1504,7 @@
       </span>
     </div>
     <a class="navitem active" data-view="dashboard" data-short="Dash" data-tip="Dashboard"><span class="mi">dashboard</span><span class="lbl">Dashboard</span></a>
+    <a class="navitem prog-nav" data-view="progress" data-short="Prog" data-tip="Progress"><span class="mi">insights</span><span class="lbl">Progress</span></a>
     <a class="navitem" data-view="entry" data-short="Entry" data-tip="BAA Entry"><span class="mi">edit_document</span><span class="lbl">BAA Entry</span></a>
     <a class="navitem" data-view="locations" data-short="LOG" data-tip="Location Log"><span class="mi">table_rows</span><span class="lbl">Location Log</span><span class="pill" id="loc-count"></span></a>
     <a class="navitem admin-only" data-view="import" data-short="Import" data-tip="Import Locations"><span class="mi">upload_file</span><span class="lbl">Import Locations</span></a>
@@ -1483,150 +1568,13 @@
           <div class="htxt"><h1 id="dHello">Welcome</h1><p class="date" id="dDate"></p></div>
           <div class="hstat"><span class="hchip" id="dChip"><span class="mi">bolt</span> <span id="dChipTxt"></span></span></div>
         </div>
-        <div id="dashOp">
-        <div class="dash">
-          <div class="dkpis" id="dKpis"></div>
-          <div class="dtile dheat">
-            <div class="th"><span class="mi">calendar_month</span> Activity rhythm · <span id="dHeatRange">this month</span></div>
-            <div class="hinsight" id="dHeatInsight"></div>
-            <div class="hcal" id="dHeatCal">
-              <div class="hmonths" id="dHeatMonths"></div>
-              <div class="hbody">
-                <div class="hdays"><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span>Sun</span></div>
-                <div class="hcols" id="dHeatCols"></div>
-              </div>
-              <div class="hoverlay"><span class="mi">event_busy</span>No activity in the last 6 months</div>
-            </div>
-            <div class="hlegend v-ocean"><span class="k"><i class="hcell" style="aspect-ratio:auto;background:var(--md-sys-color-surface-container-highest)"></i>0</span><span class="k"><i class="hcell s1" style="aspect-ratio:auto"></i>1–2</span><span class="k"><i class="hcell s2" style="aspect-ratio:auto"></i>3–5</span><span class="k"><i class="hcell s4" style="aspect-ratio:auto"></i>6+</span></div>
-          </div>
-          <div class="dtile ddonut">
-            <div class="th"><span class="mi">donut_small</span> Completion Rate</div>
-            <div class="donutwrap">
-              <svg class="gauge" viewBox="0 0 120 120" id="dGauge">
-                <defs>
-                  <linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stop-color="var(--md-sys-color-primary)"/>
-                    <stop offset="1" stop-color="var(--md-sys-color-tertiary)"/>
-                  </linearGradient>
-                </defs>
-                <circle class="gtrack" cx="60" cy="60" r="50"/>
-                <circle class="gval" id="dArc" cx="60" cy="60" r="50"/>
-                <text class="gpct" id="dPct" x="60" y="57">0%</text>
-                <text class="gcap" x="60" y="74">locations done</text>
-              </svg>
-            </div>
-            <div class="lg"><span><span class="dot" style="background:var(--md-sys-color-primary)"></span>Done <b id="dLgDone">0</b></span><span><span class="dot" style="background:var(--md-sys-color-surface-container-highest)"></span>Draft <b id="dLgDraft">0</b></span></div>
-          </div>
-          <div class="dtile dtrend">
-            <div class="th"><span class="mi">trending_up</span> Locations done · 14 days <span class="grow"></span><span class="muted" id="dTrendSum" style="font:var(--md-sys-typescale-label-medium)"></span></div>
-            <div class="bars" id="dBars"></div>
-            <div class="barx" id="dBarX"></div>
-          </div>
-          <div class="dtile dattn">
-            <div class="th"><span class="mi">warning</span> Needs Attention <span class="grow"></span><span class="lk" id="dAttnMore">Location Log ›</span></div>
-            <div id="dAttn"></div>
-          </div>
-          <div class="dtile dfeed">
-            <div class="th"><span class="mi">history</span> Recent Activity</div>
-            <div class="feed" id="dFeed"></div>
-          </div>
-          <div class="dtile dside" id="dLeadTile">
-            <div class="th"><span class="mi">military_tech</span> User Performance</div>
-            <div id="dLead"></div>
-          </div>
-          <div class="dtile dside hidden" id="dStreakTile">
-            <div class="th"><span class="mi">local_fire_department</span> Your Streak</div>
-            <div class="streak"><span class="mi" style="font-size:26px;color:var(--md-sys-color-primary);vertical-align:-4px">local_fire_department</span> <span class="big" id="dStreakN">0</span> <span class="muted">day streak</span><div class="week" id="dWeek"></div></div>
-          </div>
-          <div class="dtile dacts">
-            <div class="th"><span class="mi">bolt</span> Quick Access</div>
-            <div class="acts" id="dActs"></div>
-          </div>
-        </div>
-        </div><!-- /dashOp -->
+        <div id="dashSup" class="hidden"></div>
+        <div id="dashMe" class="hidden"></div>
+      </section>
 
-        <div id="dashSuper" class="hidden">
-          <div class="sup-head">
-            <div><h2 style="font:var(--md-sys-typescale-title-large);font-weight:600;margin:0">Supervisor Console</h2><p class="sub" id="supSub">team performance</p></div>
-            <md-button variant="tonal" icon="help" id="supHelpBtn">How to read</md-button>
-          </div>
-          <div class="sup-legend">
-            <span class="k"><span class="hdot g"></span>On-track</span>
-            <span class="k"><span class="hdot w"></span>Slowing</span>
-            <span class="k"><span class="hdot b"></span>Declining / stalled</span>
-            <span class="k" style="margin-left:auto">Click a user to drill down →</span>
-          </div>
-          <div class="sup-strip" id="supStrip"></div>
-          <div class="dash">
-            <div class="dtile" style="grid-column:span 7">
-              <div class="th"><span class="mi">priority_high</span> Needs Attention — Declining Team</div>
-              <div id="supAtt"></div>
-            </div>
-            <div class="dtile" style="grid-column:span 5">
-              <div class="th"><span class="mi">bug_report</span> Bottleneck — why not done yet</div>
-              <div id="supBn"></div>
-            </div>
-            <div class="dtile" style="grid-column:span 7">
-              <div class="th"><span class="mi">leaderboard</span> Performance Ranking</div>
-              <table><thead><tr><th></th><th>User</th><th>Done</th><th>Velocity 4 wk</th><th>Load</th><th style="text-align:right">%</th></tr></thead><tbody id="supRank"></tbody></table>
-            </div>
-            <div class="dtile" style="grid-column:span 5">
-              <div class="th"><span class="mi">insights</span> Team Throughput · 8 weeks</div>
-              <div class="vbars" id="supVbars"></div>
-              <div class="vx" id="supVx"></div>
-            </div>
-          </div>
-        </div>
-
-        <div id="dashViewer" class="hidden">
-          <div class="sup-head">
-            <div><h2 style="font:var(--md-sys-typescale-title-large);font-weight:600;margin:0">Progress Overview</h2><p class="sub" id="vwSub">work progress</p></div>
-            <span class="vw-ro"><span class="mi">visibility</span> Viewer mode — read only</span>
-          </div>
-          <div class="sup-strip" id="vwStrip"></div>
-          <div class="dash">
-            <div class="dtile vw-hero" style="grid-column:span 8">
-              <div class="th"><span class="mi">rocket_launch</span> Completion Forecast</div>
-              <div class="vwflex">
-                <div class="vwring">
-                  <svg width="150" height="150" viewBox="0 0 150 150"><circle class="cc bg" cx="75" cy="75" r="63"></circle><circle class="cc fg" id="vwRingFg" cx="75" cy="75" r="63"></circle></svg>
-                  <div class="lab"><div><b id="vwPct">0%</b><span id="vwRingSub">0 / 0</span></div></div>
-                </div>
-                <div class="vwmain">
-                  <p class="big" id="vwBig">—</p>
-                  <p class="eta" id="vwEta">—</p>
-                  <div class="vwbar"><i id="vwBar" style="width:0%"></i></div>
-                  <div class="vwmark"><span>0</span><span id="vwTarget">Target</span></div>
-                  <div class="vwwf"><span class="mi">tune</span><span>Pace scenario</span><input type="range" id="vwWf" min="4" max="80" value="20"><span class="val" id="vwWfVal">20/wk</span></div>
-                </div>
-              </div>
-            </div>
-            <div class="dtile" style="grid-column:span 4">
-              <div class="th"><span class="mi">local_fire_department</span> Team Momentum</div>
-              <div class="vwstreak"><span class="mi fl">local_fire_department</span><div><div class="big" id="vwStreakN">0 days</div><div class="mut">streak with a location done</div></div></div>
-              <div class="vwdots" id="vwWeek"></div>
-              <p class="mut" id="vwStreakNote" style="margin:12px 0 0;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)"></p>
-            </div>
-            <div class="dtile" style="grid-column:span 4">
-              <div class="th"><span class="mi">donut_large</span> Location Status</div>
-              <div class="vwdonut"><svg id="vwDonut" viewBox="0 0 120 120"></svg><div class="vwleg" style="flex:1" id="vwLeg"></div></div>
-            </div>
-            <div class="dtile" style="grid-column:span 8">
-              <div class="th"><span class="mi">insights</span> Completion Trend · last 8 weeks</div>
-              <div class="vbars" id="vwVbars"></div>
-              <div class="vx" id="vwVx"></div>
-            </div>
-            <div class="dtile" style="grid-column:span 7">
-              <div class="th"><span class="mi">bolt</span> Work Pulse — latest activity</div>
-              <div class="vwfeed" id="vwFeed"></div>
-            </div>
-            <div class="dtile" style="grid-column:span 5">
-              <div class="th"><span class="mi">construction</span> Most often delayed</div>
-              <div id="vwBn"></div>
-              <p style="color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small);margin:12px 0 0">The parts most often incomplete in draft locations — not a judgment of people.</p>
-            </div>
-          </div>
-        </div>
+      <section id="v-progress" class="hidden">
+        <div class="pg-top"><span class="grow"></span><span class="mut" id="pgUpd"></span></div>
+        <div id="pgBody"></div>
       </section>
 
       <section id="v-entry" class="hidden">
@@ -2297,6 +2245,8 @@ async function showApp(){$('#login').classList.add('hidden');$('#app').classList
   S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.keterangan=s.inventory_keterangan||[];S.appTitle=s.app_title||'BAA Generator';});
   await S.settingsReady;
   if(S.user.role!=='admin')$$('.admin-only').forEach(x=>x.classList.add('hidden'));
+  $$('.prog-nav').forEach(x=>x.classList.toggle('hidden',S.user.role==='operator'));
+  const dn=document.querySelector('.navitem[data-view="dashboard"]');if(dn)dn.classList.toggle('hidden',S.user.role==='viewer');
   $('#app').classList.toggle('is-operator',S.user.role!=='admin');
   $('#app').classList.toggle('is-viewer',S.user.role==='viewer');
   refreshPicker();loadLocations();loadCreators();loadDashboard();if(S.user.role==='admin'){loadTemplates();loadUsers();loadNotifCount();}bindTips();
@@ -2336,10 +2286,10 @@ $$('.navitem[data-view]').forEach(n=>n.addEventListener('click',()=>{
   const run=()=>{
     $$('.navitem[data-view]').forEach(x=>x.classList.remove('active'));n.classList.add('active');
     $('#setToggle').classList.remove('active');$('#navSettings').classList.remove('open');  /* tutup accordion Pengaturan */
-    const v=n.dataset.view;['dashboard','entry','locations','import','trash','notif','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!==v);});
+    const v=n.dataset.view;['dashboard','progress','entry','locations','import','trash','notif','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!==v);});
     $('#pageTitle').textContent=n.querySelector('.lbl').textContent;$('#entryTools').classList.toggle('hidden',v!=='entry');$('#locTools').classList.toggle('hidden',v!=='locations');$('#setSaveWrap').classList.add('hidden');
     $('#pageTitle').classList.toggle('hidden',v==='entry');$('#topGrow').classList.toggle('hidden',v==='entry');
-    if(v==='dashboard')loadDashboard();if(v==='locations')loadLocations();if(v==='templates')loadTemplates();if(v==='trash')loadTrash();if(v==='import')loadImport();if(v==='notif')loadNotif();
+    if(v==='dashboard')loadDashboard();if(v==='progress')loadProgress();if(v==='locations')loadLocations();if(v==='templates')loadTemplates();if(v==='trash')loadTrash();if(v==='import')loadImport();if(v==='notif')loadNotif();
     revealCards($('#v-'+v));};
   if(n.classList.contains('active'))run(); else guardLeave(run,n.querySelector('.lbl').textContent.trim());}));
 
@@ -2376,10 +2326,10 @@ function openSettings(sub){
   curSetSub=sub;
   const sv=SET_VIEWS[sub];
   if(sv){
-    ['dashboard','entry','locations','import','trash','notif','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!==sv.view);});
+    ['dashboard','progress','entry','locations','import','trash','notif','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!==sv.view);});
     $('#pageTitle').textContent='Settings · '+sv.title;$('#pageTitle').classList.remove('hidden');$('#topGrow').classList.remove('hidden');$('#setSaveWrap').classList.add('hidden');sv.load();revealCards($('#v-'+sv.view));
   }else{
-    ['dashboard','entry','locations','import','trash','notif','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!=='settings');});
+    ['dashboard','progress','entry','locations','import','trash','notif','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!=='settings');});
     loadSettingsPage();showSetSub(sub);
   }}
 /* ===== Flyout Pengaturan saat rail (A: hover · C: klik) ===== */
@@ -2494,44 +2444,220 @@ function buildDashHeat(heat){heat=heat||[];
 function actionLabel(f){const m={create:'created location',update:'updated',delete:'deleted',upload_photos:'uploaded photos',save_inventory:'saved inventory',login:'signed in',set_serial:'set SN',reassign_photo:'moved photo'};
   const a=m[f.action]||f.action;const ref=f.detail||f.entity_id||'';return a+(ref?' '+esc(ref):'');}
 function timeAgo(iso){try{const s=(Date.now()-new Date(iso))/1000;if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+' min ago';if(s<86400)return Math.floor(s/3600)+' hr ago';return Math.floor(s/86400)+' days ago';}catch(e){return '';}}
-async function loadDashboard(){
-  let s;try{s=await api('/api/stats');}catch(e){return;}
-  S.stats=s;
-  const isAdmin=s.role==='admin';
-  paintDashSky();                                            /* hero sapaan utk semua peran */
-  $('#dHello').textContent=`${greetWord()}, ${esc(s.name)}`;
-  const t=s.totals;
-  const isViewer=s.role==='viewer';
-  $('#dChipTxt').textContent=t.draft?`${t.draft} locations waiting to finish`:'All locations done';
-  $('#dashOp').classList.toggle('hidden',isAdmin||isViewer);
-  $('#dashSuper').classList.toggle('hidden',!isAdmin);
-  $('#dashViewer').classList.toggle('hidden',!isViewer);
-  if(isViewer){loadViewer();return;}
-  if(isAdmin){loadSupervisor(s.name);return;}
-  const isA=s.role==='admin';
-  const kpis=isA
-    ?[['table_rows','Total Locations',t.locations,'all locations'],['task_alt','Done',t.done,s.pct+'% of total'],['group','Active Users',t.users_active,''],['photo_camera','Total Photos',t.photos,'']]
-    :[['table_rows','My Locations',t.locations,'yours'],['task_alt','Done',t.done,s.pct+'%'],['draft','Draft',t.draft,'to continue'],['photo_camera','My Photos',t.photos,'']];
-  $('#dKpis').innerHTML=kpis.map(k=>`<div class="dkpi"><div class="top"><span class="ic"><span class="mi">${k[0]}</span></span>${k[1]}</div><div class="n">${k[2]}</div><div class="d">${k[3]?`<span class="up">${esc(k[3])}</span>`:'&nbsp;'}</div></div>`).join('');
-  const C=2*Math.PI*50,arc=$('#dArc');arc.style.strokeDasharray=C.toFixed(1);arc.style.strokeDashoffset=C.toFixed(1);
-  requestAnimationFrame(()=>{arc.style.strokeDashoffset=(C*(1-s.pct/100)).toFixed(1);});
-  $('#dPct').textContent=s.pct+'%';$('#dLgDone').textContent=t.done;$('#dLgDraft').textContent=t.draft;
-  dBars(s.trend);
-  $('#dAttn').innerHTML=s.attention.length?s.attention.map(a=>`<div class="drow" onclick="openFromLog(${a.id})"><span class="code">${esc(a.code)}</span><span class="nm"><b>${esc(a.data.nama_lokasi||a.name||'(no name)')}</b><div class="l">${locLack(a)}</div></span><span class="badge">draft</span></div>`).join(''):'<p class="muted" style="padding:8px 4px">Nothing pending</p>';
-  buildDashHeat(s.heat);
-  $('#dLeadTile').classList.toggle('hidden',!isA);$('#dStreakTile').classList.toggle('hidden',isA);
-  if(isA){const mx=Math.max(1,...s.leaderboard.map(l=>l.total));
-    $('#dLead').innerHTML=s.leaderboard.length?s.leaderboard.map(l=>`<div class="ld"><span class="ava">${esc((l.name[0]||'?').toUpperCase())}</span><div class="meta"><div class="n2">${esc(l.name)}</div><div class="sub">${l.done}/${l.total} done</div></div><div class="track"><i style="width:${Math.round(l.total/mx*100)}%"></i></div></div>`).join(''):'<p class="muted" style="padding:8px 4px">No data yet.</p>';
-  }else{$('#dStreakN').textContent=s.streak||0;
-    $('#dWeek').innerHTML=['S','S','R','K','J','S','M'].map((x,i)=>`<div class="d ${s.week&&s.week[i]?'on':''}">${x}</div>`).join('');}
-  $('#dFeed').innerHTML=s.feed.length?s.feed.map(f=>`<div class="it"><span class="dot"></span><div><b>${esc(f.username||'—')}</b> ${actionLabel(f)}<div style="opacity:.75">${timeAgo(f.created_at)}</div></div></div>`).join(''):'<p class="muted" style="padding:8px 4px">No activity yet.</p>';
-  const acts=isA
-    ?[['add','New location',1,()=>{gotoEntry();$('#entry-new').click();}],['group','Manage Users',0,()=>navTo('users')],['description','Template',0,()=>navTo('templates')],['backup','Backup',0,()=>openSettings('backup')]]
-    :[['add','New location',1,()=>{gotoEntry();$('#entry-new').click();}],['table_rows','Location Log',0,()=>navTo('locations')]];
-  const wrap=$('#dActs');wrap.innerHTML=acts.map(a=>`<div class="dact ${a[2]?'pri':''}"><span class="ic"><span class="mi">${a[0]}</span></span><span class="t">${a[1]}</span></div>`).join('');
-  [...wrap.children].forEach((el,i)=>el.addEventListener('click',acts[i][3]));
-  $('#dAttnMore').onclick=()=>navTo('locations');
-}
+async function loadDashboard(){const role=S.user&&S.user.role;
+  if(role==='viewer'){navTo('progress');return;}
+  const isA=role==='admin';$('#dashSup').classList.toggle('hidden',!isA);$('#dashMe').classList.toggle('hidden',isA);$('#dHero').classList.toggle('hidden',!isA);
+  if(isA){paintDashSky();$('#dHello').textContent=`${greetWord()}, ${S.user.full_name||S.user.username}`;
+    try{const s=await api('/api/stats');$('#dChipTxt').textContent=s.totals.draft?`${s.totals.draft} locations waiting to finish`:'All locations done';}catch(e){}
+    loadSupervisor2();}
+  else loadMyDash();}
+/* ===== Progress · Supervisor Console · My dashboard ===== */
+const AGE_KEYS=['fresh','warm','stale','cold'],AGE_LBL={fresh:'Fresh',warm:'Warm',stale:'Stale',cold:'Cold'};
+const AGE_VAR={fresh:'--ag1',warm:'--ag2',stale:'--ag3',cold:'--ag4'},AGE_INK={fresh:'--ag1i',warm:'--ag2i',stale:'--ag3i',cold:'--ag4i'};
+const cssv=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function locLbl(l){if(!l)return '—';const nm=(l.name||'').trim();return nm?`<span class="lnm">${esc(nm)}</span><span class="lcode">${esc(l.code||'')}</span>`:`<span class="lnm">${esc(l.code||'—')}</span>`;}
+function locTxt(l){const nm=(l.name||'').trim();return nm?`${nm} (${l.code})`:l.code;}
+function agingRanges(a){return {fresh:`0–${a.fresh} d`,warm:`${a.fresh+1}–${a.warm} d`,stale:`${a.warm+1}–${a.stale} d`,cold:`${a.stale+1}+ d`};}
+function ageChip(d){return `<span class="pg-age-chip" style="background:var(${AGE_VAR[d.aging]});color:var(${AGE_INK[d.aging]})">${AGE_LBL[d.aging]} · ${d.idle} d</span>`;}
+function fmtDay(iso){if(!iso)return '—';const d=new Date(iso+(iso.length===10?'T00:00:00':''));return `${d.getDate()} ${_IDMON[d.getMonth()]} ${d.getFullYear()}`;}
+function hhmm(iso){const d=new Date(iso);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+const ACT_TXT={create:'Created',data:'Edited location data',inventory:'Edited inventory',photo_add:d=>`Uploaded ${d||1} photo${(+d||1)>1?'s':''}`,photo_del:'Deleted a photo',photo_move:'Moved a photo',sn:'Edited an SN',done:'Marked Done',reopen:'Reopened'};
+function actTxt(f){const t=ACT_TXT[f.kind];return typeof t==='function'?t(f.detail):(t||f.kind);}
+let _pgTipEl=null;function pgTip(e,h){if(!_pgTipEl){_pgTipEl=document.createElement('div');_pgTipEl.className='pg-tip';document.body.appendChild(_pgTipEl);}
+  if(!h){_pgTipEl.style.opacity=0;return;}_pgTipEl.innerHTML=h;_pgTipEl.style.opacity=1;
+  const x=Math.min(e.clientX+14,window.innerWidth-_pgTipEl.offsetWidth-8);_pgTipEl.style.left=x+'px';_pgTipEl.style.top=(e.clientY+14)+'px';}
+function bindHover(root){root.querySelectorAll('[data-h]').forEach(el=>{el.onmousemove=e=>pgTip(e,el.dataset.h);el.onmouseleave=e=>pgTip(e,'');});}
+
+/* ---------- PROGRESS ---------- */
+let PG=null,_pgTimer=null,_pgAt=0;
+async function loadProgress(quiet){let d;try{d=await api('/api/progress');}catch(e){if(!quiet)toast('Failed: '+e.message);return;}
+  PG=d;_pgAt=Date.now();renderProgress();
+  clearInterval(_pgTimer);_pgTimer=setInterval(()=>{if(!_visible('v-progress')){clearInterval(_pgTimer);return;}
+    const s=Math.round((Date.now()-_pgAt)/1000);$('#pgUpd').textContent=`Updated ${s<5?'just now':s+' s ago'} · refreshes every 60 s`;
+    if(s>=60&&document.visibilityState==='visible'&&!$('#pgEditing'))loadProgress(true);},5000);}
+function renderProgress(){const d=PG,t=d.team,ed=d.can_edit,el=$('#pgBody');
+  const pct=t.total?Math.round(t.done/t.total*1000)/10:0,idealPct=t.ideal_today!=null&&t.total?Math.round(t.ideal_today/t.total*100):null;
+  const hist=(d.history||[]).filter(h=>h.field==='total').slice(-1)[0];
+  const edBtn=(id,txt)=>ed?`<button class="pg-ed" id="${id}">${txt}<span class="mi">edit</span></button>`:`<span class="pg-ed ro">${txt}</span>`;
+  const short=t.projection!=null?t.total-t.projection:null;
+  const chip=t.target_date==null?'':!t.pace_now?'<span class="pg-chip mut">No pace yet</span>':short>0?`<span class="pg-chip warn">▲ ${short} short of target</span>`:'<span class="pg-chip good">✓ On track</span>';
+  const mission=`<div class="card s12"><div class="pg-mis">
+    <div><div class="lab">BAA done</div><div class="pg-big">${t.done} <small>/ ${edBtn('pgEdTot',t.total)}</small></div>
+      <div class="pg-bar"><i style="width:${Math.min(100,pct)}%"></i>${idealPct!=null?`<b style="left:${Math.min(100,idealPct)}%" data-h="Where the team should be today: ${t.ideal_today}"></b>`:''}</div>
+      <div class="mut" style="margin-top:6px">${pct}% done${idealPct!=null?` · should be ${t.ideal_today} by today`:''}</div>
+      ${hist?`<div class="pg-hist">Total changed ${hist.old??'—'} → ${hist.new} by ${esc(hist.by)} · ${fmtDay(hist.at.slice(0,10))}</div>`:(!t.total_set?`<div class="pg-hist">Total = locations entered so far${ed?' — set the estimated total':''}</div>`:'')}</div>
+    <div><div class="lab">Target date</div><div class="pg-v">${edBtn('pgEdTgt',t.target_date?fmtDay(t.target_date):(ed?'Set date':'Not set'))}</div>
+      <div class="mut">${t.target_date?`<b>${Math.max(0,t.days_left)} days</b> left · ${t.wd_left} working days`:'No target date yet'}</div></div>
+    <div><div class="lab">Pace needed vs now</div>
+      <div class="pg-v">${t.pace_needed!=null?t.pace_needed:'—'}<small>/day needed</small></div>
+      <div class="pg-v" style="color:var(--md-sys-color-on-surface-variant)" data-tip="Average of the last 10 working days">${t.pace_now}<small>/day now</small></div></div>
+    <div><div class="lab">At this pace</div>
+      <div class="pg-v">${t.projection!=null&&t.pace_now?t.projection:'—'} <small>${t.target_date?'by '+fmtDay(t.target_date):''}</small></div>${chip}</div>
+  </div></div>`;
+  const P=[['Done',d.pipeline.done,'var(--md-sys-color-primary)','var(--md-sys-color-on-primary)','status Done'],
+    ['Ready to close',d.pipeline.ready,'color-mix(in srgb,var(--md-sys-color-primary) 70%,var(--md-sys-color-surface))','var(--md-sys-color-on-primary)','100% but Draft'],
+    ['In progress',d.pipeline.progress,'color-mix(in srgb,var(--md-sys-color-primary) 42%,var(--md-sys-color-surface))','var(--md-sys-color-on-surface)','1–99% complete'],
+    ['Not created yet',d.pipeline.notyet,'var(--md-sys-color-surface-container-highest)','var(--md-sys-color-on-surface-variant)','estimated, no entry yet']];
+  const pipe=`<div class="card s4"><div class="ct">Pipeline</div><div class="cd">Every BAA of the total, by stage.</div>
+    <div class="pg-pipe">${P.filter(p=>p[1]).map(p=>`<div class="pg-seg" style="flex-grow:${p[1]};background:${p[2]};color:${p[3]}" data-h="${p[0]}: <b>${p[1]}</b> (${t.total?Math.round(p[1]/t.total*100):0}%)"><span>${p[1]}</span></div>`).join('')}</div>
+    <div class="pg-leg">${P.map(p=>`<div class="pg-lg"><span class="sw" style="background:${p[2]}"></span><div><b>${p[1]}</b><small>${p[0]} · ${p[4]}</small></div></div>`).join('')}</div>
+    ${d.pipeline.ready?`<div class="pg-call"><span class="n">${d.pipeline.ready}</span><span>BAA ${d.pipeline.ready>1?'are':'is'} 100% complete but still <b>Draft</b> — one step to Done.</span></div>`:''}</div>`;
+  const burn=`<div class="card s8"><div class="ct">Road to target</div><div class="cd">Cumulative BAA done vs the path needed to hit the target. Dashed = if the current pace continues.</div><div id="pgBurn"></div></div>`;
+  const R=agingRanges(d.aging),drafts=d.drafts;
+  const aging=`<div class="card s7 pg-agcard"><div style="display:flex;align-items:flex-start;position:relative"><div><div class="ct">Draft aging</div><div class="cd">Open drafts by working days since last modified. Each square = 1 BAA, shade = completeness.</div></div>
+    ${ed?`<button class="pg-gear" id="pgGear" data-tip="Aging durations"><span class="mi">settings</span></button>
+    <div class="pg-pop" id="pgPop"><b>Aging durations</b><span class="mut">Working days since last modified</span>
+      <label>Fresh up to<input type="number" min="0" id="pgAgF" value="${d.aging.fresh}"> d</label><label>Warm up to<input type="number" min="1" id="pgAgW" value="${d.aging.warm}"> d</label><label>Stale up to<input type="number" min="2" id="pgAgS" value="${d.aging.stale}"> d</label>
+      <span class="mut">Beyond that = Cold</span><div class="pa"><md-button variant="text" size="xs" id="pgAgX">Cancel</md-button><md-button variant="filled" size="xs" id="pgAgOk">Save</md-button></div></div>`:''}</div>
+    <div class="pg-age">${AGE_KEYS.map(k=>`<div class="pg-acol">${drafts.filter(x=>x.aging===k).sort((a,b)=>a.pct-b.pct).map(x=>`<span class="pg-dot" style="background:${x.pct>=100?'var(--ag4)':x.pct>=75?'var(--ag3)':x.pct>=25?'var(--ag2)':'var(--ag1)'}" data-h="${esc(locTxt(x))}<br>${x.pct}% · ${x.idle} working days idle · ${esc(x.owner)}" onclick="openLocFromDash(${x.id})"></span>`).join('')}</div>`).join('')}</div>
+    <div class="pg-alab">${AGE_KEYS.map(k=>`<div><b>${drafts.filter(x=>x.aging===k).length} · ${AGE_LBL[k]}</b><small>${R[k]}</small></div>`).join('')}</div>
+    <div class="pg-ramp">Completeness <i style="background:var(--ag1)"></i>0–24% <i style="background:var(--ag2)"></i>25–74% <i style="background:var(--ag3)"></i>75–99% <i style="background:var(--ag4)"></i>100%</div></div>`;
+  const quiet=drafts.filter(x=>x.pct>=75&&x.idle>d.aging.fresh).sort((a,b)=>b.idle-a.idle).slice(0,8);
+  const stuck=`<div class="card s5"><div class="ct">Almost there, gone quiet</div><div class="cd">≥ 75% complete, idle more than ${d.aging.fresh} working days — the fastest wins.</div>
+    ${quiet.length?quiet.map(x=>`<div class="pg-li" onclick="openLocFromDash(${x.id})"><div style="min-width:0"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${locLbl(x)}</div><div class="pg-mini"><i style="width:${x.pct}%"></i></div></div><span class="mut" style="overflow:hidden;text-overflow:ellipsis">${esc(x.owner)}</span><span class="mut">${x.pct}%</span>${ageChip(x)}</div>`).join(''):'<div class="pg-empty">Nothing waiting here.</div>'}</div>`;
+  const wk=t.streak||[0,0];
+  const mom=`<div class="card s12 pg-mom"><div class="ct">Team momentum</div><div><span class="n">${wk[0]}</span> <span class="mut">working day${wk[0]===1?'':'s'} in a row with a BAA done · best ${wk[1]}</span></div>
+    <span class="mut" style="margin-left:auto">This week <b style="color:var(--md-sys-color-on-surface)">${t.done_this_week} done</b> · last week ${t.done_last_week}</span></div>`;
+  const scat=`<div class="card s6"><div class="ct">Where drafts sit</div><div class="cd">Completeness vs working days since last modified. Top-right = nearly done but idle.</div><div id="pgScat"></div></div>`;
+  const cyc=`<div class="card s6"><div class="ct">Created → Done</div><div class="cd" id="pgCycD">Days from created to done.</div><div id="pgCyc"></div></div>`;
+  el.innerHTML=`<div class="pg">${mission}${burn}${pipe}${aging}${stuck}${mom}${scat}${cyc}</div>`;
+  drawBurn($('#pgBurn'),d);drawScatter($('#pgScat'),drafts,d.aging);drawCycle($('#pgCyc'),d.cycle);bindHover(el);bindTips();
+  if(ed){$('#pgEdTot').onclick=()=>pgInline($('#pgEdTot'),'number',t.total_set?t.total:'',v=>({total:parseInt(v)}));
+    $('#pgEdTgt').onclick=()=>pgInline($('#pgEdTgt'),'date',t.target_date||'',v=>({target_date:v}));
+    $('#pgGear').onclick=e=>{e.stopPropagation();$('#pgPop').classList.toggle('on');};$('#pgAgX').onclick=()=>$('#pgPop').classList.remove('on');
+    $('#pgAgOk').onclick=async()=>{const b={fresh:+$('#pgAgF').value,warm:+$('#pgAgW').value,stale:+$('#pgAgS').value};
+      try{await api('/api/progress/aging',{method:'PUT',body:JSON.stringify(b)});toast('Aging durations saved');loadProgress(true);}catch(e){toast('Failed: '+e.message);}};}}
+function pgInline(btn,type,val,body){const w=document.createElement('span');w.className='pg-edin';w.id='pgEditing';
+  w.innerHTML=`<input type="${type}" ${type==='number'?'min="1"':''} value="${esc(String(val))}"><button class="ok" aria-label="Save"><span class="mi">check</span></button><button class="no" aria-label="Cancel"><span class="mi">close</span></button>`;
+  btn.replaceWith(w);const i=w.querySelector('input');i.focus();if(i.select)i.select();
+  const save=async()=>{const v=i.value.trim();if(!v){toast('Enter a value');return;}
+    try{await api('/api/progress/goal',{method:'PUT',body:JSON.stringify(body(v))});toast('Saved');loadProgress(true);}catch(e){toast('Failed: '+e.message);}};
+  w.querySelector('.ok').onclick=save;w.querySelector('.no').onclick=()=>renderProgress();
+  i.onkeydown=e=>{if(e.key==='Enter')save();if(e.key==='Escape')renderProgress();};}
+document.addEventListener('click',e=>{const p=$('#pgPop');if(p&&p.classList.contains('on')&&!e.target.closest('#pgPop')&&!e.target.closest('#pgGear'))p.classList.remove('on');});
+window.openLocFromDash=id=>{navTo('locations');setTimeout(()=>openLocDrawer(id),350);};
+function drawBurn(host,d){const t=d.team,s=d.series;if(!s.length){host.innerHTML='<div class="pg-empty">No locations yet.</div>';return;}
+  const W=760,H=300,L=40,R=24,T=18,B=34,iw=W-L-R,ih=H-T-B;const day=864e5,d0=new Date(s[0].d+'T00:00:00'),today=new Date(s[s.length-1].d+'T00:00:00');
+  const tgt=t.target_date?new Date(t.target_date+'T00:00:00'):null;const end=tgt&&tgt>today?tgt:new Date(+today+7*day);
+  const span=Math.max(1,(end-d0)/day);const x=dt=>L+((dt-d0)/day)/span*iw;
+  const hist=(d.history||[]).filter(h=>h.field==='total');const maxV=Math.max(t.total,...s.map(p=>p.created),...hist.map(h=>h.old||0))*1.08||10;const y=v=>T+ih-v/maxV*ih;
+  const nice=Math.pow(10,Math.floor(Math.log10(maxV)));const step=[1,2,5,10].map(m=>m*nice/ (maxV/nice>5?1:2)).find(v=>maxV/v<=6)||nice;
+  let g='';for(let v=0;v<=maxV;v+=step)g+=`<line class="ax" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text class="axt" x="${L-8}" y="${y(v)+4}" text-anchor="end">${Math.round(v)}</text>`;
+  const ticks=6;for(let i=0;i<=ticks;i++){const dt=new Date(+d0+span*day*i/ticks);g+=`<text class="axt" x="${x(dt)}" y="${H-10}" text-anchor="middle">${dt.getDate()} ${_IDMON[dt.getMonth()]}</text>`;}
+  // garis total (bertangga sesuai riwayat)
+  let tp=`M${L} ${y(hist.length&&hist[0].old?hist[0].old:t.total)}`;hist.forEach(h=>{const hx=Math.max(L,x(new Date(h.at)));if(h.old)tp+=`H${hx}`;tp+=`V${y(h.new)}`;});tp+=`H${x(end)}`;
+  g+=`<path d="${tp}" fill="none" stroke="var(--md-sys-color-outline)" stroke-width="1.5"/><text class="axt" x="${L+4}" y="${y(hist.length&&hist[0].old?hist[0].old:t.total)-6}">Total</text><text class="axt" x="${x(end)-4}" y="${y(t.total)-6}" text-anchor="end">${t.total}</text>`;
+  if(tgt){g+=`<line x1="${L}" y1="${y(0)}" x2="${x(tgt)}" y2="${y(t.total)}" stroke="var(--good)" stroke-width="1.5" stroke-dasharray="2 5"/>`;
+    g+=`<line x1="${x(tgt)}" x2="${x(tgt)}" y1="${T}" y2="${T+ih}" stroke="var(--md-sys-color-outline-variant)" stroke-dasharray="3 4"/><text class="axt" x="${x(tgt)-4}" y="${T+ih-6}" text-anchor="end">Target</text>`;}
+  const last=s[s.length-1];
+  if(tgt&&t.pace_now&&tgt>today){const wl=t.wd_left||0,hi=last.done+t.pace_now*1.25*wl,lo=last.done+t.pace_now*.75*wl;
+    g+=`<path d="M${x(today)} ${y(last.done)}L${x(tgt)} ${y(hi)}L${x(tgt)} ${y(lo)}Z" fill="var(--md-sys-color-primary)" opacity=".12"/>`;
+    g+=`<line x1="${x(today)}" y1="${y(last.done)}" x2="${x(tgt)}" y2="${y(t.projection)}" stroke="var(--md-sys-color-primary)" stroke-width="2" stroke-dasharray="6 5"/>`;
+    g+=`<circle cx="${x(tgt)}" cy="${y(t.projection)}" r="4" fill="var(--md-sys-color-primary)"/><text x="${x(tgt)-8}" y="${y(t.projection)+18}" text-anchor="end" style="font-size:12px;font-weight:600;fill:var(--warn)">≈ ${t.projection} at target</text>`;}
+  const path=k=>s.map((p,i)=>(i?'L':'M')+x(new Date(p.d+'T00:00:00')).toFixed(1)+' '+y(p[k]).toFixed(1)).join('');
+  g+=`<path d="${path('created')}" fill="none" stroke="var(--md-sys-color-outline)" stroke-width="1.5" stroke-dasharray="1 3"/>`;
+  g+=`<path d="${path('done')}" fill="none" stroke="var(--md-sys-color-primary)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  g+=`<circle cx="${x(today)}" cy="${y(last.done)}" r="5" fill="var(--md-sys-color-primary)" stroke="var(--md-sys-color-surface)" stroke-width="2"/>`;
+  g+=`<text x="${x(today)-8}" y="${y(last.done)-12}" text-anchor="end" style="font-size:12px;font-weight:600;fill:var(--md-sys-color-on-surface)">Today · ${last.done}</text>`;
+  g+=`<line id="pgBx" y1="${T}" y2="${T+ih}" stroke="var(--md-sys-color-outline)" opacity="0"/><circle id="pgBd" r="5" fill="var(--md-sys-color-primary)" opacity="0"/><rect id="pgBh" x="${L}" y="${T}" width="${Math.max(1,x(today)-L)}" height="${ih}" fill="transparent"/>`;
+  host.innerHTML=`<svg class="ch" viewBox="0 0 ${W} ${H}">${g}</svg><div class="pg-ramp"><i style="background:var(--md-sys-color-primary);height:3px"></i>Done <i style="background:var(--md-sys-color-outline);height:2px"></i>Created ${tgt?'<i style="background:var(--good);height:2px"></i>Ideal path':''}</div>`;
+  const svg=host.querySelector('svg');const hr=host.querySelector('#pgBh');
+  hr.onmousemove=e=>{const r=svg.getBoundingClientRect(),sx=(e.clientX-r.left)/r.width*W;const i=Math.max(0,Math.min(s.length-1,Math.round((sx-L)/iw*span)));const p=s[i];if(!p)return;
+    const px=x(new Date(p.d+'T00:00:00'));host.querySelector('#pgBx').setAttribute('x1',px);host.querySelector('#pgBx').setAttribute('x2',px);host.querySelector('#pgBx').setAttribute('opacity',1);
+    host.querySelector('#pgBd').setAttribute('cx',px);host.querySelector('#pgBd').setAttribute('cy',y(p.done));host.querySelector('#pgBd').setAttribute('opacity',1);
+    pgTip(e,`${fmtDay(p.d)} · <b>${p.done} done</b> · ${p.created} created`);};
+  hr.onmouseleave=e=>{pgTip(e,'');host.querySelector('#pgBx').setAttribute('opacity',0);host.querySelector('#pgBd').setAttribute('opacity',0);};}
+function drawScatter(host,drafts,ag){if(!drafts.length){host.innerHTML='<div class="pg-empty">No open drafts.</div>';return;}
+  const W=560,H=260,L=40,R=16,T=12,B=30,iw=W-L-R,ih=H-T-B;const mx=Math.max(ag.stale+5,...drafts.map(x=>x.idle))+1;const x=v=>L+v/mx*iw,y=v=>T+ih-v/100*ih;let g='';
+  g+=`<rect x="${x(ag.fresh+.5)}" y="${y(100)}" width="${x(mx)-x(ag.fresh+.5)}" height="${y(75)-y(100)}" rx="8" fill="var(--warn-bg)"/><text x="${x(mx)-4}" y="${y(100)+14}" text-anchor="end" style="font-size:11.5px;font-weight:600;fill:var(--warn)">nearly done, idle</text>`;
+  [0,25,50,75,100].forEach(v=>g+=`<line class="ax" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text class="axt" x="${L-8}" y="${y(v)+4}" text-anchor="end">${v}%</text>`);
+  for(let i=0;i<=4;i++){const v=Math.round(mx*i/4);g+=`<text class="axt" x="${x(v)}" y="${H-8}" text-anchor="middle">${v} d</text>`;}
+  g+=drafts.map(d=>`<circle cx="${x(d.idle)}" cy="${y(d.pct)}" r="6" fill="${d.pct>=75&&d.idle>ag.fresh?'var(--warn)':'var(--md-sys-color-primary)'}" stroke="var(--md-sys-color-surface)" stroke-width="2" style="cursor:pointer" data-h="${esc(locTxt(d))} · ${d.pct}% · ${d.idle} d idle" onclick="openLocFromDash(${d.id})"/>`).join('');
+  host.innerHTML=`<svg class="ch" viewBox="0 0 ${W} ${H}">${g}</svg>`;}
+function drawCycle(host,cyc){if(!cyc.length){host.innerHTML='<div class="pg-empty">No BAA done yet.</div>';$('#pgCycD').textContent='Days from created to done.';return;}
+  const srt=[...cyc].sort((a,b)=>a-b),med=srt[Math.floor(srt.length/2)],p80=srt[Math.min(srt.length-1,Math.floor(srt.length*.8))];
+  $('#pgCycD').innerHTML=`Days from created to done. Median <b>${med} d</b> · 80% finish within <b>${p80} d</b>.`;
+  const bw=Math.max(1,Math.ceil((srt[srt.length-1]+1)/9));const nb=Math.ceil((srt[srt.length-1]+1)/bw);const bins=Array(nb).fill(0);srt.forEach(v=>bins[Math.floor(v/bw)]++);
+  const W=560,H=260,L=40,R=16,T=14,B=30,iw=W-L-R,ih=H-T-B,mx=Math.max(...bins),w=iw/nb;let g='';
+  [0,Math.ceil(mx/2),mx].forEach(v=>g+=`<line class="ax" x1="${L}" x2="${W-R}" y1="${T+ih-v/mx*ih}" y2="${T+ih-v/mx*ih}"/><text class="axt" x="${L-8}" y="${T+ih-v/mx*ih+4}" text-anchor="end">${v}</text>`);
+  bins.forEach((n,i)=>{const h=n/mx*ih,x0=L+i*w+2,lbl=bw===1?`${i}d`:`${i*bw}–${i*bw+bw-1}d`;if(n)g+=`<path d="M${x0} ${T+ih}V${T+ih-h+4}q0 -4 4 -4H${x0+w-8}q4 0 4 4V${T+ih}Z" fill="${i*bw<=med?'var(--md-sys-color-primary)':'color-mix(in srgb,var(--md-sys-color-primary) 55%,var(--md-sys-color-surface))'}" data-h="${lbl} · <b>${n} BAA</b>"/>`;
+    g+=`<text class="axt" x="${x0+(w-4)/2}" y="${H-8}" text-anchor="middle">${lbl}</text>`;});
+  const mx0=L+(med/bw)*w+w/2;g+=`<line x1="${mx0}" x2="${mx0}" y1="${T}" y2="${T+ih}" stroke="var(--md-sys-color-on-surface)" stroke-width="1.5" stroke-dasharray="3 4"/><text x="${mx0+6}" y="${T+10}" style="font-size:11.5px;font-weight:600;fill:var(--md-sys-color-on-surface)">median ${med} d</text>`;
+  host.innerHTML=`<svg class="ch" viewBox="0 0 ${W} ${H}">${g}</svg>`;}
+
+/* ---------- SUPERVISOR CONSOLE ---------- */
+async function loadSupervisor2(){let d;try{d=await api('/api/dash/supervisor');}catch(e){return;}
+  const t=d.team,el=$('#dashSup');const short=t.projection!=null?t.total-t.projection:null;
+  const strip=`<div class="card s12 sv-strip">
+    <div class="it"><span class="lab">Team vs target</span><span class="pg-v">${t.done} <small>/ ${t.total} done</small></span></div><span class="sep"></span>
+    <div class="it"><span class="lab">Pace needed</span><span class="pg-v">${t.pace_needed??'—'} <small>/ day</small></span></div>
+    <div class="it"><span class="lab">Pace now</span><span class="pg-v">${t.pace_now} <small>/ day</small></span></div><span class="sep"></span>
+    <div class="it"><span class="lab">Target</span><span class="pg-v">${t.target_date?fmtDay(t.target_date):'—'} <small>${t.target_date?'· '+t.wd_left+' working days':'not set'}</small></span></div>
+    ${t.target_date&&t.pace_now?(short>0?`<span class="pg-chip warn">▲ ${short} short at this pace</span>`:'<span class="pg-chip good">✓ On track</span>'):''}
+    <button class="mlnk" id="svToProg" style="margin-left:auto;font-size:14px">Open Progress →</button></div>`;
+  const A=k=>`var(${AGE_VAR[k]})`;
+  const shareCol=v=>v>=1?'var(--good)':v>=.6?'var(--md-sys-color-primary)':'var(--warn)';
+  const rows=d.users.map(u=>{const tot=AGE_KEYS.reduce((s,k)=>s+u.aging[k],0);
+    const seen=u.state==='online'?'<span class="pg-chip good">● Online</span>':u.last_seen?esc(timeAgo(u.last_seen)):'<span class="mut">Never</span>';
+    const flag=u.inactive_wd!=null&&u.inactive_wd>=3&&u.open?`<span class="sv-flag">⚠ No changes for ${u.inactive_wd} working days</span>`:'';
+    return `<tr><td><div class="sv-who"><span class="sv-av">${esc((u.name[0]||'?').toUpperCase())}<i class="st-${u.state}"></i></span><div>${esc(u.name)}${u.role==='admin'?' <span class="mut">admin</span>':''}</div></div></td>
+      <td>${seen}</td><td class="num">${u.done_week}</td><td class="num">${u.open}</td>
+      <td>${tot?`<div class="sv-ag" style="width:${Math.min(160,tot*12)}px">${AGE_KEYS.map(k=>u.aging[k]?`<span style="flex:${u.aging[k]};background:${A(k)}" data-h="${u.aging[k]} ${AGE_LBL[k]}"></span>`:'').join('')}</div>`:'<span class="mut">—</span>'}</td>
+      <td class="sv-last">${u.last?`<span class="mut">${esc(timeAgo(u.last.at))} · </span>${locLbl(u.last)}`:'<span class="mut">—</span>'}</td>
+      <td>${u.share!=null?`<div class="sv-share"><div class="sv-sb"><i style="width:${Math.min(100,u.share*66)}%;background:${shareCol(u.share)}"></i><b></b></div><span class="mut">${Math.round(u.share*100)}%</span></div>`:'<span class="mut">no target</span>'}</td>
+      <td>${flag}</td></tr>`;}).join('');
+  const team=`<div class="card s12"><div class="ct">Team</div><div class="cd">Share = done in the last 10 working days vs each person's part of the needed pace (marker = 100%).</div>
+    <div class="sv-tw"><table><thead><tr><th>User</th><th>Last seen</th><th class="num">Done this week</th><th class="num">Open drafts</th><th>Draft aging</th><th>Last change</th><th>Share of needed pace</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="pg-ramp"><i style="background:var(--good);border-radius:50%;width:10px"></i>Online (5 min) <i style="background:var(--ag3);border-radius:50%;width:10px"></i>Idle <i style="background:var(--md-sys-color-outline);border-radius:50%;width:10px"></i>Offline
+      <span style="margin-left:10px"></span>${AGE_KEYS.map(k=>`<i style="background:${A(k)}"></i>${AGE_LBL[k]}`).join(' ')}</div></div>`;
+  const lv=v=>v===0?'var(--md-sys-color-surface-container-high)':v<3?'color-mix(in srgb,var(--md-sys-color-primary) 25%,var(--md-sys-color-surface))':v<6?'color-mix(in srgb,var(--md-sys-color-primary) 50%,var(--md-sys-color-surface))':v<10?'color-mix(in srgb,var(--md-sys-color-primary) 75%,var(--md-sys-color-surface))':'var(--md-sys-color-primary)';
+  const DN=['M','T','W','T','F'];
+  let hm=`<div></div>`+d.days.map(x=>{const dt=new Date(x+'T00:00:00');return `<div class="d">${DN[(dt.getDay()+6)%7]}<br>${dt.getDate()}</div>`;}).join('');
+  d.users.forEach(u=>{hm+=`<div class="n" title="${esc(u.name)}">${esc(u.name)}</div>`+u.heat.map((v,i)=>`<div class="c" style="background:${lv(v)}" data-h="${esc(u.name)} · ${fmtDay(d.days[i])} · <b>${v} edit${v===1?'':'s'}</b>"></div>`).join('');});
+  const rhythm=`<div class="card s7"><div class="ct">Work rhythm</div><div class="cd">Edits per user per working day · last 2 weeks. Darker = more edits.</div>
+    <div class="sv-hm" style="grid-template-columns:90px repeat(${d.days.length},minmax(0,1fr))">${hm}</div></div>`;
+  const feed=`<div class="card s5"><div class="ct">Today</div><div class="cd">Latest changes to data, inventory, photos, and status.</div>
+    ${d.feed.length?d.feed.slice(0,8).map(f=>`<div class="sv-fi"><span class="t">${hhmm(f.at)}</span><span><b>${esc(f.user)}</b> <span class="mut">${esc(actTxt(f).toLowerCase())}</span> · ${locLbl(f.loc)}</span></div>`).join(''):'<div class="pg-empty">No changes yet today.</div>'}</div>`;
+  const mx=Math.max(1,...d.users.map(u=>u.open));
+  const wl=`<div class="card s12 sv-wl"><div class="ct">Workload</div><div class="cd">Open drafts per owner, by aging.</div>
+    ${d.users.filter(u=>u.open).map(u=>`<div class="r"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.name)}</span><div class="bar" style="width:${u.open/mx*100}%">${AGE_KEYS.map(k=>u.aging[k]?`<span style="flex:${u.aging[k]};background:${A(k)}" data-h="${esc(u.name)} · ${u.aging[k]} ${AGE_LBL[k]}"></span>`:'').join('')}</div><span class="mut">${u.open}</span></div>`).join('')||'<div class="pg-empty">No open drafts.</div>'}
+    ${d.tip?`<div class="pg-call"><span class="mi" style="color:var(--md-sys-color-primary)">lightbulb</span><span><b>${esc(d.tip.from)}</b> holds ${d.tip.cold} Cold draft${d.tip.cold>1?'s':''} and made no changes for ${d.tip.inactive_wd} working days. Move them to <b>${esc(d.tip.to)}</b> (${d.tip.to_open} open draft${d.tip.to_open===1?'':'s'})?</span>
+      <md-button variant="filled" size="xs" style="margin-left:auto" id="svTransfer">Transfer…</md-button></div>`:''}</div>`;
+  el.innerHTML=`<div class="pg">${strip}${team}${rhythm}${feed}${wl}</div>`;bindHover(el);bindTips();
+  $('#svToProg').onclick=()=>navTo('progress');
+  const tb=$('#svTransfer');if(tb)tb.onclick=()=>{navTo('locations');toast('Filter by owner, select the drafts, then Transfer');};}
+
+/* ---------- MY DASHBOARD (operator) ---------- */
+async function loadMyDash(){let d;try{d=await api('/api/dash/me');}catch(e){return;}
+  const el=$('#dashMe'),t=d.team,next=d.drafts[0];
+  $('#dHero').classList.add('hidden');
+  const C=2*Math.PI*16;
+  const hero=`<div class="card s12 me-hero" style="background:linear-gradient(135deg,color-mix(in srgb,var(--md-sys-color-primary) 10%,var(--md-sys-color-surface)),var(--md-sys-color-surface))">
+    <div><h2 style="margin:0;font:var(--md-sys-typescale-headline-small);font-weight:600">${greetWord()}, ${esc(d.name)}</h2>
+      <div class="mut">${vwFullDate(new Date())} · ${d.drafts.length} open draft${d.drafts.length===1?'':'s'}</div>
+      ${next?`<div class="me-next"><svg width="54" height="54" viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" fill="none" stroke="var(--md-sys-color-surface-container-highest)" stroke-width="5"/><circle cx="20" cy="20" r="16" fill="none" stroke="var(--md-sys-color-primary)" stroke-width="5" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-next.pct/100)}" transform="rotate(-90 20 20)"/><text x="20" y="24" text-anchor="middle" font-size="10" font-weight="600" fill="var(--md-sys-color-on-surface)">${next.pct}%</text></svg>
+        <div style="flex:1;min-width:0"><div class="mut">Closest to done</div><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${locLbl(next)}</div>
+          <div class="pg-miss">${next.missing.slice(0,3).map(m=>`<span class="pg-m">${esc(m)}</span>`).join('')}</div></div>
+        <md-button variant="filled" id="meCont">Continue</md-button></div>`:'<div class="me-next"><span class="mut">No open drafts — start a new location.</span></div>'}</div>
+    <div class="me-acts"><md-button variant="filled" icon="add" id="meNew">New location</md-button><md-button variant="tonal" icon="table_rows" id="meLog">Location Log</md-button></div></div>`;
+  const mxE=Math.max(1,...d.week.map(w=>w.edits));const DN=['Mon','Tue','Wed','Thu','Fri'];
+  const week=`<div class="card s5 me-wk"><div class="ct">My week</div>
+    <div class="cd">${d.week_part?`Your part of the team target: <b>${d.week_part} BAA</b> this week (Mon–Fri).`:'Done this week (Mon–Fri). The target appears once admin sets a target date.'}</div>
+    <div style="display:flex;align-items:baseline;gap:14px"><span class="pg-big" style="font-size:36px">${d.week_done}${d.week_part?` <small>/ ${d.week_part} done</small>`:' <small>done</small>'}</span>
+      ${d.week_part?`<span class="mut">${d.week_done>=d.week_part?'Your part is done ✓':(d.week_part-d.week_done)+' more to reach your part'}</span>`:''}</div>
+    <div class="me-days">${d.week.map((w,i)=>`<div class="me-dd ${w.today?'today':''}" data-h="${DN[i]} · ${w.edits} edit${w.edits===1?'':'s'} · ${w.done} done"><div class="b">${w.future?'':`<i style="height:${Math.max(4,w.edits/mxE*100)}%;opacity:${w.done?1:.45}"></i>`}</div>${DN[i]}${w.done?' · ✓'+w.done:''}</div>`).join('')}</div>
+    <div class="me-stk"><span class="n">${d.streak}</span><div><b>day streak</b><span class="mut"> · best ${d.best}</span><div class="mut">${d.streak?'Finish one today to keep it going.':'Finish a BAA to start a streak.'}</div></div></div>
+    ${t.target_date?`<div class="mut" style="margin-top:10px">Team: ${t.done} of ${t.total} done · target ${fmtDay(t.target_date)}</div>`:''}</div>`;
+  const q=`<div class="card s7"><div class="ct">My drafts</div><div class="cd">Missing items at a glance · aging by last change</div>
+    ${d.drafts.length?d.drafts.slice(0,6).map(x=>`<div class="me-q"><div><div style="font-weight:600;font-size:13px;text-align:center">${x.pct}%</div><div class="pg-mini" style="margin-top:4px"><i style="width:${x.pct}%"></i></div></div>
+      <div style="min-width:0"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${locLbl(x)}</div><div class="pg-miss">${x.missing.slice(0,3).map(m=>`<span class="pg-m">${esc(m)}</span>`).join('')}${x.missing.length>3?`<span class="pg-m">+${x.missing.length-3}</span>`:''}</div></div>
+      ${ageChip(x)}<md-button variant="tonal" size="xs" onclick="openFromLog(${x.id})">Open</md-button></div>`).join('')+(d.drafts.length>6?`<button class="mlnk" style="margin-top:8px" onclick="navTo('locations')">+${d.drafts.length-6} more in Location Log</button>`:''):'<div class="pg-empty">No open drafts.</div>'}</div>`;
+  const feed=`<div class="card s12"><div class="ct">My recent work</div><div class="cd">Changes to your locations</div>
+    ${d.feed.length?`<div class="me-feed">${d.feed.slice(0,10).map(f=>`<div class="sv-fi"><span class="t">${relShort(f.at)}</span><span>${esc(actTxt(f))} · ${locLbl(f.loc)}</span></div>`).join('')}</div>`:'<div class="pg-empty">No changes yet.</div>'}</div>`;
+  el.innerHTML=`<div class="pg">${hero}${week}${q}${feed}</div>`;bindHover(el);bindTips();
+  if(next)$('#meCont').onclick=()=>openFromLog(next.id);
+  $('#meNew').onclick=()=>{gotoEntry();$('#entry-new').click();};$('#meLog').onclick=()=>navTo('locations');}
+function relShort(iso){const d=new Date(iso),now=new Date();return d.toDateString()===now.toDateString()?hhmm(iso):`${d.getDate()} ${_IDMON[d.getMonth()]}`;}
 
 /* ===== KONSOL SUPERVISOR ===== */
 const SUP_COL=['#04726f','#1c7d46','#7a5cc0','#b5651d','#2a6fb0','#a3312a','#0f7a6f','#8a3b6b'];
@@ -2592,7 +2718,7 @@ window.supDrill=id=>{const u=SUP_USERS.find(x=>x.id===id);if(!u)return;const c=S
   $('#supDrawer').classList.add('open');$('#supScrim').classList.add('on');};
 (function(){const close=()=>{$('#supDrawer').classList.remove('open');$('#supScrim').classList.remove('on');};
   $('#sdClose').addEventListener('click',close);$('#supScrim').addEventListener('click',close);
-  $('#supHelpBtn').addEventListener('click',()=>$('#helpDlg').show());
+  const hb=$('#supHelpBtn');if(hb)hb.addEventListener('click',()=>$('#helpDlg').show());
   $('#helpOk').addEventListener('click',()=>$('#helpDlg').close());})();
 
 /* ===== DASHBOARD VIEWER (Mode Bos) ===== */
@@ -3670,7 +3796,7 @@ $('#imp-commit')&&$('#imp-commit').addEventListener('click',async()=>{if(!IMP.fi
     loadImport();if(typeof loadLocations==='function')loadLocations();if(typeof loadDashboard==='function')loadDashboard();}
   catch(e){toast('Failed: '+e.message);$('#imp-commit').removeAttribute('disabled');}});
 function gotoEntry(){$$('.navitem[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view==='entry'));
-  ['dashboard','entry','locations','import','trash','notif','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!=='entry');});
+  ['dashboard','progress','entry','locations','import','trash','notif','templates','users','settings'].forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!=='entry');});
   $('#pageTitle').classList.add('hidden');$('#topGrow').classList.add('hidden');$('#entryTools').classList.remove('hidden');}
 
 /* DELETE */

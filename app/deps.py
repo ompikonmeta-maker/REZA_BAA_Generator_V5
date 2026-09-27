@@ -24,7 +24,22 @@ def current_user(
     user = auth.get_session_user(conn, reza_baa_session)
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not signed in")
+    _touch_seen(conn, user)
     return user
+
+
+def _touch_seen(conn: sqlite3.Connection, user) -> None:
+    """Last seen: catat waktu permintaan terakhir (maks. sekali per menit)."""
+    from datetime import datetime, timezone
+    try:
+        last = user["last_seen_at"] if "last_seen_at" in user.keys() else None
+        now = datetime.now(timezone.utc)
+        if last and (now - datetime.fromisoformat(last)).total_seconds() < 60:
+            return
+        conn.execute("UPDATE users SET last_seen_at=? WHERE id=?", (now.isoformat(), user["id"]))
+        conn.commit()
+    except Exception:
+        pass
 
 
 def require_admin(user=Depends(current_user)):

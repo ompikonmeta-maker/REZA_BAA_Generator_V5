@@ -195,14 +195,37 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.execute("UPDATE locations SET modified_at = updated_at WHERE modified_at IS NULL")
     if not _has_column(conn, "locations", "modified_by"):
         conn.execute("ALTER TABLE locations ADD COLUMN modified_by INTEGER REFERENCES users(id)")
+    # Waktu status menjadi Done (dasar grafik progres & cycle time)
+    if not _has_column(conn, "locations", "done_at"):
+        conn.execute("ALTER TABLE locations ADD COLUMN done_at TEXT")
+        conn.execute("UPDATE locations SET done_at = updated_at WHERE status='selesai' AND done_at IS NULL")
+    # Last seen user (permintaan terakhir ke server)
+    if not _has_column(conn, "users", "last_seen_at"):
+        conn.execute("ALTER TABLE users ADD COLUMN last_seen_at TEXT")
+    # Aktivitas isi lokasi (feed, ritme kerja, perubahan terakhir)
+    conn.execute("""CREATE TABLE IF NOT EXISTS activity (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER REFERENCES users(id),
+        location_id INTEGER REFERENCES locations(id) ON DELETE CASCADE,
+        kind TEXT NOT NULL, detail TEXT DEFAULT '', created_at TEXT NOT NULL)""")
+    conn.execute("CREATE INDEX IF NOT EXISTS ix_activity_time ON activity(created_at)")
     conn.commit()
 
 
-def touch_modified(conn: sqlite3.Connection, loc_id: int, user_id) -> None:
-    """Catat perubahan isi lokasi (data, inventory, foto): waktu + pengubah."""
+def touch_modified(conn: sqlite3.Connection, loc_id: int, user_id, kind: str = "edit",
+                   detail: str = "") -> None:
+    """Catat perubahan isi lokasi (data, inventory, foto): waktu + pengubah,
+    plus satu baris activity (feed & ritme kerja)."""
     now = now_iso()
     conn.execute("UPDATE locations SET modified_at=?, modified_by=?, updated_at=? WHERE id=?",
                  (now, user_id, now, loc_id))
+    log_activity(conn, loc_id, user_id, kind, detail, now)
+
+
+def log_activity(conn: sqlite3.Connection, loc_id: int, user_id, kind: str, detail: str = "",
+                 at: str | None = None) -> None:
+    conn.execute("INSERT INTO activity(user_id, location_id, kind, detail, created_at) VALUES(?,?,?,?,?)",
+                 (user_id, loc_id, kind, detail, at or now_iso()))
 
 
 def init_db() -> None:

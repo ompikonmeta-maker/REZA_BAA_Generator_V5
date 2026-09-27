@@ -68,6 +68,7 @@ def logout(response: Response, conn: sqlite3.Connection = Depends(get_db),
     # token diambil ulang dari cookie oleh dependency; hapus semua sesi user ini
     conn.execute("DELETE FROM sessions WHERE user_id=?", (user["id"],))
     conn.commit()
+    audit(conn, user, "logout", "user", user["id"])
     response.delete_cookie(config.SESSION_COOKIE)
     return {"ok": True}
 
