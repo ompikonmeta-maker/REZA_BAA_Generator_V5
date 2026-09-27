@@ -205,6 +205,8 @@ def init_db() -> None:
             set_setting(conn, "default_inventory_items", DEFAULT_INVENTORY_ITEMS)
         if get_setting(conn, "item_merks") is None:
             set_setting(conn, "item_merks", {})
+        if get_setting(conn, "inventory_keterangan") is None:
+            set_setting(conn, "inventory_keterangan", ["OK"])
         _title = get_setting(conn, "app_title")
         if _title is None or _title == "REZA BAA Generator":
             set_setting(conn, "app_title", "BAA Generator")

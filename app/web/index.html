@@ -2538,7 +2538,12 @@ function isDraft(){return !!(S.loc&&!S.loc.id);}
 function draftHasData(){if(!isDraft())return false;
   const d=computeState().data||{};
   const anyField=Object.values(d).some(v=>String(v==null?'':v).trim());
-  const anyInv=collectInventory().some(it=>Object.values(it).some(v=>String(v==null?'':v).trim()));
+  // baris default (nama default + Jumlah 1 + Ket OK, tanpa SN/Merk) tidak dihitung sebagai "data"
+  const anyInv=collectInventory().some(it=>{
+    const nb=(it.nama_barang||'').trim();
+    const isDef=(S.invItems||[]).some(x=>x.trim().toLowerCase()===nb.toLowerCase());
+    return !!((it.merk_type||'').trim()||(it.sn_tagging||'').trim()||(!isDef&&nb));
+  });
   const anyPhoto=((S.loc&&S.loc.photos)||[]).length>0;
   return anyField||anyInv||anyPhoto;}
 function newDraft(){
@@ -2680,13 +2685,13 @@ function invRow(it={}){
   return `<div class="tr">
   <input data-iv="nama_barang" value="${esc(it.nama_barang)}"${isDef?' readonly data-tip="Item default — tidak bisa diubah/dihapus"':' placeholder="nama barang"'}>
   <div class="cbx"><input data-iv="merk_type" placeholder="pilih / ketik…" value="${esc(it.merk_type)}"><span class="cbx-arrow mi" data-tip="Pilih Merk/Type" onclick="openMerkMenu(this)">arrow_drop_down</span></div>
-  <input data-iv="jumlah" value="${esc(it.jumlah)}"><input data-iv="sn_tagging" class="sn" value="${esc(it.sn_tagging)}">
+  <input data-iv="jumlah" value="${esc(it.jumlah)}" style="text-align:center"><input data-iv="sn_tagging" class="sn" value="${esc(it.sn_tagging)}">
   <div class="cbx"><input data-iv="keterangan" placeholder="pilih / ketik…" value="${esc(it.keterangan)}"><span class="cbx-arrow mi" data-tip="Pilih Keterangan" onclick="openKetMenu(this)">arrow_drop_down</span></div>
   ${isDef?'<span></span>':'<md-icon-button data-tip="Hapus baris" onclick="this.closest(\'.tr\').remove();updateSummary()"><span>close</span></md-icon-button>'}</div>`;}
 function renderInventory(){let rows=S.loc.inventory;
-  if(!rows.length)rows=(S.invItems.length?S.invItems:['','','']).map(n=>({nama_barang:n}));
+  if(!rows.length)rows=(S.invItems.length?S.invItems:['','','']).map(n=>({nama_barang:n,jumlah:'1',keterangan:'OK'}));
   $('#inv-body').innerHTML=rows.map(invRow).join('');bindTips();}
-$('#inv-add').addEventListener('click',()=>{$('#inv-body').insertAdjacentHTML('beforeend',invRow());bindTips();updateSummary();if(S.loc)entryDirty=true;});
+$('#inv-add').addEventListener('click',()=>{$('#inv-body').insertAdjacentHTML('beforeend',invRow({jumlah:'1',keterangan:'OK'}));bindTips();updateSummary();if(S.loc)entryDirty=true;});
 /* Combobox Merk/Type: selalu tampilkan SELURUH opsi item (MDMenu), tetap boleh ketik */
 window.openMerkMenu=(el)=>{const tr=el.closest('.tr');const input=tr.querySelector('[data-iv="merk_type"]');
   const name=(tr.querySelector('[data-iv="nama_barang"]').value||'').trim();const opts=merkOpts(name);
