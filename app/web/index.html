@@ -2113,6 +2113,12 @@ const NEUTRAL={light:{surface:'#fcfcfd',background:'#fcfcfd','surface-dim':'#ddd
 function applyCalm(){const t=(window.MD3&&MD3.getTheme&&MD3.getTheme())||'light';const m=NEUTRAL[t]||NEUTRAL.light;const st=document.documentElement.style;for(const k in m)st.setProperty('--md-sys-color-'+k,m[k]);}
 function paint(){if(window.MD3)MD3.applySeed('#024343',{style:'expressive'});applyCalm();}
 
+/* Transisi halaman: setiap section yang baru tampil memudar + naik sedikit (berlaku untuk semua menu) */
+function viewEnter(el){if(reduced||!el)return;el.getAnimations().forEach(a=>a.cancel());
+  el.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:420,easing:'cubic-bezier(0.05,0.7,0.1,1)'});}
+const _secObs=new MutationObserver(ms=>ms.forEach(m=>{const el=m.target;
+  if((m.oldValue||'').split(' ').includes('hidden')&&!el.classList.contains('hidden'))viewEnter(el);}));
+document.querySelectorAll('section[id^="v-"]').forEach(sec=>_secObs.observe(sec,{attributes:true,attributeFilter:['class'],attributeOldValue:true}));
 function revealCards(scope){if(reduced)return;[...scope.querySelectorAll('.card')].forEach((c,i)=>{
   c.animate([{opacity:0,transform:'translateX(26px)'},{opacity:1,transform:'none'}],{duration:460,delay:i*70,easing:'cubic-bezier(0.05,0.7,0.1,1)',fill:'both'});});}
 
@@ -2481,7 +2487,7 @@ function bindHover(root){root.querySelectorAll('[data-h]').forEach(el=>{el.onmou
 /* ---------- PROGRESS ---------- */
 let PG=null,_pgTimer=null,_pgAt=0;
 async function loadProgress(quiet){let d;try{d=await api('/api/progress');}catch(e){if(!quiet)toast('Failed: '+e.message);return;}
-  PG=d;_pgAt=Date.now();renderProgress();
+  PG=d;_pgAt=Date.now();renderProgress();if(!quiet)revealCards($('#pgBody'));
   clearInterval(_pgTimer);_pgTimer=setInterval(()=>{if(!_visible('v-progress')){clearInterval(_pgTimer);return;}
     const s=Math.round((Date.now()-_pgAt)/1000);$('#pgUpd').textContent=`Updated ${s<5?'just now':s+' s ago'} · refreshes every 60 s`;
     if(s>=60&&document.visibilityState==='visible'&&!$('#pgEditing'))loadProgress(true);},5000);}
@@ -2633,7 +2639,7 @@ async function loadSupervisor2(){let d;try{d=await api('/api/dash/supervisor');}
     ${d.users.filter(u=>u.open).map(u=>`<div class="r"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(u.name)}</span><div class="bar" style="width:${u.open/mx*100}%">${AGE_KEYS.map(k=>u.aging[k]?`<span style="flex:${u.aging[k]};background:${A(k)}" data-h="${esc(u.name)} · ${u.aging[k]} ${AGE_LBL[k]}"></span>`:'').join('')}</div><span class="mut">${u.open}</span></div>`).join('')||'<div class="pg-empty">No open drafts.</div>'}
     ${d.tip?`<div class="pg-call"><span class="mi" style="color:var(--md-sys-color-primary)">lightbulb</span><span><b>${esc(d.tip.from)}</b> holds ${d.tip.cold} Cold draft${d.tip.cold>1?'s':''} and made no changes for ${d.tip.inactive_wd} working days. Move them to <b>${esc(d.tip.to)}</b> (${d.tip.to_open} open draft${d.tip.to_open===1?'':'s'})?</span>
       <md-button variant="filled" size="xs" style="margin-left:auto" id="svTransfer">Transfer…</md-button></div>`:''}</div>`;
-  el.innerHTML=`<div class="pg">${strip}${team}${rhythm}${feed}${wl}</div>`;bindHover(el);bindTips();
+  el.innerHTML=`<div class="pg">${strip}${team}${rhythm}${feed}${wl}</div>`;bindHover(el);bindTips();revealCards(el);
   $('#svToProg').onclick=()=>navTo('progress');
   const tb=$('#svTransfer');if(tb)tb.onclick=()=>{navTo('locations');toast('Filter by owner, select the drafts, then Transfer');};}
 
@@ -2664,7 +2670,7 @@ async function loadMyDash(){let d;try{d=await api('/api/dash/me');}catch(e){retu
       ${ageChip(x)}<md-button variant="tonal" size="xs" onclick="openFromLog(${x.id})">Open</md-button></div>`).join('')+(d.drafts.length>6?`<button class="mlnk" style="margin-top:8px" onclick="navTo('locations')">+${d.drafts.length-6} more in Location Log</button>`:''):'<div class="pg-empty">No open drafts.</div>'}</div>`;
   const feed=`<div class="card s12"><div class="ct">My recent work</div><div class="cd">Changes to your locations</div>
     ${d.feed.length?`<div class="me-feed">${d.feed.slice(0,10).map(f=>`<div class="sv-fi"><span class="t">${relShort(f.at)}</span><span>${esc(actTxt(f))} · ${locLbl(f.loc)}</span></div>`).join('')}</div>`:'<div class="pg-empty">No changes yet.</div>'}</div>`;
-  el.innerHTML=`<div class="pg">${hero}${week}${q}${feed}</div>`;bindHover(el);bindTips();
+  el.innerHTML=`<div class="pg">${hero}${week}${q}${feed}</div>`;bindHover(el);bindTips();revealCards(el);
   if(next)$('#meCont').onclick=()=>openFromLog(next.id);
   $('#meNew').onclick=()=>{gotoEntry();$('#entry-new').click();};$('#meLog').onclick=()=>navTo('locations');}
 function relShort(iso){const d=new Date(iso),now=new Date();return d.toDateString()===now.toDateString()?hhmm(iso):`${d.getDate()} ${_IDMON[d.getMonth()]}`;}
