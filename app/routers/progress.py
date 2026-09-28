@@ -431,3 +431,19 @@ def my_dash(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_use
             "week": week, "week_done": sum(w["done"] for w in week), "week_part": part,
             "streak": cur, "best": best, "aging": _aging(conn),
             "feed": _feed(conn, "AND a.user_id=?", (user["id"],), 12)}
+
+
+# ---------- ringkasan hari ini (wellbeing: ajakan tutup hari) ----------
+@router.get("/dash/today")
+def my_today(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
+    """BAA yang user tandai selesai hari ini & draft yang ia ubah hari ini (masih terbuka)."""
+    if user["role"] not in ("admin", "operator"):
+        raise HTTPException(403, "Not available for this role")
+    t0 = datetime.combine(_today(), datetime.min.time()).astimezone().astimezone(timezone.utc).isoformat()
+    done = conn.execute("SELECT COUNT(DISTINCT a.location_id) c FROM activity a JOIN locations l ON l.id=a.location_id "
+                        "WHERE a.user_id=? AND a.kind='done' AND a.created_at>=? AND l.status='selesai' AND l.deleted_at IS NULL",
+                        (user["id"], t0)).fetchone()["c"]
+    drafts = conn.execute("SELECT COUNT(DISTINCT a.location_id) c FROM activity a JOIN locations l ON l.id=a.location_id "
+                          "WHERE a.user_id=? AND a.created_at>=? AND l.status!='selesai' AND l.deleted_at IS NULL",
+                          (user["id"], t0)).fetchone()["c"]
+    return {"done": done, "drafts": drafts}

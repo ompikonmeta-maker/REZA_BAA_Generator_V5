@@ -280,6 +280,61 @@
   .dp-foot .todaybtn{color:var(--md-sys-color-primary)}
   .nav-foot{margin-top:auto;display:flex;gap:4px;justify-content:center;padding-top:8px;border-top:1px solid var(--md-sys-color-outline-variant);transition:gap var(--sp)}
   .shell.rail .nav-foot{flex-direction:column;align-items:center;gap:4px}
+  /* ===== Wellbeing: pengingat rehat (A), mode rehat (C), ajakan tutup hari (F) ===== */
+  .nav-foot{flex-wrap:wrap}
+  .wb{display:flex;align-items:center;gap:8px;width:100%;height:42px;padding:0 12px 0 4px;margin-bottom:2px;border:0;border-radius:999px;background:transparent;cursor:pointer;
+    color:var(--md-sys-color-on-surface-variant);font:600 12.5px/1.15 inherit;white-space:nowrap;text-align:left;transition:background-color .3s,color .3s}
+  .wb:hover{background:color-mix(in srgb,var(--md-sys-color-on-surface) 8%,transparent)}
+  .wb .wb-ring{position:relative;flex:0 0 34px;width:34px;height:34px;display:grid;place-items:center}
+  .wb .wb-ring svg{position:absolute;inset:0}
+  .wb .wb-ring .mi{font-size:16px}
+  .wb .wb-lbl{display:flex;flex-direction:column;min-width:0}.wb .wb-lbl small{font-weight:500;font-size:10.5px;opacity:.8}
+  .shell.rail .wb{width:auto;padding:4px}.shell.rail .wb .wb-lbl{display:none}
+  .wb.due{color:var(--md-sys-color-on-surface);background:color-mix(in srgb,var(--md-sys-color-primary) 16%,transparent);animation:wbGlow 2.4s ease-out infinite}
+  .wb.late{color:var(--md-sys-color-on-surface);background:color-mix(in srgb,#8fa8ff 16%,transparent);animation:wbGlowB 2.4s ease-out infinite}
+  @keyframes wbGlow{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--md-sys-color-primary) 50%,transparent)}70%,100%{box-shadow:0 0 0 12px transparent}}
+  @keyframes wbGlowB{0%{box-shadow:0 0 0 0 rgba(143,168,255,.5)}70%,100%{box-shadow:0 0 0 12px transparent}}
+  .wb-pop{position:fixed;z-index:2500;width:300px;background:var(--md-sys-color-surface-container-high);border:1px solid var(--md-sys-color-outline-variant);border-radius:18px;padding:16px;
+    box-shadow:0 14px 36px rgba(var(--sh),.35);opacity:0;visibility:hidden;transform:translateX(-10px) scale(.98);transform-origin:left bottom;
+    transition:opacity .22s,transform .35s cubic-bezier(.05,.7,.1,1),visibility .35s}
+  .wb-pop.on{opacity:1;visibility:visible;transform:none}
+  .wb-pop::before{content:"";position:absolute;left:-7px;bottom:20px;width:12px;height:12px;background:inherit;border-left:1px solid var(--md-sys-color-outline-variant);border-bottom:1px solid var(--md-sys-color-outline-variant);transform:rotate(45deg)}
+  .wb-pop h4{margin:0 0 4px;font:var(--md-sys-typescale-title-small);font-weight:600}
+  .wb-pop .mut{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant);line-height:1.45}
+  .wb-pop .acts{display:flex;gap:8px;margin-top:14px;align-items:center}
+  .wb-pop label{display:block;margin:12px 0 6px;font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant)}
+  .wb-stat{display:flex;gap:10px;margin-top:10px}.wb-stat div{flex:1;padding:8px 10px;border-radius:12px;background:var(--md-sys-color-surface-container)}.wb-stat b{display:block;font-size:18px}
+  .wb-seg{display:flex;border:1px solid var(--md-sys-color-outline);border-radius:999px;overflow:hidden}
+  .wb-seg button{flex:1;border:0;background:transparent;color:var(--md-sys-color-on-surface);padding:7px 4px;font:var(--md-sys-typescale-label-medium);border-left:1px solid var(--md-sys-color-outline);cursor:pointer}
+  .wb-seg button:first-child{border-left:0}.wb-seg button.on{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}
+  .wb-late{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding:12px 14px;border-radius:14px;max-width:640px;
+    background:var(--amb-glass,var(--md-sys-color-surface-container));border:1px solid var(--amb-glass-b,var(--md-sys-color-outline-variant));backdrop-filter:blur(10px);animation:wbIn .6s cubic-bezier(.05,.7,.1,1)}
+  .wb-late .t{flex:1;min-width:200px}.wb-late .t .mut{color:inherit;opacity:.8}
+  @keyframes wbIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  #logoutBtn.wb-hint{border-radius:50%;animation:wbGlow 1.6s ease-out 4}
+  .wb-rest{position:fixed;inset:0;z-index:2147483050;display:grid;place-items:center;opacity:0;visibility:hidden;transition:opacity .6s ease,visibility .6s;
+    background:radial-gradient(120% 90% at 50% 110%,#1d4f4c 0%,#0d2626 45%,#081516 100%);color:#e6f4f2}
+  .wb-rest.on{opacity:1;visibility:visible}
+  .wb-rest .wrap{text-align:center;width:min(560px,90vw);transform:translateY(12px);transition:transform .8s cubic-bezier(.05,.7,.1,1)}
+  .wb-rest.on .wrap{transform:none}
+  .wb-rest .tabs{display:flex;justify-content:center;gap:6px;margin-bottom:28px}
+  .wb-rest .tabs button{border:1px solid rgba(255,255,255,.18);background:transparent;color:#cfe7e4;border-radius:999px;padding:7px 14px;font:600 12.5px/1 inherit;cursor:pointer}
+  .wb-rest .tabs button.on{background:rgba(255,255,255,.14);color:#fff}
+  .wb-stage{height:280px;display:grid;place-items:center;position:relative}
+  .wb-breath{width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#7fe0d8 0,#2fa59c 60%,#1b6f69 100%);box-shadow:0 0 80px 20px rgba(79,216,211,.25);transform:scale(.6);transition:transform 4s cubic-bezier(.45,0,.55,1)}
+  .wb-breath.in,.wb-breath.hold{transform:scale(1.6)}.wb-breath.out{transform:scale(.6)}
+  .wb-bword{position:absolute;bottom:0;font:500 20px/1 inherit;color:#dff5f2}
+  .wb-eye{font:600 64px/1 inherit;font-variant-numeric:tabular-nums}
+  .wb-stretch{width:320px;padding:22px;border-radius:20px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);text-align:left}.wb-stretch h5{margin:0 0 6px;font:600 16px/1.3 inherit}
+  .wb-rest .meta{margin-top:26px;display:flex;justify-content:center;flex-wrap:wrap;gap:18px;font-size:13px;color:#a9cfca}.wb-rest .meta b{color:#fff}
+  .wb-rest .done{margin-top:22px;border:0;border-radius:999px;padding:12px 22px;font:600 14px/1 inherit;background:#e6f4f2;color:#0d2626;cursor:pointer}
+  .wb-rest .skip{display:block;margin:12px auto 0;background:none;border:0;color:#a9cfca;font-size:12.5px;text-decoration:underline;cursor:pointer}
+  .wb-snack{position:fixed;left:50%;bottom:24px;z-index:9998;transform:translate(-50%,20px);opacity:0;visibility:hidden;max-width:min(560px,92vw);display:flex;align-items:center;gap:12px;
+    background:var(--md-sys-color-inverse-surface);color:var(--md-sys-color-inverse-on-surface);padding:14px 16px 14px 18px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35);
+    transition:opacity .3s,transform .4s cubic-bezier(.05,.7,.1,1),visibility .4s}
+  .wb-snack.on{opacity:1;visibility:visible;transform:translate(-50%,0)}
+  .wb-snack .mi{color:var(--md-sys-color-inverse-primary)}
+  @media(prefers-reduced-motion:reduce){.wb.due,.wb.late,#logoutBtn.wb-hint{animation:none}.wb-breath{transition:none}}
 
   .canvas{flex:1 1 auto;min-width:0;background:transparent;display:flex;flex-direction:column;overflow:hidden;position:relative;--topbar-h:64px}
   /* judul melayang di atas konten; konten yang lewat di bawahnya meluruh + blur */
@@ -1600,6 +1655,12 @@
       </div>
     </div>
     <div class="nav-foot">
+      <button class="wb hidden" id="wb" data-tip="">
+        <span class="wb-ring"><svg viewBox="0 0 36 36" width="34" height="34"><circle cx="18" cy="18" r="14" fill="none" stroke="var(--md-sys-color-outline-variant)" stroke-width="3.2"/>
+          <circle id="wbRing" cx="18" cy="18" r="14" fill="none" stroke="var(--md-sys-color-primary)" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="88" stroke-dashoffset="88" transform="rotate(-90 18 18)" style="transition:stroke-dashoffset .6s,stroke .4s"/></svg>
+          <span class="mi" id="wbIco">schedule</span></span>
+        <span class="wb-lbl"><span id="wbTime">0h 00m</span><small id="wbSub">active</small></span>
+      </button>
       <md-icon-button id="pwBtn" data-tip="Change password"><span>password</span></md-icon-button>
       <md-icon-button id="themeBtn" data-tip="Toggle theme"><span>dark_mode</span></md-icon-button>
       <md-icon-button id="logoutBtn" data-tip="Sign out"><span>logout</span></md-icon-button>
@@ -2148,6 +2209,25 @@
 <div id="heatTip"></div>
 <div id="clrSnack"><span class="cring"><svg viewBox="0 0 22 22"><circle class="t" cx="11" cy="11" r="9.5"/><circle class="p" id="clrRing" cx="11" cy="11" r="9.5"/></svg></span><span id="clrSnackTxt"><b>0</b> photos deleted</span><button class="ub" onclick="undoClearAll()"><span class="mi">undo</span>Undo</button></div>
 
+<div class="wb-pop" id="wbDue"><h4>Time for a short break</h4>
+  <div class="mut">You've been active for <b id="wbDueT">2h 00m</b> without a pause. 5 minutes away from the screen helps your eyes and focus.</div>
+  <div class="acts"><md-button variant="filled" id="wbRestBtn">Break 5 min</md-button><md-button variant="text" id="wbSnoozeBtn">Later (15m)</md-button></div></div>
+<div class="wb-pop" id="wbLatePop"><h4>It's <span id="wbLateH">19.00</span> already</h4>
+  <div class="mut">Good work today. Remember to save what's open before you sign out.</div>
+  <div class="wb-stat"><div><b id="wbDone">0</b><span class="mut">BAA done today</span></div><div><b id="wbDrafts">0</b><span class="mut">drafts worked on</span></div></div>
+  <div class="acts"><md-button variant="filled" data-wb="close">Wrap up today</md-button><md-button variant="text" data-wb="keep">Keep going</md-button></div></div>
+<div class="wb-pop" id="wbSet"><h4>Break reminder</h4><div class="mut">Counts active time only. 5 minutes idle counts as a break.</div>
+  <label>Remind me every</label><div class="wb-seg" data-k="every"><button data-v="60">60m</button><button data-v="90">90m</button><button data-v="120">120m</button></div>
+  <label>Suggest wrapping up after</label><div class="wb-seg" data-k="late"><button data-v="18">18.00</button><button data-v="19">19.00</button><button data-v="20">20.00</button><button data-v="0">Off</button></div>
+  <label>Do not disturb</label><div class="wb-seg" data-k="dnd"><button data-v="off">Off</button><button data-v="1h">1 hour</button><button data-v="day">Today</button></div>
+  <div class="acts"><md-button variant="text" id="wbNow">Take a break now</md-button></div></div>
+<div class="wb-rest" id="wbRest" aria-hidden="true"><div class="wrap">
+  <div class="tabs"><button data-m="breath" class="on">Breathe</button><button data-m="eye">Eyes 20-20-20</button><button data-m="stretch">Stretch</button></div>
+  <div class="wb-stage" id="wbStage"></div>
+  <div class="meta"><span>Break <b id="wbRT">5:00</b></span><span id="wbDraft"></span><span>Worked <b id="wbWork">0h 00m</b></span></div>
+  <button class="done" id="wbBack">Done, back to work</button><button class="skip" id="wbSkip">Skip</button>
+</div></div>
+<div class="wb-snack" id="wbSnack"><span class="mi">info</span><span id="wbSnackT"></span></div>
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 /* ===== Overlay scrollbar =====
@@ -2240,7 +2320,7 @@ function paint(){if(window.MD3)MD3.applySeed('#024343',{style:'expressive'});app
 function viewEnter(el){if(reduced||!el)return;el.getAnimations().forEach(a=>a.cancel());
   el.animate([{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:420,easing:'cubic-bezier(0.05,0.7,0.1,1)'});}
 const _secObs=new MutationObserver(ms=>ms.forEach(m=>{const el=m.target;
-  if((m.oldValue||'').split(' ').includes('hidden')&&!el.classList.contains('hidden'))viewEnter(el);}));
+  if((m.oldValue||'').split(' ').includes('hidden')&&!el.classList.contains('hidden')){viewEnter(el);if(typeof WB!=='undefined'&&WB.on)wbSync();}}));
 document.querySelectorAll('section[id^="v-"]').forEach(sec=>_secObs.observe(sec,{attributes:true,attributeFilter:['class'],attributeOldValue:true}));
 function revealCards(scope){if(reduced)return;[...scope.querySelectorAll('.card')].forEach((c,i)=>{
   c.animate([{opacity:0,transform:'translateX(26px)'},{opacity:1,transform:'none'}],{duration:460,delay:i*70,easing:'cubic-bezier(0.05,0.7,0.1,1)',fill:'both'});});}
@@ -2373,6 +2453,99 @@ $('#lg-btn').addEventListener('click',async()=>{const el=$('#lg-err');el.classLi
 ['#lg-user','#lg-pass'].forEach(s=>$(s).addEventListener('input',()=>$('#lg-err').classList.add('hidden')));
 $('#lg-pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('#lg-btn').click()});
 $('#logoutBtn').addEventListener('click',()=>guardLeave(async()=>{await api('/api/auth/logout',{method:'POST'});location.reload();},'sign out'));
+/* ===== Wellbeing (admin & operator) =====
+   A  tombol di sidebar: cincin waktu AKTIF (mouse/keyboard). Diam ≥5 menit = dianggap rehat → hitungan nol lagi.
+      Mencapai interval (default 120m) → berpendar + kartu "Break 5 min / Later 15m". Klik saat normal = setelan.
+   C  mode rehat layar penuh: napas terpandu / mata 20-20-20 / peregangan.
+   F  setelah jam tutup-hari (default 19.00): ajakan sekali per hari — di Dashboard lewat kartu sapaan, di halaman lain
+      lewat kartu di samping sidebar. "Wrap up today" hanya menutup ajakan + mengingatkan Save lalu Sign out.
+   Semua data wellbeing disimpan lokal di perangkat user (pribadi). */
+const WB={on:false,uid:0,cfg:{every:120,late:19,dndUntil:0},st:{active:0,lastTick:0,dueShown:false,snoozeAt:0,lateDay:'',lateShown:''},lastAct:Date.now(),timer:0,rest:null};
+const WB_IDLE=5*60*1000,WB_TICK=15000;
+const wbFmt=m=>`${Math.floor(m/60)}h ${String(Math.floor(m%60)).padStart(2,'0')}m`;
+const wbDay=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();};
+function wbLoad(){try{Object.assign(WB.cfg,JSON.parse(localStorage.getItem('wb:cfg:'+WB.uid)||'{}'));Object.assign(WB.st,JSON.parse(localStorage.getItem('wb:st:'+WB.uid)||'{}'));}catch(e){}
+  if(Date.now()-(WB.st.lastTick||0)>WB_IDLE){WB.st.active=0;WB.st.dueShown=false;WB.st.snoozeAt=0;}WB.st.lastTick=Date.now();}
+function wbSave(){try{localStorage.setItem('wb:cfg:'+WB.uid,JSON.stringify(WB.cfg));localStorage.setItem('wb:st:'+WB.uid,JSON.stringify(WB.st));}catch(e){}}
+function wbInit(){if(!S.user||!['admin','operator'].includes(S.user.role)){$('#wb').classList.add('hidden');return;}
+  WB.on=true;WB.uid=S.user.id;wbLoad();$('#wb').classList.remove('hidden');
+  ['pointermove','pointerdown','keydown','wheel'].forEach(ev=>addEventListener(ev,()=>{WB.lastAct=Date.now();},{passive:true,capture:true}));
+  clearInterval(WB.timer);WB.timer=setInterval(wbTick,WB_TICK);wbSync();}
+function wbTick(){if(!WB.on)return;const now=Date.now(),dt=now-(WB.st.lastTick||now);WB.st.lastTick=now;
+  if(WB.rest){wbSave();return;}
+  if(now-WB.lastAct>=WB_IDLE){if(WB.st.active>0){WB.st.active=0;WB.st.dueShown=false;WB.st.snoozeAt=0;}}
+  else if(dt<60000)WB.st.active+=dt/60000;
+  wbSave();wbSync();}
+const wbDnd=()=>Date.now()<(WB.cfg.dndUntil||0);
+const wbDue=()=>WB.st.active>=WB.cfg.every&&WB.st.active>=(WB.st.snoozeAt||0)&&!wbDnd();
+const wbLate=()=>!!WB.cfg.late&&new Date().getHours()>=WB.cfg.late&&WB.st.lateDay!==wbDay();
+const wbOnDash=()=>_visible('v-dashboard');
+function wbSync(){if(!WB.on)return;const due=wbDue(),late=wbLate(),p=Math.min(1,WB.st.active/WB.cfg.every),b=$('#wb');
+  const ring=$('#wbRing');ring.style.strokeDashoffset=88*(1-p);ring.style.stroke=late?'#8fa8ff':'var(--md-sys-color-primary)';
+  $('#wbIco').textContent=late?'bedtime':due?'coffee':'schedule';
+  $('#wbTime').textContent=wbFmt(WB.st.active);$('#wbSub').textContent=late?'getting late':due?'time for a break':wbDnd()?'do not disturb':'active';
+  b.classList.toggle('due',due&&!late);b.classList.toggle('late',late);
+  b.setAttribute('data-tip',`${wbFmt(WB.st.active)} active · next break at ${wbFmt(WB.cfg.every)}`);
+  $('#wbDueT').textContent=wbFmt(WB.st.active);
+  if(due&&!late&&!WB.st.dueShown&&!document.querySelector('.wb-pop.on')){WB.st.dueShown=true;wbSave();wbShow('wbDue');}
+  wbLateBanner(late);
+  if(late&&!wbOnDash()&&WB.st.lateShown!==wbDay()&&!document.querySelector('.wb-pop.on')){WB.st.lateShown=wbDay();wbSave();wbShowLate();}}
+function wbPlace(){const r=$('#wb').getBoundingClientRect(),nav=document.querySelector('.nav').getBoundingClientRect();
+  $$('.wb-pop').forEach(p=>{p.style.left=(nav.right+14)+'px';p.style.bottom=Math.max(8,innerHeight-r.bottom-4)+'px';});}
+function wbShow(id){$$('.wb-pop').forEach(p=>p.classList.toggle('on',p.id===id));if(id)wbPlace();}
+async function wbToday(){try{const d=await api('/api/dash/today');$('#wbDone').textContent=d.done;$$('.wb-late-done').forEach(e=>e.textContent=d.done);
+  $('#wbDrafts').textContent=d.drafts;$$('.wb-late-drafts').forEach(e=>e.textContent=d.drafts);}catch(e){}}
+function wbShowLate(){const h=WB.cfg.late;$('#wbLateH').textContent=new Date().getHours()+'.'+String(new Date().getMinutes()).padStart(2,'0');wbToday();wbShow('wbLatePop');}
+function wbLateBanner(late){const host=_visible('dHero')&&!$('#dHero').classList.contains('hidden')?$('#dHero .htxt'):document.querySelector('.me-hero>div:not(.amb)');
+  let el=$('#wbLateBan');
+  if(!late||!host){if(el)el.remove();return;}
+  if(el&&el.parentElement===host)return;if(el)el.remove();
+  el=document.createElement('div');el.id='wbLateBan';el.className='wb-late';
+  el.innerHTML=`<div class="t"><b>It's ${new Date().getHours()}.${String(new Date().getMinutes()).padStart(2,'0')} already.</b><div class="mut">Today: <span class="wb-late-done">–</span> BAA done, <span class="wb-late-drafts">–</span> drafts worked on. Continue tomorrow?</div></div>
+    <md-button variant="filled" size="xs" data-wb="close">Wrap up today</md-button><md-button variant="text" size="xs" data-wb="keep">Keep going</md-button>`;
+  const after=host.querySelector('.mut,.date');if(after)after.after(el);else host.appendChild(el);wbToday();}
+function wbSnack(t,ms){$('#wbSnackT').textContent=t;const s=$('#wbSnack');s.classList.add('on');clearTimeout(s._t);s._t=setTimeout(()=>s.classList.remove('on'),ms||4000);}
+function wbWrapUp(close){WB.st.lateDay=wbDay();wbSave();wbShow(null);wbSync();
+  if(!close){wbSnack("OK — don't stay up too late.");return;}
+  const dirty=typeof dirtyCtx==='function'&&dirtyCtx();
+  wbSnack(dirty?'You still have unsaved changes — save them first, then sign out. See you tomorrow!':'Remember to save anything still open, then sign out. See you tomorrow!',7000);
+  const lo=$('#logoutBtn');lo.classList.remove('wb-hint');void lo.offsetWidth;lo.classList.add('wb-hint');setTimeout(()=>lo.classList.remove('wb-hint'),6600);}
+document.addEventListener('click',e=>{const a=e.target.closest('[data-wb]');if(a){wbWrapUp(a.dataset.wb==='close');return;}
+  if(!e.target.closest('.wb-pop')&&!e.target.closest('#wb'))wbShow(null);});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelector('.wb-pop.on'))wbShow(null);});
+addEventListener('resize',()=>{if(document.querySelector('.wb-pop.on'))wbPlace();});
+$('#wb').addEventListener('click',e=>{e.stopPropagation();if(wbLate()&&!wbOnDash())return wbShowLate();if(wbDue())return wbShow('wbDue');
+  if($('#wbSet').classList.contains('on'))return wbShow(null);
+  $$('#wbSet .wb-seg').forEach(g=>{const k=g.dataset.k,v=k==='dnd'?(wbDnd()?(WB.cfg.dndKind||'1h'):'off'):String(WB.cfg[k]);g.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));});
+  wbShow('wbSet');});
+$$('#wbSet .wb-seg button').forEach(b=>b.addEventListener('click',()=>{const k=b.parentElement.dataset.k,v=b.dataset.v;
+  b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  if(k==='dnd'){if(v==='off')WB.cfg.dndUntil=0;else{const d=new Date();WB.cfg.dndUntil=v==='1h'?Date.now()+3600e3:new Date(d.getFullYear(),d.getMonth(),d.getDate()+1).getTime();WB.cfg.dndKind=v;}}
+  else{WB.cfg[k]=+v;if(k==='every'){WB.st.dueShown=false;WB.st.snoozeAt=0;}if(k==='late')WB.st.lateShown='';}
+  wbSave();wbSync();}));
+$('#wbRestBtn').addEventListener('click',()=>wbRestStart());$('#wbNow').addEventListener('click',()=>wbRestStart());
+$('#wbSnoozeBtn').addEventListener('click',()=>{WB.st.snoozeAt=WB.st.active+15;WB.st.dueShown=false;wbSave();wbShow(null);wbSync();wbSnack("OK, I'll remind you again in 15 minutes.");});
+/* C · mode rehat */
+function wbRestStart(){wbShow(null);const R=$('#wbRest');WB.rest={left:300};R.classList.add('on');R.setAttribute('aria-hidden','false');
+  $('#wbWork').textContent=wbFmt(WB.st.active);
+  $('#wbDraft').innerHTML=(typeof dirtyCtx==='function'&&dirtyCtx())?'Unsaved changes <b>kept open</b>':'Everything saved <b>✓</b>';
+  wbRestMode('breath');clearInterval(WB.rest.iv);
+  WB.rest.iv=setInterval(()=>{if(!WB.rest)return;WB.rest.left=Math.max(0,WB.rest.left-1);$('#wbRT').textContent=`${Math.floor(WB.rest.left/60)}:${String(WB.rest.left%60).padStart(2,'0')}`;},1000);}
+function wbRestEnd(){const R=$('#wbRest');R.classList.remove('on');R.setAttribute('aria-hidden','true');if(WB.rest){clearInterval(WB.rest.iv);clearTimeout(WB.rest.t);}WB.rest=null;
+  WB.st.active=0;WB.st.dueShown=false;WB.st.snoozeAt=0;WB.lastAct=Date.now();wbSave();wbSync();wbSnack('Welcome back. The timer starts from zero.',3000);}
+$('#wbBack').addEventListener('click',wbRestEnd);$('#wbSkip').addEventListener('click',wbRestEnd);
+$$('#wbRest .tabs button').forEach(b=>b.addEventListener('click',()=>wbRestMode(b.dataset.m)));
+function wbRestMode(k){$$('#wbRest .tabs button').forEach(b=>b.classList.toggle('on',b.dataset.m===k));if(!WB.rest)return;clearTimeout(WB.rest.t);const S2=$('#wbStage');
+  if(k==='breath'){S2.innerHTML='<div class="wb-breath" id="wbBr"></div><div class="wb-bword" id="wbBw">Breathe in…</div>';
+    const seq=[['in','Breathe in…',4000],['hold','Hold…',4000],['out','Breathe out…',6000]];let i=0;
+    const step=()=>{const br=$('#wbBr');if(!br||!WB.rest)return;const [c,w,d]=seq[i%3];br.className='wb-breath '+c;br.style.transitionDuration=(c==='hold'?0:d)+'ms';$('#wbBw').textContent=w;i++;WB.rest.t=setTimeout(step,d);};
+    requestAnimationFrame(()=>requestAnimationFrame(step));}
+  if(k==='eye'){S2.innerHTML='<div><div class="wb-eye" id="wbEc">20</div><div style="margin-top:10px;color:#a9cfca">Look at something about 6 m away and blink slowly.</div></div>';
+    let n=20;const t=()=>{const e=$('#wbEc');if(!e||!WB.rest)return;e.textContent=n;if(n-->0)WB.rest.t=setTimeout(t,1000);else e.textContent='✓';};t();}
+  if(k==='stretch'){const C=[['Roll your shoulders','Roll your shoulders backwards 10 times, slowly.'],['Neck stretch','Tilt your head to the left for 15 seconds, then to the right.'],['Open your chest','Clasp your hands behind you and push your chest forward for 20 seconds.'],['Stand up & walk','Get a glass of water and walk around a little.']];let i=0;
+    const t=()=>{if(!WB.rest)return;S2.innerHTML=`<div class="wb-stretch"><div style="color:#a9cfca">${i%4+1} / 4</div><h5>${C[i%4][0]}</h5><div style="color:#cfe7e4">${C[i%4][1]}</div></div>`;
+      if(!reduced)S2.firstChild.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:500,easing:'cubic-bezier(.05,.7,.1,1)'});i++;WB.rest.t=setTimeout(t,5000);};t();}}
+addEventListener('keydown',e=>{if(e.key==='Escape'&&WB.rest)wbRestEnd();});
 window.addEventListener('beforeunload',e=>{if(ldPending()||tplDirty()){e.preventDefault();e.returnValue='';}});
 /* Transisi tema "veil": tirai warna latar tema baru muncul (linear) → tema diganti di puncak (±5ms, tersembunyi) → tirai memudar.
    Hanya opacity satu elemen yang dianimasikan, jadi ringan; tanpa snapshot halaman. */
@@ -2404,6 +2577,7 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
   $('#app').classList.toggle('is-operator',S.user.role!=='admin');
   $('#app').classList.toggle('is-viewer',S.user.role==='viewer');
   refreshPicker();loadLocations();loadCreators();loadDashboard();if(S.user.role==='admin'){loadTemplates();loadUsers();loadNotifCount();}bindTips();
+  wbInit();
   if(S.user.must_change)setTimeout(()=>openPw(true),400);}
 /* ===== Guard: perubahan belum disimpan ===== */
 let entryDirty=false;
@@ -2624,8 +2798,8 @@ async function loadDashboard(){const role=S.user&&S.user.role;
   const isA=role==='admin';$('#dashSup').classList.toggle('hidden',!isA);$('#dashMe').classList.toggle('hidden',isA);$('#dHero').classList.toggle('hidden',!isA);
   if(isA){paintDashSky();$('#dHello').textContent=`${greetWord()}, ${S.user.full_name||S.user.username}`;
     try{const s=await api('/api/stats');$('#dChipTxt').textContent=s.totals.draft?`${s.totals.draft} locations waiting to finish`:'All locations done';}catch(e){}
-    loadSupervisor2();}
-  else loadMyDash();}
+    loadSupervisor2();wbSync();}
+  else loadMyDash().then(()=>wbSync());}
 /* ===== Progress · Supervisor Console · My dashboard ===== */
 const AGE_KEYS=['fresh','warm','stale','cold'],AGE_LBL={fresh:'Fresh',warm:'Warm',stale:'Stale',cold:'Cold'};
 const AGE_VAR={fresh:'--ag1',warm:'--ag2',stale:'--ag3',cold:'--ag4'},AGE_INK={fresh:'--ag1i',warm:'--ag2i',stale:'--ag3i',cold:'--ag4i'};
