@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="id" data-theme="light">
+<html lang="id" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -2174,8 +2174,9 @@ function sbUpd(s){const el=s.el;if(!el.isConnected){sbDrop(s);return;}
   else s.v.style.display='none';
   const trackH=r.width-(vH?14:0)-6;
   if(hW&&trackH>SB_MIN&&r.height){const tw=Math.max(SB_MIN,trackH*el.clientWidth/el.scrollWidth),x=(trackH-tw)*el.scrollLeft/(el.scrollWidth-el.clientWidth);
-    Object.assign(s.h.style,{display:'',left:(r.left+3)+'px',top:(r.bottom-14)+'px',width:trackH+'px',
-      clipPath:`inset(0 ${Math.max(0,r.left+3+trackH-rt)}px 0 ${Math.max(0,l-r.left-3)}px)`,visibility:(r.bottom-14>=t&&r.bottom<=b+1)?'':'hidden'});
+    const hb=Math.min(r.bottom,b);   // tabel panjang: bar menempel di tepi bawah area yang terlihat
+    Object.assign(s.h.style,{display:'',left:(r.left+3)+'px',top:(hb-14)+'px',width:trackH+'px',
+      clipPath:`inset(0 ${Math.max(0,r.left+3+trackH-rt)}px 0 ${Math.max(0,l-r.left-3)}px)`,visibility:(hb-14>=Math.max(t,r.top))?'':'hidden'});
     const i=s.h.firstChild;i.style.left=x+'px';i.style.width=tw+'px';}
   else s.h.style.display='none';}
 function sbShow(s){s.v.classList.toggle('show',!!(s.act||s.near.v||s.drag==='v'));s.h.classList.toggle('show',!!(s.act||s.near.h||s.drag==='h'));
@@ -2194,10 +2195,10 @@ function sbDrag(s,ax){const bar=s[ax],th=bar.firstChild;
 let _sbPt=null,_sbRaf=0;
 document.addEventListener('pointermove',e=>{_sbPt=e;if(!_sbRaf)_sbRaf=requestAnimationFrame(()=>{_sbRaf=0;const x=_sbPt.clientX,y=_sbPt.clientY;
   const hit=document.elementFromPoint(x,y);
-  SB.forEach(s=>{if(s.v.style.display==='none'&&s.h.style.display==='none')return;
+  SB.slice().forEach(s=>{sbUpd(s);if(!s.el.isConnected||s.v.style.display==='none'&&s.h.style.display==='none')return;   // segarkan dulu: ukuran konten bisa berubah tanpa resize
     const {r,t,b,l,rt}=sbVis(s),mine=hit&&(s.el.contains(hit)||hit.closest('.sb')===s.v||hit.closest('.sb')===s.h);
     const inY=y>=t&&y<=b,inX=x>=l&&x<=rt;
-    const nv=!!(mine&&inY&&x<=r.right&&x>=r.right-SB_NEAR&&s.v.style.display!=='none'),nh=!!(mine&&inX&&y<=r.bottom&&y>=r.bottom-SB_NEAR*.8&&s.h.style.display!=='none');
+    const nv=!!(mine&&inY&&x<=r.right&&x>=r.right-SB_NEAR&&s.v.style.display!=='none'),hb=Math.min(r.bottom,b),nh=!!(mine&&inX&&y<=hb&&y>=hb-SB_NEAR*.8&&s.h.style.display!=='none');
     if(nv!==s.near.v||nh!==s.near.h){s.near={v:nv,h:nh};sbShow(s);}});});},{passive:true});
 document.documentElement.addEventListener('pointerleave',()=>SB.forEach(s=>{s.near={v:false,h:false};sbShow(s);}));
 function sbScan(root){(root||document.body).querySelectorAll('*').forEach(el=>{if(el._sb||el.classList.contains('sb')||el.parentElement&&el.parentElement.classList.contains('sb'))return;
