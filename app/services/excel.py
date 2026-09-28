@@ -126,15 +126,30 @@ def _safe_sheet_title(code: str, name: str, used: set) -> str:
 def _letterbox(path: str, box_w: int, box_h: int):
     """Kembalikan BytesIO PNG berukuran persis box_w x box_h: foto di-fit
     (tanpa distorsi & tanpa dipotong) lalu ditaruh di tengah kanvas putih.
-    Membuat semua foto hasil export punya ukuran yang seragam."""
+    Membuat semua foto hasil export punya ukuran yang seragam.
+    - orientasi EXIF diterapkan dulu (foto HP tegak tidak tampil miring)
+    - foto kecil ikut diperbesar sampai pas kotak (frame putih seminimal mungkin)
+    - area transparan (PNG) diisi putih, bukan hitam"""
     import io
-    from PIL import Image as PILImage
+    from PIL import Image as PILImage, ImageOps
     im = PILImage.open(path)
-    if im.mode not in ("RGB",):
+    try:
+        im = ImageOps.exif_transpose(im)
+    except Exception:
+        pass
+    if im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info):
+        im = im.convert("RGBA")
+        bg = PILImage.new("RGB", im.size, (255, 255, 255))
+        bg.paste(im, mask=im.getchannel("A"))
+        im = bg
+    elif im.mode != "RGB":
         im = im.convert("RGB")
-    im.thumbnail((box_w, box_h), PILImage.LANCZOS)   # hanya mengecilkan, jaga rasio
+    scale = min(box_w / im.width, box_h / im.height)          # fit: perkecil atau perbesar, jaga rasio
+    nw, nh = max(1, round(im.width * scale)), max(1, round(im.height * scale))
+    if (nw, nh) != im.size:
+        im = im.resize((nw, nh), PILImage.LANCZOS)
     canvas = PILImage.new("RGB", (box_w, box_h), (255, 255, 255))
-    canvas.paste(im, ((box_w - im.width) // 2, (box_h - im.height) // 2))
+    canvas.paste(im, ((box_w - nw) // 2, (box_h - nh) // 2))
     bio = io.BytesIO()
     canvas.save(bio, format="PNG")
     bio.seek(0)
