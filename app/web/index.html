@@ -23,7 +23,7 @@
   /* ===== Overlay scrollbar: native disembunyikan, thumb custom fade in/out (lihat sbAttach) ===== */
   *{scrollbar-width:thin;scrollbar-color:transparent transparent}
   .sb-host{scrollbar-width:none!important}.sb-host::-webkit-scrollbar{display:none}
-  .sb{position:fixed;z-index:2147483000;opacity:0;transition:opacity .28s cubic-bezier(.2,0,0,1);pointer-events:none}
+  .sb{position:fixed;z-index:7;opacity:0;transition:opacity .28s cubic-bezier(.2,0,0,1);pointer-events:none}
   .sb.show{opacity:1;pointer-events:auto}
   .sb i{position:absolute;border-radius:99px;background:color-mix(in srgb,var(--md-sys-color-on-surface) 32%,transparent);
     transition:width .2s cubic-bezier(.2,0,0,1),height .2s cubic-bezier(.2,0,0,1),background-color .2s}
@@ -246,9 +246,9 @@
   /* floating label: posisi & motion identik dengan md-text-field outlined */
   .datefield .dflab{position:absolute;left:42px;top:50%;transform:translateY(-50%);transform-origin:left;
     font:var(--md-sys-typescale-body-large);letter-spacing:var(--md-sys-typescale-body-large-tracking);
-    color:var(--md-sys-color-on-surface-variant);background:var(--md-sys-color-surface);
+    color:var(--md-sys-color-on-surface-variant);background:transparent;
     padding:0 4px;pointer-events:none;white-space:nowrap;transition:all 200ms cubic-bezier(0.2,0,0,1)}
-  .datefield.filled .dflab,.datefield.open .dflab,.datefield.dffilter .dflab{top:0;left:12px;transform:translateY(-50%) scale(.75)}
+  .datefield.filled .dflab,.datefield.open .dflab,.datefield.dffilter .dflab{top:0;left:12px;transform:translateY(-50%) scale(.75);background:var(--md-field-notch,var(--md-sys-color-surface))}
   .datefield.open .dflab{color:var(--md-sys-color-primary)}
   /* varian filter: label selalu mengambang, nilai default 'Semua' (muted), chevron beri ruang */
   .datefield.dffilter{padding-right:38px}
@@ -1165,7 +1165,7 @@
   .mhc .in,.mhr .in{position:relative;transform-origin:0 0}
   .mhc .hx,.mhr .hx{position:absolute;display:flex;align-items:center;justify-content:center;background:var(--md-sys-color-surface-container-low);color:var(--md-sys-color-on-surface-variant);font:600 10px ui-monospace,Consolas,monospace;border-right:1px solid var(--md-sys-color-outline-variant);border-bottom:1px solid var(--md-sys-color-outline-variant)}
   .mhk{background:var(--md-sys-color-surface-container-low);border-right:1px solid var(--md-sys-color-outline-variant);border-bottom:1px solid var(--md-sys-color-outline-variant);z-index:4}
-  .tplverify{margin-top:16px;padding:14px;border-radius:14px;background:var(--md-sys-color-surface-container-low)}
+  .tplverify{margin-top:16px;padding:14px;border-radius:14px;background:var(--md-sys-color-surface-container-low);--md-field-notch:var(--md-sys-color-surface-container-low)}
   .tv-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px}.tv-head .mi{color:var(--md-sys-color-primary)}.tv-head small{display:block;color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small)}
   .tv-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
   .tv-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;font:var(--md-sys-typescale-label-small);font-weight:600;background:var(--good-bg);color:var(--good)}
@@ -2160,6 +2160,9 @@ function sbTop(el){return el.classList.contains('canvas-body')?(el.parentElement
 function sbAttach(el){el.classList.add('sb-host');
   const mk=c=>{const d=document.createElement('div');d.className='sb '+c;d.innerHTML='<i></i>';document.body.appendChild(d);return d;};
   const s={el,v:mk('sb-v'),h:mk('sb-h'),clips:sbClips(el),act:0,near:{v:false,h:false}};el._sb=s;SB.push(s);
+  // lapisan bar = lapisan host + 1 → drawer/dialog di atas halaman ikut menutupi bar milik halaman
+  let z=0;for(let p=el;p&&p!==document.body;p=p.parentElement){const cs=getComputedStyle(p);if(cs.position!=='static'&&cs.zIndex!=='auto')z=Math.max(z,+cs.zIndex||0);}
+  s.v.style.zIndex=s.h.style.zIndex=String(Math.max(7,z+1));
   el.addEventListener('scroll',()=>{sbUpd(s);sbPing(s);if(el.classList.contains('canvas-body'))SB.forEach(o=>o!==s&&sbUpd(o));},{passive:true});
   s.ro=new ResizeObserver(()=>sbUpd(s));s.ro.observe(el);if(el.firstElementChild)s.ro.observe(el.firstElementChild);
   ['v','h'].forEach(ax=>sbDrag(s,ax));sbUpd(s);return s;}

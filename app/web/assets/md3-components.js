@@ -536,11 +536,12 @@
           .field:focus-within{ ${outlined ? `border:2px solid ${accent}; padding:0 15px; box-shadow:0 0 0 4px color-mix(in srgb, ${accent} 13%, transparent);` : `border-bottom:2px solid ${accent};`} }
           label{ position:absolute; left:${lead ? '48px' : '16px'}; top:50%; transform:translateY(-50%);
             color:${error ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-on-surface-variant)'};
-            font:var(--md-sys-typescale-body-large); pointer-events:none; background:${outlined ? 'var(--md-sys-color-surface)' : 'transparent'}; padding:0 4px;
+            font:var(--md-sys-typescale-body-large); pointer-events:none; background:transparent; padding:0 4px;
             transition:all ${EASE_STD}; }
           .field:focus-within label, label.float{
             top:${outlined ? '0' : '8px'}; transform:translateY(-50%) scale(.75); transform-origin:left;
-            left:${outlined ? '12px' : '12px'}; color:${accent}; }
+            left:${outlined ? '12px' : '12px'}; color:${accent};
+            ${outlined ? 'background:var(--md-field-notch, var(--md-sys-color-surface));' : ''} }
           input,textarea{ flex:1; border:none; outline:none; background:transparent; color:var(--md-sys-color-on-surface);
             font:var(--md-sys-typescale-body-large); padding:16px 0 8px; min-width:0; resize:vertical; font-family:inherit; }
           .md-ic{ font-family:'Material Symbols Outlined'; font-size:24px; color:var(--md-sys-color-on-surface-variant); }
