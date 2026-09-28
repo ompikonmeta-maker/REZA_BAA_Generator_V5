@@ -20,14 +20,19 @@
   body{margin:0;background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-body-medium);letter-spacing:normal;-webkit-font-smoothing:antialiased}
   b,strong,th{font-weight:600}
   .hidden{display:none!important}
-  /* ===== Auto-hide scrollbar: sembunyi saat idle, muncul saat scroll/hover ===== */
+  /* ===== Overlay scrollbar: native disembunyikan, thumb custom fade in/out (lihat sbAttach) ===== */
   *{scrollbar-width:thin;scrollbar-color:transparent transparent}
-  ::-webkit-scrollbar{width:10px;height:10px}
-  ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:transparent;border:2px solid transparent;background-clip:padding-box;border-radius:99px;transition:background-color .35s}
-  *:hover::-webkit-scrollbar-thumb{background:var(--md-sys-color-outline-variant);background-clip:padding-box}
-  .scrolling{scrollbar-color:var(--md-sys-color-outline) transparent}
-  .scrolling::-webkit-scrollbar-thumb{background:var(--md-sys-color-outline);background-clip:padding-box}
+  .sb-host{scrollbar-width:none!important}.sb-host::-webkit-scrollbar{display:none}
+  .sb{position:fixed;z-index:2147483000;opacity:0;transition:opacity .28s cubic-bezier(.2,0,0,1);pointer-events:none}
+  .sb.show{opacity:1;pointer-events:auto}
+  .sb i{position:absolute;border-radius:99px;background:color-mix(in srgb,var(--md-sys-color-on-surface) 32%,transparent);
+    transition:width .2s cubic-bezier(.2,0,0,1),height .2s cubic-bezier(.2,0,0,1),background-color .2s}
+  .sb-v{width:14px}.sb-v i{right:3px;width:5px}.sb-h{height:14px}.sb-h i{bottom:3px;height:5px}
+  .sb.near.sb-v i{width:8px}.sb.near.sb-h i{height:8px}
+  .sb.near i{background:color-mix(in srgb,var(--md-sys-color-on-surface) 45%,transparent)}
+  .sb.drag i,.sb i:hover{background:color-mix(in srgb,var(--md-sys-color-on-surface) 60%,transparent)}
+  /* ===== Transisi tema "veil": tirai warna tema baru, tema diganti di puncaknya (opacity saja → ringan) ===== */
+  .theme-veil{position:fixed;inset:0;z-index:2147483100;pointer-events:none;opacity:0;will-change:opacity}
   .mi{font-family:'Material Symbols Outlined';line-height:1;display:inline-block;font-variation-settings:'FILL' 0,'wght' 400,'opsz' 24;user-select:none;font-size:22px}
   .mi.acc{color:var(--md-sys-color-primary)} .mi.fill{font-variation-settings:'FILL' 1}
   .mono{font-family:ui-monospace,Consolas,monospace}
@@ -81,7 +86,8 @@
 
   /* Shell */
   .shell{display:flex;height:100vh;gap:16px;padding:16px}
-  .nav{flex:0 0 auto;width:var(--nav-w);display:flex;flex-direction:column;gap:2px;background:var(--md-sys-color-surface-container-low);border-radius:24px;box-shadow:var(--md-sys-elevation-level1);padding:14px;overflow:hidden;transition:width var(--md-sys-motion-spring-default-spatial)}
+  .nav{flex:0 0 auto;width:var(--nav-w);display:flex;flex-direction:column;gap:2px;background:var(--md-sys-color-surface-container-low);border-radius:24px;box-shadow:0 1px 2px rgba(var(--sh),.04),0 10px 30px -6px rgba(var(--sh),.12);padding:14px;overflow:hidden;transition:width var(--md-sys-motion-spring-default-spatial)}
+  :root[data-theme="dark"] .nav{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 0 1px rgba(255,255,255,.04),0 6px 18px -4px rgba(0,0,0,.5)}
   .shell.rail .nav{width:var(--rail-w)}
   /* ===== HEADER: brand bf + toggle (choreography collapse/expand) ===== */
   .nav-head{position:relative;height:52px;flex:0 0 auto;margin-bottom:6px;transition:height var(--sp)}
@@ -275,10 +281,15 @@
   .nav-foot{margin-top:auto;display:flex;gap:4px;justify-content:center;padding-top:8px;border-top:1px solid var(--md-sys-color-outline-variant);transition:gap var(--sp)}
   .shell.rail .nav-foot{flex-direction:column;align-items:center;gap:4px}
 
-  .canvas{flex:1 1 auto;min-width:0;background:transparent;display:flex;flex-direction:column;overflow:hidden}
-  .topbar{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+  .canvas{flex:1 1 auto;min-width:0;background:transparent;display:flex;flex-direction:column;overflow:hidden;position:relative;--topbar-h:64px}
+  /* judul melayang di atas konten; konten yang lewat di bawahnya meluruh + blur */
+  .topbar{position:absolute;left:0;right:0;top:0;z-index:6;display:flex;align-items:center;gap:12px;padding:12px 20px}
+  .topbar::before{content:"";position:absolute;inset:0 0 -18px 0;z-index:-1;pointer-events:none;
+    background:linear-gradient(var(--md-sys-color-surface-container-high) 0,color-mix(in srgb,var(--md-sys-color-surface-container-high) 88%,transparent) 30%,color-mix(in srgb,var(--md-sys-color-surface-container-high) 62%,transparent) 100%);
+    -webkit-backdrop-filter:blur(3px) saturate(1.3);backdrop-filter:blur(3px) saturate(1.3);
+    -webkit-mask:linear-gradient(#000 calc(100% - 18px),transparent);mask:linear-gradient(#000 calc(100% - 18px),transparent)}
   .topbar .page-title{font:var(--md-sys-typescale-headline-small);margin:0}
-  .canvas-body{padding:22px;overflow-y:auto;scrollbar-gutter:stable}
+  .canvas-body{flex:1 1 auto;padding:calc(var(--topbar-h) + 22px) 22px 22px;overflow-y:auto;scroll-padding-top:calc(var(--topbar-h) + 20px)}
   /* Batasi lebar konten submenu (Pengaturan/Users/Template) di layar besar */
   #v-settings,#v-users{max-width:1200px;margin-inline:auto}
   .code-chip{display:inline-flex;align-items:center;gap:6px;background:var(--md-sys-color-surface-container-highest);color:var(--md-sys-color-on-surface-variant);border-radius:9px;padding:4px 10px;font:var(--md-sys-typescale-label-medium)}
@@ -302,7 +313,7 @@
 
   /* Entry two-column with sticky summary */
   .entry-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
-  .summary{position:sticky;top:0}
+  .summary{position:sticky;top:calc(var(--topbar-h) + 4px)}
   @media(max-width:1040px){.entry-grid{grid-template-columns:1fr}.summary{position:static}}
 
   /* MD3 select (opens MDMenu) */
@@ -751,7 +762,7 @@
   .ld-btn:disabled{opacity:.6;cursor:default}
 
   /* ===== Dashboard (bento) ===== */
-  .dash{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+  .dash{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}.dash>*,.pg>*{min-width:0}
   .dtile{background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-outline-variant);border-radius:22px;padding:18px;min-width:0;box-shadow:var(--card-shadow)}
   .dhero{grid-column:span 12}.dkpis{grid-column:span 4;display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:1fr 1fr;gap:14px}
   .dheat{grid-column:span 5;display:flex;flex-direction:column}.ddonut{grid-column:span 3}.dtrend{grid-column:span 12}
@@ -1009,7 +1020,7 @@
   .map-ws{display:grid;grid-template-columns:250px minmax(0,1fr);gap:20px;align-items:start;padding-bottom:20px}
   @media(max-width:860px){.map-ws{grid-template-columns:1fr}.map-steps{position:static!important}}
   /* rail kiri: step + progress + tombol menyatu */
-  .map-steps{padding:8px;position:sticky;top:14px;align-self:start}
+  .map-steps{padding:8px;position:sticky;top:calc(var(--topbar-h) + 8px);align-self:start}
   .map-steps .rtitle{font:var(--md-sys-typescale-label-large);font-weight:600;padding:10px 10px 6px}
   .mstep{display:flex;gap:12px;align-items:center;padding:11px 12px;border-radius:14px;cursor:pointer;color:var(--md-sys-color-on-surface-variant);border:1.5px solid transparent}
   .mstep:hover{background:var(--md-sys-color-surface-container-high)}
@@ -1131,7 +1142,7 @@
   .mcell.ok .k{color:var(--good)}.mcell.warn input{border-color:var(--warn)}.mcell.warn .k{color:var(--warn)}.mcell.err input{border-color:var(--md-sys-color-error);background:var(--bad-bg)}.mcell.err .k{color:var(--md-sys-color-error)}
   .mm.act .mcell input{border-color:var(--md-sys-color-primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--md-sys-color-primary) 22%,transparent)}
   .mwarn[hidden]{display:none}.mwarn{grid-column:1/-1;margin:-4px 0 6px;font:var(--md-sys-typescale-label-small);color:var(--warn)}
-  .mcanvas{border:1px solid var(--md-sys-color-outline-variant);border-radius:14px;overflow:hidden;position:sticky;top:14px;min-width:0;background:var(--md-sys-color-surface)}
+  .mcanvas{border:1px solid var(--md-sys-color-outline-variant);border-radius:14px;overflow:hidden;position:sticky;top:calc(var(--topbar-h) + 8px);min-width:0;background:var(--md-sys-color-surface)}
   .mctool{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--md-sys-color-outline-variant);background:var(--md-sys-color-surface-container-low);font:var(--md-sys-typescale-label-medium)}
   .mctool .muted{font:var(--md-sys-typescale-label-small)}.mctool .muted b{color:var(--md-sys-color-primary)}
   .mzb{width:28px;height:28px;border-radius:8px;border:1px solid var(--md-sys-color-outline-variant);background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface);cursor:pointer;font-weight:600}
@@ -2136,10 +2147,67 @@
 
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-/* Auto-hide scrollbar: tampilkan thumb saat scroll, sembunyikan ~800ms setelah berhenti */
-document.addEventListener('scroll',e=>{const t=e.target;if(!t||!t.classList)return;
-  t.classList.add('scrolling');clearTimeout(t._sbto);
-  t._sbto=setTimeout(()=>t.classList.remove('scrolling'),800);},true);
+/* ===== Overlay scrollbar =====
+   Native scrollbar disembunyikan; tiap elemen yang bisa di-scroll (overflow auto/scroll) otomatis dapat thumb custom
+   di layer fixed. Muncul (fade) saat di-scroll, saat kursor mendekat (≤ SB_NEAR px dari tepi), atau saat di-drag;
+   hilang ~0.9s setelah berhenti & kursor menjauh. Bisa di-drag; klik track = lompat satu halaman. */
+const SB=[],SB_NEAR=48,SB_HIDE=900,SB_MIN=28;
+function sbClips(el){const a=[];for(let p=el.parentElement;p&&p!==document.body;p=p.parentElement){const cs=getComputedStyle(p);if(/(auto|scroll|hidden|clip)/.test(cs.overflowX+cs.overflowY))a.push(p);}return a;}
+function sbVis(s){const r=s.el.getBoundingClientRect();let t=r.top+sbTop(s.el),b=r.bottom,l=r.left,rt=r.right;
+  for(const p of s.clips){const q=p.getBoundingClientRect(),pt=q.top+sbTop(p);t=Math.max(t,pt);b=Math.min(b,q.bottom);l=Math.max(l,q.left);rt=Math.min(rt,q.right);}
+  return {r,t,b,l,rt};}
+function sbTop(el){return el.classList.contains('canvas-body')?(el.parentElement.style.getPropertyValue('--topbar-h')|0||64):0;}
+function sbAttach(el){el.classList.add('sb-host');
+  const mk=c=>{const d=document.createElement('div');d.className='sb '+c;d.innerHTML='<i></i>';document.body.appendChild(d);return d;};
+  const s={el,v:mk('sb-v'),h:mk('sb-h'),clips:sbClips(el),act:0,near:{v:false,h:false}};el._sb=s;SB.push(s);
+  el.addEventListener('scroll',()=>{sbUpd(s);sbPing(s);if(el.classList.contains('canvas-body'))SB.forEach(o=>o!==s&&sbUpd(o));},{passive:true});
+  s.ro=new ResizeObserver(()=>sbUpd(s));s.ro.observe(el);if(el.firstElementChild)s.ro.observe(el.firstElementChild);
+  ['v','h'].forEach(ax=>sbDrag(s,ax));sbUpd(s);return s;}
+function sbDrop(s){s.ro.disconnect();s.v.remove();s.h.remove();s.el.classList.remove('sb-host');delete s.el._sb;SB.splice(SB.indexOf(s),1);}
+function sbUpd(s){const el=s.el;if(!el.isConnected){sbDrop(s);return;}
+  const {r,t,b,l,rt}=sbVis(s),top=r.top+sbTop(el),vH=el.scrollHeight>el.clientHeight+1,hW=el.scrollWidth>el.clientWidth+1;
+  const trackV=(r.bottom-top)-(hW?14:0)-6;
+  if(vH&&trackV>SB_MIN&&r.width){const th=Math.max(SB_MIN,trackV*el.clientHeight/el.scrollHeight),y=(trackV-th)*el.scrollTop/(el.scrollHeight-el.clientHeight);
+    Object.assign(s.v.style,{display:'',left:(r.right-14)+'px',top:(top+3)+'px',height:trackV+'px',
+      clipPath:`inset(${Math.max(0,t-top-3)}px 0 ${Math.max(0,top+3+trackV-b)}px 0)`,visibility:(b-t>10&&r.right<=rt+1&&r.right-14>=l)?'':'hidden'});
+    const i=s.v.firstChild;i.style.top=y+'px';i.style.height=th+'px';}
+  else s.v.style.display='none';
+  const trackH=r.width-(vH?14:0)-6;
+  if(hW&&trackH>SB_MIN&&r.height){const tw=Math.max(SB_MIN,trackH*el.clientWidth/el.scrollWidth),x=(trackH-tw)*el.scrollLeft/(el.scrollWidth-el.clientWidth);
+    Object.assign(s.h.style,{display:'',left:(r.left+3)+'px',top:(r.bottom-14)+'px',width:trackH+'px',
+      clipPath:`inset(0 ${Math.max(0,r.left+3+trackH-rt)}px 0 ${Math.max(0,l-r.left-3)}px)`,visibility:(r.bottom-14>=t&&r.bottom<=b+1)?'':'hidden'});
+    const i=s.h.firstChild;i.style.left=x+'px';i.style.width=tw+'px';}
+  else s.h.style.display='none';}
+function sbShow(s){s.v.classList.toggle('show',!!(s.act||s.near.v||s.drag==='v'));s.h.classList.toggle('show',!!(s.act||s.near.h||s.drag==='h'));
+  s.v.classList.toggle('near',s.near.v||s.drag==='v');s.h.classList.toggle('near',s.near.h||s.drag==='h');}
+function sbPing(s){s.act=1;sbShow(s);clearTimeout(s.to);s.to=setTimeout(()=>{s.act=0;sbShow(s);},SB_HIDE);}
+function sbDrag(s,ax){const bar=s[ax],th=bar.firstChild;
+  th.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();th.setPointerCapture(e.pointerId);s.drag=ax;bar.classList.add('drag');sbShow(s);
+    const el=s.el,st0=ax==='v'?e.clientY:e.clientX,sc0=ax==='v'?el.scrollTop:el.scrollLeft,
+      track=ax==='v'?bar.offsetHeight-th.offsetHeight:bar.offsetWidth-th.offsetWidth,range=ax==='v'?el.scrollHeight-el.clientHeight:el.scrollWidth-el.clientWidth;
+    const mv=ev=>{const d=((ax==='v'?ev.clientY:ev.clientX)-st0)*range/Math.max(1,track);if(ax==='v')el.scrollTop=sc0+d;else el.scrollLeft=sc0+d;};
+    const up=()=>{th.removeEventListener('pointermove',mv);s.drag=null;bar.classList.remove('drag');sbPing(s);};
+    th.addEventListener('pointermove',mv);th.addEventListener('pointerup',up,{once:true});th.addEventListener('pointercancel',up,{once:true});});
+  bar.addEventListener('pointerdown',e=>{if(e.target!==bar)return;e.stopPropagation();const el=s.el,q=th.getBoundingClientRect();
+    if(ax==='v')el.scrollBy({top:(e.clientY<q.top?-1:1)*el.clientHeight*.9,behavior:'smooth'});
+    else el.scrollBy({left:(e.clientX<q.left?-1:1)*el.clientWidth*.9,behavior:'smooth'});});}
+let _sbPt=null,_sbRaf=0;
+document.addEventListener('pointermove',e=>{_sbPt=e;if(!_sbRaf)_sbRaf=requestAnimationFrame(()=>{_sbRaf=0;const x=_sbPt.clientX,y=_sbPt.clientY;
+  const hit=document.elementFromPoint(x,y);
+  SB.forEach(s=>{if(s.v.style.display==='none'&&s.h.style.display==='none')return;
+    const {r,t,b,l,rt}=sbVis(s),mine=hit&&(s.el.contains(hit)||hit.closest('.sb')===s.v||hit.closest('.sb')===s.h);
+    const inY=y>=t&&y<=b,inX=x>=l&&x<=rt;
+    const nv=!!(mine&&inY&&x<=r.right&&x>=r.right-SB_NEAR&&s.v.style.display!=='none'),nh=!!(mine&&inX&&y<=r.bottom&&y>=r.bottom-SB_NEAR*.8&&s.h.style.display!=='none');
+    if(nv!==s.near.v||nh!==s.near.h){s.near={v:nv,h:nh};sbShow(s);}});});},{passive:true});
+document.documentElement.addEventListener('pointerleave',()=>SB.forEach(s=>{s.near={v:false,h:false};sbShow(s);}));
+function sbScan(root){(root||document.body).querySelectorAll('*').forEach(el=>{if(el._sb||el.classList.contains('sb')||el.parentElement&&el.parentElement.classList.contains('sb'))return;
+  const cs=getComputedStyle(el);if(/(auto|scroll)/.test(cs.overflowX+cs.overflowY)&&el.tagName!=='TEXTAREA')sbAttach(el);});
+  SB.slice().forEach(s=>{if(!s.el.isConnected)sbDrop(s);});}
+let _sbScanT=0;const sbScanSoon=()=>{clearTimeout(_sbScanT);_sbScanT=setTimeout(()=>requestAnimationFrame(()=>sbScan()),120);};
+new MutationObserver(ms=>{if(ms.some(m=>m.addedNodes.length||m.removedNodes.length))sbScanSoon();}).observe(document.body,{childList:true,subtree:true});
+addEventListener('resize',()=>SB.forEach(sbUpd));
+addEventListener('load',()=>sbScan());sbScanSoon();
+new ResizeObserver(es=>es.forEach(en=>{const c=en.target.closest('.canvas');if(c)c.style.setProperty('--topbar-h',Math.round(en.target.getBoundingClientRect().height)+'px');})).observe(document.querySelector('.topbar'));
 const api=async(url,opts={})=>{const r=await fetch(url,{credentials:'same-origin',headers:{'Content-Type':'application/json'},...opts});
   if(!r.ok){let d;try{d=await r.json()}catch{d={detail:r.statusText}}throw new Error(d.detail||('HTTP '+r.status));}
   const ct=r.headers.get('content-type')||'';return ct.includes('json')?r.json():r;};
@@ -2255,7 +2323,7 @@ class LocationPicker{
 let pickerSel,tplLogSel,tplDetailSel,mapLogSel,mapDetailSel,roleSel;
 
 /* AUTH */
-async function boot(){paint();
+async function boot(){paint();themeIcon(false);
   pickerSel=new LocationPicker($('#picker'),{onChange:v=>{if(!v)return;const id=+v;
     if(isEntryDirty()&&S.loc&&id!==S.loc.id)
       guardLeave(()=>openLoc(id),'another location',()=>{try{pickerSel.setValue(String(S.loc.id));}catch(e){}});
@@ -2299,7 +2367,22 @@ $('#lg-btn').addEventListener('click',async()=>{const el=$('#lg-err');el.classLi
 $('#lg-pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('#lg-btn').click()});
 $('#logoutBtn').addEventListener('click',()=>guardLeave(async()=>{await api('/api/auth/logout',{method:'POST'});location.reload();},'sign out'));
 window.addEventListener('beforeunload',e=>{if(ldPending()||tplDirty()){e.preventDefault();e.returnValue='';}});
-$('#themeBtn').addEventListener('click',()=>{const c=MD3.getTheme();MD3.setTheme(c==='dark'?'light':'dark');applyCalm();});
+/* Transisi tema "veil": tirai warna latar tema baru muncul (linear) → tema diganti di puncak (±5ms, tersembunyi) → tirai memudar.
+   Hanya opacity satu elemen yang dianimasikan, jadi ringan; tanpa snapshot halaman. */
+const THEME_FX={dur:620,ease:'linear',peak:.92};
+const themeVeil=document.createElement('div');themeVeil.className='theme-veil';document.body.appendChild(themeVeil);
+function themeIcon(animate){const ic=$('#themeBtn span');if(!ic)return;ic.textContent=MD3.getTheme()==='dark'?'light_mode':'dark_mode';
+  if(animate&&!reduced)ic.animate([{transform:'rotate(-90deg) scale(.4)',opacity:0},{transform:'none',opacity:1}],{duration:380,easing:'cubic-bezier(0.34,1.56,0.64,1)'});}
+function setThemeNow(t){MD3.setTheme(t);applyCalm();}
+let _themeBusy=false;
+$('#themeBtn').addEventListener('click',()=>{if(_themeBusy)return;const cur=MD3.getTheme(),next=cur==='dark'?'light':'dark';
+  if(reduced){setThemeNow(next);themeIcon(false);return;}
+  setThemeNow(next);const bg=getComputedStyle(document.body).backgroundColor;setThemeNow(cur);   // warna latar tema baru, tanpa kedip
+  _themeBusy=true;themeVeil.style.background=bg;const D=THEME_FX.dur;
+  themeVeil.animate([{opacity:0},{opacity:THEME_FX.peak}],{duration:D*.4,easing:THEME_FX.ease,fill:'forwards'}).onfinish=()=>{
+    setThemeNow(next);themeIcon(true);
+    themeVeil.animate([{opacity:THEME_FX.peak},{opacity:0}],{duration:D*.6,easing:'cubic-bezier(0.05,0.7,0.1,1)',fill:'forwards'}).onfinish=()=>{_themeBusy=false;};};});
+
 $('#railBtn').addEventListener('click',()=>{$('#app').classList.toggle('rail');if(typeof flyHide==='function')flyHide(true);});
 
 async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remove('hidden');
