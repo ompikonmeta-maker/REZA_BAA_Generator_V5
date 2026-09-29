@@ -4171,6 +4171,8 @@ async function downloadExport(url){toast('Preparing file…');
     const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=fn;document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(u),4000);
     const w=r.headers.get('X-Export-Warnings');toast(w?('Downloaded · '+w+' image warnings'):'Downloaded ✓');
+    const pw=r.headers.get('X-Paper-Warning');   // ukuran halaman PDF ≠ Page Setup template
+    if(pw)confirmDo('Check paper size',`<div style="display:flex;gap:12px;align-items:flex-start"><span class="mi" style="font-size:26px;color:var(--warn)">print</span><div>${esc(pw)}</div></div>`,()=>{},{okLabel:'OK',hideCancel:true});
   }catch(e){exportFail(e.message||'Connection lost');}}
 function exportFail(detail){const isTpl=/template/i.test(detail||'');const isAdmin=S.user&&S.user.role==='admin';
   if(isTpl&&isAdmin)confirmDo('Template not ready',

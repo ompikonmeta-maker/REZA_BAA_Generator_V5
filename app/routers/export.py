@@ -99,14 +99,17 @@ def _photo_anchors(tcfg: dict) -> list[str]:
     return [a for a in (excel_svc.resolve_config(tcfg)["detail"].get("photos") or {}).values() if a]
 
 
-def _template_pdf(tpl, tcfg, locs, out_pdf: Path, cats=None) -> bool:
+def _template_pdf(tpl, tcfg, locs, out_pdf: Path, cats=None) -> tuple[bool, str]:
     """Isi template -> xlsx (detail saja, tanpa LOG) -> konversi PDF (Excel/LO).
-    True bila berhasil; False agar pemanggil fallback ke reportlab."""
+    (True, peringatan_kertas) bila berhasil; False agar pemanggil fallback ke reportlab.
+    Peringatan terisi bila ukuran halaman PDF tidak sama dengan Page Setup template
+    (biasanya karena printer default Windows tidak mendukung ukuran kertas itu)."""
     if not xlsx2pdf.available():
-        return False
+        return False, ""
     import openpyxl
     tmp_xlsx = out_pdf.with_suffix(".xlsx")
     ok = False
+    warn = ""
     try:
         excel_svc.build_workbook(tpl["path"], tcfg, locs, str(tmp_xlsx), cats)
         wb = openpyxl.load_workbook(str(tmp_xlsx))
@@ -116,6 +119,8 @@ def _template_pdf(tpl, tcfg, locs, out_pdf: Path, cats=None) -> bool:
         wb.save(str(tmp_xlsx))
         anchors = _photo_anchors(tcfg)
         ok = xlsx2pdf.xlsx_to_pdf(str(tmp_xlsx), str(out_pdf), anchors)
+        if ok:
+            warn = xlsx2pdf.paper_warning(str(tmp_xlsx), str(out_pdf))
     except Exception:
         ok = False
     finally:
@@ -123,17 +128,19 @@ def _template_pdf(tpl, tcfg, locs, out_pdf: Path, cats=None) -> bool:
             tmp_xlsx.unlink()
         except OSError:
             pass
-    return bool(ok) and out_pdf.exists()
+    return bool(ok) and out_pdf.exists(), warn
 
 
-def _render_pdf(conn, locs, out_pdf: Path, cats, title) -> str:
+def _render_pdf(conn, locs, out_pdf: Path, cats, title) -> tuple[str, str]:
     """PDF mengikuti template aktif bila memungkinkan; jika tidak, pakai
-    generator bawaan (reportlab). Mengembalikan 'template' atau 'builtin'."""
+    generator bawaan (reportlab). Mengembalikan ('template'|'builtin', peringatan_kertas)."""
     tpl, tcfg = _active_template(conn)
-    if tpl and _template_pdf(tpl, tcfg, locs, out_pdf, cats):
-        return "template"
+    if tpl:
+        ok, warn = _template_pdf(tpl, tcfg, locs, out_pdf, cats)
+        if ok:
+            return "template", warn
     pdf_svc.build_pdf(locs, cats, str(out_pdf), app_title=title)
-    return "builtin"
+    return "builtin", ""
 
 
 @router.get("/excel")
@@ -177,10 +184,12 @@ def export_pdf(scope: str = Query("one"), loc_id: int | None = None,
     cats = db.get_setting(conn, "photo_categories", [])
     title = db.get_setting(conn, "app_title", "Berita Acara Aktivasi")
     out = _stamp(locs[0]["code"] if scope == "one" else "BAA", "pdf")
-    mode = _render_pdf(conn, locs, out, cats, title)
+    mode, warn = _render_pdf(conn, locs, out, cats, title)
     audit(conn, user, "export_pdf", "export", scope, out.name)
     resp = FileResponse(str(out), filename=out.name, media_type="application/pdf")
     resp.headers["X-PDF-Mode"] = mode
+    if warn:
+        resp.headers["X-Paper-Warning"] = warn
     return resp
 
 
@@ -195,6 +204,7 @@ def export_pdf_zip(scope: str = Query("filter"), loc_id: int | None = None,
     title = db.get_setting(conn, "app_title", "Berita Acara Aktivasi")
     zpath = _stamp("PDF_BAA", "zip")
     used: set[str] = set()
+    paper_warn = ""
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as zf:
         for loc in locs:
             nm = _safe_name(f"{loc.get('code','')} {loc.get('name','') or loc.get('data',{}).get('nama_lokasi','')}")
@@ -204,11 +214,15 @@ def export_pdf_zip(scope: str = Query("filter"), loc_id: int | None = None,
                 entry = f"{nm} ({i}).pdf"; i += 1
             used.add(entry.lower())
             tmp = config.OUTPUT_DIR / f"_tmp_{loc['id']}.pdf"
-            _render_pdf(conn, [loc], tmp, cats, title)
+            _, w = _render_pdf(conn, [loc], tmp, cats, title)
+            paper_warn = paper_warn or w
             zf.write(str(tmp), entry)
             try:
                 tmp.unlink()
             except OSError:
                 pass
     audit(conn, user, "export_pdf_zip", "export", scope, zpath.name)
-    return FileResponse(str(zpath), filename=zpath.name, media_type="application/zip")
+    resp = FileResponse(str(zpath), filename=zpath.name, media_type="application/zip")
+    if paper_warn:
+        resp.headers["X-Paper-Warning"] = paper_warn
+    return resp

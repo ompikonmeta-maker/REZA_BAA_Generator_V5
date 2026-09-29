@@ -206,3 +206,85 @@ def available() -> bool:
         except Exception:
             pass
     return _find_soffice() is not None
+
+
+# ---------- cek ukuran kertas PDF vs Page Setup template ----------
+# kode paperSize Excel -> (nama, lebar mm, tinggi mm) — ukuran yang umum dipakai
+PAPER_MM = {1: ("Letter", 215.9, 279.4), 5: ("Legal", 215.9, 355.6), 8: ("A3", 297, 420), 9: ("A4", 210, 297),
+            11: ("A5", 148, 210), 12: ("B4", 257, 364), 13: ("B5", 182, 257), 14: ("F4/Folio", 215.9, 330.2)}
+_PT = 72 / 25.4
+
+
+def expected_paper(xlsx: str) -> list[tuple[str, str, float, float]]:
+    """[(sheet, nama kertas, lebar pt, tinggi pt)] dari Page Setup tiap sheet (orientasi diterapkan).
+    Sheet dengan kode kertas tak dikenal dilewati."""
+    import openpyxl
+    out = []
+    wb = openpyxl.load_workbook(xlsx, read_only=False)
+    for ws in wb.worksheets:
+        try:
+            code = int(ws.page_setup.paperSize or 9)       # kosong = default Excel (A4 di Indonesia)
+        except Exception:
+            continue
+        if code not in PAPER_MM:
+            continue
+        name, w, h = PAPER_MM[code]
+        land = (ws.page_setup.orientation or "portrait") == "landscape"
+        w, h = (h, w) if land else (w, h)
+        out.append((ws.title, f"{name} {'landscape' if land else 'portrait'}", w * _PT, h * _PT))
+    return out
+
+
+def pdf_page_sizes(pdf: str) -> list[tuple[float, float]]:
+    """Ukuran halaman (pt) dari /MediaBox, termasuk yang tersimpan di object stream terkompresi."""
+    import re
+    import zlib
+    data = Path(pdf).read_bytes()
+    blobs = [data]
+    for m in re.finditer(rb"stream\r?\n(.*?)\r?\nendstream", data, re.S):
+        try:
+            blobs.append(zlib.decompress(m.group(1)))
+        except Exception:
+            pass
+    sizes = []
+    rx = re.compile(rb"/Type\s*/Page(?!s)[^>]*?/MediaBox\s*\[\s*([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s*\]"
+                    rb"|/MediaBox\s*\[\s*([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s*\][^>]*?/Type\s*/Page(?!s)", re.S)
+    for b in blobs:
+        for m in rx.finditer(b):
+            g = [x for x in m.groups() if x is not None]
+            x0, y0, x1, y1 = map(float, g)
+            sizes.append((abs(x1 - x0), abs(y1 - y0)))
+    if not sizes:                                            # MediaBox diwariskan dari /Pages
+        for b in blobs:
+            for m in re.finditer(rb"/MediaBox\s*\[\s*([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s+([-\d.]+)\s*\]", b):
+                x0, y0, x1, y1 = map(float, m.groups())
+                sizes.append((abs(x1 - x0), abs(y1 - y0)))
+    return sizes
+
+
+def _paper_name(w: float, h: float) -> str:
+    for name, a, b in PAPER_MM.values():
+        A, B = a * _PT, b * _PT
+        if abs(w - A) < 6 and abs(h - B) < 6:
+            return f"{name} portrait"
+        if abs(w - B) < 6 and abs(h - A) < 6:
+            return f"{name} landscape"
+    return f"{w / _PT:.0f}x{h / _PT:.0f} mm"
+
+
+def paper_warning(xlsx: str, pdf: str) -> str:
+    """'' bila ukuran halaman PDF sesuai Page Setup template; selain itu pesan singkat (ASCII)."""
+    try:
+        exp = expected_paper(xlsx)
+        got = pdf_page_sizes(pdf)
+    except Exception:
+        return ""
+    if not exp or not got:
+        return ""
+    for w, h in got:
+        if not any(abs(w - ew) < 6 and abs(h - eh) < 6 for _, _, ew, eh in exp):
+            want = exp[0][1]
+            return (f"Template paper is {want}, but the PDF came out {_paper_name(w, h)}. "
+                    f"Check that the default printer in Windows supports {want.split()[0]} "
+                    f"(or set 'Microsoft Print to PDF' as default), then export again.")
+    return ""
