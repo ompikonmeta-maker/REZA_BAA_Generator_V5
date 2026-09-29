@@ -375,6 +375,9 @@
   .exp-job.err .arc{stroke:var(--bad);stroke-dashoffset:0!important}.exp-job.err .st{color:var(--bad);white-space:normal}
   .exp-job.err .exp-stg.on{background:var(--bad);color:var(--bad-bg);box-shadow:none}.exp-job.err .exp-stg.on::after{display:none}
   .exp-job .acts{display:flex;gap:8px;margin-top:10px}
+  .exp-ask{display:inline-flex;align-items:center;gap:8px;font:var(--md-sys-typescale-label-large);color:var(--md-sys-color-on-surface-variant);cursor:pointer;user-select:none;white-space:nowrap}
+  .exp-ask md-switch{transform:scale(.72);transform-origin:left center;margin-right:-12px}
+  .exp-ask-bar{margin-left:6px;padding-left:14px;border-left:1px solid var(--md-sys-color-outline-variant)}
   .navitem .exp-spin{margin-left:auto;width:16px;height:16px;border-radius:50%;flex:0 0 auto;border:2.5px solid color-mix(in srgb,var(--md-sys-color-primary) 30%,transparent);border-top-color:var(--md-sys-color-primary);animation:expSpin2 .9s linear infinite}
   .navitem .exp-spin+.pill{margin-left:6px}
   @keyframes expSpin2{to{transform:rotate(360deg)}}
@@ -1728,6 +1731,7 @@
         <span class="exp-lbl">BULK EXPORT</span>
         <md-button variant="outlined" icon="grid_on" id="loc-exp-xlsx">Excel (template)</md-button>
         <md-button variant="outlined" icon="picture_as_pdf" id="loc-exp-pdf">PDF per location (ZIP)</md-button>
+        <label class="exp-ask exp-ask-bar"><md-switch class="exp-ask-sw"></md-switch>Ask where to save</label>
       </span>
       <span class="hidden" id="setSaveWrap">
         <span class="set-status ok" id="setStatus"><span class="dot"></span><span id="setStatusTxt">Saved</span></span>
@@ -1836,6 +1840,7 @@
                   <md-button variant="outlined" icon="grid_on" id="exp-xlsx">Excel</md-button>
                   <md-button variant="outlined" icon="picture_as_pdf" id="exp-pdf">PDF</md-button>
                 </div>
+                <label class="exp-ask"><md-switch class="exp-ask-sw"></md-switch>Ask where to save</label>
               </div>
               <p class="hint">Best exported once required data is complete; you can still try it.</p>
             </div>
@@ -2625,7 +2630,7 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
   $('#app').classList.toggle('is-operator',S.user.role!=='admin');
   $('#app').classList.toggle('is-viewer',S.user.role==='viewer');
   refreshPicker();loadLocations();loadCreators();loadDashboard();if(S.user.role==='admin'){loadTemplates();loadUsers();loadNotifCount();}bindTips();
-  wbInit();
+  wbInit();expAskSync();
   if(S.user.must_change)setTimeout(()=>openPw(true),400);}
 /* ===== Guard: perubahan belum disimpan ===== */
 let entryDirty=false;
@@ -4219,13 +4224,30 @@ const EXP_STG={excel:[['fill','description','Filling template'],['photo','image'
 const expRunning=()=>[...EXP.jobs.values()].filter(j=>j.state==='run').length;
 function expSpin(){const nv=document.querySelector('.navitem[data-view="locations"]');if(!nv)return;let sp=nv.querySelector('.exp-spin');
   if(expRunning()){if(!sp){sp=document.createElement('span');sp.className='exp-spin';nv.querySelector('.lbl').after(sp);}}else if(sp)sp.remove();}
+/* "Ask where to save": On = jendela Save As (Chrome/Edge) sebelum export dimulai; Off / browser lain = folder Downloads.
+   Setelan per user, disimpan di perangkat. Dialog harus dibuka saat klik (aturan browser), jadi nama file dibuat di sini. */
+const expAskKey=()=>'exp:ask:'+((S.user&&S.user.id)||0);
+function expAsk(){try{return localStorage.getItem(expAskKey())!=='0';}catch(e){return true;}}
+function expAskSync(){const on=expAsk();$$('.exp-ask-sw').forEach(w=>{w.selected=on;});$$('.exp-ask').forEach(l=>l.classList.toggle('hidden',!window.showSaveFilePicker));}
+$$('.exp-ask-sw').forEach(w=>w.addEventListener('change',()=>{try{localStorage.setItem(expAskKey(),w.selected?'1':'0');}catch(e){}expAskSync();}));
+$$('.exp-ask').forEach(l=>l.addEventListener('click',e=>{if(e.target===l){const w=l.querySelector('md-switch');w.selected=!w.selected;w.dispatchEvent(new Event('change'));}}));
+function expSuggest(kind,q){const ts=(d=>`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`)(new Date());
+  const id=+q.get('loc_id'),one=q.get('scope')==='one';
+  const l=one?((S.loc&&S.loc.id===id&&S.loc)||LOC_ROWS.find(x=>x.id===id)):null,code=(l&&l.code)||'BAA';
+  return kind==='excel'?`${one?code:'Log_BAA'}_${ts}.xlsx`:kind==='pdf'?`${one?code:'BAA'}_${ts}.pdf`:`PDF_BAA_${ts}.zip`;}
+const EXP_TYPES={excel:{description:'Excel workbook',accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx']}},
+  pdf:{description:'PDF document',accept:{'application/pdf':['.pdf']}},pdfzip:{description:'ZIP archive',accept:{'application/zip':['.zip']}}};
 async function downloadExport(url){const u=new URL(url,location.origin);
   const kind=u.pathname.endsWith('/excel')?'excel':u.pathname.endsWith('/pdf-zip')?'pdfzip':'pdf';
   u.searchParams.set('kind',kind);
+  let handle=null;
+  if(expAsk()&&window.showSaveFilePicker){
+    try{handle=await window.showSaveFilePicker({id:'baa-export',suggestedName:expSuggest(kind,u.searchParams),types:[EXP_TYPES[kind]]});}
+    catch(e){if(e&&e.name==='AbortError')return;handle=null;}}   // batal di Save As = export tidak dijalankan
   let r;try{r=await fetch('/api/export/jobs?'+u.searchParams.toString(),{method:'POST',credentials:'same-origin'});}catch(e){exportFail(e.message||'Connection lost');return;}
   if(!r.ok){let detail='';try{detail=(await r.json()).detail||'';}catch(e){detail='Export failed ('+r.status+')';}exportFail(detail);return;}
-  const d=await r.json();expCard(d,url);}
-function expCard(d,url){const st=EXP_STG[d.kind],el=document.createElement('div');
+  const d=await r.json();expCard(d,url,handle);}
+function expCard(d,url,handle){const st=EXP_STG[d.kind],el=document.createElement('div');
   el.className='exp-job'+(d.total?'':' ind');
   el.innerHTML=`<div class="top"><div class="exp-badge"><svg viewBox="0 0 46 46"><circle class="trk" cx="23" cy="23" r="21"/><circle class="arc" cx="23" cy="23" r="21"/></svg>
       <div class="exp-ic ${d.kind}">${{excel:'XLS',pdf:'PDF',pdfzip:'ZIP'}[d.kind]}</div></div>
@@ -4233,7 +4255,7 @@ function expCard(d,url){const st=EXP_STG[d.kind],el=document.createElement('div'
     <button class="x" data-tip="Cancel"><span class="mi">close</span></button></div>
     <div class="exp-stages">${st.map((x,i)=>`${i?'<span class="exp-lnk"><i></i></span>':''}<span class="exp-stg" data-tip="${x[2]}"><span class="mi">${x[1]}</span></span>`).join('')}<span class="exp-pct"></span></div>`;
   $('#expTray').prepend(el);bindTips();
-  const j={id:d.id,kind:d.kind,el,url,state:'run',t0:Date.now(),si:-1};EXP.jobs.set(d.id,j);expSpin();
+  const j={id:d.id,kind:d.kind,el,url,handle,state:'run',t0:Date.now(),si:-1};EXP.jobs.set(d.id,j);expSpin();
   j.tick=setInterval(()=>{const t=Math.floor((Date.now()-j.t0)/1000);el.querySelector('.tm').textContent=t?`· ${t}s`:'';},500);
   el.querySelector('.x').addEventListener('click',()=>{if(j.state==='run'){fetch('/api/export/jobs/'+j.id,{method:'DELETE',credentials:'same-origin'}).catch(()=>{});expEnd(j,'cancel');}else expClose(j);});
   expUpd(j,d);j.poll=setInterval(()=>expPoll(j),700);}
@@ -4259,14 +4281,16 @@ async function expPoll(j){if(j.state!=='run'||j.busy)return;j.busy=true;
 async function expFetch(j){try{const r=await fetch('/api/export/jobs/'+j.id+'/file',{credentials:'same-origin'});if(!r.ok)throw new Error('Download failed ('+r.status+')');
     const blob=await r.blob(),cd=r.headers.get('Content-Disposition')||'';
     const fn=decodeURIComponent((cd.match(/filename\*?=(?:UTF-8''|")?([^";]+)/)||[])[1]||'export');
-    const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);
-    const w=r.headers.get('X-Export-Warnings');expEnd(j,'ok',w?`${w} image warning${w==='1'?'':'s'}`:'');
+    let where='Saved to Downloads ✓';
+    if(j.handle){try{const ws=await j.handle.createWritable();await ws.write(blob);await ws.close();where='Saved ✓';}catch(e){j.handle=null;}}
+    if(!j.handle){const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);}
+    const w=r.headers.get('X-Export-Warnings');expEnd(j,'ok',w?`${w} image warning${w==='1'?'':'s'}`:'',where);
     const pw=r.headers.get('X-Paper-Warning');   // ukuran halaman PDF ≠ Page Setup template
     if(pw)confirmDo('Check paper size',`<div style="display:flex;gap:12px;align-items:flex-start"><span class="mi" style="font-size:26px;color:var(--warn)">print</span><div>${esc(pw)}</div></div>`,()=>{},{okLabel:'OK',hideCancel:true});
   }catch(e){expEnd(j,'err',e.message);}}
-function expEnd(j,res,info){if(j.state!=='run')return;j.state=res;clearInterval(j.tick);clearInterval(j.poll);expSpin();
+function expEnd(j,res,info,where){if(j.state!=='run')return;j.state=res;clearInterval(j.tick);clearInterval(j.poll);expSpin();
   const el=j.el,msg=el.querySelector('.msg'),tm=el.querySelector('.tm'),secs=((Date.now()-j.t0)/1000).toFixed(1);el.classList.remove('ind');
-  if(res==='ok'){el.classList.add('ok');expStep(j,3);el.querySelector('.exp-pct').textContent='';msg.textContent='Downloaded ✓'+(info?' · '+info:'');tm.textContent=`· ${secs}s`;j.auto=setTimeout(()=>expClose(j),6000);}
+  if(res==='ok'){el.classList.add('ok');expStep(j,3);el.querySelector('.exp-pct').textContent='';msg.textContent=(where||'Saved to Downloads ✓')+(info?' · '+info:'');tm.textContent=`· ${secs}s`;j.auto=setTimeout(()=>expClose(j),6000);}
   if(res==='err'){el.classList.add('err');msg.textContent='Failed: '+(info||'unknown error');tm.textContent='';
     const acts=document.createElement('div');acts.className='acts';acts.innerHTML='<md-button variant="tonal" size="xs">Try again</md-button>';
     acts.firstChild.addEventListener('click',()=>{expClose(j);downloadExport(j.url);});el.appendChild(acts);}
