@@ -37,6 +37,10 @@ if config.WEB_DIR.exists():
     if assets.exists():
         app.mount("/assets", StaticFiles(directory=str(assets)), name="assets")
 
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon():
+        return FileResponse(str(assets / "favicon.ico"), media_type="image/x-icon")
+
     @app.get("/")
     def index():
         idx = config.WEB_DIR / "index.html"
