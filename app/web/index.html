@@ -335,6 +335,50 @@
   .wb-snack.on{opacity:1;visibility:visible;transform:translate(-50%,0)}
   .wb-snack .mi{color:var(--md-sys-color-inverse-primary)}
   @media(prefers-reduced-motion:reduce){.wb.due,.wb.late,#logoutBtn.wb-hint{animation:none}.wb-breath{transition:none}}
+  /* ===== Tray progress export (Excel / PDF / ZIP) — menempel di layar, tetap ada saat pindah halaman ===== */
+  .exp-tray{position:fixed;right:20px;bottom:20px;z-index:2600;width:360px;max-width:calc(100vw - 40px);display:flex;flex-direction:column;gap:10px;pointer-events:none}
+  .exp-job{pointer-events:auto;background:var(--md-sys-color-surface-container-highest);border:1px solid var(--md-sys-color-outline-variant);border-radius:18px;padding:14px 14px 12px;
+    box-shadow:0 14px 36px rgba(var(--sh),.4);transform-origin:bottom right;animation:expIn .45s cubic-bezier(.05,.7,.1,1)}
+  .exp-job.out{animation:expOut .35s cubic-bezier(.3,0,.8,.15) forwards}
+  @keyframes expIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+  @keyframes expOut{to{opacity:0;transform:translateY(10px) scale(.97)}}
+  .exp-job .top{display:flex;align-items:center;gap:12px}
+  .exp-badge{position:relative;width:46px;height:46px;flex:0 0 auto;display:grid;place-items:center}
+  .exp-badge svg{position:absolute;inset:0;width:46px;height:46px;transform:rotate(-90deg)}
+  .exp-badge .trk{fill:none;stroke:color-mix(in srgb,var(--md-sys-color-on-surface) 12%,transparent);stroke-width:3}
+  .exp-badge .arc{fill:none;stroke:var(--md-sys-color-primary);stroke-width:3;stroke-linecap:round;stroke-dasharray:132;stroke-dashoffset:132;transition:stroke-dashoffset .5s cubic-bezier(.2,0,0,1),stroke .3s}
+  .exp-job.ind .exp-badge svg{animation:expSpin 1.1s linear infinite}.exp-job.ind .exp-badge .arc{stroke-dashoffset:95}
+  @keyframes expSpin{to{transform:rotate(270deg)}}
+  .exp-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font:700 10px/1 var(--md-sys-typescale-body-medium-font,inherit);letter-spacing:.03em}
+  .exp-ic.excel{background:#1d6f42;color:#e8fff1}.exp-ic.pdf{background:#b3261e;color:#ffecea}.exp-ic.pdfzip{background:#7a4a0c;color:#fff3e0}
+  .exp-job.ok .exp-ic{animation:expPop .5s cubic-bezier(.34,1.56,.64,1)}@keyframes expPop{40%{transform:scale(1.15)}}
+  .exp-job .tt{flex:1;min-width:0}.exp-job .tt b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:var(--md-sys-typescale-title-small);font-weight:600}
+  .exp-job .st{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant);display:flex;gap:6px;white-space:nowrap;overflow:hidden}
+  .exp-job .st .msg{overflow:hidden;text-overflow:ellipsis}
+  .exp-job .x{width:30px;height:30px;border-radius:50%;border:0;background:transparent;color:var(--md-sys-color-on-surface-variant);display:grid;place-items:center;flex:0 0 auto;cursor:pointer}
+  .exp-job .x:hover{background:color-mix(in srgb,var(--md-sys-color-on-surface) 8%,transparent)}.exp-job .x .mi{font-size:18px}
+  .exp-stages{display:flex;align-items:center;margin-top:12px;padding:0 2px}
+  .exp-stg{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;position:relative;
+    background:color-mix(in srgb,var(--md-sys-color-on-surface) 10%,transparent);color:var(--md-sys-color-on-surface-variant);transition:background-color .3s,color .3s,box-shadow .3s}
+  .exp-stg .mi{font-size:14px}
+  .exp-stg.on{background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);box-shadow:0 0 0 4px color-mix(in srgb,var(--md-sys-color-primary) 22%,transparent)}
+  .exp-stg.on::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--md-sys-color-primary);opacity:0;animation:expPing 1.6s ease-out infinite}
+  @keyframes expPing{0%{transform:scale(.8);opacity:.6}100%{transform:scale(1.5);opacity:0}}
+  .exp-stg.done{background:color-mix(in srgb,var(--good) 25%,transparent);color:var(--good)}
+  .exp-lnk{flex:1;height:4px;margin:0 6px;border-radius:3px;background:color-mix(in srgb,var(--md-sys-color-on-surface) 10%,transparent);position:relative;overflow:hidden}
+  .exp-lnk i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:3px;background:var(--md-sys-color-primary);transition:width .5s cubic-bezier(.2,0,0,1)}
+  .exp-lnk.run i{background:linear-gradient(90deg,var(--md-sys-color-primary) 0 40%,color-mix(in srgb,var(--md-sys-color-primary) 35%,transparent) 50%,var(--md-sys-color-primary) 60% 100%);background-size:200% 100%;animation:expShim 1.2s linear infinite}
+  @keyframes expShim{from{background-position:100% 0}to{background-position:-100% 0}}
+  .exp-lnk.done i{width:100%!important;background:var(--good)}
+  .exp-pct{font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-primary);min-width:34px;text-align:right;margin-left:8px}
+  .exp-job.ok .arc{stroke:var(--good);stroke-dashoffset:0!important}.exp-job.ok .st{color:var(--good)}
+  .exp-job.err .arc{stroke:var(--bad);stroke-dashoffset:0!important}.exp-job.err .st{color:var(--bad);white-space:normal}
+  .exp-job.err .exp-stg.on{background:var(--bad);color:var(--bad-bg);box-shadow:none}.exp-job.err .exp-stg.on::after{display:none}
+  .exp-job .acts{display:flex;gap:8px;margin-top:10px}
+  .navitem .exp-spin{margin-left:auto;width:16px;height:16px;border-radius:50%;flex:0 0 auto;border:2.5px solid color-mix(in srgb,var(--md-sys-color-primary) 30%,transparent);border-top-color:var(--md-sys-color-primary);animation:expSpin2 .9s linear infinite}
+  .navitem .exp-spin+.pill{margin-left:6px}
+  @keyframes expSpin2{to{transform:rotate(360deg)}}
+  @media(prefers-reduced-motion:reduce){.exp-job,.exp-job.out,.exp-stg.on::after,.exp-lnk.run i,.exp-job.ind .exp-badge svg,.navitem .exp-spin{animation:none}}
 
   .canvas{flex:1 1 auto;min-width:0;background:transparent;display:flex;flex-direction:column;overflow:hidden;position:relative;--topbar-h:64px}
   /* judul melayang di atas konten; konten yang lewat di bawahnya meluruh + blur */
@@ -2227,6 +2271,7 @@
   <div class="meta"><span>Break <b id="wbRT">5:00</b></span><span id="wbDraft"></span><span>Worked <b id="wbWork">0h 00m</b></span></div>
   <button class="done" id="wbBack">Done, back to work</button><button class="skip" id="wbSkip">Skip</button>
 </div></div>
+<div class="exp-tray" id="expTray" aria-live="polite"></div>
 <div class="wb-snack" id="wbSnack"><span class="mi">info</span><span id="wbSnackT"></span></div>
 <script>
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -2452,7 +2497,10 @@ $('#lg-btn').addEventListener('click',async()=>{const el=$('#lg-err');el.classLi
   }finally{btn.removeAttribute('disabled');btn.style.opacity='';}});
 ['#lg-user','#lg-pass'].forEach(s=>$(s).addEventListener('input',()=>$('#lg-err').classList.add('hidden')));
 $('#lg-pass').addEventListener('keydown',e=>{if(e.key==='Enter')$('#lg-btn').click()});
-$('#logoutBtn').addEventListener('click',()=>guardLeave(async()=>{await api('/api/auth/logout',{method:'POST'});location.reload();},'sign out'));
+$('#logoutBtn').addEventListener('click',()=>{const go=()=>guardLeave(async()=>{await api('/api/auth/logout',{method:'POST'});location.reload();},'sign out');
+  const n=typeof expRunning==='function'?expRunning():0;
+  const stop=()=>{EXP.jobs.forEach(j=>{if(j.state==='run')fetch('/api/export/jobs/'+j.id,{method:'DELETE',credentials:'same-origin',keepalive:true}).catch(()=>{});});go();};
+  if(n)confirmDo('Export still running',`Signing out now will cancel <b>${n} export${n>1?'s':''}</b> that ${n>1?'are':'is'} still being prepared. Wait until ${n>1?'they finish':'it finishes'}?`,stop,{okLabel:'Sign out anyway'});else go();});
 /* ===== Wellbeing (admin & operator) =====
    A  tombol di sidebar: cincin waktu AKTIF (mouse/keyboard). Diam ≥5 menit = dianggap rehat → hitungan nol lagi.
       Mencapai interval (default 120m) → berpendar + kartu "Break 5 min / Later 15m". Klik saat normal = setelan.
@@ -2546,7 +2594,7 @@ function wbRestMode(k){$$('#wbRest .tabs button').forEach(b=>b.classList.toggle(
     const t=()=>{if(!WB.rest)return;S2.innerHTML=`<div class="wb-stretch"><div style="color:#a9cfca">${i%4+1} / 4</div><h5>${C[i%4][0]}</h5><div style="color:#cfe7e4">${C[i%4][1]}</div></div>`;
       if(!reduced)S2.firstChild.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:500,easing:'cubic-bezier(.05,.7,.1,1)'});i++;WB.rest.t=setTimeout(t,5000);};t();}}
 addEventListener('keydown',e=>{if(e.key==='Escape'&&WB.rest)wbRestEnd();});
-window.addEventListener('beforeunload',e=>{if(ldPending()||tplDirty()){e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',e=>{if(ldPending()||tplDirty()||(typeof expRunning==='function'&&expRunning())){e.preventDefault();e.returnValue='';}});
 /* Transisi tema "veil": tirai warna latar tema baru muncul (linear) → tema diganti di puncak (±5ms, tersembunyi) → tirai memudar.
    Hanya opacity satu elemen yang dianimasikan, jadi ringan; tanpa snapshot halaman. */
 const THEME_FX={dur:620,ease:'linear',peak:.92};
@@ -4163,17 +4211,67 @@ let _cfmFn=null,_inpFn=null;
 window.confirmDo=(title,msg,fn,opts)=>{opts=opts||{};_cfmFn=fn;$('#cfmTitle').textContent=title;$('#cfmMsg').innerHTML=msg;
   $('#cfmOk').textContent=opts.okLabel||'Yes';$('#cfmCancel').style.display=opts.hideCancel?'none':'';$('#cfmDlg').show();};
 /* ---- Download export via fetch: on inconsistency -> a clean dialog (not raw JSON) ---- */
-async function downloadExport(url){toast('Preparing file…');
-  try{const r=await fetch(url,{credentials:'same-origin'});
-    if(!r.ok){let detail='';try{detail=(await r.json()).detail||'';}catch(e){detail='Export failed ('+r.status+')';}exportFail(detail);return;}
-    const blob=await r.blob();const cd=r.headers.get('Content-Disposition')||'';
+/* ---- Export sebagai pekerjaan latar + tray progress (tetap jalan saat pindah halaman) ---- */
+const EXP={jobs:new Map()};
+const EXP_STG={excel:[['fill','description','Filling template'],['photo','image','Placing photos'],['dl','download','Downloading']],
+  pdf:[['fill','description','Filling template'],['conv','sync','Converting to PDF'],['dl','download','Downloading']],
+  pdfzip:[['conv','sync','Converting to PDF'],['zip','folder_zip','Zipping'],['dl','download','Downloading']]};
+const expRunning=()=>[...EXP.jobs.values()].filter(j=>j.state==='run').length;
+function expSpin(){const nv=document.querySelector('.navitem[data-view="locations"]');if(!nv)return;let sp=nv.querySelector('.exp-spin');
+  if(expRunning()){if(!sp){sp=document.createElement('span');sp.className='exp-spin';nv.querySelector('.lbl').after(sp);}}else if(sp)sp.remove();}
+async function downloadExport(url){const u=new URL(url,location.origin);
+  const kind=u.pathname.endsWith('/excel')?'excel':u.pathname.endsWith('/pdf-zip')?'pdfzip':'pdf';
+  u.searchParams.set('kind',kind);
+  let r;try{r=await fetch('/api/export/jobs?'+u.searchParams.toString(),{method:'POST',credentials:'same-origin'});}catch(e){exportFail(e.message||'Connection lost');return;}
+  if(!r.ok){let detail='';try{detail=(await r.json()).detail||'';}catch(e){detail='Export failed ('+r.status+')';}exportFail(detail);return;}
+  const d=await r.json();expCard(d,url);}
+function expCard(d,url){const st=EXP_STG[d.kind],el=document.createElement('div');
+  el.className='exp-job'+(d.total?'':' ind');
+  el.innerHTML=`<div class="top"><div class="exp-badge"><svg viewBox="0 0 46 46"><circle class="trk" cx="23" cy="23" r="21"/><circle class="arc" cx="23" cy="23" r="21"/></svg>
+      <div class="exp-ic ${d.kind}">${{excel:'XLS',pdf:'PDF',pdfzip:'ZIP'}[d.kind]}</div></div>
+    <div class="tt"><b>${esc(d.name)}</b><div class="st"><span class="msg">Starting…</span><span class="tm"></span></div></div>
+    <button class="x" data-tip="Cancel"><span class="mi">close</span></button></div>
+    <div class="exp-stages">${st.map((x,i)=>`${i?'<span class="exp-lnk"><i></i></span>':''}<span class="exp-stg" data-tip="${x[2]}"><span class="mi">${x[1]}</span></span>`).join('')}<span class="exp-pct"></span></div>`;
+  $('#expTray').prepend(el);bindTips();
+  const j={id:d.id,kind:d.kind,el,url,state:'run',t0:Date.now(),si:-1};EXP.jobs.set(d.id,j);expSpin();
+  j.tick=setInterval(()=>{const t=Math.floor((Date.now()-j.t0)/1000);el.querySelector('.tm').textContent=t?`· ${t}s`:'';},500);
+  el.querySelector('.x').addEventListener('click',()=>{if(j.state==='run'){fetch('/api/export/jobs/'+j.id,{method:'DELETE',credentials:'same-origin'}).catch(()=>{});expEnd(j,'cancel');}else expClose(j);});
+  expUpd(j,d);j.poll=setInterval(()=>expPoll(j),700);}
+function expStep(j,i){const stg=[...j.el.querySelectorAll('.exp-stg')],lnk=[...j.el.querySelectorAll('.exp-lnk')];j.si=i;
+  stg.forEach((s,n)=>{s.classList.toggle('on',n===i);s.classList.toggle('done',n<i);});
+  lnk.forEach((l,n)=>{l.classList.toggle('done',n<i);l.classList.toggle('run',n===i);if(n===i&&!l.firstChild.style.width)l.firstChild.style.width='55%';});}
+function expUpd(j,d){if(j.state!=='run')return;const st=EXP_STG[j.kind],i=Math.max(0,st.findIndex(x=>x[0]===d.stage));
+  if(d.stage!=='queued'&&i!==j.si)expStep(j,i);if(d.stage==='queued'&&j.si<0)expStep(j,0);
+  const lbl=(st[i]||st[0])[2],msg=j.el.querySelector('.msg');
+  if(d.total){j.el.classList.remove('ind');const p=d.done/d.total;
+    msg.textContent=i===0?`${lbl} · ${Math.min(d.done+1,d.total)}/${d.total}`:lbl+'…';
+    const lnk=j.el.querySelector('.exp-lnk i');if(i===0&&lnk)lnk.style.width=(p*100)+'%';
+    const tot=i===0?p*.85:i===1?.93:1;j.el.querySelector('.arc').style.strokeDashoffset=132*(1-tot);j.el.querySelector('.exp-pct').textContent=Math.round(tot*100)+'%';}
+  else msg.textContent=lbl+'…';}
+async function expPoll(j){if(j.state!=='run'||j.busy)return;j.busy=true;
+  try{const r=await fetch('/api/export/jobs/'+j.id,{credentials:'same-origin'});if(!r.ok)throw new Error(r.status===404?'Export was lost (app restarted?)':'Export failed ('+r.status+')');
+    const d=await r.json();
+    if(d.state==='run')expUpd(j,d);
+    else if(d.state==='ok'){expUpd(j,Object.assign({},d,{stage:'dl'}));clearInterval(j.poll);await expFetch(j);}
+    else if(d.state==='err'){clearInterval(j.poll);expEnd(j,'err',d.error);}
+    else if(d.state==='cancel'){clearInterval(j.poll);expEnd(j,'cancel');}
+  }catch(e){clearInterval(j.poll);expEnd(j,'err',e.message);}finally{j.busy=false;}}
+async function expFetch(j){try{const r=await fetch('/api/export/jobs/'+j.id+'/file',{credentials:'same-origin'});if(!r.ok)throw new Error('Download failed ('+r.status+')');
+    const blob=await r.blob(),cd=r.headers.get('Content-Disposition')||'';
     const fn=decodeURIComponent((cd.match(/filename\*?=(?:UTF-8''|")?([^";]+)/)||[])[1]||'export');
-    const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=fn;document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(u),4000);
-    const w=r.headers.get('X-Export-Warnings');toast(w?('Downloaded · '+w+' image warnings'):'Downloaded ✓');
+    const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);
+    const w=r.headers.get('X-Export-Warnings');expEnd(j,'ok',w?`${w} image warning${w==='1'?'':'s'}`:'');
     const pw=r.headers.get('X-Paper-Warning');   // ukuran halaman PDF ≠ Page Setup template
     if(pw)confirmDo('Check paper size',`<div style="display:flex;gap:12px;align-items:flex-start"><span class="mi" style="font-size:26px;color:var(--warn)">print</span><div>${esc(pw)}</div></div>`,()=>{},{okLabel:'OK',hideCancel:true});
-  }catch(e){exportFail(e.message||'Connection lost');}}
+  }catch(e){expEnd(j,'err',e.message);}}
+function expEnd(j,res,info){if(j.state!=='run')return;j.state=res;clearInterval(j.tick);clearInterval(j.poll);expSpin();
+  const el=j.el,msg=el.querySelector('.msg'),tm=el.querySelector('.tm'),secs=((Date.now()-j.t0)/1000).toFixed(1);el.classList.remove('ind');
+  if(res==='ok'){el.classList.add('ok');expStep(j,3);el.querySelector('.exp-pct').textContent='';msg.textContent='Downloaded ✓'+(info?' · '+info:'');tm.textContent=`· ${secs}s`;j.auto=setTimeout(()=>expClose(j),6000);}
+  if(res==='err'){el.classList.add('err');msg.textContent='Failed: '+(info||'unknown error');tm.textContent='';
+    const acts=document.createElement('div');acts.className='acts';acts.innerHTML='<md-button variant="tonal" size="xs">Try again</md-button>';
+    acts.firstChild.addEventListener('click',()=>{expClose(j);downloadExport(j.url);});el.appendChild(acts);}
+  if(res==='cancel'){msg.textContent='Cancelled';tm.textContent='';j.auto=setTimeout(()=>expClose(j),1500);}}
+function expClose(j){clearTimeout(j.auto);j.el.classList.add('out');setTimeout(()=>j.el.remove(),reduced?0:350);EXP.jobs.delete(j.id);expSpin();}
 function exportFail(detail){const isTpl=/template/i.test(detail||'');const isAdmin=S.user&&S.user.role==='admin';
   if(isTpl&&isAdmin)confirmDo('Template not ready',
     '<div style="display:flex;gap:12px;align-items:flex-start"><span class="mi" style="font-size:26px;color:var(--md-sys-color-primary)">description</span><div><b>No active template.</b><br>Excel export needs a registered &amp; active BAA template. Register or activate one first in the Template menu.</div></div>',

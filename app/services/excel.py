@@ -322,9 +322,10 @@ def _has_photo(plist: list) -> bool:
 
 
 def build_workbook(template_path: str, template_config: dict, locations: list[dict],
-                   out_path: str, categories: list[dict] | None = None) -> dict:
+                   out_path: str, categories: list[dict] | None = None, progress=None) -> dict:
     """locations: list of dict {code,name,data,inventory:[...],photos:[{category,path,...}]}
-    categories: kategori foto dari Pengaturan (untuk kolom "Foto Lengkap?")."""
+    categories: kategori foto dari Pengaturan (untuk kolom "Foto Lengkap?").
+    progress: opsional, dipanggil progress(i, n) sebelum tiap lokasi diisi (boleh raise untuk batal)."""
     import openpyxl
     from openpyxl.drawing.image import Image as XLImage
 
@@ -364,6 +365,8 @@ def build_workbook(template_path: str, template_config: dict, locations: list[di
     repeat_ident = (logc.get("identity") or "first") == "repeat"
 
     for i, loc in enumerate(locations, start=1):
+        if progress:
+            progress(i, len(locations))
         data = loc.get("data", {})
         inv = loc.get("inventory", [])
         photos = loc.get("photos", [])

@@ -4,6 +4,9 @@ from __future__ import annotations
 import json
 import re
 import sqlite3
+import threading
+import time
+import uuid
 import zipfile
 from datetime import datetime
 from pathlib import Path
@@ -18,6 +21,10 @@ from ..services import pdf as pdf_svc
 from ..services import xlsx2pdf
 
 router = APIRouter(prefix="/api/export", tags=["export"])
+
+
+class _Cancelled(Exception):
+    """Dilempar dari callback progress saat user membatalkan export."""
 
 
 def _filter_where(q: str, status: str, creator: int, date: str, user=None):
@@ -99,7 +106,7 @@ def _photo_anchors(tcfg: dict) -> list[str]:
     return [a for a in (excel_svc.resolve_config(tcfg)["detail"].get("photos") or {}).values() if a]
 
 
-def _template_pdf(tpl, tcfg, locs, out_pdf: Path, cats=None) -> tuple[bool, str]:
+def _template_pdf(tpl, tcfg, locs, out_pdf: Path, cats=None, progress=None, stage=None) -> tuple[bool, str]:
     """Isi template -> xlsx (detail saja, tanpa LOG) -> konversi PDF (Excel/LO).
     (True, peringatan_kertas) bila berhasil; False agar pemanggil fallback ke reportlab.
     Peringatan terisi bila ukuran halaman PDF tidak sama dengan Page Setup template
@@ -111,7 +118,9 @@ def _template_pdf(tpl, tcfg, locs, out_pdf: Path, cats=None) -> tuple[bool, str]
     ok = False
     warn = ""
     try:
-        excel_svc.build_workbook(tpl["path"], tcfg, locs, str(tmp_xlsx), cats)
+        excel_svc.build_workbook(tpl["path"], tcfg, locs, str(tmp_xlsx), cats, progress)
+        if stage:
+            stage("conv")
         wb = openpyxl.load_workbook(str(tmp_xlsx))
         log_name = tcfg.get("sheet_log")
         if log_name and log_name in wb.sheetnames and len(wb.sheetnames) > 1:
@@ -121,6 +130,8 @@ def _template_pdf(tpl, tcfg, locs, out_pdf: Path, cats=None) -> tuple[bool, str]
         ok = xlsx2pdf.xlsx_to_pdf(str(tmp_xlsx), str(out_pdf), anchors)
         if ok:
             warn = xlsx2pdf.paper_warning(str(tmp_xlsx), str(out_pdf))
+    except _Cancelled:
+        raise
     except Exception:
         ok = False
     finally:
@@ -135,8 +146,12 @@ def _render_pdf(conn, locs, out_pdf: Path, cats, title) -> tuple[str, str]:
     """PDF mengikuti template aktif bila memungkinkan; jika tidak, pakai
     generator bawaan (reportlab). Mengembalikan ('template'|'builtin', peringatan_kertas)."""
     tpl, tcfg = _active_template(conn)
+    return _render_pdf_with(tpl, tcfg, locs, out_pdf, cats, title)
+
+
+def _render_pdf_with(tpl, tcfg, locs, out_pdf: Path, cats, title, progress=None, stage=None) -> tuple[str, str]:
     if tpl:
-        ok, warn = _template_pdf(tpl, tcfg, locs, out_pdf, cats)
+        ok, warn = _template_pdf(tpl, tcfg, locs, out_pdf, cats, progress, stage)
         if ok:
             return "template", warn
     pdf_svc.build_pdf(locs, cats, str(out_pdf), app_title=title)
@@ -225,4 +240,153 @@ def export_pdf_zip(scope: str = Query("filter"), loc_id: int | None = None,
     resp = FileResponse(str(zpath), filename=zpath.name, media_type="application/zip")
     if paper_warn:
         resp.headers["X-Paper-Warning"] = paper_warn
+    return resp
+
+
+# ================= Export sebagai pekerjaan latar (progress + batal) =================
+# Alur: POST /jobs -> {id} ; GET /jobs/{id} (poll tahap & progres) ; GET /jobs/{id}/file ; DELETE /jobs/{id} (batal).
+# Validasi (template aktif, lokasi ada) tetap sinkron di POST supaya error langsung terlihat.
+_JOBS: dict[str, dict] = {}
+_JOBS_LOCK = threading.Lock()
+_JOB_TTL = 3600
+
+
+def _job_public(j: dict) -> dict:
+    return {k: j[k] for k in ("id", "kind", "name", "stage", "done", "total", "state", "error", "warn", "img_warn")}
+
+
+def _purge_jobs() -> None:
+    now = time.time()
+    with _JOBS_LOCK:
+        for k in [k for k, j in _JOBS.items() if now - j["created"] > _JOB_TTL]:
+            _JOBS.pop(k, None)
+
+
+def _run_job(j: dict, locs: list, tpl, tcfg, cats, title) -> None:
+    def prog(i, n):
+        if j["cancel"]:
+            raise _Cancelled()
+        if n > 1:                                        # 1 lokasi = progres tak berangka
+            j["done"], j["total"] = i - 1, n
+
+    def stage(s):
+        if j["cancel"]:
+            raise _Cancelled()
+        j["stage"] = s
+    try:
+        kind = j["kind"]
+        if kind == "excel":
+            out = _stamp(locs[0]["code"] if j["scope"] == "one" else "Log_BAA", "xlsx")
+            stage("fill")
+            res = excel_svc.build_workbook(tpl["path"], tcfg, locs, str(out), cats, prog)
+            j["done"] = j["total"]
+            stage("photo")
+            try:
+                xlsx2pdf.recenter_images_excel(str(out), _photo_anchors(tcfg))
+            except Exception:
+                pass
+            j["img_warn"] = len(res.get("warnings") or [])
+            j.update(path=str(out), filename=out.name,
+                     media="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        elif kind == "pdf":
+            out = _stamp(locs[0]["code"] if j["scope"] == "one" else "BAA", "pdf")
+            stage("fill")
+            _, warn = _render_pdf_with(tpl, tcfg, locs, out, cats, title, prog, stage)
+            j["warn"] = warn
+            j.update(path=str(out), filename=out.name, media="application/pdf")
+        else:                                            # pdfzip
+            zpath = _stamp("PDF_BAA", "zip")
+            stage("conv")
+            used: set[str] = set()
+            with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as zf:
+                for n, loc in enumerate(locs, start=1):
+                    if j["cancel"]:
+                        raise _Cancelled()
+                    j["done"], j["total"] = n - 1, len(locs)
+                    nm = _safe_name(f"{loc.get('code','')} {loc.get('name','') or loc.get('data',{}).get('nama_lokasi','')}")
+                    entry = f"{nm}.pdf"
+                    k = 2
+                    while entry.lower() in used:
+                        entry = f"{nm} ({k}).pdf"; k += 1
+                    used.add(entry.lower())
+                    tmp = config.OUTPUT_DIR / f"_tmp_{j['id']}_{loc['id']}.pdf"
+                    _, w = _render_pdf_with(tpl, tcfg, [loc], tmp, cats, title)
+                    j["warn"] = j["warn"] or w
+                    zf.write(str(tmp), entry)
+                    try:
+                        tmp.unlink()
+                    except OSError:
+                        pass
+                j["done"] = len(locs)
+                stage("zip")
+            j.update(path=str(zpath), filename=zpath.name, media="application/zip")
+        j["stage"], j["state"] = "dl", "ok"
+    except _Cancelled:
+        j["state"] = "cancel"
+    except Exception as e:                              # pesan singkat untuk kartu progress
+        j["state"], j["error"] = "err", (str(e) or e.__class__.__name__)[:200]
+
+
+@router.post("/jobs")
+def start_job(kind: str = Query(...), scope: str = Query("one"), loc_id: int | None = None,
+              q: str = Query(""), status: str = Query("all"), creator: int = Query(0), date: str = Query(""),
+              conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
+    if kind not in ("excel", "pdf", "pdfzip"):
+        raise HTTPException(400, "Unknown export type")
+    _purge_jobs()
+    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user)
+    tpl, tcfg = _active_template(conn)
+    if kind == "excel":
+        t = conn.execute("SELECT * FROM templates WHERE active=1 ORDER BY id DESC LIMIT 1").fetchone()
+        if not t:
+            raise HTTPException(400, "No active template. Add one in the Template menu first.")
+        if not tpl:
+            raise HTTPException(400, "Template file is missing on the server.")
+    cats = db.get_setting(conn, "photo_categories", [])
+    title = db.get_setting(conn, "app_title", "Berita Acara Aktivasi")
+    n = len(locs)
+    one = f"{locs[0]['code']}" + (f" · {locs[0].get('name')}" if locs[0].get("name") else "")
+    name = {"excel": (one + " · Excel") if scope == "one" else f"Location Log · {n} location{'s' if n != 1 else ''}",
+            "pdf": (one + " · PDF") if scope == "one" else f"BAA PDF · {n} locations",
+            "pdfzip": f"PDF per location · {n} location{'s' if n != 1 else ''}"}[kind]
+    jid = uuid.uuid4().hex[:12]
+    j = {"id": jid, "user_id": user["id"], "kind": kind, "scope": scope, "name": name, "stage": "queued",
+         "done": 0, "total": n if n > 1 else 0, "state": "run", "error": "", "warn": "", "img_warn": 0,
+         "cancel": False, "created": time.time(), "path": None, "filename": None, "media": None}
+    with _JOBS_LOCK:
+        _JOBS[jid] = j
+    audit(conn, user, {"excel": "export_excel", "pdf": "export_pdf", "pdfzip": "export_pdf_zip"}[kind], "export", scope, name)
+    threading.Thread(target=_run_job, args=(j, locs, tpl, tcfg, cats, title), daemon=True).start()
+    return _job_public(j)
+
+
+def _own_job(jid: str, user) -> dict:
+    j = _JOBS.get(jid)
+    if not j or j["user_id"] != user["id"]:
+        raise HTTPException(404, "Export not found")
+    return j
+
+
+@router.get("/jobs/{jid}")
+def job_status(jid: str, user=Depends(current_user)):
+    return _job_public(_own_job(jid, user))
+
+
+@router.delete("/jobs/{jid}")
+def job_cancel(jid: str, user=Depends(current_user)):
+    j = _own_job(jid, user)
+    j["cancel"] = True
+    return _job_public(j)
+
+
+@router.get("/jobs/{jid}/file")
+def job_file(jid: str, user=Depends(current_user)):
+    j = _own_job(jid, user)
+    if j["state"] != "ok" or not j["path"] or not Path(j["path"]).exists():
+        raise HTTPException(409, "Export is not ready")
+    resp = FileResponse(j["path"], filename=j["filename"], media_type=j["media"])
+    if j["img_warn"]:
+        resp.headers["X-Export-Warnings"] = str(j["img_warn"])
+    if j["warn"]:
+        resp.headers["X-Paper-Warning"] = j["warn"]
     return resp
