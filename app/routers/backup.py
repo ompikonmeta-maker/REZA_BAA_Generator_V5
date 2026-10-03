@@ -16,7 +16,7 @@ from ..deps import audit, get_hub, require_admin
 router = APIRouter(prefix="/api", tags=["backup"])
 
 # Yang di-backup (relatif terhadap DATA_DIR)
-_INCLUDE = ["app.db", "projects", "images", "templates"]
+_INCLUDE = ["app.db", "projects"]   # projects/pN/ = DB + foto + template per project
 
 
 def _checkpoint(conn: sqlite3.Connection) -> None:

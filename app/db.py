@@ -6,6 +6,8 @@ peta kata kunci auto-sort, akun admin awal).
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -269,8 +271,33 @@ class ProjectConn(sqlite3.Connection):
     project: dict | None = None
 
 
+# Satu project = satu folder: data/projects/pN/{project.db, images/<KODE>/, templates/}.
+# Path file di DB disimpan RELATIF terhadap folder project (mis. images/LOK_00012/x.jpg),
+# jadi folder project/data bisa dipindah atau dipulihkan di PC lain tanpa path rusak.
+def project_dir(p) -> Path:
+    return config.PROJECTS_DIR / f"p{int(p['id'])}"
+
+
 def project_path(p) -> Path:
-    return config.PROJECTS_DIR / p["db_file"]
+    return project_dir(p) / "project.db"
+
+
+def images_dir(conn) -> Path:
+    return project_dir(conn.project) / "images"
+
+
+def templates_dir(conn) -> Path:
+    return project_dir(conn.project) / "templates"
+
+
+def fpath(conn, stored: str) -> Path:
+    """Path absolut dari path tersimpan (relatif ke folder project)."""
+    p = Path(stored or "")
+    return p if p.is_absolute() else project_dir(conn.project) / p
+
+
+def rel_path(conn, absolute) -> str:
+    return Path(absolute).relative_to(project_dir(conn.project)).as_posix()
 
 
 def connect_project(p) -> ProjectConn:
@@ -321,7 +348,8 @@ def _seed_project(conn: sqlite3.Connection, base: dict | None = None) -> None:
 
 
 def init_project_db(p, base: dict | None = None) -> None:
-    config.ensure_dirs()
+    for d in (project_dir(p), project_dir(p) / "images", project_dir(p) / "templates"):
+        d.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(project_path(p))
     conn.row_factory = sqlite3.Row
     try:
@@ -385,10 +413,74 @@ def create_project(hub: sqlite3.Connection, name: str, prefix: str, color: str,
     cur = hub.execute("INSERT INTO projects(name, prefix, color, db_file, created_at) VALUES(?,?,?,?,?)",
                       (name, prefix.upper(), color, "", now_iso()))
     pid = cur.lastrowid
-    hub.execute("UPDATE projects SET db_file=? WHERE id=?", (f"p{pid}.db", pid))
+    hub.execute("UPDATE projects SET db_file=? WHERE id=?", (f"p{pid}/project.db", pid))
     hub.commit()
-    init_project_db({"db_file": f"p{pid}.db"}, base)
+    init_project_db({"id": pid}, base)
     return pid
+
+
+def _to_folder(hub: sqlite3.Connection, p) -> None:
+    """Tata letak awal (data/projects/pN.db) -> folder data/projects/pN/project.db."""
+    old = config.PROJECTS_DIR / f"p{int(p['id'])}.db"
+    new = project_path(p)
+    if old.exists() and not new.exists():
+        c = sqlite3.connect(old)
+        try:
+            c.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        finally:
+            c.close()
+        new.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(old), str(new))
+        for ext in ("-wal", "-shm"):
+            Path(str(old) + ext).unlink(missing_ok=True)
+    if p["db_file"] != f"p{int(p['id'])}/project.db":
+        hub.execute("UPDATE projects SET db_file=? WHERE id=?", (f"p{int(p['id'])}/project.db", p["id"]))
+        hub.commit()
+
+
+def _relocate_files(p) -> None:
+    """Pindahkan foto & template yang masih di folder global lama (data/images,
+    data/templates) atau tersimpan dengan path absolut ke folder project, lalu
+    simpan path-nya relatif. Idempoten: baris yang sudah relatif dilewati."""
+    base = project_dir(p)
+    conn = sqlite3.connect(project_path(p))
+    conn.row_factory = sqlite3.Row
+    try:
+        jobs = [("photos", "images/", lambda src: base / "images" / src.parent.name / src.name,
+                 lambda src: config.IMAGES_DIR / src.parent.name / src.name),
+                ("templates", "templates/", lambda src: base / "templates" / src.name,
+                 lambda src: config.TEMPLATES_DIR / src.name)]
+        for table, pre, dest_of, legacy_of in jobs:
+            rows = conn.execute(f"SELECT id, path FROM {table} WHERE path NOT LIKE ?", (pre + "%",)).fetchall()
+            for r in rows:
+                src = Path((r["path"] or "").replace("\\", "/") if os.sep == "/" else (r["path"] or ""))
+                dest = dest_of(src)
+                if not dest.exists():
+                    for cand in (legacy_of(src), src):
+                        if cand.is_file():
+                            dest.parent.mkdir(parents=True, exist_ok=True)
+                            # di dalam folder data -> pindah; di luar (path absolut lama) -> salin saja
+                            inside = config.DATA_DIR.resolve() in cand.resolve().parents
+                            (shutil.move if inside else shutil.copy2)(str(cand), str(dest))
+                            break
+                conn.execute(f"UPDATE {table} SET path=? WHERE id=?", (dest.relative_to(base).as_posix(), r["id"]))
+            if rows:
+                conn.commit()
+    finally:
+        conn.close()
+    # Bersihkan folder global lama yang sudah kosong
+    for d in (config.IMAGES_DIR, config.TEMPLATES_DIR):
+        if d.is_dir():
+            for sub in sorted(d.rglob("*"), key=lambda x: -len(x.parts)):
+                if sub.is_dir():
+                    try:
+                        sub.rmdir()
+                    except OSError:
+                        pass
+            try:
+                d.rmdir()
+            except OSError:
+                pass
 
 
 def touch_modified(conn: sqlite3.Connection, loc_id: int, user_id, kind: str = "edit",
@@ -437,6 +529,8 @@ def init_db() -> None:
                          "SELECT ?, id FROM users WHERE role <> 'admin'", (pid,))
             conn.commit()
         for p in conn.execute("SELECT * FROM projects").fetchall():
+            _to_folder(conn, p)
             init_project_db(p)
+            _relocate_files(p)
     finally:
         conn.close()

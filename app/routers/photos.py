@@ -53,7 +53,7 @@ def upload_photos(
     except Exception:
         paths = []
 
-    dest_dir = config.IMAGES_DIR / loc["code"]
+    dest_dir = db.images_dir(conn) / loc["code"]
     dest_dir.mkdir(parents=True, exist_ok=True)
 
     results = []
@@ -104,7 +104,7 @@ def upload_photos(
                 (loc_id, cat_key),
             ).fetchall():
                 try:
-                    Path(old["path"]).unlink(missing_ok=True)
+                    db.fpath(conn, old["path"]).unlink(missing_ok=True)
                 except Exception:
                     pass
                 conn.execute("DELETE FROM photos WHERE id=?", (old["id"],))
@@ -112,7 +112,7 @@ def upload_photos(
         cur = conn.execute(
             "INSERT INTO photos(location_id,category,orig_name,filename,path,ocr_text,"
             "ocr_serial,matched_by,uploaded_by,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
-            (loc_id, cat_key, base or fname, fname, str(fpath), ocr_text,
+            (loc_id, cat_key, base or fname, fname, db.rel_path(conn, fpath), ocr_text,
              ocr_serial, matched_by, user["id"], db.now_iso()),
         )
         results.append({
@@ -150,7 +150,7 @@ def reassign_photo(photo_id: int, payload: dict, conn: sqlite3.Connection = Depe
     categories = db.get_setting(conn, "photo_categories", [])
     ocr_serial, ocr_text = row["ocr_serial"], row["ocr_text"]
     if autosort.category_needs_ocr(new_cat, categories) and not ocr_serial:
-        ocr_serial, ocr_text = ocr.read_serial(row["path"])
+        ocr_serial, ocr_text = ocr.read_serial(db.fpath(conn, row["path"]))
     conn.execute(
         "UPDATE photos SET category=?,matched_by='manual',ocr_serial=?,ocr_text=? WHERE id=?",
         (new_cat, ocr_serial, ocr_text, photo_id),
@@ -169,7 +169,7 @@ def reocr_photo(photo_id: int, conn: sqlite3.Connection = Depends(get_db),
     if not row:
         raise HTTPException(404, "Photo not found")
     _guard_photo(conn, user, row, write=True)
-    serial, text = ocr.read_serial(row["path"])
+    serial, text = ocr.read_serial(db.fpath(conn, row["path"]))
     conn.execute("UPDATE photos SET ocr_serial=?,ocr_text=? WHERE id=?", (serial, text, photo_id))
     conn.commit()
     return {"ok": True, "ocr_serial": serial, "ocr_available": ocr.available()}
@@ -179,11 +179,11 @@ def reocr_photo(photo_id: int, conn: sqlite3.Connection = Depends(get_db),
 def photo_file(photo_id: int, conn: sqlite3.Connection = Depends(get_db),
                user=Depends(current_user)):
     row = conn.execute("SELECT * FROM photos WHERE id=?", (photo_id,)).fetchone()
-    if not row or not Path(row["path"]).exists():
+    if not row or not db.fpath(conn, row["path"]).exists():
         raise HTTPException(404, "File not found")
     _guard_photo(conn, user, row, write=False)
     # URL foto sama antar project (id per project) -> selalu validasi ulang ke server
-    return FileResponse(row["path"], headers={"Cache-Control": "private, no-cache"})
+    return FileResponse(db.fpath(conn, row["path"]), headers={"Cache-Control": "private, no-cache"})
 
 
 @router.delete("/photos/{photo_id}")
@@ -194,7 +194,7 @@ def delete_photo(photo_id: int, conn: sqlite3.Connection = Depends(get_db),
         raise HTTPException(404, "Photo not found")
     _guard_photo(conn, user, row, write=True)
     try:
-        Path(row["path"]).unlink(missing_ok=True)
+        db.fpath(conn, row["path"]).unlink(missing_ok=True)
     except Exception:
         pass
     conn.execute("DELETE FROM photos WHERE id=?", (photo_id,))

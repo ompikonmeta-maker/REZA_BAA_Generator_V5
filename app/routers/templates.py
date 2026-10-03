@@ -104,7 +104,7 @@ async def inspect_template(file: UploadFile = File(...),
     if not (file.filename or "").lower().endswith((".xlsx", ".xlsm")):
         raise HTTPException(400, "Must be an .xlsx/.xlsm file")
     tmp_name = f"pending_{uuid.uuid4().hex}.xlsx"
-    tmp_path = config.TEMPLATES_DIR / tmp_name
+    tmp_path = db.templates_dir(conn) / tmp_name
     tmp_path.write_bytes(await file.read())
     try:
         sheets = _inspect_workbook(tmp_path)
@@ -132,11 +132,11 @@ def register_template(body: RegisterIn, conn: sqlite3.Connection = Depends(get_d
         raise HTTPException(400, "Log and Detail must be different sheets")
     if "/" in body.pending_file or "\\" in body.pending_file:
         raise HTTPException(400, "Invalid file name")
-    src = config.TEMPLATES_DIR / body.pending_file
+    src = db.templates_dir(conn) / body.pending_file
     if not src.exists():
         raise HTTPException(400, "Upload expired — please upload again")
     final_name = f"tpl_{uuid.uuid4().hex}.xlsx"
-    final_path = config.TEMPLATES_DIR / final_name
+    final_path = db.templates_dir(conn) / final_name
     src.rename(final_path)
     now = db.now_iso()
     # Template pertama (belum ada yang aktif) langsung diaktifkan
@@ -145,7 +145,7 @@ def register_template(body: RegisterIn, conn: sqlite3.Connection = Depends(get_d
     cur = conn.execute(
         "INSERT INTO templates(name,filename,path,sheet_log,sheet_detail,config_json,"
         "active,uploaded_by,created_at) VALUES(?,?,?,?,?,?,?,?,?)",
-        (body.name, body.orig_name, str(final_path), body.sheet_log, body.sheet_detail,
+        (body.name, body.orig_name, db.rel_path(conn, final_path), body.sheet_log, body.sheet_detail,
          json.dumps(body.config, ensure_ascii=False), 1 if activate else 0,
          user["id"], now),
     )
@@ -214,7 +214,7 @@ def delete_template(tpl_id: int, conn: sqlite3.Connection = Depends(get_db),
     if row["active"]:
         raise HTTPException(400, "Can't delete the active template — activate another one first")
     try:
-        Path(row["path"]).unlink(missing_ok=True)
+        db.fpath(conn, row["path"]).unlink(missing_ok=True)
     except Exception:
         pass
     conn.execute("DELETE FROM templates WHERE id=?", (tpl_id,))
@@ -243,9 +243,9 @@ def template_sheets(tpl_id: int, conn: sqlite3.Connection = Depends(get_db),
     row = conn.execute("SELECT * FROM templates WHERE id=?", (tpl_id,)).fetchone()
     if not row:
         raise HTTPException(404, "Template not found")
-    if not Path(row["path"]).exists():
+    if not db.fpath(conn, row["path"]).exists():
         raise HTTPException(400, "Template file is missing on the server")
-    return {"sheets": _inspect_workbook(Path(row["path"]))}
+    return {"sheets": _inspect_workbook(db.fpath(conn, row["path"]))}
 
 
 class MappingIn(BaseModel):
@@ -284,9 +284,9 @@ def template_render(tpl_id: int, sheet: str, conn: sqlite3.Connection = Depends(
     row = conn.execute("SELECT path FROM templates WHERE id=?", (tpl_id,)).fetchone()
     if not row:
         raise HTTPException(404, "Template not found")
-    if not Path(row["path"]).exists():
+    if not db.fpath(conn, row["path"]).exists():
         raise HTTPException(400, "Template file is missing on the server")
-    wb = openpyxl.load_workbook(row["path"])
+    wb = openpyxl.load_workbook(db.fpath(conn, row["path"]))
     try:
         if sheet not in wb.sheetnames:
             raise HTTPException(404, "Worksheet not found")
@@ -309,7 +309,7 @@ def _trial_build(tpl_id: int, body: TrialIn, conn: sqlite3.Connection) -> tuple[
     row = conn.execute("SELECT path FROM templates WHERE id=?", (tpl_id,)).fetchone()
     if not row:
         raise HTTPException(404, "Template not found")
-    if not Path(row["path"]).exists():
+    if not db.fpath(conn, row["path"]).exists():
         raise HTTPException(400, "Template file is missing on the server")
     ids = [r["id"] for r in conn.execute(
         "SELECT id FROM locations WHERE deleted_at IS NULL ORDER BY id DESC LIMIT ?",
@@ -325,7 +325,7 @@ def _trial_build(tpl_id: int, body: TrialIn, conn: sqlite3.Connection) -> tuple[
     tcfg["sheet_detail"] = body.sheet_detail
     cats = db.get_setting(conn, "photo_categories", [])
     out = config.OUTPUT_DIR / f"_trial_{uuid.uuid4().hex}.xlsx"
-    res = excel_svc.build_workbook(row["path"], tcfg, locs, str(out), cats)
+    res = excel_svc.build_workbook(str(db.fpath(conn, row["path"])), tcfg, locs, str(out), cats)
     return out, res, excel_svc.resolve_config(tcfg)
 
 

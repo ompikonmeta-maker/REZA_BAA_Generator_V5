@@ -74,7 +74,7 @@ def _gather_locations(conn: sqlite3.Connection, scope: str, loc_id: int | None,
             "id": r["id"], "code": r["code"], "name": r["name"],
             "data": json.loads(r["data_json"]),
             "inventory": [dict(i) for i in inv],
-            "photos": [dict(p) for p in photos],
+            "photos": [{**dict(p), "path": str(db.fpath(conn, p["path"]))} for p in photos],
         })
     return out
 
@@ -90,9 +90,15 @@ def _safe_name(s: str) -> str:
     return re.sub(r"\s+", " ", s) or "lokasi"
 
 
+def _tpl_row(conn: sqlite3.Connection) -> dict | None:
+    """Template aktif (path sudah absolut), atau None."""
+    t = conn.execute("SELECT * FROM templates WHERE active=1 ORDER BY id DESC LIMIT 1").fetchone()
+    return {**dict(t), "path": str(db.fpath(conn, t["path"]))} if t else None
+
+
 def _active_template(conn: sqlite3.Connection):
     """Template aktif + config, atau (None, None) bila tak ada / file hilang."""
-    tpl = conn.execute("SELECT * FROM templates WHERE active=1 ORDER BY id DESC LIMIT 1").fetchone()
+    tpl = _tpl_row(conn)
     if not tpl or not Path(tpl["path"]).exists():
         return None, None
     tcfg = json.loads(tpl["config_json"]) if tpl["config_json"] else {}
@@ -163,7 +169,7 @@ def export_excel(scope: str = Query("one"), loc_id: int | None = None,
                  q: str = Query(""), status: str = Query("all"),
                  creator: int = Query(0), date: str = Query(""),
                  conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
-    tpl = conn.execute("SELECT * FROM templates WHERE active=1 ORDER BY id DESC LIMIT 1").fetchone()
+    tpl = _tpl_row(conn)
     if not tpl:
         raise HTTPException(400, "No active template. Add one in the Template menu first.")
     if not Path(tpl["path"]).exists():

@@ -390,6 +390,6 @@ def purge_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
         raise HTTPException(404, "Deleted location not found")
     conn.execute("DELETE FROM locations WHERE id=?", (loc_id,))  # cascade -> inventory & photos
     conn.commit()
-    shutil.rmtree(config.IMAGES_DIR / row["code"], ignore_errors=True)
+    shutil.rmtree(db.images_dir(conn) / row["code"], ignore_errors=True)
     audit(conn, user, "purge", "location", loc_id, row["code"])
     return {"ok": True}
