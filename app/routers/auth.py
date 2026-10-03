@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
 from .. import auth, config
-from ..deps import audit, current_user, get_db
+from ..deps import audit, current_user, get_hub
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -27,7 +27,7 @@ class PeekIn(BaseModel):
 
 
 @router.post("/peek")
-def peek(body: PeekIn, conn: sqlite3.Connection = Depends(get_db)):
+def peek(body: PeekIn, conn: sqlite3.Connection = Depends(get_hub)):
     """Cek ringan apakah username (aktif) bertipe admin — untuk aksen 'zona' di
     layar login. Hanya balas admin true/false (tanpa info keberadaan user)."""
     row = conn.execute(
@@ -47,7 +47,7 @@ def _public(user) -> dict:
 
 
 @router.post("/login")
-def login(body: LoginIn, response: Response, conn: sqlite3.Connection = Depends(get_db)):
+def login(body: LoginIn, response: Response, conn: sqlite3.Connection = Depends(get_hub)):
     row = conn.execute(
         "SELECT * FROM users WHERE username=? AND active=1", (body.username.strip(),)
     ).fetchone()
@@ -63,7 +63,7 @@ def login(body: LoginIn, response: Response, conn: sqlite3.Connection = Depends(
 
 
 @router.post("/logout")
-def logout(response: Response, conn: sqlite3.Connection = Depends(get_db),
+def logout(response: Response, conn: sqlite3.Connection = Depends(get_hub),
            user=Depends(current_user)):
     # token diambil ulang dari cookie oleh dependency; hapus semua sesi user ini
     conn.execute("DELETE FROM sessions WHERE user_id=?", (user["id"],))
@@ -79,7 +79,7 @@ def me(user=Depends(current_user)):
 
 
 @router.post("/change-password")
-def change_password(body: ChangePwIn, conn: sqlite3.Connection = Depends(get_db),
+def change_password(body: ChangePwIn, conn: sqlite3.Connection = Depends(get_hub),
                     user=Depends(current_user)):
     if not auth.verify_password(body.old_password, user["password_hash"]):
         raise HTTPException(status_code=400, detail="Current password is wrong")

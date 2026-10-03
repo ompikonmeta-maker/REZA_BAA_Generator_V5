@@ -31,6 +31,7 @@ DB_PATH = DATA_DIR / "app.db"
 TEMPLATES_DIR = DATA_DIR / "templates"
 IMAGES_DIR = DATA_DIR / "images"
 OUTPUT_DIR = DATA_DIR / "output"
+PROJECTS_DIR = DATA_DIR / "projects"   # satu file SQLite per project
 
 # Direktori aset frontend (dikemas bersama app)
 WEB_DIR = Path(__file__).resolve().parent / "web"
@@ -49,5 +50,5 @@ ALLOWED_IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif"}
 
 
 def ensure_dirs() -> None:
-    for d in (DATA_DIR, TEMPLATES_DIR, IMAGES_DIR, OUTPUT_DIR):
+    for d in (DATA_DIR, TEMPLATES_DIR, IMAGES_DIR, OUTPUT_DIR, PROJECTS_DIR):
         d.mkdir(parents=True, exist_ok=True)

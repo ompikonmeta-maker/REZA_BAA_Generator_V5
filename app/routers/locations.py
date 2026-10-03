@@ -12,10 +12,10 @@ from ..deps import audit, current_user, get_db, require_admin, require_editor
 
 router = APIRouter(prefix="/api/locations", tags=["locations"])
 
-def _format_code(n: int) -> str:
-    """Kode urut dari nomor baris, mis. LOK_00001. Minimal 5 digit (auto
-    melebar kalau > 99999)."""
-    return f"LOK_{n:05d}"
+def _format_code(conn, n: int) -> str:
+    """Kode urut dari nomor baris + awalan project, mis. LOK_00001. Minimal 5
+    digit (auto melebar kalau > 99999)."""
+    return db.format_code(conn, n)
 
 
 def _scope(user):
@@ -213,7 +213,7 @@ def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db)
         ("", body.name, json.dumps(body.data, ensure_ascii=False), body.status,
          user["id"], user["id"], now, now),
     )
-    code = _format_code(cur.lastrowid)
+    code = _format_code(conn, cur.lastrowid)
     conn.execute("UPDATE locations SET code=?, modified_at=?, modified_by=? WHERE id=?",
                  (code, now, user["id"], cur.lastrowid))
     db.log_activity(conn, cur.lastrowid, user["id"], "create", "", now)
@@ -232,10 +232,10 @@ class TransferIn(BaseModel):
 def transfer_locations(body: TransferIn, conn: sqlite3.Connection = Depends(get_db),
                        user=Depends(require_admin)):
     """Admin mengalihkan kepemilikan beberapa lokasi ke user lain."""
-    tgt = conn.execute("SELECT id, username, full_name, role, active FROM users WHERE id=?",
+    tgt = conn.execute("SELECT id, username, full_name, role, active FROM pm_users WHERE id=?",
                        (body.to_user_id,)).fetchone()
     if not tgt:
-        raise HTTPException(404, "Target user not found")
+        raise HTTPException(404, "Target user not found in this project")
     if not tgt["active"]:
         raise HTTPException(400, "Target user is inactive")
     if tgt["role"] == "viewer":

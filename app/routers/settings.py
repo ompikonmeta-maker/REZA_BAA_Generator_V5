@@ -1,6 +1,7 @@
 """Pengaturan aplikasi: field lokasi (custom fields), kategori foto + kata kunci."""
 from __future__ import annotations
 
+import json
 import sqlite3
 
 from fastapi import APIRouter, Depends
@@ -39,7 +40,7 @@ class InvKeterangan(BaseModel):
 @router.get("")
 def get_settings(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     return {
-        "app_title": db.get_setting(conn, "app_title", "BAA Generator"),
+        "app_title": db.app_title(conn),
         "location_fields": db.get_setting(conn, "location_fields", []),
         "photo_categories": db.get_setting(conn, "photo_categories", []),
         "default_inventory_items": db.get_setting(conn, "default_inventory_items", []),
@@ -75,7 +76,9 @@ def update_photo_categories(body: PhotoCategories, conn: sqlite3.Connection = De
 @router.put("/app-title")
 def update_app_title(body: AppTitle, conn: sqlite3.Connection = Depends(get_db),
                      user=Depends(require_admin)):
-    db.set_setting(conn, "app_title", body.title.strip() or "BAA Generator")
+    conn.execute("INSERT INTO hub.settings(key, value_json) VALUES('app_title', ?) "
+                 "ON CONFLICT(key) DO UPDATE SET value_json=excluded.value_json",
+                 (json.dumps(body.title.strip() or "BAA Generator"),))
     conn.commit()
     return {"ok": True}
 

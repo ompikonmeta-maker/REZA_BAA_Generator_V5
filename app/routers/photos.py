@@ -182,7 +182,8 @@ def photo_file(photo_id: int, conn: sqlite3.Connection = Depends(get_db),
     if not row or not Path(row["path"]).exists():
         raise HTTPException(404, "File not found")
     _guard_photo(conn, user, row, write=False)
-    return FileResponse(row["path"])
+    # URL foto sama antar project (id per project) -> selalu validasi ulang ke server
+    return FileResponse(row["path"], headers={"Cache-Control": "private, no-cache"})
 
 
 @router.delete("/photos/{photo_id}")

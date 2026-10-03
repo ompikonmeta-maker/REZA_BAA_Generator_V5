@@ -286,29 +286,34 @@ class GoalIn(BaseModel):
 
 @router.put("/progress/goal")
 def set_goal(body: GoalIn, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    return {"ok": True, "goal": apply_goal(conn, user, body.total, body.target_date)}
+
+
+def apply_goal(conn, user, total: int | None, target_date: str | None) -> dict:
+    """Ubah target project (total BAA & tanggal) + catat riwayat & audit."""
     g = _goal(conn)
     hist = db.get_setting(conn, "progress_history", []) or []
     name = (user["full_name"] or user["username"]).strip()
-    if body.total is not None:
-        if body.total < 1:
+    if total is not None:
+        if total < 1:
             raise HTTPException(400, "Total must be at least 1")
-        if body.total != g["total"]:
-            hist.append({"at": db.now_iso(), "by": name, "field": "total", "old": g["total"], "new": body.total})
-            g["total"] = body.total
-    if body.target_date is not None:
+        if total != g["total"]:
+            hist.append({"at": db.now_iso(), "by": name, "field": "total", "old": g["total"], "new": total})
+            g["total"] = total
+    if target_date is not None:
         try:
-            date.fromisoformat(body.target_date)
+            date.fromisoformat(target_date)
         except ValueError:
             raise HTTPException(400, "Invalid date")
-        if body.target_date != g["target_date"]:
+        if target_date != g["target_date"]:
             hist.append({"at": db.now_iso(), "by": name, "field": "target_date", "old": g["target_date"],
-                         "new": body.target_date})
-            g["target_date"] = body.target_date
+                         "new": target_date})
+            g["target_date"] = target_date
     db.set_setting(conn, "progress_goal", g)
     db.set_setting(conn, "progress_history", hist[-200:])
     conn.commit()
     audit(conn, user, "set_goal", "settings", "progress_goal", json.dumps(g))
-    return {"ok": True, "goal": g}
+    return g
 
 
 class AgingIn(BaseModel):
@@ -349,7 +354,7 @@ def supervisor(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_
     today = _today()
     team = _team(conn)
     drafts = _open_drafts(conn)
-    users = conn.execute("SELECT id, username, full_name, role, last_seen_at FROM users "
+    users = conn.execute("SELECT id, username, full_name, role, last_seen_at FROM pm_users "
                          "WHERE active=1 AND role IN ('admin','operator') ORDER BY id").fetchall()
     wk0 = today - timedelta(days=today.weekday())
     last10 = _last_wds(today, 10)
@@ -424,7 +429,7 @@ def my_dash(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_use
                              datetime.combine(d + timedelta(days=1), datetime.min.time()).astimezone().astimezone(timezone.utc).isoformat())).fetchone()["c"]
         week.append({"d": d.isoformat(), "done": sum(1 for x in dd if x == d), "edits": n_ed, "today": d == today,
                      "future": d > today})
-    n_workers = conn.execute("SELECT COUNT(*) c FROM users WHERE active=1 AND role='operator'").fetchone()["c"] or 1
+    n_workers = conn.execute("SELECT COUNT(*) c FROM pm_users WHERE active=1 AND role='operator'").fetchone()["c"] or 1
     part = math.ceil((team["pace_needed"] or 0) * 5 / n_workers) if team["pace_needed"] else None
     cur, best = _streak(set(dd), today)
     return {"name": (user["full_name"] or user["username"]).strip(), "team": team, "drafts": mine,

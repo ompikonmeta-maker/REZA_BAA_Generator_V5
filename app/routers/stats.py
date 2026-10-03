@@ -36,7 +36,7 @@ def stats(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)
     uid = user["id"]
     scope = " AND l.deleted_at IS NULL" + ("" if see_all else " AND l.owner_id = :uid")
     own = "" if see_all else " AND owner_id=:uid"  # untuk subquery locations tanpa alias
-    p = {"uid": uid}
+    p = {"uid": uid, "pid": conn.project["id"]}
 
     # --- ringkasan lokasi ---
     tot = conn.execute(
@@ -54,7 +54,7 @@ def stats(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)
         f" AND ph.location_id IN (SELECT id FROM locations WHERE deleted_at IS NULL{own})", p
     ).fetchone()["c"] or 0
 
-    users_active = conn.execute("SELECT COUNT(*) c FROM users WHERE active=1").fetchone()["c"] or 0
+    users_active = conn.execute("SELECT COUNT(*) c FROM pm_users WHERE active=1").fetchone()["c"] or 0
     template_active = conn.execute("SELECT COUNT(*) c FROM templates WHERE active=1").fetchone()["c"] or 0
     inv_items = conn.execute(
         f"SELECT COUNT(*) c FROM inventory_items i WHERE 1=1" +
@@ -89,7 +89,7 @@ def stats(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)
             leaderboard.append({"name": r["nm"], "total": r["total"], "done": r["done"] or 0})
 
     # --- aktivitas terbaru ---
-    feed_scope = "" if see_all else " WHERE user_id=:uid"
+    feed_scope = " WHERE project_id=:pid" + ("" if see_all else " AND user_id=:uid")
     feed = [dict(r) for r in conn.execute(
         f"SELECT username,action,entity,entity_id,detail,created_at FROM audit_log{feed_scope} "
         f"ORDER BY id DESC LIMIT 8", p
@@ -109,7 +109,7 @@ def stats(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)
     heat_scope = "" if see_all else " AND user_id=:uid"
     heat_rows = {r["d"]: r["c"] for r in conn.execute(
         f"SELECT date(created_at) d, COUNT(*) c FROM audit_log "
-        f"WHERE date(created_at)>=:c56{heat_scope} GROUP BY d",
+        f"WHERE project_id=:pid AND date(created_at)>=:c56{heat_scope} GROUP BY d",
         {**p, "c56": cutoff56}
     ).fetchall()}
     heat = _day_series(heat_rows, 197)
@@ -190,15 +190,15 @@ def supervisor(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_
     ).fetchone()["c"] or 0
     # Hanya operator yang dihitung sebagai 'tim lapangan' (exclude admin & viewer).
     users_active = conn.execute(
-        "SELECT COUNT(*) c FROM users WHERE active=1 AND role='operator'").fetchone()["c"] or 0
+        "SELECT COUNT(*) c FROM pm_users WHERE active=1 AND role='operator'").fetchone()["c"] or 0
     users_total = conn.execute(
-        "SELECT COUNT(*) c FROM users WHERE role='operator'").fetchone()["c"] or 0
+        "SELECT COUNT(*) c FROM pm_users WHERE role='operator'").fetchone()["c"] or 0
     throughput = [completed(wk(j), wk(j - 1)) for j in range(7, -1, -1)]
 
     # per-user (khusus operator — admin & viewer dikecualikan dari peringkat/perhatian)
     users = []
     for u in conn.execute(
-        "SELECT id, COALESCE(NULLIF(full_name,''),username) nm FROM users "
+        "SELECT id, COALESCE(NULLIF(full_name,''),username) nm FROM pm_users "
         "WHERE active=1 AND role='operator'"
     ).fetchall():
         r = conn.execute(
@@ -277,7 +277,7 @@ def supervisor(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_
     # aktivitas terkini tim (global) untuk 'denyut pekerjaan' di dashboard viewer
     feed = [dict(r) for r in conn.execute(
         "SELECT username,action,entity,entity_id,detail,created_at FROM audit_log "
-        "ORDER BY id DESC LIMIT 8"
+        "WHERE project_id=? ORDER BY id DESC LIMIT 8", (conn.project["id"],)
     ).fetchall()]
 
     # momentum/streak tim: hari beruntun (mundur dari hari ini) yang ADA lokasi selesai

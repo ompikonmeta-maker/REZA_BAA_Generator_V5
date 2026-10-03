@@ -119,7 +119,7 @@ def approve_request(rid: int, conn: sqlite3.Connection = Depends(get_db),
         raise HTTPException(400, "Request already handled")
     if r["loc_deleted"] is not None:
         raise HTTPException(400, "Location was deleted")
-    tgt = conn.execute("SELECT id, active, role FROM users WHERE id=?", (r["requester_id"],)).fetchone()
+    tgt = conn.execute("SELECT id, active, role FROM pm_users WHERE id=?", (r["requester_id"],)).fetchone()
     if not tgt or not tgt["active"]:
         raise HTTPException(400, "Requester is inactive")
     now = db.now_iso()

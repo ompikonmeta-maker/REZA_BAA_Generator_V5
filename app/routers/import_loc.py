@@ -210,7 +210,7 @@ async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True),
         )
         lid = cur.lastrowid
         conn.execute("UPDATE locations SET code=?, modified_at=?, modified_by=? WHERE id=?",
-                     (_format_code(lid), now, user["id"], lid))
+                     (_format_code(conn, lid), now, user["id"], lid))
         db.log_activity(conn, lid, user["id"], "create", "import", now)
         for i, it in enumerate(loc["inventory"]):
             conn.execute(

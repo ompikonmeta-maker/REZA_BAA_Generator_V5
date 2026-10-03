@@ -4,12 +4,16 @@ from __future__ import annotations
 import sqlite3
 from typing import Optional
 
-from fastapi import Cookie, Depends, HTTPException, status
+from fastapi import Cookie, Depends, HTTPException, Request, status
 
 from . import auth, config, db
 
+PROJECT_HEADER = "X-Project"
+PROJECT_COOKIE = "baa_project"
 
-def get_db():
+
+def get_hub():
+    """Koneksi ke hub (akun, sesi, audit, daftar project)."""
     conn = db.connect()
     try:
         yield conn
@@ -18,7 +22,7 @@ def get_db():
 
 
 def current_user(
-    conn: sqlite3.Connection = Depends(get_db),
+    conn: sqlite3.Connection = Depends(get_hub),
     reza_baa_session: Optional[str] = Cookie(default=None),
 ):
     user = auth.get_session_user(conn, reza_baa_session)
@@ -40,6 +44,42 @@ def _touch_seen(conn: sqlite3.Connection, user) -> None:
         conn.commit()
     except Exception:
         pass
+
+
+def accessible_projects(hub: sqlite3.Connection, user) -> list:
+    """Project yang boleh dibuka user: admin semua (termasuk arsip), lainnya
+    hanya project aktif tempat ia jadi anggota."""
+    if user["role"] == "admin":
+        return hub.execute("SELECT * FROM projects ORDER BY archived, id").fetchall()
+    return hub.execute(
+        "SELECT p.* FROM projects p JOIN project_members m ON m.project_id=p.id "
+        "WHERE m.user_id=? AND p.archived=0 ORDER BY p.id", (user["id"],)).fetchall()
+
+
+def current_project(request: Request, hub: sqlite3.Connection = Depends(get_hub),
+                    user=Depends(current_user)):
+    """Project aktif request ini: header X-Project (dipakai fetch), lalu cookie
+    baa_project (untuk <img>/unduhan), lalu project pertama yang boleh diakses.
+    Akses selalu dicek di server — header/cookie hanya pilihan, bukan izin."""
+    rows = accessible_projects(hub, user)
+    if not rows:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="No project access")
+    by_id = {str(r["id"]): r for r in rows}
+    want = request.headers.get(PROJECT_HEADER)
+    if want:
+        if want not in by_id:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, detail="No access to this project")
+        return by_id[want]
+    return by_id.get(request.cookies.get(PROJECT_COOKIE) or "", rows[0])
+
+
+def get_db(project=Depends(current_project)):
+    """Koneksi ke DB project aktif (hub ter-ATTACH)."""
+    conn = db.connect_project(project)
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 def require_admin(user=Depends(current_user)):
@@ -75,8 +115,8 @@ def loc_access(user, owner_id, *, write: bool) -> bool:
 
 def audit(conn: sqlite3.Connection, user, action: str, entity: str = "", entity_id="", detail: str = ""):
     conn.execute(
-        "INSERT INTO audit_log(user_id, username, action, entity, entity_id, detail, created_at) "
-        "VALUES(?,?,?,?,?,?,?)",
+        "INSERT INTO audit_log(user_id, username, action, entity, entity_id, detail, created_at, project_id) "
+        "VALUES(?,?,?,?,?,?,?,?)",
         (
             user["id"] if user else None,
             user["username"] if user else "",
@@ -85,6 +125,7 @@ def audit(conn: sqlite3.Connection, user, action: str, entity: str = "", entity_
             str(entity_id),
             detail,
             db.now_iso(),
+            (getattr(conn, "project", None) or {}).get("id"),
         ),
     )
     conn.commit()

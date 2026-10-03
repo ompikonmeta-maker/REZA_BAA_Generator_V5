@@ -197,7 +197,7 @@ def export_pdf(scope: str = Query("one"), loc_id: int | None = None,
                conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user)
     cats = db.get_setting(conn, "photo_categories", [])
-    title = db.get_setting(conn, "app_title", "Berita Acara Aktivasi")
+    title = db.app_title(conn)
     out = _stamp(locs[0]["code"] if scope == "one" else "BAA", "pdf")
     mode, warn = _render_pdf(conn, locs, out, cats, title)
     audit(conn, user, "export_pdf", "export", scope, out.name)
@@ -216,7 +216,7 @@ def export_pdf_zip(scope: str = Query("filter"), loc_id: int | None = None,
     """Satu PDF detail per lokasi (tanpa LOG sheet), dibundel dalam satu ZIP."""
     locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user)
     cats = db.get_setting(conn, "photo_categories", [])
-    title = db.get_setting(conn, "app_title", "Berita Acara Aktivasi")
+    title = db.app_title(conn)
     zpath = _stamp("PDF_BAA", "zip")
     used: set[str] = set()
     paper_warn = ""
@@ -343,7 +343,7 @@ def start_job(kind: str = Query(...), scope: str = Query("one"), loc_id: int | N
         if not tpl:
             raise HTTPException(400, "Template file is missing on the server.")
     cats = db.get_setting(conn, "photo_categories", [])
-    title = db.get_setting(conn, "app_title", "Berita Acara Aktivasi")
+    title = db.app_title(conn)
     n = len(locs)
     one = f"{locs[0]['code']}" + (f" · {locs[0].get('name')}" if locs[0].get("name") else "")
     name = {"excel": (one + " · Excel") if scope == "one" else f"Location Log · {n} location{'s' if n != 1 else ''}",

@@ -8,17 +8,20 @@ from __future__ import annotations
 import json
 import sqlite3
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from . import config
 from .auth import hash_password
 
-SCHEMA = """
+# Hub (data/app.db): akun, sesi, audit, daftar project + akses. Data kerja
+# (lokasi, foto, template, pengaturan) ada di DB per project: data/projects/pN.db.
+HUB_SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     username      TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role          TEXT NOT NULL DEFAULT 'operator',   -- 'admin' | 'operator'
+    role          TEXT NOT NULL DEFAULT 'operator',   -- 'admin' | 'operator' | 'viewer'
     full_name     TEXT DEFAULT '',
     active        INTEGER NOT NULL DEFAULT 1,
     must_change   INTEGER NOT NULL DEFAULT 0,
@@ -32,6 +35,44 @@ CREATE TABLE IF NOT EXISTS sessions (
     expires_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS settings (
+    key        TEXT PRIMARY KEY,
+    value_json TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER REFERENCES users(id),
+    username   TEXT DEFAULT '',
+    action     TEXT NOT NULL,
+    entity     TEXT DEFAULT '',
+    entity_id  TEXT DEFAULT '',
+    detail     TEXT DEFAULT '',
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS projects (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    name       TEXT NOT NULL,
+    prefix     TEXT UNIQUE NOT NULL COLLATE NOCASE,  -- awalan kode lokasi, mis. LOK -> LOK_00001
+    color      TEXT NOT NULL DEFAULT '#0aa39d',
+    db_file    TEXT NOT NULL,
+    archived   INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS project_members (
+    project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (project_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+"""
+
+# Tabel per project. Kolom *_by/owner_id menyimpan id user di hub (tanpa FK:
+# SQLite tidak mendukung foreign key lintas file database).
+PROJECT_SCHEMA = """
 CREATE TABLE IF NOT EXISTS templates (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT NOT NULL,
@@ -41,22 +82,25 @@ CREATE TABLE IF NOT EXISTS templates (
     sheet_detail TEXT NOT NULL,
     config_json TEXT NOT NULL DEFAULT '{}',   -- mapping kolom/anchor foto
     active      INTEGER NOT NULL DEFAULT 0,
-    uploaded_by INTEGER REFERENCES users(id),
+    uploaded_by INTEGER,
     created_at  TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS locations (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    code       TEXT UNIQUE NOT NULL,             -- mis. Lokasi_0043
-    name       TEXT NOT NULL DEFAULT '',
-    data_json  TEXT NOT NULL DEFAULT '{}',       -- field lokasi + custom fields
-    status     TEXT NOT NULL DEFAULT 'draft',    -- draft | complete
-    created_by INTEGER REFERENCES users(id),
-    owner_id   INTEGER REFERENCES users(id),     -- pemilik saat ini (bisa ditransfer admin)
-    deleted_at TEXT,                              -- soft-delete (NULL = aktif)
-    deleted_by INTEGER REFERENCES users(id),
-    created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    code        TEXT UNIQUE NOT NULL,             -- mis. LOK_00043
+    name        TEXT NOT NULL DEFAULT '',
+    data_json   TEXT NOT NULL DEFAULT '{}',       -- field lokasi + custom fields
+    status      TEXT NOT NULL DEFAULT 'draft',    -- draft | selesai
+    created_by  INTEGER,
+    owner_id    INTEGER,                          -- pemilik saat ini (bisa ditransfer admin)
+    deleted_at  TEXT,                             -- soft-delete (NULL = aktif)
+    deleted_by  INTEGER,
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL,
+    modified_at TEXT,
+    modified_by INTEGER,
+    done_at     TEXT
 );
 
 CREATE TABLE IF NOT EXISTS inventory_items (
@@ -80,7 +124,7 @@ CREATE TABLE IF NOT EXISTS photos (
     ocr_text    TEXT DEFAULT '',
     ocr_serial  TEXT DEFAULT '',
     matched_by  TEXT DEFAULT '',                 -- filename | folder | manual
-    uploaded_by INTEGER REFERENCES users(id),
+    uploaded_by INTEGER,
     created_at  TEXT NOT NULL
 );
 
@@ -92,30 +136,33 @@ CREATE TABLE IF NOT EXISTS settings (
 CREATE TABLE IF NOT EXISTS edit_requests (
     id           INTEGER PRIMARY KEY AUTOINCREMENT,
     location_id  INTEGER NOT NULL REFERENCES locations(id) ON DELETE CASCADE,
-    requester_id INTEGER NOT NULL REFERENCES users(id),
-    owner_id     INTEGER REFERENCES users(id),      -- pemilik saat request dibuat
+    requester_id INTEGER NOT NULL,
+    owner_id     INTEGER,                         -- pemilik saat request dibuat
     message      TEXT DEFAULT '',
-    status       TEXT NOT NULL DEFAULT 'pending',   -- pending | approved | rejected
+    status       TEXT NOT NULL DEFAULT 'pending', -- pending | approved | rejected
     created_at   TEXT NOT NULL,
     resolved_at  TEXT,
-    resolved_by  INTEGER REFERENCES users(id)
+    resolved_by  INTEGER
 );
 
-CREATE TABLE IF NOT EXISTS audit_log (
-    id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id    INTEGER REFERENCES users(id),
-    username   TEXT DEFAULT '',
-    action     TEXT NOT NULL,
-    entity     TEXT DEFAULT '',
-    entity_id  TEXT DEFAULT '',
-    detail     TEXT DEFAULT '',
-    created_at TEXT NOT NULL
+CREATE TABLE IF NOT EXISTS activity (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER,
+    location_id INTEGER REFERENCES locations(id) ON DELETE CASCADE,
+    kind        TEXT NOT NULL,
+    detail      TEXT DEFAULT '',
+    created_at  TEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_inv_loc ON inventory_items(location_id);
 CREATE INDEX IF NOT EXISTS idx_photo_loc ON photos(location_id);
-CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS ix_activity_time ON activity(created_at);
 """
+
+# Tabel data kerja yang dulu ada di app.db (pra multi-project)
+_LEGACY_TABLES = ["templates", "locations", "inventory_items", "photos", "edit_requests", "activity"]
+MAX_PROJECTS = 5
+PROJECT_COLORS = ["#0aa39d", "#7b5cd6", "#d07a1f", "#3b7be0", "#d0496a", "#5a9e3a"]
 
 # --- Default kategori foto (sesuai Template_BAA.xlsx) ---
 DEFAULT_PHOTO_CATEGORIES = [
@@ -177,39 +224,171 @@ def _has_column(conn: sqlite3.Connection, table: str, col: str) -> bool:
     return any(r["name"] == col for r in conn.execute(f"PRAGMA table_info({table})").fetchall())
 
 
-def _migrate(conn: sqlite3.Connection) -> None:
-    """Migrasi ringan & idempoten untuk DB lama."""
-    # Kepemilikan lokasi: owner_id (transfer bisa mengubah tanpa hilangkan created_by)
+def _has_table(conn: sqlite3.Connection, table: str, schema: str = "main") -> bool:
+    return conn.execute(f"SELECT 1 FROM {schema}.sqlite_master WHERE type='table' AND name=?",
+                        (table,)).fetchone() is not None
+
+
+def _migrate_legacy(conn: sqlite3.Connection) -> None:
+    """Migrasi kolom untuk app.db lama (pra multi-project) sebelum datanya
+    dipindah ke project pertama. Idempoten."""
     if not _has_column(conn, "locations", "owner_id"):
         conn.execute("ALTER TABLE locations ADD COLUMN owner_id INTEGER REFERENCES users(id)")
         conn.execute("UPDATE locations SET owner_id = created_by WHERE owner_id IS NULL")
-    # Soft-delete lokasi (Task #9) — disiapkan sekarang agar aman dipakai nanti
     if not _has_column(conn, "locations", "deleted_at"):
         conn.execute("ALTER TABLE locations ADD COLUMN deleted_at TEXT")
     if not _has_column(conn, "locations", "deleted_by"):
         conn.execute("ALTER TABLE locations ADD COLUMN deleted_by INTEGER REFERENCES users(id)")
-    # Last modified / Modified by: hanya perubahan isi (data, inventory, foto).
-    # Data lama: waktu diambil dari updated_at, pengubah belum tercatat (NULL).
     if not _has_column(conn, "locations", "modified_at"):
         conn.execute("ALTER TABLE locations ADD COLUMN modified_at TEXT")
         conn.execute("UPDATE locations SET modified_at = updated_at WHERE modified_at IS NULL")
     if not _has_column(conn, "locations", "modified_by"):
         conn.execute("ALTER TABLE locations ADD COLUMN modified_by INTEGER REFERENCES users(id)")
-    # Waktu status menjadi Done (dasar grafik progres & cycle time)
     if not _has_column(conn, "locations", "done_at"):
         conn.execute("ALTER TABLE locations ADD COLUMN done_at TEXT")
         conn.execute("UPDATE locations SET done_at = updated_at WHERE status='selesai' AND done_at IS NULL")
-    # Last seen user (permintaan terakhir ke server)
+    conn.commit()
+
+
+def _migrate_hub(conn: sqlite3.Connection) -> None:
     if not _has_column(conn, "users", "last_seen_at"):
         conn.execute("ALTER TABLE users ADD COLUMN last_seen_at TEXT")
-    # Aktivitas isi lokasi (feed, ritme kerja, perubahan terakhir)
-    conn.execute("""CREATE TABLE IF NOT EXISTS activity (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER REFERENCES users(id),
-        location_id INTEGER REFERENCES locations(id) ON DELETE CASCADE,
-        kind TEXT NOT NULL, detail TEXT DEFAULT '', created_at TEXT NOT NULL)""")
-    conn.execute("CREATE INDEX IF NOT EXISTS ix_activity_time ON activity(created_at)")
+    if not _has_column(conn, "audit_log", "project_id"):
+        conn.execute("ALTER TABLE audit_log ADD COLUMN project_id INTEGER")
     conn.commit()
+
+
+# ---------- project ----------
+class ProjectConn(sqlite3.Connection):
+    """Koneksi ke DB satu project; hub ter-ATTACH sebagai skema ``hub``.
+
+    Nama tabel tanpa skema dicari di main dulu lalu hub, jadi ``users`` /
+    ``audit_log`` / ``sessions`` otomatis ke hub, sedangkan ``settings`` ke
+    pengaturan project. ``pm_users`` = user yang punya akses ke project ini
+    (admin + anggota)."""
+    project: dict | None = None
+
+
+def project_path(p) -> Path:
+    return config.PROJECTS_DIR / p["db_file"]
+
+
+def connect_project(p) -> ProjectConn:
+    config.ensure_dirs()
+    conn = sqlite3.connect(project_path(p), check_same_thread=False, factory=ProjectConn)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("ATTACH DATABASE ? AS hub", (str(config.DB_PATH),))
+    conn.project = dict(p)
+    conn.execute(
+        "CREATE TEMP VIEW IF NOT EXISTS pm_users AS SELECT * FROM hub.users WHERE role='admin' "
+        f"OR id IN (SELECT user_id FROM hub.project_members WHERE project_id={int(p['id'])})")
+    return conn
+
+
+def format_code(conn, n: int) -> str:
+    """Kode urut per project dari nomor baris, mis. LOK_00001 (min. 5 digit)."""
+    pj = getattr(conn, "project", None) or {}
+    return f"{(pj.get('prefix') or 'LOK').upper()}_{n:05d}"
+
+
+def app_title(conn) -> str:
+    """Judul app global (disimpan di hub)."""
+    sch = "hub." if getattr(conn, "project", None) else ""
+    row = conn.execute(f"SELECT value_json FROM {sch}settings WHERE key='app_title'").fetchone()
+    return json.loads(row["value_json"]) if row else "BAA Generator"
+
+
+def _seed_project(conn: sqlite3.Connection, base: dict | None = None) -> None:
+    """Isi pengaturan default project (dari ``base`` bila ada, mis. salinan
+    pengaturan project pertama — saat ini antar project hanya beda template)."""
+    base = base or {}
+    defaults = {
+        "photo_categories": DEFAULT_PHOTO_CATEGORIES,
+        "location_fields": DEFAULT_LOCATION_FIELDS,
+        "default_inventory_items": DEFAULT_INVENTORY_ITEMS,
+        "item_merks": {},
+        "inventory_keterangan": ["OK"],
+    }
+    for k, v in defaults.items():
+        if get_setting(conn, k) is None:
+            set_setting(conn, k, base.get(k, v))
+    for k in ("aging_days",):
+        if k in base and get_setting(conn, k) is None:
+            set_setting(conn, k, base[k])
+    conn.commit()
+
+
+def init_project_db(p, base: dict | None = None) -> None:
+    config.ensure_dirs()
+    conn = sqlite3.connect(project_path(p))
+    conn.row_factory = sqlite3.Row
+    try:
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.executescript(PROJECT_SCHEMA)
+        _seed_project(conn, base)
+    finally:
+        conn.close()
+
+
+def project_settings(p) -> dict:
+    conn = sqlite3.connect(project_path(p))
+    conn.row_factory = sqlite3.Row
+    try:
+        return {r["key"]: json.loads(r["value_json"])
+                for r in conn.execute("SELECT key, value_json FROM settings")}
+    finally:
+        conn.close()
+
+
+def _move_legacy_to_project(hub: sqlite3.Connection, p) -> None:
+    """Pindahkan data kerja dari app.db lama ke DB project pertama, lalu ganti
+    nama tabel lama menjadi legacy_* (disimpan sebagai cadangan)."""
+    _migrate_legacy(hub)
+    init_project_db(p)
+    pc = sqlite3.connect(project_path(p))
+    pc.row_factory = sqlite3.Row
+    try:
+        pc.execute("PRAGMA foreign_keys = OFF")
+        pc.execute("ATTACH DATABASE ? AS old", (str(config.DB_PATH),))
+        for t in _LEGACY_TABLES:
+            if not _has_table(pc, t, "old"):
+                continue
+            new_cols = {r["name"] for r in pc.execute(f"PRAGMA main.table_info({t})")}
+            cols = [r["name"] for r in pc.execute(f"PRAGMA old.table_info({t})") if r["name"] in new_cols]
+            cl = ",".join(f'"{c}"' for c in cols)
+            pc.execute(f"DELETE FROM main.{t}")
+            pc.execute(f"INSERT INTO main.{t}({cl}) SELECT {cl} FROM old.{t}")
+        # Lanjutkan penomoran lama (kode lokasi yang pernah terbit tidak dipakai ulang)
+        for r in pc.execute("SELECT name, seq FROM old.sqlite_sequence").fetchall():
+            if r["name"] in _LEGACY_TABLES:
+                pc.execute("UPDATE main.sqlite_sequence SET seq=MAX(seq, ?) WHERE name=?", (r["seq"], r["name"]))
+        pc.execute("DELETE FROM main.settings")
+        pc.execute("INSERT INTO main.settings(key, value_json) SELECT key, value_json FROM old.settings "
+                   "WHERE key <> 'app_title'")
+        pc.commit()
+        pc.execute("DETACH DATABASE old")
+        _seed_project(pc)
+    finally:
+        pc.close()
+    hub.execute("PRAGMA foreign_keys = OFF")
+    for t in _LEGACY_TABLES:
+        if _has_table(hub, t):
+            hub.execute(f'ALTER TABLE "{t}" RENAME TO "legacy_{t}"')
+    hub.commit()
+    hub.execute("PRAGMA foreign_keys = ON")
+
+
+def create_project(hub: sqlite3.Connection, name: str, prefix: str, color: str,
+                   base: dict | None = None) -> int:
+    cur = hub.execute("INSERT INTO projects(name, prefix, color, db_file, created_at) VALUES(?,?,?,?,?)",
+                      (name, prefix.upper(), color, "", now_iso()))
+    pid = cur.lastrowid
+    hub.execute("UPDATE projects SET db_file=? WHERE id=?", (f"p{pid}.db", pid))
+    hub.commit()
+    init_project_db({"db_file": f"p{pid}.db"}, base)
+    return pid
 
 
 def touch_modified(conn: sqlite3.Connection, loc_id: int, user_id, kind: str = "edit",
@@ -231,19 +410,8 @@ def log_activity(conn: sqlite3.Connection, loc_id: int, user_id, kind: str, deta
 def init_db() -> None:
     conn = connect()
     try:
-        conn.executescript(SCHEMA)
-        _migrate(conn)
-        # Seed settings
-        if get_setting(conn, "photo_categories") is None:
-            set_setting(conn, "photo_categories", DEFAULT_PHOTO_CATEGORIES)
-        if get_setting(conn, "location_fields") is None:
-            set_setting(conn, "location_fields", DEFAULT_LOCATION_FIELDS)
-        if get_setting(conn, "default_inventory_items") is None:
-            set_setting(conn, "default_inventory_items", DEFAULT_INVENTORY_ITEMS)
-        if get_setting(conn, "item_merks") is None:
-            set_setting(conn, "item_merks", {})
-        if get_setting(conn, "inventory_keterangan") is None:
-            set_setting(conn, "inventory_keterangan", ["OK"])
+        conn.executescript(HUB_SCHEMA)
+        _migrate_hub(conn)
         _title = get_setting(conn, "app_title")
         if _title is None or _title == "REZA BAA Generator":
             set_setting(conn, "app_title", "BAA Generator")
@@ -256,5 +424,19 @@ def init_db() -> None:
                 ("admin", hash_password("admin"), "admin", "Administrator", 1, now_iso()),
             )
         conn.commit()
+        # Project pertama: dari data lama (bila ada) atau kosong untuk instalasi baru.
+        if not conn.execute("SELECT 1 FROM projects LIMIT 1").fetchone():
+            pid = create_project(conn, "Project 1", "LOK", PROJECT_COLORS[0])
+            p = conn.execute("SELECT * FROM projects WHERE id=?", (pid,)).fetchone()
+            if _has_table(conn, "locations"):
+                _move_legacy_to_project(conn, p)
+                conn.execute("UPDATE audit_log SET project_id=? WHERE project_id IS NULL "
+                             "AND entity NOT IN ('user','data')", (pid,))
+            # Semua user lama mendapat akses ke project pertama (perilaku sama seperti sebelumnya)
+            conn.execute("INSERT OR IGNORE INTO project_members(project_id, user_id) "
+                         "SELECT ?, id FROM users WHERE role <> 'admin'", (pid,))
+            conn.commit()
+        for p in conn.execute("SELECT * FROM projects").fetchall():
+            init_project_db(p)
     finally:
         conn.close()
