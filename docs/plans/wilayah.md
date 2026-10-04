@@ -41,6 +41,21 @@ Status: **Tahap 1 selesai** (referensi, pencarian, sakelar per project, kelengka
 - **Export ZIP**: opsi folder per wilayah, mis. `Jawa Barat/Kab. Bandung/LOK_00012 ….pdf`.
 - **Filter** Location Log per provinsi/kab/kota.
 
+## Wilayah yang tidak ada di data Kemendagri (rencana, belum dikerjakan)
+Keputusan: kasus utama = desa tidak ada tapi kecamatan ada; kasus "tidak cocok sama sekali" tetap didukung.
+**Nama yang dicetak di Excel/BAA = sesuai tulisan teknisi.** Operator boleh mengisi manual; admin meninjau.
+
+| Kasus | Cara isi | Simpan | Rekap / peta |
+|---|---|---|---|
+| 1. Desa tak ada, kecamatan ada | Opsi "Desa not in the list? Enter it manually" di bawah hasil → pilih **kecamatan resmi** + ketik desa | kode kecamatan + nama desa manual, badge **Desa manual** | ikut kecamatan/kab/prov resmi (tetap masuk peta) |
+| 2. Tidak cocok sama sekali | "Switch to fully manual" → 4 kolom diketik | tanpa kode, badge **Unverified** | kelompok "Belum terverifikasi" |
+| 3. Resmi ada, ejaan beda | pilih resmi → "As written by technician" (4 kolom, terisi nama resmi, bisa diubah; tampil "Official: …") | kode resmi + nama tertulis | pakai kode resmi |
+
+- Semua kasus dihitung "terisi" untuk kelengkapan.
+- **Excel/BAA mencetak nama tertulis** (default = nama resmi bila tidak diubah).
+- Location Log: badge Desa manual / Unverified, filter **"Manual wilayah"**.
+- Admin: **"Link to official wilayah"** per lokasi/massal dengan saran (kecocokan nama di kecamatan yang sama); tulisan teknisi tetap dipertahankan. Saat update data Kemendagri, aplikasi menyarankan pasangan untuk isian manual.
+
 ## Update data Kemendagri
 - **Jalur A (dipakai):** data wilayah baru disiapkan di repo → build → EXE baru mendeteksi versi data lebih baru saat start dan memperbarui referensi otomatis. Data lokasi tidak diubah diam-diam.
 - **Jalur B (ditunda):** upload paket wilayah oleh admin (Settings › Wilayah, pratinjau perubahan) — ditambahkan hanya bila nanti dibutuhkan.
