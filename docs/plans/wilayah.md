@@ -1,6 +1,6 @@
 # Rencana: Data Wilayah + Infografis Peta
 
-Status: **Tahap 1 selesai** (referensi, pencarian, sakelar per project, kelengkapan, filter, isi massal) + **isian manual** + **tahap 2** (Excel/BAA, import, folder ZIP) · tahap 3 (peta) belum · 2026-10-04
+Status: **Tahap 1 selesai** (referensi, pencarian, sakelar per project, kelengkapan, filter, isi massal) + **isian manual** + **tahap 2** (Excel/BAA, import, folder ZIP) + **tahap 3** (peta Progress, Team by wilayah, peta mini Portfolio) — semua tahap selesai · 2026-10-04
 
 ## Keputusan
 | Topik | Keputusan |
@@ -72,7 +72,8 @@ Keputusan: kasus utama = desa tidak ada tapi kecamatan ada; kasus "tidak cocok s
 - "Perlu dicek" hanya pemberitahuan: tidak memblok Done/export, tidak mengurangi progres; muncul di Notifications admin + filter Location Log.
 - Batas peta punya versi sendiri (ikut jalur A); wilayah baru yang belum ada batas petanya tampil sebagai daftar.
 
-## Infografis
+## Infografis (**selesai**)
+- Implementasi: drill-down kab/kota memakai **peta kab/kota sungguhan** (bukan treemap) karena batas 514 kab/kota tersedia; klik kab/kota → daftar kecamatan + "Open in Location Log". Mode: % Done / Drafts / **Stale** (draft tanpa perubahan ≥ batas aging 'warm'; menggantikan "Behind" karena target per wilayah tidak ada). Data peta: `app/data/peta.json` dibangun `tools/build_peta.py` dari geoBoundaries IDN ADM2 (CC BY 4.0), provinsi = gabungan kab/kota per kode Kemendagri (38 provinsi).
 - **Progress (admin & viewer)** — hero card:
   - peta Indonesia per provinsi, warna = % Done (skala sekuensial dari warna primer project), hover = kartu ringkas, klik = drill-down;
   - drill-down kab/kota sebagai **treemap** (ukuran = target, warna = % done) → klik = daftar kecamatan;

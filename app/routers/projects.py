@@ -66,6 +66,12 @@ def _summary(p, user, *, detail: bool = False) -> dict:
             else:
                 state = "bad"
             out.update(state=state, short=short, pace_now=t["pace_now"], pace_needed=t["pace_needed"])
+            if p["wilayah_on"]:
+                prov: dict[str, list[int]] = {}
+                for r in pc.execute("SELECT substr(wil_kode,1,2) k, COUNT(*) n, SUM(status='selesai') d FROM locations "
+                                    "WHERE deleted_at IS NULL AND wil_kode IS NOT NULL AND wil_kode<>'' GROUP BY k"):
+                    prov[r["k"]] = [r["n"], r["d"] or 0]
+                out["peta"] = prov
         return out
     finally:
         pc.close()

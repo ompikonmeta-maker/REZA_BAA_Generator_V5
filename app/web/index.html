@@ -109,6 +109,58 @@
   .nav-brand .bt .flow{color:var(--md-sys-color-primary);font-weight:600}
   .nav-brand .bs{display:block;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--md-sys-color-on-surface-variant);line-height:1;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .shell.rail .nav-brand .txt{opacity:0;max-width:0;transform:translateX(-14px)}
+  /* ===== Infografis wilayah (peta Progress, sebaran tim, peta mini Portfolio) ===== */
+  .wm{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px}
+  @media(max-width:1100px){.wm{grid-template-columns:minmax(0,1fr)}}
+  .wm-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .wm-bc{font:var(--md-sys-typescale-title-medium);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .wm-bc a{color:var(--md-sys-color-primary);cursor:pointer}
+  .wm-bc .sub{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-body-medium)}
+  .wm-seg{margin-left:auto;display:flex;border:1px solid var(--md-sys-color-outline);border-radius:99px;overflow:hidden}
+  .wm-seg button{border:0;background:none;color:var(--md-sys-color-on-surface);padding:6px 14px;font:var(--md-sys-typescale-label-large);cursor:pointer}
+  .wm-seg button.on{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}
+  .wm-map{position:relative;border-radius:var(--md-sys-shape-corner-large);background:color-mix(in srgb,var(--md-sys-color-surface-container-lowest) 60%,transparent);overflow:hidden}
+  .wm-map svg{width:100%;height:auto;display:block;touch-action:manipulation}
+  .wm-map path{stroke:var(--md-sys-color-surface-container-low);stroke-width:.6;vector-effect:non-scaling-stroke;transition:fill .35s,opacity .3s;cursor:default}
+  .wm-map path.has{cursor:pointer}
+  .wm-map path.ctx{opacity:.35}
+  .wm-map path:hover.has,.wm-map path.sel{stroke:var(--md-sys-color-on-surface);stroke-width:1.6}
+  .wm-tip{position:absolute;z-index:3;min-width:190px;max-width:260px;padding:10px 12px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-inverse-surface);color:var(--md-sys-color-inverse-on-surface);
+    box-shadow:var(--md-sys-elevation-level3);font:var(--md-sys-typescale-body-small);pointer-events:none;transform:translate(-50%,calc(-100% - 12px))}
+  .wm-tip.hidden{display:none}
+  .wm-tip b{display:block;font:var(--md-sys-typescale-title-small);margin-bottom:2px}
+  .wm-tip .big{font:var(--md-sys-typescale-title-large);font-weight:600}
+  .wm-tip .go{display:block;margin-top:6px;opacity:.75}
+  .wm-leg{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant);margin-top:8px}
+  .wm-leg i{display:block;width:150px;height:8px;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--wm-c) 26%,var(--md-sys-color-surface-container-highest)),var(--wm-c))}
+  .wm-leg u{display:inline-block;width:14px;height:8px;border-radius:3px;background:var(--md-sys-color-surface-container-high);text-decoration:none}
+  .wm-leg .sep{width:1px;height:12px;background:var(--md-sys-color-outline-variant)}
+  .wm-side h4{margin:0 0 10px;font:var(--md-sys-typescale-title-small)}
+  .wm-cov{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:12px 14px;border-radius:var(--md-sys-shape-corner-large);background:var(--md-sys-color-surface-container);margin-bottom:16px}
+  .wm-cov b{font:var(--md-sys-typescale-headline-small);font-weight:600}
+  .wm-cov span{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .wm-rk{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;margin-bottom:12px;cursor:pointer;padding:4px 6px;margin-left:-6px;margin-right:-6px;border-radius:8px}
+  .wm-rk:hover{background:var(--md-sys-color-surface-container-high)}
+  .wm-rk .nm{font:var(--md-sys-typescale-body-medium);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wm-rk .nm small{color:var(--md-sys-color-on-surface-variant)}
+  .wm-rk .v{font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant);text-align:right}
+  .wm-rk .bar{grid-column:1/-1;height:6px;border-radius:99px;background:var(--md-sys-color-surface-container-highest);position:relative;overflow:visible}
+  .wm-rk .bar i{position:absolute;inset:0 auto 0 0;border-radius:99px;background:var(--md-sys-color-primary)}
+  .wm-rk .bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--md-sys-color-on-surface)}
+  .wm-rk.bad .bar i{background:var(--bad)}.wm-rk.warn .bar i{background:#e6a52e}
+  .wm-note{font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant)}
+  .wm-empty{padding:30px 10px;text-align:center;color:var(--md-sys-color-on-surface-variant)}
+  .tm-row{display:grid;grid-template-columns:160px minmax(0,1fr);gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--md-sys-color-outline-variant)}
+  .tm-row .who{font:var(--md-sys-typescale-title-small)}
+  .tm-row .who small{display:block;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .tm-row .rg{display:flex;flex-wrap:wrap;gap:6px}
+  .tm-row .rg span{padding:4px 10px;border-radius:99px;background:var(--md-sys-color-surface-container-high);font:var(--md-sys-typescale-label-medium);cursor:pointer}
+  .tm-row .rg span em{font-style:normal;color:var(--md-sys-color-on-surface-variant);margin-left:4px}
+  .tm-row .rg span.stuck{background:var(--warn-bg);color:var(--warn)}
+  .tm-row .rg span.nw{cursor:default;opacity:.7}
+  @media(max-width:600px){.tm-row{grid-template-columns:minmax(0,1fr)}}
+  .pf-map{display:block;width:100%;height:92px}
+  .pf-map path{stroke:none}
   /* ===== Wilayah (Desa → Provinsi) ===== */
   #app.wil-off .wil-only{display:none!important}
   .wl-f{position:relative;margin-top:16px}
@@ -1976,11 +2028,13 @@
           <div class="hstat"><span class="hchip" id="dChip"><span class="mi">bolt</span> <span id="dChipTxt"></span></span></div>
         </div>
         <div id="dashSup" class="hidden"></div>
+        <div id="tmHost" class="hidden" style="margin-top:16px"></div>
         <div id="dashMe" class="hidden"></div>
       </section>
 
       <section id="v-progress" class="hidden">
         <div class="pg-top"><span class="grow"></span><span class="mut" id="pgUpd"></span></div>
+        <div id="wmHost" class="wil-only" style="margin-bottom:16px"></div>
         <div id="pgBody"></div>
       </section>
 
@@ -3000,7 +3054,9 @@ let locWilSel=null;const BK=new Set();
 async function wilRegions(){if(!locWilSel||!WIL.on())return;try{const r=await api('/api/wilayah/regions');
   const cur=locWilSel.getValue();
   locWilSel.setOptions([{value:'',label:'All wilayah'}].concat(r.none?[{value:'none',label:`No wilayah yet · ${r.none}`}]:[],r.manual?[{value:'manual',label:`Manual wilayah · ${r.manual}`}]:[],
-    r.regions.map(x=>({value:x.kode,label:(x.level==='kab'?'   ':'')+x.nama+' · '+x.n}))));if(cur)locWilSel.setValue(cur);}catch(e){}}
+    r.regions.map(x=>({value:x.kode,label:(x.level==='kab'?'   ':'')+x.nama+' · '+x.n}))));
+  if(WIL_PENDING){const k=WIL_PENDING;WIL_PENDING=null;locWilSel.setValue(k);BK.clear();loadLocations();return;}
+  if(cur)locWilSel.setValue(cur);}catch(e){}}
 function wilCell(l){if(!WIL.on())return '';if(!l.wil_desa)return '<span class="lc-wil none">— no wilayah yet</span>';
   const b=l.wil_mode==='manual'?'Unverified':l.wil_mode==='desa_manual'?'Desa manual':'';
   const adm=S.user&&S.user.role==='admin'&&b;
@@ -3036,6 +3092,85 @@ window.wilLink=async id=>{const l=LOC_ROWS.find(x=>x.id===id)||{};let sg;try{sg=
   const shut=()=>d.remove();$('#lkCancel').onclick=shut;d.addEventListener('mousedown',e=>{if(e.target===d)shut();});
   $('#lkOk').onclick=async()=>{if(!val)return;try{await api('/api/locations/'+id+'/wilayah-link',{method:'POST',body:JSON.stringify({wil_kode:val.kode})});
     toast('Linked to '+val.desa+' (official)');shut();loadLocations();}catch(e){toast('Failed: '+e.message);}};};
+
+/* ===== Infografis wilayah (tahap 3) =====
+   Peta digambar sendiri (SVG) dari data/peta.json: batas 38 provinsi & 514 kab/kota (geoBoundaries,
+   CC BY 4.0) yang sudah dicocokkan ke kode Kemendagri. Warna = % Done / jumlah draft / draft macet.
+   Klik provinsi → peta kab/kota (zoom), klik kab/kota → daftar kecamatan. Tanpa internet/CDN. */
+let PETA=null,WM={mode:'pct',prov:null,kab:null,st:null,vb:null},WIL_PENDING=null;
+async function wilPeta(){if(!PETA){try{PETA=await api('/api/wilayah/peta');}catch(e){PETA=null;}}return PETA;}
+const WM_MODES={pct:{lbl:'% Done',c:'var(--md-sys-color-primary)'},drafts:{lbl:'Drafts',c:'var(--md-sys-color-tertiary)'},stale:{lbl:'Stale',c:'var(--md-sys-color-error)'}};
+function wmVal(x,max){if(!x)return null;return WM.mode==='pct'?(x.n?x.done/x.n*100:0):(max?(x[WM.mode]||0)/max*100:0);}
+// tanpa lokasi = netral gelap; ada lokasi = minimal 26% warna mode supaya 0% tetap terlihat "dalam cakupan"
+const wmFill=v=>v==null?'var(--md-sys-color-surface-container-high)':`color-mix(in srgb,${WM_MODES[WM.mode].c} ${Math.round(26+v*.74)}%,var(--md-sys-color-surface-container-highest))`;
+async function loadWilMap(){const host=$('#wmHost');if(!host)return;if(!WIL.on()){host.innerHTML='';return;}
+  const [pt,st]=await Promise.all([wilPeta(),api('/api/wilayah/stats').catch(()=>null)]);if(!pt||!st){host.innerHTML='';return;}
+  WM.st=st;if(WM.prov&&!st.prov[WM.prov]){WM.prov=null;WM.kab=null;}renderWm();}
+function wmBox(){const P=PETA;if(!WM.prov)return [0,0,P.w,P.h];const b=P.prov[WM.prov].b,pad=Math.max(b[2],b[3])*.08;
+  let [x,y,w,h]=[b[0]-pad,b[1]-pad,b[2]+pad*2,b[3]+pad*2];const ar=P.w/P.h;          // pertahankan rasio peta
+  if(w/h<ar){const nw=h*ar;x-=(nw-w)/2;w=nw;}else{const nh=w/ar;y-=(nh-h)/2;h=nh;}return [x,y,w,h];}
+function renderWm(){const host=$('#wmHost'),st=WM.st,P=PETA;if(!host||!st||!P)return;
+  const lvl=WM.prov?st.kab:st.prov,max=Math.max(1,...Object.values(lvl).map(x=>x[WM.mode]||0));
+  const pathsProv=Object.entries(P.prov).map(([k,v])=>{const x=st.prov[k];
+    if(WM.prov)return `<path d="${v.d}" class="ctx" fill="${k===WM.prov?'var(--md-sys-color-surface-container-highest)':wmFill(null)}"/>`;
+    return `<path d="${v.d}" data-k="${k}" class="${x?'has':''}" fill="${wmFill(wmVal(x,max))}"/>`;}).join('');
+  const pathsKab=WM.prov?Object.entries(P.kab).filter(([k])=>k.startsWith(WM.prov+'.')).map(([k,v])=>{const x=st.kab[k];
+    return `<path d="${v.d}" data-k="${k}" class="has${k===WM.kab?' sel':''}" fill="${wmFill(wmVal(x,max))}"/>`;}).join(''):'';
+  const nProv=Object.keys(st.prov).length,nKab=Object.keys(st.kab).length,pn=WM.prov?(st.prov[WM.prov]||{}).nama:'';
+  const bc=WM.prov?`<a data-go="nat">Indonesia</a> › ${WM.kab?`<a data-go="prov">${esc(pn)}</a> › ${esc((st.kab[WM.kab]||{}).nama||'')}`:esc(pn)} <span class="sub">· ${Object.keys(st.kab).filter(k=>k.startsWith(WM.prov+'.')).length} kab/kota</span>`
+    :`Indonesia <span class="sub">· ${nProv} province${nProv===1?'':'s'} · ${nKab} kab/kota in this project</span>`;
+  const notes=[st.manual?`${st.manual} manual (unverified)`:'',st.none?`${st.none} without wilayah`:''].filter(Boolean).join(' · ');
+  const legend=WM.mode==='pct'?'<span>0%</span><i></i><span>100%</span>':`<span>0</span><i></i><span>${max} ${WM.mode==='stale'?`stale (no change ≥ ${st.warm} working days)`:'drafts'}</span>`;
+  const vb=wmBox();
+  host.innerHTML=`<div class="card s12" id="wmCard"><div class="wm"><div style="min-width:0">
+    <div class="wm-top"><span class="mi acc">map</span><span class="wm-bc">${bc}</span>
+      <div class="wm-seg">${Object.entries(WM_MODES).map(([k,m])=>`<button data-m="${k}" class="${WM.mode===k?'on':''}">${m.lbl}</button>`).join('')}</div></div>
+    <div class="wm-map"><svg viewBox="${(WM.vb||vb).join(' ')}" preserveAspectRatio="xMidYMid meet">${pathsProv}${pathsKab}</svg><div class="wm-tip hidden"></div></div>
+    <div class="wm-leg" style="--wm-c:${WM_MODES[WM.mode].c}">${legend}<span class="sep"></span><u></u><span>no locations</span>${notes?`<span class="sep"></span><span>${notes}</span>`:''}<span style="margin-left:auto;opacity:.7">Map: geoBoundaries (CC BY 4.0)</span></div></div>
+    <div class="wm-side">${wmSide()}</div></div></div>`;
+  const svg=host.querySelector('svg');if(WM.vb&&WM.vb.join()!==vb.join())wmZoom(svg,WM.vb,vb);WM.vb=vb;
+  host.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{WM.mode=b.dataset.m;renderWm();});
+  host.querySelectorAll('[data-go]').forEach(a=>a.onclick=()=>{if(a.dataset.go==='nat'){WM.prov=null;WM.kab=null;}else WM.kab=null;renderWm();});
+  const tip=host.querySelector('.wm-tip'),map=host.querySelector('.wm-map');
+  svg.querySelectorAll('path.has').forEach(p=>{const k=p.dataset.k,x=(k.length===2?st.prov:st.kab)[k];
+    p.addEventListener('mousemove',e=>{if(!x)return;const r=map.getBoundingClientRect();tip.classList.remove('hidden');
+      tip.style.left=(e.clientX-r.left)+'px';tip.style.top=(e.clientY-r.top)+'px';
+      tip.innerHTML=`<b>${esc(x.nama)}</b><span class="big">${x.done}</span> / ${x.n} done · ${Math.round(x.done/x.n*100)}%<br>${x.drafts} draft${x.drafts===1?'':'s'}${x.stale?` · ${x.stale} stale`:''}<span class="go">${k.length===2?'Click to open kab/kota →':'Click for kecamatan →'}</span>`;});
+    p.addEventListener('mouseleave',()=>tip.classList.add('hidden'));
+    p.addEventListener('click',()=>{if(!x)return;tip.classList.add('hidden');if(k.length===2){WM.prov=k;WM.kab=null;}else WM.kab=k;renderWm();});});
+  host.querySelectorAll('[data-rk]').forEach(r=>r.onclick=()=>{const k=r.dataset.rk;WM.prov=k.slice(0,2);WM.kab=k;renderWm();});
+  host.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>wilOpenLog(b.dataset.log));
+  revealCards(host);}
+function wmSide(){const st=WM.st,id=st.ideal_pct;
+  if(WM.kab){const kb=st.kab[WM.kab]||{n:0,done:0,drafts:0,stale:0,nama:''};
+    const kecs=Object.entries(st.kec).filter(([k])=>k.startsWith(WM.kab+'.')).map(([k,v])=>({k,...v})).sort((a,b)=>a.done/a.n-b.done/b.n||b.n-a.n);
+    return `<div class="wm-cov"><b>${kb.done} / ${kb.n}</b><span>done in ${esc(kb.nama)} · ${kb.drafts} draft${kb.drafts===1?'':'s'}${kb.stale?` · ${kb.stale} stale`:''}</span></div>
+      <h4>Kecamatan</h4>${kecs.map(x=>wmRow(x.nama,'',x.done,x.n,id,'')).join('')||'<div class="wm-note">No data</div>'}
+      <md-button variant="tonal" icon="table_rows" data-log="${WM.kab}" style="margin-top:6px">Open in Location Log</md-button>`;}
+  const kabs=Object.entries(st.kab).filter(([k])=>!WM.prov||k.startsWith(WM.prov+'.')).map(([k,v])=>({k,...v}))
+    .sort((a,b)=>a.done/a.n-b.done/b.n||b.n-a.n).slice(0,6);
+  const cov=WM.prov?(()=>{const ks=Object.keys(st.kab).filter(k=>k.startsWith(WM.prov+'.'));const r=Object.keys(st.kec).filter(k=>k.startsWith(WM.prov+'.')).length;
+      const p=st.prov[WM.prov]||{n:0,done:0};return `<div class="wm-cov"><b>${p.done} / ${p.n}</b><span>done · ${r} kecamatan reached in ${ks.length} kab/kota</span></div>`;})()
+    :`<div class="wm-cov"><b>${st.kec_reached}</b><span>of ${st.kec_total} kecamatan reached · ${st.kec_total?Math.round(st.kec_reached/st.kec_total*100):0}% of the kab/kota in this project</span></div>`;
+  return cov+`<h4>Furthest behind (kab/kota)</h4>${kabs.map(x=>`<div data-rk="${x.k}">${wmRow(x.nama,WM.prov?'':(st.prov[x.k.slice(0,2)]||{}).nama,x.done,x.n,id,x.k)}</div>`).join('')||'<div class="wm-note">No locations with wilayah yet</div>'}
+    ${id!=null&&kabs.length?'<div class="wm-note">Marker = where the project should be today · click a row to zoom in</div>':''}`;}
+function wmRow(nm,sub,d,n,ideal,k){const p=n?Math.round(d/n*100):0,cls=ideal==null?'':p>=ideal?'':p>=ideal*.6?'warn':'bad';
+  return `<div class="wm-rk ${cls}"><span class="nm">${esc(nm)}${sub?` <small>· ${esc(sub)}</small>`:''}</span><span class="v">${d} / ${n}</span><div class="bar"><i style="width:${p}%"></i>${ideal!=null?`<b style="left:${Math.min(99,ideal)}%"></b>`:''}</div></div>`;}
+function wmZoom(svg,a,b){if(reduced){svg.setAttribute('viewBox',b.join(' '));return;}const t0=performance.now(),D=480,ease=t=>1-Math.pow(1-t,3);
+  const step=now=>{const t=Math.min(1,(now-t0)/D),e=ease(t);svg.setAttribute('viewBox',a.map((v,i)=>v+(b[i]-v)*e).join(' '));if(t<1)requestAnimationFrame(step);};
+  svg.setAttribute('viewBox',a.join(' '));requestAnimationFrame(step);}
+function wilOpenLog(code){WIL_PENDING=code;navTo('locations');}
+/* Supervisor (admin): sebaran tim per kab/kota */
+async function loadWilTeam(){const host=$('#tmHost');if(!host)return;const show=WIL.on()&&S.user&&S.user.role==='admin';host.classList.toggle('hidden',!show);if(!show)return;
+  let d;try{d=await api('/api/wilayah/team');}catch(e){return;}
+  host.innerHTML=`<div class="card s12"><div class="sec"><span class="mi acc">groups</span><h3>Team by wilayah</h3><span class="grow"></span><span class="wm-note">open drafts per kab/kota · amber = no change ≥ ${d.warm} working days</span></div>
+    ${d.team.map(t=>`<div class="tm-row"><div class="who">${esc(t.name)}<small>${t.drafts} draft${t.drafts===1?'':'s'}</small></div><div class="rg">${t.kab.map(r=>`<span class="${r.stale?'stuck':''}${r.kode?'':' nw'}" ${r.kode?`data-log="${r.kode}" data-tip="Open in Location Log"`:''}>${esc(r.nama)}<em>${r.n}${r.stale?` · ${r.stale} stale`:''}</em></span>`).join('')}</div></div>`).join('')||'<div class="wm-note">No open drafts</div>'}</div>`;
+  host.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>wilOpenLog(b.dataset.log));bindTips();}
+/* Portfolio: peta mini area kerja per project */
+function pfMap(p){if(!PETA||!p.peta)return '';const P=PETA;
+  return `<svg class="pf-map" viewBox="0 0 ${P.w} ${P.h}" preserveAspectRatio="xMidYMid meet">${Object.entries(P.prov).map(([k,v])=>{const x=p.peta[k];
+    const f=x?`color-mix(in srgb,var(--pj) ${Math.round(35+(x[1]/x[0])*65)}%,var(--md-sys-color-surface-container-highest))`:'var(--md-sys-color-surface-container-highest)';
+    return `<path d="${v.d}" fill="${f}"><title>${x?`${x[1]}/${x[0]} done`:''}</title></path>`;}).join('')}</svg>`;}
 
 /* ===== Scan PDF per lokasi (wajib; jadi halaman pertama export PDF) =====
    Belum ada scan = hanya ditandai kurang; Done & export Excel/PDF tetap jalan. */
@@ -3169,13 +3304,14 @@ function pfSpark(p){const v=p.spark||[],m=Math.max(1,...v),w=240,h=34,st=w/Math.
   return `<svg class="pf-sp" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polygon points="0,${h} ${pts} ${w},${h}" fill="var(--pj)" opacity=".14"/><polyline points="${pts}" fill="none" stroke="var(--pj)" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;}
 const pfDate=d=>{if(!d)return 'no target date';try{return new Date(d+'T00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}catch(e){return d;}};
 async function loadPortfolio(){let L=[];try{L=(await api('/api/projects/portfolio')).projects||[];}catch(e){toast('Failed: '+e.message);return;}
+  if(L.some(p=>p.peta))await wilPeta();
   const d=L.reduce((a,p)=>a+p.done,0),t=L.reduce((a,p)=>a+p.total,0),att=L.filter(p=>p.state==='warn'||p.state==='bad').length;
   $('#pfSum').innerHTML=`<b>${d.toLocaleString()} / ${t.toLocaleString()}</b><span>BAA done · ${L.length} project${L.length>1?'s':''}${att?` · ${att} need attention`:''}</span>`;
   $('#pfGrid').innerHTML=L.map(p=>`<div class="card pf-card" tabindex="0" data-id="${p.id}" style="--pj:${esc(p.color)}">
       <div class="pf-top">${pjAv(p,'lg')}<span class="pj-tx"><span class="pj-nm">${esc(p.name)}</span><span class="pj-sb">${esc(p.prefix)} · target ${pfDate(p.target_date)}</span></span></div>
       <div class="pf-mid">${pfRing(p)}<div><div class="pf-num">${p.done} <small>/ ${p.total}</small></div>
         <div class="pf-lt ${p.state}"><i></i>${PF_LT[p.state]||''}</div><div class="pj-sb">${p.drafts} open draft${p.drafts===1?'':'s'}</div></div></div>
-      ${pfSpark(p)}<div class="pf-ft"><span>last 10 working days</span><span class="go">Open →</span></div></div>`).join('');
+      ${pfMap(p)}${pfSpark(p)}<div class="pf-ft"><span>last 10 working days</span><span class="go">Open →</span></div></div>`).join('');
   $$('#pfGrid .pf-card').forEach(c=>{const open=()=>pjSwitch(c.dataset.id,S.user.role==='viewer'?'progress':'dashboard');
     c.addEventListener('click',open);c.addEventListener('keydown',e=>{if(e.key==='Enter')open();});});
   revealCards($('#v-portfolio'));}
@@ -3458,7 +3594,7 @@ async function loadDashboard(){const role=S.user&&S.user.role;
   const isA=role==='admin';$('#dashSup').classList.toggle('hidden',!isA);$('#dashMe').classList.toggle('hidden',isA);$('#dHero').classList.toggle('hidden',!isA);
   if(isA){paintDashSky();$('#dHello').textContent=`${greetWord()}, ${S.user.full_name||S.user.username}`;
     try{const s=await api('/api/stats');$('#dChipTxt').textContent=s.totals.draft?`${s.totals.draft} locations waiting to finish`:'All locations done';}catch(e){}
-    loadSupervisor2();wbSync();}
+    loadSupervisor2();loadWilTeam();wbSync();}
   else loadMyDash().then(()=>wbSync());}
 /* ===== Progress · Supervisor Console · My dashboard ===== */
 const AGE_KEYS=['fresh','warm','stale','cold'],AGE_LBL={fresh:'Fresh',warm:'Warm',stale:'Stale',cold:'Cold'};
@@ -3480,7 +3616,7 @@ function bindHover(root){root.querySelectorAll('[data-h]').forEach(el=>{el.onmou
 /* ---------- PROGRESS ---------- */
 let PG=null,_pgTimer=null,_pgAt=0;
 async function loadProgress(quiet){let d;try{d=await api('/api/progress');}catch(e){if(!quiet)toast('Failed: '+e.message);return;}
-  PG=d;_pgAt=Date.now();renderProgress();if(!quiet)revealCards($('#pgBody'));
+  PG=d;_pgAt=Date.now();renderProgress();if(!quiet)revealCards($('#pgBody'));loadWilMap();
   clearInterval(_pgTimer);_pgTimer=setInterval(()=>{if(!_visible('v-progress')){clearInterval(_pgTimer);return;}
     const s=Math.round((Date.now()-_pgAt)/1000);$('#pgUpd').textContent=`Updated ${s<5?'just now':s+' s ago'} · refreshes every 60 s`;
     if(s>=60&&document.visibilityState==='visible'&&!$('#pgEditing'))loadProgress(true);},5000);}
