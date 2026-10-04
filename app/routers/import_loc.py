@@ -239,7 +239,7 @@ async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True), wil_
         cur = conn.execute(
             "INSERT INTO locations(code,name,data_json,status,created_by,owner_id,created_at,updated_at) "
             "VALUES(?,?,?,?,?,?,?,?)",
-            ("", "", json.dumps(loc["data"], ensure_ascii=False), "draft",
+            ("", loc["nama"], json.dumps(loc["data"], ensure_ascii=False), "draft",
              user["id"], user["id"], now, now),
         )
         lid = cur.lastrowid

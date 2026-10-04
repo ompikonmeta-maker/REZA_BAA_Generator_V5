@@ -389,6 +389,9 @@ def init_project_db(p, base: dict | None = None) -> None:
             if not _has_column(conn, "locations", col):
                 conn.execute(f"ALTER TABLE locations ADD COLUMN {col} TEXT")
         conn.execute("CREATE INDEX IF NOT EXISTS ix_loc_wil ON locations(wil_kode)")
+        # lokasi hasil import lama: kolom name kosong -> isi dari nama lokasi (agar bisa dicari)
+        conn.execute("UPDATE locations SET name = TRIM(COALESCE(json_extract(data_json,'$.nama_lokasi'),'')) "
+                     "WHERE (name IS NULL OR name = '') AND json_valid(data_json)")
         # isian wilayah awal (sebelum ada mode): resmi, nama kab disingkat seperti isian baru
         conn.execute("UPDATE locations SET wil_mode='official', wil_kab = CASE WHEN wil_kab LIKE 'Kabupaten %' "
                      "THEN 'Kab. ' || substr(wil_kab, 11) ELSE wil_kab END "
