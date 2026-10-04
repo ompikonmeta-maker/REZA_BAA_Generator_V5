@@ -24,7 +24,8 @@ _COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 def _public(p) -> dict:
     return {"id": p["id"], "name": p["name"], "prefix": p["prefix"], "color": p["color"],
-            "archived": bool(p["archived"])}
+            "archived": bool(p["archived"]), "wilayah_on": bool(p["wilayah_on"]),
+            "wilayah_progress": bool(p["wilayah_progress"])}
 
 
 def _seq(pc) -> int:
@@ -94,6 +95,8 @@ class ProjectIn(BaseModel):
     target_date: str | None = None
     members: list[int] | None = None
     archived: bool | None = None
+    wilayah_on: bool | None = None
+    wilayah_progress: bool | None = None
 
 
 def _members(hub, pid: int) -> list[int]:
@@ -112,7 +115,9 @@ def _admin_row(hub, p) -> dict:
         return {**_public(p), "members": _members(hub, p["id"]), "prefix_locked": seq > 0,
                 "next_code": db.format_code(pc, seq + 1), "template": tpl["name"] if tpl else None,
                 "total": g["total"], "target_date": g["target_date"],
-                "locations": n["c"] or 0, "done": n["d"] or 0}
+                "locations": n["c"] or 0, "done": n["d"] or 0,
+                "wil_missing": pc.execute("SELECT COUNT(*) c FROM locations WHERE deleted_at IS NULL "
+                                          "AND (wil_kode IS NULL OR wil_kode='')").fetchone()["c"]}
     finally:
         pc.close()
 
@@ -163,6 +168,9 @@ def create_project(body: ProjectIn, hub: sqlite3.Connection = Depends(get_hub), 
     first = hub.execute("SELECT * FROM projects ORDER BY id LIMIT 1").fetchone()
     base = db.project_settings(first) if first else None
     pid = db.create_project(hub, name, prefix, body.color, base)
+    hub.execute("UPDATE projects SET wilayah_on=?, wilayah_progress=? WHERE id=?",
+                (int(body.wilayah_on if body.wilayah_on is not None else True),
+                 int(body.wilayah_progress if body.wilayah_progress is not None else True), pid))
     _set_members(hub, pid, body.members)
     hub.commit()
     p = hub.execute("SELECT * FROM projects WHERE id=?", (pid,)).fetchone()
@@ -196,8 +204,10 @@ def update_project(pid: int, body: ProjectIn, hub: sqlite3.Connection = Depends(
             pg.apply_goal(pc, user, body.total, body.target_date or None)
     finally:
         pc.close()
-    hub.execute("UPDATE projects SET name=?, prefix=?, color=?, archived=? WHERE id=?",
-                (name, prefix, body.color, archived, pid))
+    w_on = p["wilayah_on"] if body.wilayah_on is None else int(body.wilayah_on)
+    w_pr = p["wilayah_progress"] if body.wilayah_progress is None else int(body.wilayah_progress)
+    hub.execute("UPDATE projects SET name=?, prefix=?, color=?, archived=?, wilayah_on=?, wilayah_progress=? "
+                "WHERE id=?", (name, prefix, body.color, archived, w_on, w_pr, pid))
     _set_members(hub, pid, body.members)
     hub.commit()
     audit(hub, user, "update", "project", pid, f"{name} ({prefix})")

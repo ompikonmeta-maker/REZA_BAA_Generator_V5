@@ -6,7 +6,7 @@ One-file: semua dependensi + aset frontend (app/web) tertanam. Data runtime
 """
 from PyInstaller.utils.hooks import collect_all, collect_submodules
 
-datas = [("app/web", "app/web")]
+datas = [("app/web", "app/web"), ("app/data", "app/data")]   # app/data: referensi wilayah
 binaries = []
 hiddenimports = []
 

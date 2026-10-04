@@ -1,6 +1,6 @@
 # Rencana: Data Wilayah + Infografis Peta
 
-Status: **dicatat (belum dikerjakan)** · mockup disetujui untuk dibahas · 2026-10-04
+Status: **Tahap 1 selesai** (referensi, pencarian, sakelar per project, kelengkapan, filter, isi massal) · tahap 2–3 belum · 2026-10-04
 
 ## Keputusan
 | Topik | Keputusan |

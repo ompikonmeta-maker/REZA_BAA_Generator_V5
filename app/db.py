@@ -60,7 +60,9 @@ CREATE TABLE IF NOT EXISTS projects (
     color      TEXT NOT NULL DEFAULT '#0aa39d',
     db_file    TEXT NOT NULL,
     archived   INTEGER NOT NULL DEFAULT 0,
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    wilayah_on       INTEGER NOT NULL DEFAULT 1,   -- fitur data wilayah
+    wilayah_progress INTEGER NOT NULL DEFAULT 1    -- wilayah dihitung dalam kelengkapan lokasi
 );
 
 CREATE TABLE IF NOT EXISTS project_members (
@@ -102,7 +104,9 @@ CREATE TABLE IF NOT EXISTS locations (
     updated_at  TEXT NOT NULL,
     modified_at TEXT,
     modified_by INTEGER,
-    done_at     TEXT
+    done_at     TEXT,
+    wil_kode    TEXT,                             -- kode desa/kelurahan Kemendagri (mis. 32.17.01.2005)
+    wil_desa    TEXT, wil_kec TEXT, wil_kab TEXT, wil_prov TEXT   -- snapshot nama saat diinput
 );
 
 CREATE TABLE IF NOT EXISTS inventory_items (
@@ -266,6 +270,10 @@ def _migrate_legacy(conn: sqlite3.Connection) -> None:
 def _migrate_hub(conn: sqlite3.Connection) -> None:
     if not _has_column(conn, "users", "last_seen_at"):
         conn.execute("ALTER TABLE users ADD COLUMN last_seen_at TEXT")
+    # Fitur per project: data wilayah (on/off) + dihitung dalam progres lokasi
+    for col in ("wilayah_on", "wilayah_progress"):
+        if not _has_column(conn, "projects", col):
+            conn.execute(f"ALTER TABLE projects ADD COLUMN {col} INTEGER NOT NULL DEFAULT 1")
     if not _has_column(conn, "audit_log", "project_id"):
         conn.execute("ALTER TABLE audit_log ADD COLUMN project_id INTEGER")
     conn.commit()
@@ -329,6 +337,12 @@ def connect_project(p) -> ProjectConn:
     return conn
 
 
+def wil_counted(conn) -> bool:
+    """Wilayah wajib & dihitung dalam kelengkapan lokasi untuk project ini?"""
+    pj = getattr(conn, "project", None) or {}
+    return bool(pj.get("wilayah_on", 1)) and bool(pj.get("wilayah_progress", 1))
+
+
 def format_code(conn, n: int) -> str:
     """Kode urut per project dari nomor baris, mis. LOK_00001 (min. 5 digit)."""
     pj = getattr(conn, "project", None) or {}
@@ -370,6 +384,11 @@ def init_project_db(p, base: dict | None = None) -> None:
     try:
         conn.execute("PRAGMA journal_mode = WAL")
         conn.executescript(PROJECT_SCHEMA)
+        for col in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov"):
+            if not _has_column(conn, "locations", col):
+                conn.execute(f"ALTER TABLE locations ADD COLUMN {col} TEXT")
+        conn.execute("CREATE INDEX IF NOT EXISTS ix_loc_wil ON locations(wil_kode)")
+        conn.commit()
         _seed_project(conn, base)
     finally:
         conn.close()

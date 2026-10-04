@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from .. import config, db
 from ..deps import audit, current_user, get_db, require_admin, require_editor
 
+from ..services import wilayah
 from .scan import scan_info
 
 router = APIRouter(prefix="/api/locations", tags=["locations"])
@@ -36,6 +37,31 @@ class LocationIn(BaseModel):
     name: str = ""
     data: dict = {}
     status: str = "draft"
+    wil_kode: str | None = None       # kode desa Kemendagri; None = tidak diubah, "" = kosongkan
+
+
+_WIL_COLS = ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov")
+
+
+def _wil_values(kode: str | None):
+    """Nilai kolom wilayah dari kode desa (snapshot nama), atau None bila tidak diubah."""
+    if kode is None:
+        return None
+    kode = kode.strip()
+    if not kode:
+        return (None,) * 5
+    w = wilayah.info(kode)
+    if not w:
+        raise HTTPException(400, "Unknown wilayah code")
+    return (w["kode"], w["desa"], w["kec"], w["kab"], w["prov"])
+
+
+def _wil_dict(row) -> dict | None:
+    if "wil_kode" not in row.keys() or not row["wil_kode"]:
+        return None
+    return {"kode": row["wil_kode"], "desa": row["wil_desa"], "kec": row["wil_kec"],
+            "kab": wilayah.short_kab(row["wil_kab"] or ""), "prov": row["wil_prov"],
+            "kel": (row["wil_kode"].split(".")[-1:] or [""])[0].startswith("1")}
 
 
 class InventoryItem(BaseModel):
@@ -83,6 +109,7 @@ def _location_dict(conn: sqlite3.Connection, row, user=None) -> dict:
         "inventory": [dict(i) for i in inv],
         "photos": [dict(p) for p in photos],
         "scan": scan_info(conn, row["id"]),
+        "wilayah": _wil_dict(row),
     }
 
 
@@ -94,6 +121,7 @@ def list_locations(
     status: str = Query("all"),
     creator: int = Query(0),          # filter berdasarkan pembuat (user id); 0 = semua
     date: str = Query(""),            # filter tanggal dibuat (YYYY-MM-DD, waktu lokal)
+    wil: str = Query(""),             # filter wilayah: kode provinsi/kab/kec, atau "none" = belum diisi
     conn: sqlite3.Connection = Depends(get_db),
     user=Depends(current_user),
 ):
@@ -119,6 +147,9 @@ def list_locations(
     if date.strip():
         where.append("date(l.created_at,'localtime') = ?")
         params.append(date.strip())
+    if wil.strip():
+        w, p = wil_where(wil, "l.")
+        where.append(w); params += p
     wsql = ("WHERE " + " AND ".join(where)) if where else ""
 
     total = conn.execute(
@@ -136,6 +167,7 @@ def list_locations(
               (SELECT GROUP_CONCAT(DISTINCT category) FROM photos p WHERE p.location_id = l.id) AS photo_cats,
               (SELECT COUNT(*) FROM inventory_items i WHERE i.location_id = l.id) AS inv_count,
               EXISTS(SELECT 1 FROM scan_docs s WHERE s.location_id = l.id) AS has_scan,
+              l.wil_kode, l.wil_desa, l.wil_kab,
               (SELECT COUNT(*) FROM inventory_items i WHERE i.location_id = l.id AND (
                    TRIM(COALESCE(i.nama_barang,'')) = '' OR TRIM(COALESCE(i.merk_type,'')) = '' OR
                    TRIM(COALESCE(i.jumlah,'')) = '' OR TRIM(COALESCE(i.sn_tagging,'')) = '' OR
@@ -161,6 +193,8 @@ def list_locations(
             "inv_ok": r["inv_count"] > 0 and r["inv_bad"] == 0,
             "inv_full": max(0, r["inv_count"] - r["inv_bad"]),
             "has_scan": bool(r["has_scan"]),
+            "wil_kode": r["wil_kode"], "wil_desa": r["wil_desa"],
+            "wil_kab": wilayah.short_kab(r["wil_kab"] or ""),
             "can_delete": is_admin or r["owner_id"] == user["id"],
         }
         for r in rows
@@ -212,11 +246,12 @@ def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db)
     # Insert dulu dengan placeholder unik, lalu kunci kode dari id AUTOINCREMENT.
     # id dijamin unik & monoton oleh SQLite (write ter-serialisasi), jadi kode
     # urut aman dibuat paralel banyak user tanpa koordinasi.
+    wv = _wil_values(body.wil_kode) or (None,) * 5
     cur = conn.execute(
-        "INSERT INTO locations(code,name,data_json,status,created_by,owner_id,created_at,updated_at) "
-        "VALUES(?,?,?,?,?,?,?,?)",
+        "INSERT INTO locations(code,name,data_json,status,created_by,owner_id,created_at,updated_at,"
+        "wil_kode,wil_desa,wil_kec,wil_kab,wil_prov) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
         ("", body.name, json.dumps(body.data, ensure_ascii=False), body.status,
-         user["id"], user["id"], now, now),
+         user["id"], user["id"], now, now, *wv),
     )
     code = _format_code(conn, cur.lastrowid)
     conn.execute("UPDATE locations SET code=?, modified_at=?, modified_by=? WHERE id=?",
@@ -226,6 +261,41 @@ def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db)
     audit(conn, user, "create", "location", cur.lastrowid, code)
     row = conn.execute("SELECT * FROM locations WHERE id=?", (cur.lastrowid,)).fetchone()
     return _location_dict(conn, row, user)
+
+
+def wil_where(wil: str, alias: str = "") -> tuple[str, list]:
+    """Klausa filter wilayah: 'none' = belum diisi; selain itu kode prefiks (prov/kab/kec/desa)."""
+    wil = wil.strip()
+    if wil == "none":
+        return f"({alias}wil_kode IS NULL OR {alias}wil_kode = '')", []
+    return f"({alias}wil_kode = ? OR {alias}wil_kode LIKE ?)", [wil, wil + ".%"]
+
+
+class WilBulkIn(BaseModel):
+    ids: list[int]
+    wil_kode: str
+
+
+@router.post("/wilayah-bulk")
+def set_wilayah_bulk(body: WilBulkIn, conn: sqlite3.Connection = Depends(get_db),
+                     user=Depends(require_admin)):
+    """Admin mengisi wilayah banyak lokasi sekaligus (mengganti yang sudah ada)."""
+    wv = _wil_values(body.wil_kode)
+    if not wv or not wv[0]:
+        raise HTTPException(400, "Pick a desa/kelurahan")
+    n = 0
+    for lid in body.ids:
+        r = conn.execute("SELECT id, wil_kode FROM locations WHERE id=? AND deleted_at IS NULL", (lid,)).fetchone()
+        if not r:
+            continue
+        if r["wil_kode"] != wv[0]:
+            conn.execute("UPDATE locations SET wil_kode=?,wil_desa=?,wil_kec=?,wil_kab=?,wil_prov=? WHERE id=?",
+                         (*wv, lid))
+            db.touch_modified(conn, lid, user["id"], "data", "wilayah")
+        n += 1
+    conn.commit()
+    audit(conn, user, "set_wilayah", "location", ",".join(map(str, body.ids)), f"{n} lokasi -> {wv[0]} {wv[1]}")
+    return {"ok": True, "count": n}
 
 
 class TransferIn(BaseModel):
@@ -279,7 +349,12 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
     if not _can_write(user, row):
         raise HTTPException(403, "Not your location")
     new_json = json.dumps(body.data, ensure_ascii=False)
-    changed = (body.name != row["name"] or body.status != row["status"]
+    wv = _wil_values(body.wil_kode)
+    wil_changed = wv is not None and (wv[0] or None) != (row["wil_kode"] or None)
+    if wil_changed:
+        conn.execute("UPDATE locations SET wil_kode=?,wil_desa=?,wil_kec=?,wil_kab=?,wil_prov=? WHERE id=?",
+                     (*wv, loc_id))
+    changed = (body.name != row["name"] or body.status != row["status"] or wil_changed
                or json.loads(new_json) != json.loads(row["data_json"] or "{}"))
     conn.execute(
         "UPDATE locations SET name=?,data_json=?,status=?,updated_at=? WHERE id=?",
@@ -290,7 +365,8 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
     elif body.status != "selesai" and row["status"] == "selesai":
         conn.execute("UPDATE locations SET done_at=NULL WHERE id=?", (loc_id,))
     if changed:
-        data_changed = json.loads(new_json) != json.loads(row["data_json"] or "{}") or body.name != row["name"]
+        data_changed = (json.loads(new_json) != json.loads(row["data_json"] or "{}")
+                        or body.name != row["name"] or wil_changed)
         if body.status != row["status"]:
             db.touch_modified(conn, loc_id, user["id"], "done" if body.status == "selesai" else "reopen")
             if data_changed:

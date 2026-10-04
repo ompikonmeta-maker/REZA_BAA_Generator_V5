@@ -131,7 +131,8 @@ def _bucket(idle: int, ag: dict) -> str:
 
 
 # ---------- kelengkapan (sama dengan locDetailState di UI) ----------
-def _completeness(loc, fields, cats, inv_rows, photo_cats, has_scan: bool = True) -> tuple[int, list[str]]:
+def _completeness(loc, fields, cats, inv_rows, photo_cats, has_scan: bool = True,
+                  wil_req: bool = False) -> tuple[int, list[str]]:
     data = json.loads(loc["data_json"] or "{}")
     miss_f = [f for f in fields if not str(data.get(f["key"], "") or "").strip()]
     filled_f = len(fields) - len(miss_f)
@@ -147,8 +148,10 @@ def _completeness(loc, fields, cats, inv_rows, photo_cats, has_scan: bool = True
                 bad_rows.append((r, vals))
     inv_ok = items > 0 and filled == cells
     miss_c = [c for c in cats if c["key"] not in photo_cats]
-    total = (len(fields) or 1) + 1 + len(cats) + 1          # +1 = scan PDF (wajib)
-    done = filled_f + (1 if inv_ok else (0.5 if items else 0)) + (len(cats) - len(miss_c)) + (1 if has_scan else 0)
+    has_wil = bool(loc["wil_kode"]) if "wil_kode" in loc.keys() else False
+    total = (len(fields) or 1) + 1 + len(cats) + 1 + (1 if wil_req else 0)   # +scan PDF (+wilayah)
+    done = (filled_f + (1 if inv_ok else (0.5 if items else 0)) + (len(cats) - len(miss_c)) + (1 if has_scan else 0)
+            + (1 if wil_req and has_wil else 0))
     pct = min(100, round(done / total * 100))
     miss: list[str] = []
     if miss_c:
@@ -162,6 +165,8 @@ def _completeness(loc, fields, cats, inv_rows, photo_cats, has_scan: bool = True
             miss.append("SN " + (bad_rows[0][0]["nama_barang"] or "").strip())
         else:
             miss.append("Inventory")
+    if wil_req and not has_wil:
+        miss.append("Wilayah")
     if not has_scan:
         miss.append("Scan PDF")
     return pct, miss
@@ -192,7 +197,8 @@ def _open_drafts(conn, where: str = "", params: tuple = ()) -> list[dict]:
     today, ag = _today(), _aging(conn)
     out = []
     for r in rows:
-        pct, miss = _completeness(r, fields, cats, inv.get(r["id"], []), pc.get(r["id"], set()), r["id"] in scans)
+        pct, miss = _completeness(r, fields, cats, inv.get(r["id"], []), pc.get(r["id"], set()), r["id"] in scans,
+                                  db.wil_counted(conn))
         lm = _local(r["modified_at"] or r["updated_at"])
         idle = _wd_between(lm.date(), today) if lm else 0
         out.append({**_loc_label(r), "pct": pct, "missing": miss, "idle": idle, "aging": _bucket(idle, ag),
