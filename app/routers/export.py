@@ -74,9 +74,13 @@ def _gather_locations(conn: sqlite3.Connection, scope: str, loc_id: int | None,
         photos = conn.execute(
             "SELECT category,path,ocr_serial FROM photos WHERE location_id=? ORDER BY id",
             (r["id"],)).fetchall()
+        data = json.loads(r["data_json"])
+        # Wilayah sesuai tulisan teknisi -> bisa dipetakan ke kolom Log / sel Detail seperti field data
+        for k in ("wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_kode"):
+            data[k] = r[k] or ""
         out.append({
             "id": r["id"], "code": r["code"], "name": r["name"],
-            "data": json.loads(r["data_json"]),
+            "data": data,
             "inventory": [dict(i) for i in inv],
             "photos": [{**dict(p), "path": str(db.fpath(conn, p["path"]))} for p in photos],
             "scan": (str(db.fpath(conn, sc["path"])) if (sc := conn.execute(

@@ -5036,6 +5036,8 @@ function guessPhoto(text){const ht=' '+_tok(text).join(' ')+' ';let best='',scor
   return score?best:'';}
 function guessTarget(text){const t=(text||'').toLowerCase();
   if(/\bscan\b|\bbast\b|dokumen|document/.test(t))return 'f:scan_pdf';
+  if(WIL.on()){if(/kecamatan|\bkec\b/.test(t))return 'd:wil_kec';if(/kabupaten|kab\s*\/\s*kota|\bkab\b|kotamadya/.test(t))return 'd:wil_kab';
+    if(/provinsi|propinsi|\bprov\b/.test(t))return 'd:wil_prov';if(/\bdesa\b|kelurahan|\bkel\b/.test(t))return 'd:wil_desa';}
   if(/lengkap|complete/.test(t))return 'f:foto_lengkap';
   if(/foto|capture|photo|gambar|screenshot/.test(t)){const p=guessPhoto(text);if(p)return 'p:'+p;}
   if(/\b(kode|code)\b/.test(t))return 'f:kode';
@@ -5087,6 +5089,7 @@ function logTargetOpts(sel){
   const grp=(lbl,items)=>`<optgroup label="${lbl}">`+items.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(l)}</option>`).join('')+`</optgroup>`;
   return `<option value="">— Ignore —</option>`
     +grp('Data',[['f:no','No'],['f:kode','Location code'],['f:lokasi','Location']].concat((S.locFields||[]).map(x=>['d:'+x.key,x.label])))
+    +(WIL.on()?grp('Wilayah (as written by technician)',WIL_FIELDS.map(f=>['d:'+f.key,f.label.replace('Wilayah · ','')])):'')
     +grp('Inventory',INV_FIELDS.map(f=>['f:'+f,INV_LABELS[f]||f]))
     +grp('Photo status (X if missing)',(S.cats||[]).map(c=>['p:'+c.key,c.label]))
     +grp('Photos complete (SUDAH/BELUM)',[['f:foto_lengkap','All photo categories']])
@@ -5140,7 +5143,8 @@ function imgState(a){const v=(a||'').toUpperCase();if(!v)return['',''];
   if(!RX_CELL.test(v))return['err','?'];
   if(!M.render)return['ok','cell'];const[c,r]=pRef(v);return mergeAt(c,r)?['ok','merge']:['warn','range?'];}
 function cellBox(st,val,ph){return `<span class="mcell ${st[0]}"><input value="${esc(val||'')}" placeholder="${ph}" spellcheck="false"><span class="k">${st[1]}</span></span>`;}
-const dataFields=()=>[{key:'kode',label:'Location code'}].concat(S.locFields||[]);
+const WIL_FIELDS=[{key:'wil_desa',label:'Wilayah · Desa/Kelurahan'},{key:'wil_kec',label:'Wilayah · Kecamatan'},{key:'wil_kab',label:'Wilayah · Kab/Kota'},{key:'wil_prov',label:'Wilayah · Provinsi'}];
+const dataFields=()=>[{key:'kode',label:'Location code'}].concat(S.locFields||[],WIL.on()?WIL_FIELDS:[]);
 function renderTxtRows(){
   const dopts=sel=>`<option value="">— field —</option>`+dataFields().map(f=>`<option value="${esc(f.key)}" ${f.key===sel?'selected':''}>${esc(f.label)}</option>`).join('');
   const iopts=sel=>`<option value="">— field —</option>`+INV_FIELDS.map(f=>`<option value="${f}" ${f===sel?'selected':''}>${esc(INV_LABELS[f]||f)}</option>`).join('');

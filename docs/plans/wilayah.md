@@ -37,7 +37,7 @@ Status: **Tahap 1 selesai** (referensi, pencarian, sakelar per project, kelengka
 - **Kelengkapan** (bila Count in progress ON): dihitung 1 item "Wilayah" (bukan 4); hanya ditandai kurang, tidak memblok Done/export.
 - **Isi massal** di Location Log: centang lokasi → "Set wilayah" (untuk 60+ lokasi lama).
 - **Import**: kolom Desa/Kec/Kab/Prov → dicocokkan ke kode; hasil ✓ cocok / ? ambigu (pilih) / ✗ tidak ditemukan (perbaiki). Tidak ada penyimpanan diam-diam.
-- **Excel**: 4 target mapping (Log & Detail), opsional.
+- **Excel** (**selesai**): 4 target mapping (Log & Detail) "Wilayah (as written by technician)" — mencetak tulisan teknisi; header Desa/Kelurahan, Kecamatan, Kabupaten/Kota, Provinsi dikenali otomatis.
 - **Export ZIP**: opsi folder per wilayah, mis. `Jawa Barat/Kab. Bandung/LOK_00012 ….pdf`.
 - **Filter** Location Log per provinsi/kab/kota.
 
