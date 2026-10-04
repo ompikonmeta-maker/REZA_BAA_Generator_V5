@@ -14,6 +14,13 @@ Status: **dicatat (belum dikerjakan)** · mockup disetujui untuk dibahas · 2026
 ## Penanganan data
 - **Referensi resmi** kode wilayah Kemendagri (≈84 rb desa) dibundel offline (SQLite, ±3–5 MB, berversi untuk pemekaran).
 - **Input**: satu field "Wilayah" dengan pencarian (ketik desa → pilih) → keempat tingkat terisi sekaligus.
+- **Pencarian cepat** (offline, instan untuk ±84 rb desa):
+  - beberapa kata, urutan bebas; tiap kata dicocokkan ke semua tingkat dan semua harus cocok — `cibodas lembang`, `sukamaju cianjur`;
+  - singkatan provinsi dikenali (`jabar`, `jateng`, `jatim`, `sulsel`, `ntb`, `ntt`, `dki`, `diy`, …); kata `kab`, `kec`, `desa`, titik & huruf besar diabaikan;
+  - toleran salah ketik ringan (`cibodaz`, `lembng`), diurutkan di bawah yang persis cocok; baris "Matched:" menjelaskan kata mana cocok ke apa;
+  - urutan pintar: kecamatan/kab yang sering dipakai di project ini (terutama oleh user tsb) di atas, ditandai "used in this project";
+  - tombol penyempit bila hasil banyak: provinsi (dengan jumlah) → klik → kab/kota; bisa dilepas (✕);
+  - ketik kode wilayah (mis. `32.17.01`) → desa di kecamatan itu.
 - **Simpan**: `wilayah_kode` (kolom ber-index di `locations`) + snapshot nama 4 tingkat (BAA lama tidak berubah saat referensi diperbarui).
 - **Kelengkapan**: dihitung 1 item "Wilayah" (bukan 4); hanya ditandai kurang, tidak memblok Done/export.
 - **Isi massal** di Location Log: centang lokasi → "Set wilayah" (untuk 60+ lokasi lama).
@@ -39,5 +46,6 @@ Status: **dicatat (belum dikerjakan)** · mockup disetujui untuk dibahas · 2026
 3. Peta Progress + drill-down, peringkat, cakupan, Team by wilayah, peta mini Portfolio.
 
 ## Mockup
-Snapshot (Playwright, di app nyata dengan data demo): cari desa, wilayah terpilih, isi massal + dialog,
+Snapshot (Playwright, di app nyata dengan data demo): cari desa, wilayah terpilih, tombol penyempit (provinsi → kab/kota),
+beberapa kata + singkatan + salah ketik, isi massal + dialog,
 peta Progress, drill-down Jawa Barat (treemap), Team by wilayah.
