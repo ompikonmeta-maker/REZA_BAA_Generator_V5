@@ -41,6 +41,22 @@ Status: **dicatat (belum dikerjakan)** · mockup disetujui untuk dibahas · 2026
 - **Export ZIP**: opsi folder per wilayah, mis. `Jawa Barat/Kab. Bandung/LOK_00012 ….pdf`.
 - **Filter** Location Log per provinsi/kab/kota.
 
+## Update data Kemendagri
+- **Jalur A (dipakai):** data wilayah baru disiapkan di repo → build → EXE baru mendeteksi versi data lebih baru saat start dan memperbarui referensi otomatis. Data lokasi tidak diubah diam-diam.
+- **Jalur B (ditunda):** upload paket wilayah oleh admin (Settings › Wilayah, pratinjau perubahan) — ditambahkan hanya bila nanti dibutuhkan.
+- Settings menampilkan versi data aktif (mis. "Kepmendagri 2025 · 83.7xx desa").
+- Tiap lokasi menyimpan kode + snapshot nama saat input → BAA lama tidak berubah. Setelah update dibuat laporan dampak:
+
+| Kasus | Penanganan |
+|---|---|
+| Desa baru | Langsung bisa dicari |
+| Ganti nama, kode sama | Lokasi tetap valid; **admin memutuskan** "Perbarui nama" (massal) atau tetap nama lama — tidak otomatis |
+| Pindah induk / kode berubah (pemekaran) | Ditandai **"Wilayah perlu dicek"** + saran pengganti (cocok nama & induk), konfirmasi lewat isi massal |
+| Kode dihapus / digabung | Ditandai sama; admin memilih pengganti |
+
+- "Perlu dicek" hanya pemberitahuan: tidak memblok Done/export, tidak mengurangi progres; muncul di Notifications admin + filter Location Log.
+- Batas peta punya versi sendiri (ikut jalur A); wilayah baru yang belum ada batas petanya tampil sebagai daftar.
+
 ## Infografis
 - **Progress (admin & viewer)** — hero card:
   - peta Indonesia per provinsi, warna = % Done (skala sekuensial dari warna primer project), hover = kartu ringkas, klik = drill-down;
