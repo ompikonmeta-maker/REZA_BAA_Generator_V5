@@ -18,7 +18,7 @@ from .. import config, db
 from ..deps import audit, current_user, get_db
 from ..services import excel as excel_svc
 from ..services import pdf as pdf_svc
-from ..services import xlsx2pdf
+from ..services import pdfdoc, xlsx2pdf
 
 router = APIRouter(prefix="/api/export", tags=["export"])
 
@@ -75,6 +75,8 @@ def _gather_locations(conn: sqlite3.Connection, scope: str, loc_id: int | None,
             "data": json.loads(r["data_json"]),
             "inventory": [dict(i) for i in inv],
             "photos": [{**dict(p), "path": str(db.fpath(conn, p["path"]))} for p in photos],
+            "scan": (str(db.fpath(conn, sc["path"])) if (sc := conn.execute(
+                "SELECT path FROM scan_docs WHERE location_id=?", (r["id"],)).fetchone()) else None),
         })
     return out
 
@@ -156,6 +158,48 @@ def _render_pdf(conn, locs, out_pdf: Path, cats, title) -> tuple[str, str]:
 
 
 def _render_pdf_with(tpl, tcfg, locs, out_pdf: Path, cats, title, progress=None, stage=None) -> tuple[str, str]:
+    """Seperti _render_body, plus scan PDF tiap lokasi di depan halaman BAA-nya.
+    Lokasi tanpa scan tetap diekspor apa adanya."""
+    if not any(loc.get("scan") for loc in locs):
+        return _render_body(tpl, tcfg, locs, out_pdf, cats, title, progress, stage)
+    parts, tmps, notes = [], [], []
+    mode, warn, n = "template", "", len(locs)
+    try:
+        for i, loc in enumerate(locs, start=1):
+            if progress and n > 1:
+                progress(i, n)
+            body = out_pdf.with_name(f"{out_pdf.stem}__b{i}.pdf")
+            m, w = _render_body(tpl, tcfg, [loc], body, cats, title, None, stage)
+            tmps.append(body)
+            mode, warn = (m if i == 1 else mode), (warn or w)
+            if loc.get("scan") and Path(loc["scan"]).exists():
+                parts.append(loc["scan"])
+                if not notes:
+                    notes += _scan_paper_note(loc["scan"], body)
+            parts.append(body)
+        skipped = pdfdoc.concat(parts, out_pdf)
+    finally:
+        for t in tmps:
+            try:
+                t.unlink()
+            except OSError:
+                pass
+    if skipped:
+        notes.append(f"{len(skipped)} scan PDF could not be read and was left out.")
+    return mode, " ".join([x for x in (warn, *notes) if x])
+
+
+def _scan_paper_note(scan: str, body: Path) -> list[str]:
+    a, b = pdfdoc.first_page_size(scan), pdfdoc.first_page_size(body)
+    if not a or not b:
+        return []
+    same = lambda x, y: abs(x[0] - y[0]) < 6 and abs(x[1] - y[1]) < 6
+    if same(a, b) or same(a, (b[1], b[0])):
+        return []
+    return [f"Scan PDF is {xlsx2pdf._paper_name(*a)} while the BAA pages are {xlsx2pdf._paper_name(*b)}."]
+
+
+def _render_body(tpl, tcfg, locs, out_pdf: Path, cats, title, progress=None, stage=None) -> tuple[str, str]:
     if tpl:
         ok, warn = _template_pdf(tpl, tcfg, locs, out_pdf, cats, progress, stage)
         if ok:
@@ -258,7 +302,8 @@ _JOB_TTL = 3600
 
 
 def _job_public(j: dict) -> dict:
-    return {k: j[k] for k in ("id", "kind", "name", "stage", "done", "total", "state", "error", "warn", "img_warn")}
+    return {k: j[k] for k in ("id", "kind", "name", "stage", "done", "total", "state", "error", "warn", "img_warn",
+                              "scan_missing")}
 
 
 def _purge_jobs() -> None:
@@ -358,6 +403,7 @@ def start_job(kind: str = Query(...), scope: str = Query("one"), loc_id: int | N
     jid = uuid.uuid4().hex[:12]
     j = {"id": jid, "user_id": user["id"], "kind": kind, "scope": scope, "name": name, "stage": "queued",
          "done": 0, "total": n if n > 1 else 0, "state": "run", "error": "", "warn": "", "img_warn": 0,
+         "scan_missing": sum(1 for loc in locs if not loc.get("scan")),
          "cancel": False, "created": time.time(), "path": None, "filename": None, "media": None}
     with _JOBS_LOCK:
         _JOBS[jid] = j
@@ -395,4 +441,6 @@ def job_file(jid: str, user=Depends(current_user)):
         resp.headers["X-Export-Warnings"] = str(j["img_warn"])
     if j["warn"]:
         resp.headers["X-Paper-Warning"] = j["warn"]
+    if j["scan_missing"]:
+        resp.headers["X-Scan-Missing"] = str(j["scan_missing"])
     return resp

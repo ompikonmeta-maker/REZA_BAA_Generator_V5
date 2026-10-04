@@ -386,6 +386,7 @@ def build_workbook(template_path: str, template_config: dict, locations: list[di
                 _setc(log_row, log_cols.get("kode"), loc.get("code", ""))
             if j == 0:                           # kolom identitas lain hanya di baris pertama
                 _setc(log_row, log_cols.get("foto_lengkap"), "SUDAH" if complete else "BELUM")
+                _setc(log_row, log_cols.get("scan_pdf"), "SUDAH" if loc.get("scan") else "BELUM")
                 # status foto per kategori: "X" bila belum ada, kosong bila ada
                 for cat, col in log_photo.items():
                     _setc(log_row, col, "" if _has_photo(by_cat.get(cat)) else "X")

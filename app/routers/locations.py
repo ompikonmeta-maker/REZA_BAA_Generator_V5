@@ -10,6 +10,8 @@ from pydantic import BaseModel
 from .. import config, db
 from ..deps import audit, current_user, get_db, require_admin, require_editor
 
+from .scan import scan_info
+
 router = APIRouter(prefix="/api/locations", tags=["locations"])
 
 def _format_code(conn, n: int) -> str:
@@ -80,6 +82,7 @@ def _location_dict(conn: sqlite3.Connection, row, user=None) -> dict:
         "my_request": my_request,
         "inventory": [dict(i) for i in inv],
         "photos": [dict(p) for p in photos],
+        "scan": scan_info(conn, row["id"]),
     }
 
 
@@ -132,6 +135,7 @@ def list_locations(
               (SELECT COUNT(*) FROM photos p WHERE p.location_id = l.id) AS photo_count,
               (SELECT GROUP_CONCAT(DISTINCT category) FROM photos p WHERE p.location_id = l.id) AS photo_cats,
               (SELECT COUNT(*) FROM inventory_items i WHERE i.location_id = l.id) AS inv_count,
+              EXISTS(SELECT 1 FROM scan_docs s WHERE s.location_id = l.id) AS has_scan,
               (SELECT COUNT(*) FROM inventory_items i WHERE i.location_id = l.id AND (
                    TRIM(COALESCE(i.nama_barang,'')) = '' OR TRIM(COALESCE(i.merk_type,'')) = '' OR
                    TRIM(COALESCE(i.jumlah,'')) = '' OR TRIM(COALESCE(i.sn_tagging,'')) = '' OR
@@ -156,6 +160,7 @@ def list_locations(
             "photo_cats": (r["photo_cats"].split(",") if r["photo_cats"] else []),
             "inv_ok": r["inv_count"] > 0 and r["inv_bad"] == 0,
             "inv_full": max(0, r["inv_count"] - r["inv_bad"]),
+            "has_scan": bool(r["has_scan"]),
             "can_delete": is_admin or r["owner_id"] == user["id"],
         }
         for r in rows
@@ -391,5 +396,6 @@ def purge_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
     conn.execute("DELETE FROM locations WHERE id=?", (loc_id,))  # cascade -> inventory & photos
     conn.commit()
     shutil.rmtree(db.images_dir(conn) / row["code"], ignore_errors=True)
+    shutil.rmtree(db.docs_dir(conn) / row["code"], ignore_errors=True)
     audit(conn, user, "purge", "location", loc_id, row["code"])
     return {"ok": True}

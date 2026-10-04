@@ -109,6 +109,31 @@
   .nav-brand .bt .flow{color:var(--md-sys-color-primary);font-weight:600}
   .nav-brand .bs{display:block;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--md-sys-color-on-surface-variant);line-height:1;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .shell.rail .nav-brand .txt{opacity:0;max-width:0;transform:translateX(-14px)}
+  /* ===== Scan PDF (wajib; halaman 1 export PDF) ===== */
+  .scan-card .sec .req{font:var(--md-sys-typescale-label-small);font-weight:600;padding:2px 8px;border-radius:99px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);margin-left:8px}
+  .scan-card .sec .req.ok{background:var(--good-bg);color:var(--good)}
+  .scan-card.drag .scan-empty,.scan-card.drag .scan-full{outline:2px dashed var(--md-sys-color-primary);outline-offset:4px}
+  .scan-empty{display:flex;align-items:center;gap:16px;padding:18px;border:1.5px dashed var(--md-sys-color-outline);border-radius:var(--md-sys-shape-corner-large);background:var(--md-sys-color-surface-container);cursor:pointer;flex-wrap:wrap}
+  .scan-empty.ro{cursor:default;border-style:solid;border-color:var(--md-sys-color-outline-variant)}
+  .scan-empty .ic{width:48px;height:56px;border-radius:8px;display:grid;place-items:center;background:var(--md-sys-color-surface-container-highest);color:var(--md-sys-color-error)}
+  .scan-empty .ic .mi{font-size:28px}
+  .scan-empty .ic .spin{color:var(--md-sys-color-primary);animation:scspin 1s linear infinite}
+  @keyframes scspin{to{transform:rotate(360deg)}}
+  .scan-empty .t{font:var(--md-sys-typescale-title-small)}
+  .scan-empty .s{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .scan-empty .grow{flex:1}
+  .scan-full{display:flex;gap:16px;align-items:stretch}
+  .scan-full .sc-pg{width:112px;flex:0 0 auto;border-radius:10px;overflow:hidden;box-shadow:var(--md-sys-elevation-level2);position:relative;background:var(--md-sys-color-surface-container-highest);min-height:150px;display:grid;place-items:center}
+  .scan-full .sc-pg img{width:100%;display:block}
+  .scan-full .sc-pg .ph{font-size:40px;color:var(--md-sys-color-error)}
+  .scan-full .sc-pg .n{position:absolute;right:6px;bottom:6px;font:600 10px/1 system-ui,sans-serif;padding:3px 6px;border-radius:6px;background:rgba(0,0,0,.6);color:#fff}
+  .scan-full .meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+  .scan-full .fn{font:var(--md-sys-typescale-title-small);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .scan-full .sc-sub{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .scan-full .first{display:inline-flex;align-items:center;gap:6px;font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-primary)}
+  .scan-full .first .mi{font-size:18px}
+  .scan-full .acts{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap}
+  #entry-form.ro .scan-full .acts .wr{display:none}
   /* ===== Multi-project: switcher, palette, chip, veil ===== */
   .psw{display:flex;align-items:center;gap:10px;width:100%;flex:0 0 auto;margin:0 0 8px;padding:7px 10px 7px 7px;border:1px solid var(--md-sys-color-outline-variant);border-radius:var(--md-sys-shape-corner-large);
     background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface);cursor:pointer;text-align:left;font:inherit;transition:background .15s,width var(--sp),padding var(--sp)}
@@ -1874,6 +1899,11 @@
                 <div id="inv-body"></div>
               </div>
             </div>
+            <div class="card scan-card" id="scanCard">
+              <div class="sec"><span class="mi acc">picture_as_pdf</span><h3>Scan Document (PDF)</h3><span class="req" id="scanTag">Required</span><span class="grow"></span></div>
+              <div id="scanBody"></div>
+              <input id="scan-file" type="file" accept=".pdf,application/pdf" class="hidden">
+            </div>
             <div class="card">
               <div class="sec"><span class="mi acc">photo_camera</span><h3>Photos &amp; Capture</h3><span class="grow"></span>
                 <span class="photodock" id="photoDock" title="Drag photos here / click to upload">
@@ -1894,7 +1924,7 @@
                   <md-button variant="text" icon="folder" id="btn-folder">Pick folder</md-button>
                   <span class="dz-hint"><span class="mi">drag_pan</span>drag &amp; drop photos here</span>
                 </div>
-                <input id="file-auto" type="file" multiple accept="image/*" class="hidden">
+                <input id="file-auto" type="file" multiple accept="image/*,.pdf,application/pdf" class="hidden">
                 <input id="file-folder" type="file" multiple webkitdirectory class="hidden">
                 <div class="dz-drophint"><span class="mi">cloud_upload</span>Drop to upload</div>
                 <div class="upprog" id="upProg">
@@ -1935,6 +1965,7 @@
                 <div class="crow" id="sum-loc-row"><span class="mi ci" id="sum-loc-ic">error</span><span class="lbl">Location info</span><span class="st no" id="sum-loc">Missing</span></div>
                 <div class="crow" id="sum-inv-row"><span class="mi ci" id="sum-inv-ic">error</span><span class="lbl">Inventory</span><span class="st" id="sum-inv">0 items</span></div>
                 <div class="crow" id="sum-foto-row"><span class="mi ci" id="sum-foto-ic">error</span><span class="lbl">Photos &amp; Capture</span><span class="st" id="sum-foto">0 / 0</span></div>
+                <div class="crow" id="sum-scan-row"><span class="mi ci" id="sum-scan-ic">error</span><span class="lbl">Scan PDF</span><span class="st no" id="sum-scan">Missing</span></div>
               </div>
               <div class="sum-actions">
                 <md-button variant="filled" size="l" icon="save" id="save-btn">Save BAA</md-button>
@@ -2757,6 +2788,53 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
   refreshPicker();loadLocations();loadCreators();pjLand();if(S.user.role==='admin'){loadTemplates();loadUsers();loadNotifCount();}bindTips();
   wbInit();expAskSync();
   if(S.user.must_change)setTimeout(()=>openPw(true),400);}
+/* ===== Scan PDF per lokasi (wajib; jadi halaman pertama export PDF) =====
+   Belum ada scan = hanya ditandai kurang; Done & export Excel/PDF tetap jalan. */
+const isPdf=f=>!!f&&(/\.pdf$/i.test(f.name||'')||f.type==='application/pdf');
+const fmtSize=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round((b||0)/1024))+' KB';
+function scanUrl(kind){return '/api/locations/'+S.loc.id+'/scan/'+kind+'?v='+encodeURIComponent((S.loc.scan&&S.loc.scan.created_at)||'');}
+function renderScan(busy){const c=$('#scanBody');if(!c||!S.loc)return;const sc=S.loc.scan,ro=roActive();
+  const tag=$('#scanTag');tag.className='req'+(sc?' ok':'');tag.textContent=sc?'Uploaded':'Required';
+  if(busy){c.innerHTML='<div class="scan-empty ro"><span class="ic"><span class="mi spin">progress_activity</span></span><span><div class="t">Uploading scan…</div><div class="s">'+esc(busy)+'</div></span></div>';return;}
+  if(!sc){c.innerHTML=ro?'<div class="scan-empty ro"><span class="ic"><span class="mi">picture_as_pdf</span></span><span><div class="t">No scan PDF yet</div><div class="s">The PDF export starts with the BAA pages until a scan is uploaded</div></span></div>'
+      :`<div class="scan-empty" id="scanDrop"><span class="ic"><span class="mi">picture_as_pdf</span></span><span><div class="t">Upload the signed scan (PDF)</div><div class="s">Drop a .pdf here or click · becomes page 1 of the PDF export · max 25 MB</div></span><span class="grow"></span><md-button variant="tonal" icon="upload">Upload PDF</md-button></div>`;
+    const d=$('#scanDrop');if(d)d.onclick=()=>$('#scan-file').click();return;}
+  const when=(()=>{try{return new Date(sc.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}})();
+  c.innerHTML=`<div class="scan-full"><a class="sc-pg" href="${scanUrl('file')}" target="_blank" rel="noopener" data-tip="Open scan PDF"><img src="${scanUrl('thumb')}" alt="" onerror="this.outerHTML='<span class=&quot;mi ph&quot;>picture_as_pdf</span>'"><span class="n">${sc.pages} page${sc.pages>1?'s':''}</span></a>
+    <div class="meta"><div class="fn">${esc(sc.orig_name||'scan.pdf')}</div><div class="sc-sub">${sc.pages} page${sc.pages>1?'s':''} · ${fmtSize(sc.size)}${sc.by?' · uploaded by '+esc(sc.by):''}${when?' · '+when:''}</div>
+      <div class="first"><span class="mi">vertical_align_top</span>Placed before the BAA pages in PDF export</div>
+      <div class="acts"><md-button variant="tonal" icon="open_in_new" id="scanOpen">Open</md-button><md-button class="wr" variant="text" icon="sync" id="scanRep">Replace</md-button><md-button class="wr" variant="text" icon="delete" id="scanDel">Remove</md-button></div></div></div>`;
+  $('#scanOpen').onclick=()=>window.open(scanUrl('file'),'_blank','noopener');
+  $('#scanRep').onclick=()=>$('#scan-file').click();
+  $('#scanDel').onclick=()=>confirmDo('Remove scan PDF',`Remove <b>${esc(sc.orig_name||'scan.pdf')}</b> from this location? It will be marked as missing again.`,removeScan,{okLabel:'Remove'});
+  bindTips();}
+async function uploadScan(file){if(!file||!S.loc)return;
+  if(roActive()){toast('Viewer mode — cannot upload');return;}
+  if(!isPdf(file)){toast('Scan must be a .pdf file');return;}
+  if(file.size>25*1048576){toast('PDF is larger than 25 MB');return;}
+  if(isDraft()){try{await ensureLoc();}catch(e){toast('Failed to create location: '+e.message);return;}}
+  if(!S.loc.id)return;const lid=S.loc.id;
+  renderScan(file.name+' · '+fmtSize(file.size));
+  const fd=new FormData();fd.append('file',file,file.name);
+  try{const r=await fetch('/api/locations/'+lid+'/scan',{method:'POST',body:fd,credentials:'same-origin'});
+    const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.detail||('HTTP '+r.status));
+    if(S.loc&&S.loc.id===lid)S.loc.scan=d.scan;toast('Scan PDF uploaded');}
+  catch(e){toast('Scan upload failed: '+e.message);}
+  if(S.loc&&S.loc.id===lid){renderScan();updateSummary();}
+  if(typeof loadLocations==='function')loadLocations();}
+async function removeScan(){const lid=S.loc&&S.loc.id;if(!lid)return;
+  try{await api('/api/locations/'+lid+'/scan',{method:'DELETE'});if(S.loc&&S.loc.id===lid){S.loc.scan=null;renderScan();updateSummary();}toast('Scan PDF removed');loadLocations();}
+  catch(e){toast('Failed: '+e.message);}}
+// upload scan langsung tersimpan di server -> jangan tandai form sebagai "belum disimpan"
+$('#scan-file').addEventListener('input',e=>e.stopPropagation());
+$('#scan-file').addEventListener('change',e=>{e.stopPropagation();const f=e.target.files[0];e.target.value='';if(f)uploadScan(f);});
+(function(){const card=$('#scanCard');if(!card)return;
+  const on=e=>{if(roActive()||!e.dataTransfer||![...e.dataTransfer.types].includes('Files'))return;e.preventDefault();e.stopPropagation();card.classList.add('drag');};
+  card.addEventListener('dragenter',on);card.addEventListener('dragover',on);
+  card.addEventListener('dragleave',e=>{if(!card.contains(e.relatedTarget))card.classList.remove('drag');});
+  card.addEventListener('drop',e=>{card.classList.remove('drag');if(roActive())return;e.preventDefault();e.stopPropagation();
+    const f=[...(e.dataTransfer.files||[])].find(isPdf);if(f)uploadScan(f);else toast('Drop a .pdf file here');});})();
+
 /* ===== Multi-project =====
    Pilih project: header X-Project + cookie baa_project (untuk <img>/unduhan). Pindah project = simpan pilihan
    lalu muat ulang halaman di balik tirai warna project (state bersih, tidak ada data project lain tertinggal). */
@@ -3504,7 +3582,7 @@ function newDraft(){
   if(pickerSel){pickerSel.setValue('');const v=$('#picker .lp-val');
     if(v){v.innerHTML='<span class="lp-nm-main">New location</span><span class="lp-code">not saved</span>';v.classList.remove('ph');}}
   updateLocNav();
-  renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();
+  renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();renderScan();
   entryDirty=false;
   requestAnimationFrame(()=>revealCards($('#v-entry')));
   const f=$('#loc-fields input');if(f)setTimeout(()=>f.focus(),120);}
@@ -3544,7 +3622,7 @@ async function openLoc(id){S.loc=await api('/api/locations/'+id);
   pickerSel.setValue(String(id));
   $('#entry-empty').classList.add('hidden');$('#entry-form').classList.remove('hidden');
   updateLocNav();
-  renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();
+  renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();renderScan();
   entryDirty=false;
   requestAnimationFrame(()=>revealCards($('#v-entry')));}
 /* Read-only bila viewer, atau operator membuka lokasi milik user lain (boleh lihat,
@@ -3748,12 +3826,13 @@ function computeState(){
   const fotoDone=rc.filter(c=>byCat[c.key]).length;const missing=rc.filter(c=>!byCat[c.key]).map(c=>c.label);
   const checklist=rc.map(c=>({label:c.label,done:!!byCat[c.key]}));
   const invOk=items>0&&filledCells===cells;const fotoOk=rc.length>0&&fotoDone>=rc.length;
-  return {data,fields,filledF,locDone,items,cells,filledCells,rowsDone,invOk,rc,fotoDone,fotoOk,missing,checklist,complete:locDone&&invOk&&fotoOk};
+  const scanOk=!!(S.loc&&S.loc.scan);
+  return {data,fields,filledF,locDone,items,cells,filledCells,rowsDone,invOk,rc,fotoDone,fotoOk,missing,checklist,scanOk,complete:locDone&&invOk&&fotoOk&&scanOk};
 }
 function updateSummary(){
   if(!S.loc)return;const s=computeState();
-  const total=(s.fields.length||1)+1+s.rc.length;
-  const done=(s.fields.length?s.filledF:(s.locDone?1:0))+(s.invOk?1:(s.items>0?0.5:0))+s.fotoDone;
+  const total=(s.fields.length||1)+1+s.rc.length+1;     // +1 = scan PDF (wajib)
+  const done=(s.fields.length?s.filledF:(s.locDone?1:0))+(s.invOk?1:(s.items>0?0.5:0))+s.fotoDone+(s.scanOk?1:0);
   const pct=Math.round(done/total*100);
   $('#sum-pct').textContent=pct+'%';$('#sum-ring-pct').textContent=pct+'%';
   const _sc=$('.summary .card');if(_sc){const lvl=pct>=100?'done':pct>=80?'high':pct>=40?'mid':'low';
@@ -3774,6 +3853,8 @@ function updateSummary(){
   setRow('#sum-inv-row','#sum-inv-ic',iv,s.invOk,s.items>0?(s.rowsDone+'/'+s.items):'0 item');
   const ft=$('#sum-foto');
   setRow('#sum-foto-row','#sum-foto-ic',ft,s.fotoOk,s.fotoDone+'/'+s.rc.length);
+  const sc=S.loc.scan;
+  setRow('#sum-scan-row','#sum-scan-ic',$('#sum-scan'),s.scanOk,sc?(sc.pages+' page'+(sc.pages>1?'s':'')):'Missing');
 }
 
 /* photos — tile kompak: klik=Edit, ⋯=aksi lain, strip SN (OCR), undo bercincin in-tile */
@@ -3945,8 +4026,12 @@ function upDone(n,ok){const p=$('#upProg');if(!p)return;p.classList.add('done');
   $('#upTxt').textContent=ok?'Done':'Failed';$('#upSub').textContent=ok?(n+' photos uploaded'):'';upSet(100);
   setTimeout(()=>{p.classList.remove('on','done');dzBusy=false;dzScheduleMini(1200);},950);}   // beri jeda lalu collapse
 function doUpload(files,category,relpaths){return new Promise(async resolve=>{
-  const arr=files?[...files]:[];if(!arr.length)return resolve();
+  let arr=files?[...files]:[];if(!arr.length)return resolve();
   if(roActive()){toast('Viewer mode — cannot upload');return resolve();}
+  const pdf=arr.find(isPdf);                       // file .pdf ikut terpilih -> slot Scan PDF
+  if(pdf){const ix=arr.map((f,i)=>isPdf(f)?-1:i).filter(i=>i>=0);
+    if(relpaths&&relpaths.length)relpaths=ix.map(i=>relpaths[i]);arr=ix.map(i=>arr[i]);
+    await uploadScan(pdf);if(!arr.length)return resolve();}
   if(isDraft()){try{await ensureLoc();}catch(e){toast('Failed to create location: '+e.message);return resolve();}}  // first photo -> create code first
   if(!S.loc||!S.loc.id)return resolve();
   const fd=new FormData();arr.forEach(f=>fd.append('files',f));if(category)fd.append('category',category);
@@ -3993,7 +4078,9 @@ async function _dzHandleDrop(dt){if(!dt)return;let files=[],relpaths=[];
   if(hasEntry){const col=await _collectEntries(items);files=col.map(x=>x.file);relpaths=col.map(x=>x.path);}
   else{files=[...(dt.files||[])];relpaths=files.map(f=>f.name);}
   const keep=files.map((f,i)=>[f,relpaths[i]]).filter(([f])=>/^image\//.test(f.type)||IMG_RE.test(f.name));
-  if(!keep.length){toast('No valid images');return;}
+  const pdf=files.find(isPdf);
+  if(!keep.length){if(pdf)uploadScan(pdf);else toast('No valid images');return;}
+  if(pdf)keep.push([pdf,pdf.name]);
   doUpload(keep.map(x=>x[0]),'',keep.map(x=>x[1]));}
 function bindDropzone(){
   const stop=e=>{e.preventDefault();e.stopPropagation();};
@@ -4212,9 +4299,9 @@ function locPct(l){
   const cats=S.cats||[];const have=new Set(l.photo_cats||[]);
   const fotoDone=cats.filter(c=>have.has(c.key)).length;
   const invOk=!!l.inv_ok;
-  const total=(fields.length||1)+1+cats.length;
-  const done=filledF+(invOk?1:((l.inv_count||0)>0?0.5:0))+fotoDone;
-  return {pct:Math.min(100,Math.round(done/total*100)),filledF,nFields:fields.length,fotoDone,nCats:cats.length,invOk};
+  const total=(fields.length||1)+1+cats.length+1;
+  const scan=!!l.has_scan;const done=filledF+(invOk?1:((l.inv_count||0)>0?0.5:0))+fotoDone+(scan?1:0);
+  return {pct:Math.min(100,Math.round(done/total*100)),filledF,nFields:fields.length,fotoDone,nCats:cats.length,invOk,scan};
 }
 /* Sel kolom "Kelengkapan": 100% -> hanya persentase; kurang -> % + chip grup yg kurang (mirror donut) */
 function locKel(l){
@@ -4227,6 +4314,7 @@ function locKel(l){
     if(c.filledF<c.nFields)arr.push('Data '+c.filledF+'/'+c.nFields);
     if(!c.invOk)arr.push('Inventory '+invHave+'/'+reqInv);
     if(c.fotoDone<c.nCats)arr.push('Photos '+c.fotoDone+'/'+c.nCats);
+    if(!c.scan)arr.push('Scan PDF');
     inner='<div class="kel-miss">'+arr.map(x=>`<span class="mchip">${x}</span>`).join('')+'</div>';}
   return `<div class="kel ${full?'full':''}">
     <div class="kbar"><div class="track"><i style="width:${c.pct}%"></i></div><span class="kel-pv">${c.pct}%</span></div>
@@ -4245,8 +4333,8 @@ function locDetailState(loc){
   const invOk=items>0&&filled===cells;
   const cats=S.cats||[];const byCat={};(loc.photos||[]).forEach(p=>byCat[p.category]=1);
   const fotoDone=cats.filter(c=>byCat[c.key]).length;
-  const total=(fields.length||1)+1+cats.length;
-  const done=filledF+(invOk?1:(items>0?0.5:0))+fotoDone;
+  const total=(fields.length||1)+1+cats.length+1;
+  const done=filledF+(invOk?1:(items>0?0.5:0))+fotoDone+(loc.scan?1:0);
   return {pct:Math.min(100,Math.round(done/total*100)),filledF,nFields:fields.length,invOk,items,fotoDone,nCats:cats.length,byCat};
 }
 async function openLocDrawer(id){
@@ -4551,7 +4639,9 @@ async function expFetch(j){try{const r=await fetch('/api/export/jobs/'+j.id+'/fi
     let where='Saved to Downloads ✓';
     if(j.handle){try{const ws=await j.handle.createWritable();await ws.write(blob);await ws.close();where='Saved ✓';}catch(e){j.handle=null;}}
     if(!j.handle){const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);}
-    const w=r.headers.get('X-Export-Warnings');expEnd(j,'ok',w?`${w} image warning${w==='1'?'':'s'}`:'',where);
+    const w=r.headers.get('X-Export-Warnings'),sm=r.headers.get('X-Scan-Missing');
+    const info=[w?`${w} image warning${w==='1'?'':'s'}`:'',sm?`${sm} without scan PDF`:''].filter(Boolean).join(' · ');
+    expEnd(j,'ok',info,where);
     const pw=r.headers.get('X-Paper-Warning');   // ukuran halaman PDF ≠ Page Setup template
     if(pw)confirmDo('Check paper size',`<div style="display:flex;gap:12px;align-items:flex-start"><span class="mi" style="font-size:26px;color:var(--warn)">print</span><div>${esc(pw)}</div></div>`,()=>{},{okLabel:'OK',hideCancel:true});
   }catch(e){expEnd(j,'err',e.message);}}
@@ -4678,6 +4768,7 @@ function guessPhoto(text){const ht=' '+_tok(text).join(' ')+' ';let best='',scor
   (S.cats||[]).forEach(c=>{const toks=new Set([..._tok(c.label),...(c.keywords||[]).flatMap(_tok)]);let sc=0;toks.forEach(w=>{if(ht.includes(' '+w+' '))sc++;});if(sc>score){score=sc;best=c.key;}});
   return score?best:'';}
 function guessTarget(text){const t=(text||'').toLowerCase();
+  if(/\bscan\b|\bbast\b|dokumen|document/.test(t))return 'f:scan_pdf';
   if(/lengkap|complete/.test(t))return 'f:foto_lengkap';
   if(/foto|capture|photo|gambar|screenshot/.test(t)){const p=guessPhoto(text);if(p)return 'p:'+p;}
   if(/\b(kode|code)\b/.test(t))return 'f:kode';
@@ -4724,14 +4815,15 @@ function mapRereadHeaders(){const prev={};MAP_LOGH.forEach(r=>prev[r.col]=r.targ
   MAP_LOGH=detectedHeaders().map(h=>({col:h.col,text:h.text,target:(h.col in prev)?prev[h.col]:guessTarget(h.text)}));renderLogRows();mapSchedPreview();}
 $('#map-headerrow').addEventListener('input',()=>{mapDirty();clearTimeout(M.hrT);M.hrT=setTimeout(()=>{mapRereadHeaders();mapSteps();},250);});
 $('#map-logstart').addEventListener('input',()=>{mapDirty();mapSchedPreview();});
-const tgtGroup=v=>!v?'':v.startsWith('p:')?'p':v==='f:foto_lengkap'?'c':(v.startsWith('f:')&&INV_FIELDS.includes(v.slice(2)))?'i':'d';
+const tgtGroup=v=>!v?'':v.startsWith('p:')?'p':(v==='f:foto_lengkap'||v==='f:scan_pdf')?'c':(v.startsWith('f:')&&INV_FIELDS.includes(v.slice(2)))?'i':'d';
 function logTargetOpts(sel){
   const grp=(lbl,items)=>`<optgroup label="${lbl}">`+items.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(l)}</option>`).join('')+`</optgroup>`;
   return `<option value="">— Ignore —</option>`
     +grp('Data',[['f:no','No'],['f:kode','Location code'],['f:lokasi','Location']].concat((S.locFields||[]).map(x=>['d:'+x.key,x.label])))
     +grp('Inventory',INV_FIELDS.map(f=>['f:'+f,INV_LABELS[f]||f]))
     +grp('Photo status (X if missing)',(S.cats||[]).map(c=>['p:'+c.key,c.label]))
-    +grp('Photos complete (SUDAH/BELUM)',[['f:foto_lengkap','All photo categories']]);}
+    +grp('Photos complete (SUDAH/BELUM)',[['f:foto_lengkap','All photo categories']])
+    +grp('Scan PDF (SUDAH/BELUM)',[['f:scan_pdf','Scan document uploaded']]);}
 function logConflicts(){const n={};MAP_LOGH.forEach(r=>{if(r.target)n[r.target]=(n[r.target]||0)+1;});return new Set(Object.keys(n).filter(k=>n[k]>1));}
 function renderLogRows(){const bad=logConflicts();
   const row=(r,i)=>{const g=tgtGroup(r.target);return `<div class="mr"><span class="mc">${esc(r.col)}</span><span class="mt" title="${esc(r.text)}">${esc(r.text)}</span><span class="mi ma">arrow_forward</span>

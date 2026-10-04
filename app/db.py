@@ -156,6 +156,17 @@ CREATE TABLE IF NOT EXISTS activity (
     created_at  TEXT NOT NULL
 );
 
+-- Dokumen scan PDF (wajib, satu per lokasi): halaman pertama saat export PDF
+CREATE TABLE IF NOT EXISTS scan_docs (
+    location_id INTEGER PRIMARY KEY REFERENCES locations(id) ON DELETE CASCADE,
+    orig_name   TEXT DEFAULT '',
+    path        TEXT NOT NULL,                   -- relatif ke folder project: docs/<KODE>/scan_x.pdf
+    pages       INTEGER NOT NULL DEFAULT 1,
+    size        INTEGER NOT NULL DEFAULT 0,
+    uploaded_by INTEGER,
+    created_at  TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_inv_loc ON inventory_items(location_id);
 CREATE INDEX IF NOT EXISTS idx_photo_loc ON photos(location_id);
 CREATE INDEX IF NOT EXISTS ix_activity_time ON activity(created_at);
@@ -284,6 +295,10 @@ def project_path(p) -> Path:
 
 def images_dir(conn) -> Path:
     return project_dir(conn.project) / "images"
+
+
+def docs_dir(conn) -> Path:
+    return project_dir(conn.project) / "docs"
 
 
 def templates_dir(conn) -> Path:
