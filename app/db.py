@@ -105,8 +105,9 @@ CREATE TABLE IF NOT EXISTS locations (
     modified_at TEXT,
     modified_by INTEGER,
     done_at     TEXT,
-    wil_kode    TEXT,                             -- kode desa/kelurahan Kemendagri (mis. 32.17.01.2005)
-    wil_desa    TEXT, wil_kec TEXT, wil_kab TEXT, wil_prov TEXT   -- snapshot nama saat diinput
+    wil_kode    TEXT,                             -- kode desa Kemendagri; mode desa_manual = kode kecamatan
+    wil_desa    TEXT, wil_kec TEXT, wil_kab TEXT, wil_prov TEXT,  -- nama SESUAI TULISAN TEKNISI (dicetak)
+    wil_mode    TEXT                              -- official | desa_manual | manual
 );
 
 CREATE TABLE IF NOT EXISTS inventory_items (
@@ -384,10 +385,14 @@ def init_project_db(p, base: dict | None = None) -> None:
     try:
         conn.execute("PRAGMA journal_mode = WAL")
         conn.executescript(PROJECT_SCHEMA)
-        for col in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov"):
+        for col in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_mode"):
             if not _has_column(conn, "locations", col):
                 conn.execute(f"ALTER TABLE locations ADD COLUMN {col} TEXT")
         conn.execute("CREATE INDEX IF NOT EXISTS ix_loc_wil ON locations(wil_kode)")
+        # isian wilayah awal (sebelum ada mode): resmi, nama kab disingkat seperti isian baru
+        conn.execute("UPDATE locations SET wil_mode='official', wil_kab = CASE WHEN wil_kab LIKE 'Kabupaten %' "
+                     "THEN 'Kab. ' || substr(wil_kab, 11) ELSE wil_kab END "
+                     "WHERE wil_mode IS NULL AND wil_kode IS NOT NULL AND wil_kode <> ''")
         conn.commit()
         _seed_project(conn, base)
     finally:

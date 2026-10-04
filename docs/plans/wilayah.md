@@ -1,6 +1,6 @@
 # Rencana: Data Wilayah + Infografis Peta
 
-Status: **Tahap 1 selesai** (referensi, pencarian, sakelar per project, kelengkapan, filter, isi massal) · tahap 2–3 belum · 2026-10-04
+Status: **Tahap 1 selesai** (referensi, pencarian, sakelar per project, kelengkapan, filter, isi massal) + **isian manual** (desa manual, sepenuhnya manual, tulisan teknisi, tautkan ke resmi) · tahap 2–3 belum · 2026-10-04
 
 ## Keputusan
 | Topik | Keputusan |
@@ -41,7 +41,7 @@ Status: **Tahap 1 selesai** (referensi, pencarian, sakelar per project, kelengka
 - **Export ZIP**: opsi folder per wilayah, mis. `Jawa Barat/Kab. Bandung/LOK_00012 ….pdf`.
 - **Filter** Location Log per provinsi/kab/kota.
 
-## Wilayah yang tidak ada di data Kemendagri (rencana, belum dikerjakan)
+## Wilayah yang tidak ada di data Kemendagri (**selesai**)
 Keputusan: kasus utama = desa tidak ada tapi kecamatan ada; kasus "tidak cocok sama sekali" tetap didukung.
 **Nama yang dicetak di Excel/BAA = sesuai tulisan teknisi.** Operator boleh mengisi manual; admin meninjau.
 

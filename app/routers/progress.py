@@ -148,7 +148,7 @@ def _completeness(loc, fields, cats, inv_rows, photo_cats, has_scan: bool = True
                 bad_rows.append((r, vals))
     inv_ok = items > 0 and filled == cells
     miss_c = [c for c in cats if c["key"] not in photo_cats]
-    has_wil = bool(loc["wil_kode"]) if "wil_kode" in loc.keys() else False
+    has_wil = bool(loc["wil_desa"]) if "wil_desa" in loc.keys() else False
     total = (len(fields) or 1) + 1 + len(cats) + 1 + (1 if wil_req else 0)   # +scan PDF (+wilayah)
     done = (filled_f + (1 if inv_ok else (0.5 if items else 0)) + (len(cats) - len(miss_c)) + (1 if has_scan else 0)
             + (1 if wil_req and has_wil else 0))

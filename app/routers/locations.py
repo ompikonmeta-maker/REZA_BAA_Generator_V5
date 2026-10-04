@@ -1,6 +1,7 @@
 """Lokasi (BAA per lokasi) + item inventory."""
 from __future__ import annotations
 
+import re
 import shutil
 import sqlite3
 
@@ -37,31 +38,62 @@ class LocationIn(BaseModel):
     name: str = ""
     data: dict = {}
     status: str = "draft"
-    wil_kode: str | None = None       # kode desa Kemendagri; None = tidak diubah, "" = kosongkan
+    wil: dict | None = None           # {mode, kode, desa, kec, kab, prov}; None = tidak diubah, {} = kosongkan
+    wil_kode: str | None = None       # (lama) pilih desa resmi lewat kode saja
 
 
-_WIL_COLS = ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov")
+WIL_MODES = ("official", "desa_manual", "manual")
 
 
-def _wil_values(kode: str | None):
-    """Nilai kolom wilayah dari kode desa (snapshot nama), atau None bila tidak diubah."""
-    if kode is None:
+def _wil_values(w: dict | None, kode: str | None = None):
+    """Kolom (kode, desa, kec, kab, prov, mode) dari isian wilayah, atau None bila tidak diubah.
+    Nama disimpan sesuai tulisan teknisi; kosong = pakai nama resmi."""
+    if w is None and kode is not None:
+        w = {"mode": "official", "kode": kode} if kode.strip() else {}
+    if w is None:
         return None
-    kode = kode.strip()
-    if not kode:
-        return (None,) * 5
-    w = wilayah.info(kode)
-    if not w:
-        raise HTTPException(400, "Unknown wilayah code")
-    return (w["kode"], w["desa"], w["kec"], w["kab"], w["prov"])
+    mode = (w.get("mode") or "").strip()
+    if not mode:
+        return (None,) * 6
+    if mode not in WIL_MODES:
+        raise HTTPException(400, "Invalid wilayah mode")
+    t = {k: re.sub(r"\s+", " ", str(w.get(k) or "")).strip()[:120] for k in ("desa", "kec", "kab", "prov")}
+    k = str(w.get("kode") or "").strip()
+    if mode == "official":
+        off = wilayah.info(k)
+        if not off:
+            raise HTTPException(400, "Unknown wilayah code")
+        off["kab"] = wilayah.short_kab(off["kab"])
+    elif mode == "desa_manual":
+        off = wilayah.kec_info(k)
+        if not off:
+            raise HTTPException(400, "Pick an official kecamatan")
+        off["kab"] = wilayah.short_kab(off["kab"])
+        off["desa"] = ""
+        if not t["desa"]:
+            raise HTTPException(400, "Type the desa/kelurahan name")
+    else:
+        off = {"kode": None, "desa": "", "kec": "", "kab": "", "prov": ""}
+        if not all(t.values()):
+            raise HTTPException(400, "Fill desa, kecamatan, kab/kota and provinsi")
+    return (off["kode"], t["desa"] or off["desa"], t["kec"] or off["kec"], t["kab"] or off["kab"],
+            t["prov"] or off["prov"], mode)
 
 
 def _wil_dict(row) -> dict | None:
-    if "wil_kode" not in row.keys() or not row["wil_kode"]:
+    if "wil_desa" not in row.keys() or not row["wil_desa"]:
         return None
-    return {"kode": row["wil_kode"], "desa": row["wil_desa"], "kec": row["wil_kec"],
-            "kab": wilayah.short_kab(row["wil_kab"] or ""), "prov": row["wil_prov"],
-            "kel": (row["wil_kode"].split(".")[-1:] or [""])[0].startswith("1")}
+    mode = row["wil_mode"] or ("official" if row["wil_kode"] else "manual")
+    k = row["wil_kode"]
+    off = (wilayah.info(k) if mode == "official" else wilayah.kec_info(k) if mode == "desa_manual" else None) or {}
+    if off.get("kab"):
+        off["kab"] = wilayah.short_kab(off["kab"])
+    return {"mode": mode, "kode": k, "desa": row["wil_desa"], "kec": row["wil_kec"], "kab": row["wil_kab"],
+            "prov": row["wil_prov"], "kel": bool(k and mode == "official" and k.split(".")[-1].startswith("1")),
+            "off": {x: off.get(x, "") for x in ("desa", "kec", "kab", "prov")}}
+
+
+_WIL_SET = "wil_kode=?,wil_desa=?,wil_kec=?,wil_kab=?,wil_prov=?,wil_mode=?"
 
 
 class InventoryItem(BaseModel):
@@ -167,7 +199,7 @@ def list_locations(
               (SELECT GROUP_CONCAT(DISTINCT category) FROM photos p WHERE p.location_id = l.id) AS photo_cats,
               (SELECT COUNT(*) FROM inventory_items i WHERE i.location_id = l.id) AS inv_count,
               EXISTS(SELECT 1 FROM scan_docs s WHERE s.location_id = l.id) AS has_scan,
-              l.wil_kode, l.wil_desa, l.wil_kab,
+              l.wil_kode, l.wil_desa, l.wil_kab, l.wil_mode,
               (SELECT COUNT(*) FROM inventory_items i WHERE i.location_id = l.id AND (
                    TRIM(COALESCE(i.nama_barang,'')) = '' OR TRIM(COALESCE(i.merk_type,'')) = '' OR
                    TRIM(COALESCE(i.jumlah,'')) = '' OR TRIM(COALESCE(i.sn_tagging,'')) = '' OR
@@ -193,8 +225,8 @@ def list_locations(
             "inv_ok": r["inv_count"] > 0 and r["inv_bad"] == 0,
             "inv_full": max(0, r["inv_count"] - r["inv_bad"]),
             "has_scan": bool(r["has_scan"]),
-            "wil_kode": r["wil_kode"], "wil_desa": r["wil_desa"],
-            "wil_kab": wilayah.short_kab(r["wil_kab"] or ""),
+            "wil_kode": r["wil_kode"], "wil_desa": r["wil_desa"], "wil_kab": r["wil_kab"] or "",
+            "wil_mode": (r["wil_mode"] or ("official" if r["wil_kode"] else None)) if r["wil_desa"] else None,
             "can_delete": is_admin or r["owner_id"] == user["id"],
         }
         for r in rows
@@ -246,10 +278,10 @@ def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db)
     # Insert dulu dengan placeholder unik, lalu kunci kode dari id AUTOINCREMENT.
     # id dijamin unik & monoton oleh SQLite (write ter-serialisasi), jadi kode
     # urut aman dibuat paralel banyak user tanpa koordinasi.
-    wv = _wil_values(body.wil_kode) or (None,) * 5
+    wv = _wil_values(body.wil, body.wil_kode) or (None,) * 6
     cur = conn.execute(
         "INSERT INTO locations(code,name,data_json,status,created_by,owner_id,created_at,updated_at,"
-        "wil_kode,wil_desa,wil_kec,wil_kab,wil_prov) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "wil_kode,wil_desa,wil_kec,wil_kab,wil_prov,wil_mode) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         ("", body.name, json.dumps(body.data, ensure_ascii=False), body.status,
          user["id"], user["id"], now, now, *wv),
     )
@@ -267,7 +299,9 @@ def wil_where(wil: str, alias: str = "") -> tuple[str, list]:
     """Klausa filter wilayah: 'none' = belum diisi; selain itu kode prefiks (prov/kab/kec/desa)."""
     wil = wil.strip()
     if wil == "none":
-        return f"({alias}wil_kode IS NULL OR {alias}wil_kode = '')", []
+        return f"({alias}wil_desa IS NULL OR {alias}wil_desa = '')", []
+    if wil == "manual":
+        return f"({alias}wil_mode IN ('desa_manual','manual'))", []
     return f"({alias}wil_kode = ? OR {alias}wil_kode LIKE ?)", [wil, wil + ".%"]
 
 
@@ -280,22 +314,54 @@ class WilBulkIn(BaseModel):
 def set_wilayah_bulk(body: WilBulkIn, conn: sqlite3.Connection = Depends(get_db),
                      user=Depends(require_admin)):
     """Admin mengisi wilayah banyak lokasi sekaligus (mengganti yang sudah ada)."""
-    wv = _wil_values(body.wil_kode)
-    if not wv or not wv[0]:
-        raise HTTPException(400, "Pick a desa/kelurahan")
+    wv = _wil_values({"mode": "official", "kode": body.wil_kode})
     n = 0
     for lid in body.ids:
-        r = conn.execute("SELECT id, wil_kode FROM locations WHERE id=? AND deleted_at IS NULL", (lid,)).fetchone()
+        r = conn.execute("SELECT id, wil_kode, wil_mode FROM locations WHERE id=? AND deleted_at IS NULL",
+                         (lid,)).fetchone()
         if not r:
             continue
-        if r["wil_kode"] != wv[0]:
-            conn.execute("UPDATE locations SET wil_kode=?,wil_desa=?,wil_kec=?,wil_kab=?,wil_prov=? WHERE id=?",
-                         (*wv, lid))
+        if r["wil_kode"] != wv[0] or (r["wil_mode"] or "official") != "official":
+            conn.execute(f"UPDATE locations SET {_WIL_SET} WHERE id=?", (*wv, lid))
             db.touch_modified(conn, lid, user["id"], "data", "wilayah")
         n += 1
     conn.commit()
     audit(conn, user, "set_wilayah", "location", ",".join(map(str, body.ids)), f"{n} lokasi -> {wv[0]} {wv[1]}")
     return {"ok": True, "count": n}
+
+
+class WilLinkIn(BaseModel):
+    wil_kode: str
+
+
+@router.get("/{loc_id}/wilayah-suggest")
+def wilayah_suggest(loc_id: int, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    """Saran desa resmi untuk lokasi dengan isian wilayah manual."""
+    r = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
+    if not r or not r["wil_desa"]:
+        raise HTTPException(404, "No wilayah to link")
+    under = r["wil_kode"] if r["wil_mode"] == "desa_manual" else ""
+    return {"items": wilayah.suggest(r["wil_desa"], under, f'{r["wil_kec"] or ""} {r["wil_kab"] or ""}'),
+            "under": under}
+
+
+@router.post("/{loc_id}/wilayah-link")
+def wilayah_link(loc_id: int, body: WilLinkIn, conn: sqlite3.Connection = Depends(get_db),
+                 user=Depends(require_admin)):
+    """Tautkan isian manual ke desa resmi. Tulisan teknisi (nama) dipertahankan."""
+    r = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
+    if not r:
+        raise HTTPException(404, "Location not found")
+    off = wilayah.info(body.wil_kode)
+    if not off:
+        raise HTTPException(400, "Unknown wilayah code")
+    keep = {k: r[f"wil_{k}"] for k in ("desa", "kec", "kab", "prov")}
+    wv = _wil_values({"mode": "official", "kode": off["kode"], **keep})
+    conn.execute(f"UPDATE locations SET {_WIL_SET} WHERE id=?", (*wv, loc_id))
+    db.touch_modified(conn, loc_id, user["id"], "data", "wilayah link")
+    conn.commit()
+    audit(conn, user, "link_wilayah", "location", loc_id, f"{r['wil_desa']} -> {off['kode']}")
+    return {"ok": True, "wilayah": _wil_dict(conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone())}
 
 
 class TransferIn(BaseModel):
@@ -349,11 +415,11 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
     if not _can_write(user, row):
         raise HTTPException(403, "Not your location")
     new_json = json.dumps(body.data, ensure_ascii=False)
-    wv = _wil_values(body.wil_kode)
-    wil_changed = wv is not None and (wv[0] or None) != (row["wil_kode"] or None)
+    wv = _wil_values(body.wil, body.wil_kode)
+    wil_changed = wv is not None and tuple(x or None for x in wv) != tuple(
+        row[c] or None for c in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_mode"))
     if wil_changed:
-        conn.execute("UPDATE locations SET wil_kode=?,wil_desa=?,wil_kec=?,wil_kab=?,wil_prov=? WHERE id=?",
-                     (*wv, loc_id))
+        conn.execute(f"UPDATE locations SET {_WIL_SET} WHERE id=?", (*wv, loc_id))
     changed = (body.name != row["name"] or body.status != row["status"] or wil_changed
                or json.loads(new_json) != json.loads(row["data_json"] or "{}"))
     conn.execute(

@@ -114,6 +114,8 @@
   .wl-f{position:relative;margin-top:16px}
   .wl-f.hidden{display:none}
   .card:has(.wl-f.focus){position:relative;z-index:25;overflow:visible}
+  .wl-f .wl-f{margin-top:0}
+  #wilMain{margin:0}
   .wl-box{display:flex;align-items:center;gap:10px;height:56px;padding:0 12px 0 14px;border:1px solid var(--md-sys-color-outline);border-radius:var(--md-sys-shape-corner-extra-small,4px);transition:border-color .15s}
   .wl-f.focus .wl-box{border:2px solid var(--md-sys-color-primary);padding:0 11px 0 13px}
   .wl-box>.mi{color:var(--md-sys-color-on-surface-variant)}
@@ -148,6 +150,30 @@
   #entry-form.ro .wl-box .wl-x{display:none}
   .lc-wil{display:block;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
   .lc-wil.none{opacity:.7}
+  .badge-m{display:inline-block;margin-left:6px;font:var(--md-sys-typescale-label-small);font-weight:600;padding:1px 7px;border-radius:99px;background:var(--warn-bg);color:var(--warn);vertical-align:1px}
+  .badge-m.lk{cursor:pointer;text-decoration:underline dotted}
+  .wl-man{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--md-sys-shape-corner-medium);border-top:1px solid var(--md-sys-color-outline-variant);margin-top:4px;color:var(--md-sys-color-primary);cursor:pointer}
+  .wl-man:hover{background:var(--md-sys-color-surface-container-high)}
+  .wl-man b{font:var(--md-sys-typescale-title-small)}
+  .wl-man div div{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .wl-sel span.man{background:var(--warn-bg);color:var(--warn)}
+  .wl-sel .ed{background:none;color:var(--md-sys-color-primary);font:var(--md-sys-typescale-label-large);cursor:pointer}
+  .mn{margin-top:10px;padding:14px;border-radius:var(--md-sys-shape-corner-large);background:var(--md-sys-color-surface-container);display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px 12px}
+  @media(max-width:700px){.mn{grid-template-columns:minmax(0,1fr)}}
+  .mn .hd{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font:var(--md-sys-typescale-title-small)}
+  .mn .hd .bd{font:var(--md-sys-typescale-label-small);font-weight:600;padding:2px 8px;border-radius:99px;background:var(--warn-bg);color:var(--warn)}
+  .mn .hd .sp{flex:1}
+  .mn .lk{color:var(--md-sys-color-primary);font:var(--md-sys-typescale-label-large);cursor:pointer;margin-left:10px}
+  .mn .full{grid-column:1/-1}
+  .mn .wl-f{margin-top:4px}
+  .mn .wl-lab{background:var(--md-sys-color-surface-container)}
+  .mn .fx{position:relative}
+  .mn .fx input{width:100%;box-sizing:border-box;height:48px;padding:0 12px;border:1px solid var(--md-sys-color-outline);border-radius:4px;background:none;color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-body-large);outline:0}
+  .mn .fx input:focus{border:2px solid var(--md-sys-color-primary);padding:0 11px}
+  .mn .fx input.chg{border-color:var(--md-sys-color-tertiary)}
+  .mn .fx label{position:absolute;left:10px;top:-8px;padding:0 4px;background:var(--md-sys-color-surface-container);font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .mn .fx .of{display:block;margin-top:4px;font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant)}
+  .mn .nt{grid-column:1/-1;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
   /* pilih banyak lokasi (admin) + isi wilayah massal */
   .bk-col{display:none;width:34px}
   #app.bk-on .bk-col{display:table-cell}
@@ -2862,37 +2888,44 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
   wbInit();expAskSync();
   if(S.user.must_change)setTimeout(()=>openPw(true),400);}
 /* ===== Wilayah (Desa/Kelurahan → Provinsi), per project bisa on/off =====
-   Pencarian di server (data Kemendagri offline). Beberapa kata urutan bebas, singkatan provinsi,
-   toleran salah ketik, kode wilayah, dan tombol penyempit provinsi → kab/kota. */
+   Pencarian di server (data Kemendagri offline): beberapa kata urutan bebas, singkatan provinsi,
+   toleran salah ketik, kode wilayah, tombol penyempit provinsi → kab/kota.
+   Mode isian: official (desa resmi) · desa_manual (kecamatan resmi + desa diketik) · manual (4 tingkat diketik).
+   Nama yang disimpan & dicetak = sesuai tulisan teknisi (default = nama resmi). */
 const WIL={on:()=>!!(PJ.cur&&PJ.cur.wilayah_on),req:()=>!!(PJ.cur&&PJ.cur.wilayah_on&&PJ.cur.wilayah_progress)};
 function wilApply(){const a=$('#app');a.classList.toggle('wil-off',!WIL.on());a.classList.toggle('bk-on',WIL.on()&&!!S.user&&S.user.role==='admin');}
 const wilShort=v=>v?`${v.desa}, ${v.kec}, ${v.kab}`:'';
-function wilPicker(host,{value=null,required=false,onPick=null,label='Wilayah (Desa / Kelurahan)'}={}){
+const wilValid=w=>!!(w&&w.desa&&(w.mode!=='desa_manual'||w.kode)&&(w.mode!=='manual'||(w.kec&&w.kab&&w.prov)));
+function wilPicker(host,{value=null,required=false,onPick=null,onManual=null,label='Wilayah (Desa / Kelurahan)',level='desa',under='',
+    chips=true,display=null,placeholder='Type desa + kecamatan / kabupaten / province, e.g. cibodas lembang'}={}){
   host.classList.add('wl-f');
-  host.innerHTML=`<div class="wl-box"><span class="mi">location_on</span><input autocomplete="off" spellcheck="false" placeholder="Type desa + kecamatan / kabupaten / province, e.g. cibodas lembang"><span class="mi wl-x" data-tip="Clear">close</span></div>
-    <span class="wl-lab">${esc(label)}${required?' <span class="wl-req">*</span>':''}</span><div class="wl-sel"></div><div class="wl-pop hidden"></div>`;
-  const inp=host.querySelector('input'),pop=host.querySelector('.wl-pop'),sel=host.querySelector('.wl-sel'),x=host.querySelector('.wl-x');
-  const st={v:value,prov:'',kab:'',items:[],act:0,t:0,seq:0};
-  const show=()=>{inp.value=st.v?(st.v.kel?'Kel. ':'Desa ')+st.v.desa:'';x.style.visibility=st.v?'':'hidden';
-    sel.innerHTML=st.v?`<span><small>${st.v.kel?'Kel.':'Desa'}</small>${esc(st.v.desa)}</span><span><small>Kec.</small>${esc(st.v.kec)}</span><span>${esc(st.v.kab)}</span><span><small>Prov.</small>${esc(st.v.prov)}</span><span class="kd">${esc(st.v.kode)}</span>`:'';
-    host.querySelector('.mi').textContent=st.v?'location_on':'search';};
+  host.innerHTML=`<div class="wl-box"><span class="mi">search</span><input autocomplete="off" spellcheck="false" placeholder="${esc(placeholder)}"><span class="mi wl-x" data-tip="Clear">close</span></div>
+    <span class="wl-lab">${esc(label)}${required?' <span class="wl-req">*</span>':''}</span>${chips?'<div class="wl-sel"></div>':''}<div class="wl-pop hidden"></div>`;
+  const inp=host.querySelector('input'),pop=host.querySelector('.wl-pop'),sel=host.querySelector('.wl-sel'),x=host.querySelector('.wl-x'),ic=host.querySelector('.wl-box>.mi');
+  const st={v:value,prov:'',kab:'',items:[],act:0,t:0,seq:0};const isK=level==='kec';
+  const dflt=v=>isK?`Kec. ${v.kec} · ${v.kab}`:(v.kel?'Kel. ':'Desa ')+v.desa;
+  const show=()=>{inp.value=st.v?(display||dflt)(st.v):'';x.style.visibility=st.v?'':'hidden';ic.textContent=st.v?'location_on':'search';
+    if(sel)sel.innerHTML=st.v&&!isK?`<span><small>${st.v.kel?'Kel.':'Desa'}</small>${esc(st.v.desa)}</span><span><small>Kec.</small>${esc(st.v.kec)}</span><span>${esc(st.v.kab)}</span><span><small>Prov.</small>${esc(st.v.prov)}</span><span class="kd">${esc(st.v.kode)}</span>`:'';};
   const close=()=>{pop.classList.add('hidden');host.classList.remove('focus');};
   const pick=v=>{st.v=v;show();close();inp.blur();onPick&&onPick(v);};
+  const manRow=()=>onManual?`<div class="wl-man" data-man="1"><span class="mi">edit_location_alt</span><div><b>Desa not in the list? Enter it manually</b><div>Pick the official kecamatan, then type the desa as written by the technician</div></div></div>`:'';
   const render=d=>{st.items=d.items||[];st.act=0;
-    const fc=(d.facets||[]).length>1||st.prov||st.kab?`<div class="wl-fc">${st.prov?`<button class="on" data-clr="prov">${esc(d.facet_level==='kab'?(d.items[0]?d.items[0].prov:'Province'):'Province')} ✕</button>`:'<span class="lb">Narrow:</span>'}
+    const fc=(d.facets||[]).length>1||st.prov||st.kab?`<div class="wl-fc">${st.prov?`<button class="on" data-clr="prov">${esc((d.items[0]||{}).prov||'Province')} ✕</button>`:'<span class="lb">Narrow:</span>'}
       ${st.kab?`<button class="on" data-clr="kab">${esc((d.items[0]||{}).kab||'Kab/Kota')} ✕</button>`:(st.prov?'<span class="lb">Kab/Kota:</span>':'')+(d.facets||[]).slice(0,6).map(f=>`<button data-f="${f.kode}">${esc(f.nama)}<em>${f.n}</em></button>`).join('')+((d.facets||[]).length>6?`<span class="lb">+${d.facets.length-6}</span>`:'')}</div>`:'';
     const mt=(d.matched||[]).length?`<div class="wl-hint">Matched: ${d.matched.map(m=>`<b>${esc(m.t)}</b> → ${esc(m.w)}`).join(' · ')}</div>`:'';
-    const its=st.items.map((it,i)=>`<div class="wl-it${i===0?' act':''}" data-i="${i}"><span class="mi">location_on</span><div class="tx"><b>${esc(it.desa)}</b>${it.used?'<span class="tag">used in this project</span>':''}<div class="bc">${it.kel?'Kel.':'Desa'} · Kec. ${esc(it.kec)} · ${esc(it.kab)} · ${esc(it.prov)}</div></div><span class="kd">${esc(it.kode)}</span></div>`).join('');
+    const its=st.items.map((it,i)=>isK?`<div class="wl-it${i===0?' act':''}" data-i="${i}"><span class="mi">map</span><div class="tx"><b>Kec. ${esc(it.kec)}</b>${it.used?'<span class="tag">used in this project</span>':''}<div class="bc">${esc(it.kab)} · ${esc(it.prov)}</div></div><span class="kd">${esc(it.kode)}</span></div>`
+      :`<div class="wl-it${i===0?' act':''}" data-i="${i}"><span class="mi">location_on</span><div class="tx"><b>${esc(it.desa)}</b>${it.used?'<span class="tag">used in this project</span>':''}<div class="bc">${it.kel?'Kel.':'Desa'} · Kec. ${esc(it.kec)} · ${esc(it.kab)} · ${esc(it.prov)}</div></div><span class="kd">${esc(it.kode)}</span></div>`).join('');
     const ft=d.total?`<div class="wl-ft">${d.total} result${d.total>1?'s':''}${d.total>st.items.length?' · add a word (kecamatan, kabupaten, jabar…) or pick above to narrow':' · ↑↓ Enter'}</div>`:'<div class="wl-ft">No match · try fewer words or check spelling</div>';
-    pop.innerHTML=fc+mt+its+ft;pop.classList.remove('hidden');
+    pop.innerHTML=fc+mt+its+ft+manRow();pop.classList.remove('hidden');
     pop.querySelectorAll('.wl-it').forEach(e=>e.addEventListener('mousedown',ev=>{ev.preventDefault();pick(st.items[+e.dataset.i]);}));
     pop.querySelectorAll('[data-f]').forEach(b=>b.addEventListener('mousedown',ev=>{ev.preventDefault();if(st.prov)st.kab=b.dataset.f;else st.prov=b.dataset.f;run(0);}));
-    pop.querySelectorAll('[data-clr]').forEach(b=>b.addEventListener('mousedown',ev=>{ev.preventDefault();if(b.dataset.clr==='prov'){st.prov='';st.kab='';}else st.kab='';run(0);}));};
+    pop.querySelectorAll('[data-clr]').forEach(b=>b.addEventListener('mousedown',ev=>{ev.preventDefault();if(b.dataset.clr==='prov'){st.prov='';st.kab='';}else st.kab='';run(0);}));
+    const mr=pop.querySelector('[data-man]');if(mr)mr.addEventListener('mousedown',ev=>{ev.preventDefault();const q=inp.value.trim();close();inp.blur();onManual(q);});};
   const run=(delay=160)=>{clearTimeout(st.t);const q=inp.value.trim();
-    if(!q&&!st.prov){pop.classList.add('hidden');return;}
+    if(!q&&!st.prov&&!under){pop.classList.add('hidden');return;}
     st.t=setTimeout(async()=>{const my=++st.seq;
-      try{const d=await api(`/api/wilayah/search?q=${encodeURIComponent(q)}&prov=${st.prov}&kab=${st.kab}&limit=20`);if(my===st.seq&&host.classList.contains('focus'))render(d);}catch(e){}},delay);};
-  inp.addEventListener('focus',()=>{if(inp.disabled)return;host.classList.add('focus');if(st.v){inp.select();}});
+      try{const d=await api(`/api/wilayah/search?q=${encodeURIComponent(q)}&prov=${st.prov}&kab=${st.kab}&limit=20&level=${level}&under=${encodeURIComponent(under)}`);if(my===st.seq&&host.classList.contains('focus'))render(d);}catch(e){}},delay);};
+  inp.addEventListener('focus',()=>{if(inp.disabled)return;host.classList.add('focus');if(st.v)inp.select();else if(under)run(0);});
   inp.addEventListener('input',e=>{e.stopPropagation();st.kab='';run();});
   inp.addEventListener('change',e=>e.stopPropagation());
   inp.addEventListener('blur',()=>{setTimeout(()=>{if(document.activeElement!==inp){close();show();}},120);});
@@ -2903,19 +2936,67 @@ function wilPicker(host,{value=null,required=false,onPick=null,label='Wilayah (D
     else if(e.key==='Escape'){close();inp.blur();}});
   x.addEventListener('mousedown',e=>{e.preventDefault();if(inp.disabled)return;st.v=null;st.prov='';st.kab='';show();onPick&&onPick(null);inp.focus();});
   show();
-  return {get:()=>st.v,set:v=>{st.v=v;show();},disable:d=>{inp.disabled=!!d;}};}
-/* BAA Entry */
-let wilEntry=null;
+  return {get:()=>st.v,set:v=>{st.v=v;show();},disable:d=>{inp.disabled=!!d;},focus:()=>inp.focus()};}
+/* ---- BAA Entry: editor wilayah (3 mode + tulisan teknisi) ---- */
+let wilEntry=null,_wilWritten=false;
+function wilSet(w){S.loc.wilayah=w;S.loc._wilDirty=true;if(S.loc)entryDirty=true;updateSummary();}
+const wilDisp=w=>w.mode==='manual'?`${w.desa} (manual)`:w.mode==='desa_manual'?`Desa ${w.desa} (manual)`:(w.kel?'Kel. ':'Desa ')+w.desa;
 function renderWil(){const h=$('#wil-field');if(!h)return;h.classList.toggle('hidden',!WIL.on()||!S.loc);if(!WIL.on()||!S.loc)return;
-  wilEntry=wilPicker(h,{value:S.loc.wilayah||null,required:WIL.req(),onPick:v=>{S.loc.wilayah=v;S.loc._wilDirty=true;if(S.loc)entryDirty=true;updateSummary();}});
-  wilEntry.disable(roActive());bindTips();}
-function wilBody(){return S.loc&&S.loc._wilDirty?{wil_kode:S.loc.wilayah?S.loc.wilayah.kode:''}:{};}
-/* Location Log: filter + pilih banyak + isi massal */
+  const ro=roActive(),w=S.loc.wilayah||null;
+  h.innerHTML='<div id="wilMain"></div><div class="wl-sel" id="wilChips"></div><div id="wilPanel"></div>';h.classList.add('wl-f');
+  wilEntry=wilPicker($('#wilMain'),{value:w,required:WIL.req(),chips:false,display:wilDisp,
+    onPick:v=>{_wilWritten=false;wilSet(v?{mode:'official',kode:v.kode,desa:v.desa,kec:v.kec,kab:v.kab,prov:v.prov,kel:v.kel,off:{desa:v.desa,kec:v.kec,kab:v.kab,prov:v.prov}}:null);renderWil();},
+    onManual:q=>{wilSet({mode:'desa_manual',kode:'',desa:q,kec:'',kab:'',prov:'',off:{}});renderWil();setTimeout(()=>{const k=$('#wilKec input');if(k)k.focus();},50);}});
+  wilEntry.disable(ro);
+  const pn=$('#wilPanel');wilChips();
+  const fx=(id,lab,val,off,req)=>`<div class="fx${id==='wd-desa'&&w&&w.mode==='desa_manual'?' full':''}"><label>${lab}${req?' *':''}</label><input id="${id}" value="${esc(val||'')}" ${ro?'disabled':''}${off!=null&&off!==val?' class="chg"':''}>${off!=null?`<span class="of">Official: ${esc(off||'—')}</span>`:''}</div>`;
+  if(w&&w.mode==='desa_manual'){
+    pn.innerHTML=`<div class="mn"><div class="hd"><span class="mi">edit_location_alt</span>Manual desa<span class="bd">Desa manual</span><span class="sp"></span>${ro?'':'<span class="lk" id="wilFull">Switch to fully manual</span><span class="lk" id="wilBack">Back to official search</span>'}</div>
+      <div class="full" id="wilKec"></div>${fx('wd-desa','Desa / Kelurahan (as written by technician)',w.desa,null,1)}
+      <div class="nt">Saved as written. Admin can later link it to an official desa (e.g. after a Kemendagri update).</div></div>`;
+    const kp=wilPicker($('#wilKec'),{level:'kec',label:'Kecamatan (official)',required:true,chips:false,placeholder:'Type kecamatan + kabupaten, e.g. cibeber cianjur',
+      value:w.kode?{kode:w.kode,kec:w.kec,kab:w.kab,prov:w.prov}:null,
+      onPick:v=>{const c=S.loc.wilayah;if(v){Object.assign(c,{kode:v.kode,kec:v.kec,kab:v.kab,prov:v.prov,off:{desa:'',kec:v.kec,kab:v.kab,prov:v.prov}});}else Object.assign(c,{kode:'',kec:'',kab:'',prov:''});
+        wilSet(c);renderWil();}});kp.disable(ro);}
+  else if(w&&w.mode==='manual'){
+    pn.innerHTML=`<div class="mn"><div class="hd"><span class="mi">edit_note</span>Fully manual wilayah<span class="bd">Unverified</span><span class="sp"></span>${ro?'':'<span class="lk" id="wilBack">Back to official search</span>'}</div>
+      ${fx('wd-desa','Desa / Kelurahan',w.desa,null,1)}${fx('wd-kec','Kecamatan',w.kec,null,1)}${fx('wd-kab','Kab/Kota',w.kab,null,1)}${fx('wd-prov','Provinsi',w.prov,null,1)}
+      <div class="nt">Counts as filled. Shown as "Unverified" until an admin links it to official data.</div></div>`;}
+  else if(w&&w.mode==='official'&&_wilWritten){const o=w.off||{};
+    pn.innerHTML=`<div class="mn"><div class="hd"><span class="mi">draw</span>As written by technician<span class="sp"></span>${ro?'':'<span class="lk" id="wilReset">Reset to official</span>'}</div>
+      ${fx('wd-desa','Desa / Kelurahan',w.desa,o.desa)}${fx('wd-kec','Kecamatan',w.kec,o.kec)}${fx('wd-kab','Kab/Kota',w.kab,o.kab)}${fx('wd-prov','Provinsi',w.prov,o.prov)}
+      <div class="nt">Printed on Excel/BAA exactly as written here. Rekap, filter &amp; map use the official code.</div></div>`;}
+  else pn.innerHTML='';
+  ['desa','kec','kab','prov'].forEach(k=>{const el=$('#wd-'+k);if(!el)return;
+    el.addEventListener('input',e=>{e.stopPropagation();const c=S.loc.wilayah;c[k]=el.value;const o=(c.off||{})[k];if(c.mode==='official')el.classList.toggle('chg',o!=null&&o!==el.value);wilSet(c);wilChips();if(wilEntry)wilEntry.set(c);});
+    el.addEventListener('change',e=>e.stopPropagation());
+    el.addEventListener('blur',()=>{const c=S.loc.wilayah;if(c&&c.mode==='official'&&!el.value.trim()){c[k]=(c.off||{})[k]||'';el.value=c[k];el.classList.remove('chg');wilSet(c);}renderWilChipsOnly();});});
+  const fl=$('#wilFull');if(fl)fl.onclick=()=>{const c=S.loc.wilayah;c.mode='manual';c.kode='';wilSet(c);renderWil();};
+  const bk=$('#wilBack');if(bk)bk.onclick=()=>{wilSet(null);renderWil();setTimeout(()=>wilEntry&&wilEntry.focus(),50);};
+  const rs=$('#wilReset');if(rs)rs.onclick=()=>{const c=S.loc.wilayah;Object.assign(c,c.off||{});wilSet(c);renderWil();};
+  bindTips();}
+function renderWilChipsOnly(){const w=S.loc&&S.loc.wilayah;if(!w||!wilEntry)return;wilEntry.set(w);wilChips();}
+function wilChips(){const ch=$('#wilChips');if(!ch)return;const w=S.loc&&S.loc.wilayah,ro=roActive();
+  if(!w){ch.innerHTML='';return;}
+  const tag=w.mode==='manual'?'<span class="man">Wilayah manual · unverified</span>':'';const dz=w.mode==='desa_manual'?'man':'';
+  ch.innerHTML=(tag||`<span class="${dz}"><small>${w.kel?'Kel.':'Desa'}</small>${esc(w.desa)}${dz?' · manual':''}</span><span><small>Kec.</small>${esc(w.kec)}</span><span>${esc(w.kab)}</span><span><small>Prov.</small>${esc(w.prov)}</span>`)
+    +(w.kode?`<span class="kd">${esc(w.kode)}${w.mode==='desa_manual'?' · desa manual':''}</span>`:'')
+    +(w.mode==='official'&&!ro?`<span class="ed" id="wilEd">${_wilWritten?'Hide':'✎ As written by technician'}</span>`:'');
+  const ed=$('#wilEd');if(ed)ed.onclick=()=>{_wilWritten=!_wilWritten;renderWil();};}
+function wilBody(strict=true){if(!S.loc||!S.loc._wilDirty)return {};const w=S.loc.wilayah;
+  if(!w)return {wil:{}};
+  if(!wilValid(w)){if(!strict)return {};throw new Error(w.mode==='desa_manual'?'Pick the official kecamatan and type the desa (or clear the wilayah)':'Fill desa, kecamatan, kab/kota and provinsi (or clear the wilayah)');}
+  return {wil:{mode:w.mode,kode:w.kode||'',desa:w.desa,kec:w.kec,kab:w.kab,prov:w.prov}};}
+/* ---- Location Log: filter + pilih banyak + isi massal + tautkan isian manual ---- */
 let locWilSel=null;const BK=new Set();
 async function wilRegions(){if(!locWilSel||!WIL.on())return;try{const r=await api('/api/wilayah/regions');
   const cur=locWilSel.getValue();
-  locWilSel.setOptions([{value:'',label:'All wilayah'}].concat(r.none?[{value:'none',label:`No wilayah yet · ${r.none}`}]:[],
+  locWilSel.setOptions([{value:'',label:'All wilayah'}].concat(r.none?[{value:'none',label:`No wilayah yet · ${r.none}`}]:[],r.manual?[{value:'manual',label:`Manual wilayah · ${r.manual}`}]:[],
     r.regions.map(x=>({value:x.kode,label:(x.level==='kab'?'   ':'')+x.nama+' · '+x.n}))));if(cur)locWilSel.setValue(cur);}catch(e){}}
+function wilCell(l){if(!WIL.on())return '';if(!l.wil_desa)return '<span class="lc-wil none">— no wilayah yet</span>';
+  const b=l.wil_mode==='manual'?'Unverified':l.wil_mode==='desa_manual'?'Desa manual':'';
+  const adm=S.user&&S.user.role==='admin'&&b;
+  return `<span class="lc-wil">${esc(l.wil_desa)}${l.wil_kab?' · '+esc(l.wil_kab):''}${b?`<span class="badge-m${adm?' lk':''}"${adm?` onclick="event.stopPropagation();wilLink(${l.id})" data-tip="Link to official wilayah"`:''}>${b}</span>`:''}</span>`;}
 function bkSync(){const n=BK.size;let bar=$('#bkBar');
   if(!bar){bar=document.createElement('div');bar.id='bkBar';bar.className='bk-bar';
     bar.innerHTML='<span id="bkN"></span><button class="pri" id="bkSet"><span class="mi">location_on</span>Set wilayah</button><button id="bkClr" data-tip="Clear selection"><span class="mi">close</span></button>';
@@ -2930,11 +3011,23 @@ function bkDialog(){const ids=[...BK],codes=LOC_ROWS.filter(l=>BK.has(l.id)).map
     <div class="lst">${codes.map(c=>`<span>${esc(c)}</span>`).join('')}${ids.length>codes.length?`<span>+${ids.length-codes.length}</span>`:''}</div><div id="bkPick"></div>
     <div class="acts"><md-button variant="text" id="bkCancel">Cancel</md-button><md-button variant="filled" icon="check" id="bkApply" disabled>Apply to ${ids.length} location${ids.length>1?'s':''}</md-button></div></div>`;
   document.body.appendChild(d);let val=null;
-  const pk=wilPicker($('#bkPick'),{onPick:v=>{val=v;$('#bkApply').toggleAttribute('disabled',!v);}});
+  wilPicker($('#bkPick'),{onPick:v=>{val=v;$('#bkApply').toggleAttribute('disabled',!v);}});
   const shut=()=>d.remove();$('#bkCancel').onclick=shut;d.addEventListener('mousedown',e=>{if(e.target===d)shut();});
   $('#bkApply').onclick=async()=>{if(!val)return;try{const r=await api('/api/locations/wilayah-bulk',{method:'POST',body:JSON.stringify({ids,wil_kode:val.kode})});
     toast(`Wilayah set for ${r.count} location${r.count>1?'s':''}`);shut();BK.clear();bkSync();loadLocations();}catch(e){toast('Failed: '+e.message);}};
   setTimeout(()=>$('#bkPick input').focus(),60);}
+window.wilLink=async id=>{const l=LOC_ROWS.find(x=>x.id===id)||{};let sg;try{sg=await api('/api/locations/'+id+'/wilayah-suggest');}catch(e){toast('Failed: '+e.message);return;}
+  const d=document.createElement('div');d.className='bk-dlg';let val=null;
+  const it=(v,i,best)=>`<div class="wl-it${i===0?' act':''}" data-i="${i}"><span class="mi">location_on</span><div class="tx"><b>${esc(v.desa)}</b>${best?'<span class="tag">best match</span>':''}<div class="bc">${v.kel?'Kel.':'Desa'} · Kec. ${esc(v.kec)} · ${esc(v.kab)} · ${esc(v.prov)}</div></div><span class="kd">${esc(v.kode)}</span></div>`;
+  d.innerHTML=`<div class="box"><h3>Link to official wilayah</h3><p><b>${esc(l.code||'')}</b> · typed as <b>"${esc(l.wil_desa||'')}"</b>${l.wil_kab?' · '+esc(l.wil_kab):''}. Pick the official desa it belongs to — the technician's spelling stays as written on the BAA.</p>
+    <div class="wl-pop" id="lkSug" style="position:static;box-shadow:none;margin:0 0 12px">${sg.items.length?`<div class="wl-hint">Suggestions${sg.under?' in this kecamatan':''}</div>`+sg.items.map((v,i)=>it(v,i,i===0&&v.score>=.7)).join(''):'<div class="wl-ft">No close match — search below</div>'}</div>
+    <div id="lkPick"></div><div class="acts"><md-button variant="text" id="lkCancel">Keep manual</md-button><md-button variant="filled" icon="link" id="lkOk" ${sg.items.length?'':'disabled'}>Link</md-button></div></div>`;
+  document.body.appendChild(d);val=sg.items[0]||null;
+  $$('#lkSug .wl-it').forEach(e=>e.addEventListener('click',()=>{$$('#lkSug .wl-it').forEach(x=>x.classList.toggle('act',x===e));val=sg.items[+e.dataset.i];$('#lkOk').removeAttribute('disabled');}));
+  wilPicker($('#lkPick'),{label:'Or search official desa',under:sg.under||'',onPick:v=>{if(v){val=v;$$('#lkSug .wl-it').forEach(x=>x.classList.remove('act'));$('#lkOk').removeAttribute('disabled');}}});
+  const shut=()=>d.remove();$('#lkCancel').onclick=shut;d.addEventListener('mousedown',e=>{if(e.target===d)shut();});
+  $('#lkOk').onclick=async()=>{if(!val)return;try{await api('/api/locations/'+id+'/wilayah-link',{method:'POST',body:JSON.stringify({wil_kode:val.kode})});
+    toast('Linked to '+val.desa+' (official)');shut();loadLocations();}catch(e){toast('Failed: '+e.message);}};};
 
 /* ===== Scan PDF per lokasi (wajib; jadi halaman pertama export PDF) =====
    Belum ada scan = hanya ditandai kurang; Done & export Excel/PDF tetap jalan. */
@@ -3753,8 +3846,9 @@ async function ensureLoc(){                                  // buat lokasi (kod
   S._creating=(async()=>{try{
       if(S.settingsReady)await S.settingsReady;
       const st=computeState();
-      const loc=await api('/api/locations',{method:'POST',body:JSON.stringify({name:st.data.nama_lokasi||'',data:st.data,status:'draft',...wilBody()})});
-      if(S.loc)S.loc._wilDirty=false;
+      const wb=wilBody(false);
+      const loc=await api('/api/locations',{method:'POST',body:JSON.stringify({name:st.data.nama_lokasi||'',data:st.data,status:'draft',...wb})});
+      if(S.loc&&wb.wil)S.loc._wilDirty=false;
       if(!S.loc)S.loc={};
       S.loc.id=loc.id;S.loc.code=loc.code;S.loc.owner_name=loc.owner_name;S.loc.can_edit=loc.can_edit;
       await refreshPicker();pickerSel.setValue(String(loc.id));
@@ -3989,7 +4083,7 @@ function computeState(){
   const checklist=rc.map(c=>({label:c.label,done:!!byCat[c.key]}));
   const invOk=items>0&&filledCells===cells;const fotoOk=rc.length>0&&fotoDone>=rc.length;
   const scanOk=!!(S.loc&&S.loc.scan);
-  const wilReq=WIL.req(),wilOk=!!(S.loc&&S.loc.wilayah);
+  const wilReq=WIL.req(),wilOk=!!(S.loc&&wilValid(S.loc.wilayah));
   const nF=fields.length+(wilReq?1:0),filledAll=filledF+(wilReq&&wilOk?1:0),locAll=locDone&&(!wilReq||wilOk);
   // Done (selesai) hanya dari data, inventory & foto: scan PDF & wilayah cukup ditandai kurang, tidak memblok Done
   return {data,fields,filledF,locDone,items,cells,filledCells,rowsDone,invOk,rc,fotoDone,fotoOk,missing,checklist,scanOk,wilReq,wilOk,nF,filledAll,locAll,complete:locDone&&invOk&&fotoOk};
@@ -4394,7 +4488,7 @@ function renderLocTable(){
   $('#loc-table').innerHTML=LOC_ROWS.map(l=>{
     const present=(l.photo_cats||[]).filter(k=>S.cats.some(c=>c.key===k)).length;
     const stCls=l.status==='selesai'?'ok':'warn';
-    const wl=WIL.on()?(l.wil_kode?`<span class="lc-wil">${esc(l.wil_desa)} · ${esc(l.wil_kab)}</span>`:'<span class="lc-wil none">— no wilayah yet</span>'):'';
+    const wl=wilCell(l);
     return `<tr class="lrow" data-i="${l.id}" onclick='openLocDrawer(${l.id})'><td class="bk-col" onclick="bkTog(event,${l.id})"><span class="bk-ck${BK.has(l.id)?' on':''}" data-id="${l.id}"></span></td><td><a class="loc-link mono">${esc(l.code)}</a></td>
     <td>${esc(l.data.nama_lokasi||l.name||'')}${wl}</td>
     <td>${esc(l.creator_name||'—')}</td>
@@ -4468,7 +4562,7 @@ function locPct(l){
   const cats=S.cats||[];const have=new Set(l.photo_cats||[]);
   const fotoDone=cats.filter(c=>have.has(c.key)).length;
   const invOk=!!l.inv_ok;
-  const wr=WIL.req(),wil=!!l.wil_kode;
+  const wr=WIL.req(),wil=!!l.wil_desa;
   const total=(fields.length||1)+1+cats.length+1+(wr?1:0);
   const scan=!!l.has_scan;const done=filledF+(invOk?1:((l.inv_count||0)>0?0.5:0))+fotoDone+(scan?1:0)+(wr&&wil?1:0);
   return {pct:Math.min(100,Math.round(done/total*100)),filledF,nFields:fields.length,fotoDone,nCats:cats.length,invOk,scan,wilMiss:wr&&!wil};
@@ -4506,7 +4600,7 @@ function locDetailState(loc){
   const fotoDone=cats.filter(c=>byCat[c.key]).length;
   const wr=WIL.req();
   const total=(fields.length||1)+1+cats.length+1+(wr?1:0);
-  const done=filledF+(invOk?1:(items>0?0.5:0))+fotoDone+(loc.scan?1:0)+(wr&&loc.wilayah?1:0);
+  const done=filledF+(invOk?1:(items>0?0.5:0))+fotoDone+(loc.scan?1:0)+(wr&&loc.wilayah&&loc.wilayah.desa?1:0);
   return {pct:Math.min(100,Math.round(done/total*100)),filledF,nFields:fields.length,invOk,items,fotoDone,nCats:cats.length,byCat};
 }
 async function openLocDrawer(id){

@@ -117,7 +117,7 @@ def _admin_row(hub, p) -> dict:
                 "total": g["total"], "target_date": g["target_date"],
                 "locations": n["c"] or 0, "done": n["d"] or 0,
                 "wil_missing": pc.execute("SELECT COUNT(*) c FROM locations WHERE deleted_at IS NULL "
-                                          "AND (wil_kode IS NULL OR wil_kode='')").fetchone()["c"]}
+                                          "AND (wil_desa IS NULL OR wil_desa='')").fetchone()["c"]}
     finally:
         pc.close()
 
