@@ -5,11 +5,23 @@ Status: **dicatat (belum dikerjakan)** · mockup disetujui untuk dibahas · 2026
 ## Keputusan
 | Topik | Keputusan |
 |---|---|
-| Tingkat wilayah | Desa/Kelurahan, Kecamatan, Kab/Kota, Provinsi — **semua wajib** |
+| Tingkat wilayah | Desa/Kelurahan, Kecamatan, Kab/Kota, Provinsi — satu kesatuan (dipilih sekaligus) |
+| Per project | Sakelar **Wilayah data** on/off + sub-sakelar **Count in location progress** (lihat bawah). Bawaan project baru & Project 1: **ON + ON** (tool belum dipakai) |
+| Scan PDF | Tetap wajib di semua project (tidak ikut sakelar ini) |
 | Template BAA | Belum punya sel wilayah → data dipakai di dalam app; target mapping Excel tetap disediakan (opsional) |
 | Data awal | Mungkin ada dari pemberi kerja → Import Locations mencocokkan otomatis |
 | Foto via WhatsApp | GPS EXIF hilang → **tanpa** fitur koordinat/titik lokasi; peta murni per wilayah |
 | Pengguna peta | Admin & viewer |
+
+## Sakelar per project (Settings › Projects › Features)
+| Wilayah data | Count in progress | Perilaku |
+|---|---|---|
+| OFF | (nonaktif) | Field, filter, isi massal, peta, Team by wilayah, peta mini Portfolio disembunyikan untuk project ini. Data yang sudah ada **tetap disimpan** dan muncul lagi bila dinyalakan. |
+| ON | ON | Field wajib (*), masuk % kelengkapan, chip "Wilayah" bila kosong (tidak memblok Done/export). |
+| ON | OFF | Field **opsional** (tanpa *), tidak memengaruhi %, tanpa chip. Peta tetap jalan; lokasi tanpa wilayah = kelompok "Belum ada wilayah". |
+- Menyalakan "Count in progress" saat sudah ada lokasi tanpa wilayah → konfirmasi berisi jumlah lokasi terdampak + saran pakai "Set wilayah".
+- Peta/peringkat memakai status Done lokasi (bukan kelengkapan wilayah), jadi tetap berguna saat sub-sakelar OFF.
+- Hanya admin yang bisa mengubah; server mengikuti sakelar (validasi wajib, perhitungan %, kolom export).
 
 ## Penanganan data
 - **Referensi resmi** kode wilayah Kemendagri (≈84 rb desa) dibundel offline (SQLite, ±3–5 MB, berversi untuk pemekaran).
@@ -22,7 +34,7 @@ Status: **dicatat (belum dikerjakan)** · mockup disetujui untuk dibahas · 2026
   - tombol penyempit bila hasil banyak: provinsi (dengan jumlah) → klik → kab/kota; bisa dilepas (✕);
   - ketik kode wilayah (mis. `32.17.01`) → desa di kecamatan itu.
 - **Simpan**: `wilayah_kode` (kolom ber-index di `locations`) + snapshot nama 4 tingkat (BAA lama tidak berubah saat referensi diperbarui).
-- **Kelengkapan**: dihitung 1 item "Wilayah" (bukan 4); hanya ditandai kurang, tidak memblok Done/export.
+- **Kelengkapan** (bila Count in progress ON): dihitung 1 item "Wilayah" (bukan 4); hanya ditandai kurang, tidak memblok Done/export.
 - **Isi massal** di Location Log: centang lokasi → "Set wilayah" (untuk 60+ lokasi lama).
 - **Import**: kolom Desa/Kec/Kab/Prov → dicocokkan ke kode; hasil ✓ cocok / ? ambigu (pilih) / ✗ tidak ditemukan (perbaiki). Tidak ada penyimpanan diam-diam.
 - **Excel**: 4 target mapping (Log & Detail), opsional.
@@ -46,6 +58,6 @@ Status: **dicatat (belum dikerjakan)** · mockup disetujui untuk dibahas · 2026
 3. Peta Progress + drill-down, peringkat, cakupan, Team by wilayah, peta mini Portfolio.
 
 ## Mockup
-Snapshot (Playwright, di app nyata dengan data demo): cari desa, wilayah terpilih, tombol penyempit (provinsi → kab/kota),
+Snapshot (Playwright, di app nyata dengan data demo): panel Features (ON+ON, ON+opsional, OFF) + konfirmasi, cari desa, wilayah terpilih, tombol penyempit (provinsi → kab/kota),
 beberapa kata + singkatan + salah ketik, isi massal + dialog,
 peta Progress, drill-down Jawa Barat (treemap), Team by wilayah.
