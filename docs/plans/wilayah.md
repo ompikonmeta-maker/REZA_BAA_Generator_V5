@@ -1,6 +1,6 @@
 # Rencana: Data Wilayah + Infografis Peta
 
-Status: **Tahap 1 selesai** (referensi, pencarian, sakelar per project, kelengkapan, filter, isi massal) + **isian manual** (desa manual, sepenuhnya manual, tulisan teknisi, tautkan ke resmi) · tahap 2–3 belum · 2026-10-04
+Status: **Tahap 1 selesai** (referensi, pencarian, sakelar per project, kelengkapan, filter, isi massal) + **isian manual** + **tahap 2** (Excel/BAA, import, folder ZIP) · tahap 3 (peta) belum · 2026-10-04
 
 ## Keputusan
 | Topik | Keputusan |
@@ -36,9 +36,9 @@ Status: **Tahap 1 selesai** (referensi, pencarian, sakelar per project, kelengka
 - **Simpan**: `wilayah_kode` (kolom ber-index di `locations`) + snapshot nama 4 tingkat (BAA lama tidak berubah saat referensi diperbarui).
 - **Kelengkapan** (bila Count in progress ON): dihitung 1 item "Wilayah" (bukan 4); hanya ditandai kurang, tidak memblok Done/export.
 - **Isi massal** di Location Log: centang lokasi → "Set wilayah" (untuk 60+ lokasi lama).
-- **Import**: kolom Desa/Kec/Kab/Prov → dicocokkan ke kode; hasil ✓ cocok / ? ambigu (pilih) / ✗ tidak ditemukan (perbaiki). Tidak ada penyimpanan diam-diam.
+- **Import** (**selesai**): template berisi kolom Desa/Kelurahan, Kecamatan, Kab/Kota, Provinsi, Kode Wilayah → dicocokkan ke data resmi; hasil ✓ cocok / Desa manual (kecamatan resmi) / ? pilih kandidat / ✗ tidak ditemukan (simpan sebagai manual atau kosongkan). Default tanpa pilihan = tanpa wilayah (tidak ada penyimpanan diam-diam).
 - **Excel** (**selesai**): 4 target mapping (Log & Detail) "Wilayah (as written by technician)" — mencetak tulisan teknisi; header Desa/Kelurahan, Kecamatan, Kabupaten/Kota, Provinsi dikenali otomatis.
-- **Export ZIP**: opsi folder per wilayah, mis. `Jawa Barat/Kab. Bandung/LOK_00012 ….pdf`.
+- **Export ZIP** (**selesai**): opsi "Folders per wilayah" → `Provinsi/Kab-Kota/LOK_… .pdf` (nama resmi bila ada kode agar ejaan berbeda tetap satu folder; isian manual pakai tulisannya; lainnya `Tanpa wilayah/`).
 - **Filter** Location Log per provinsi/kab/kota.
 
 ## Wilayah yang tidak ada di data Kemendagri (**selesai**)

@@ -231,3 +231,88 @@ def suggest(desa: str, under: str = "", extra: str = "", limit: int = 6) -> list
         it["score"] = round(difflib.SequenceMatcher(None, target, r[2]).ratio(), 2)
         out.append(it)
     return out
+
+
+# ---------- pencocokan untuk Import Locations ----------
+def _kab_norm(s: str) -> tuple[str, bool]:
+    """('kabupaten x' | 'kota x' | 'x', ada_prefiks)."""
+    n = _norm(s)
+    for a, b in (("kabupaten ", "kabupaten "), ("kab ", "kabupaten "), ("kotamadya ", "kota "), ("kota ", "kota ")):
+        if n.startswith(a):
+            return b + n[len(a):], True
+    return n, False
+
+
+def _codes(level: int) -> list[tuple[str, str]]:
+    d = _load()
+    if "lv" not in d:
+        d["lv"] = {lv: [(k, _norm(v)) for k, v in d["names"].items() if k.count(".") == lv - 1] for lv in (1, 2, 3, 4)}
+    return d["lv"][level]
+
+
+def match(desa: str, kec: str = "", kab: str = "", prov: str = "", kode: str = "") -> dict:
+    """Cocokkan isian wilayah (mis. dari Excel) ke data resmi.
+    status: ok (1 desa resmi) · desa_manual (kecamatan resmi, desa tak ada) · ambiguous (pilih dari cands)
+    · notfound · empty. Nama tertulis = isian apa adanya (kosong -> nama resmi)."""
+    raw = {"desa": (desa or "").strip(), "kec": (kec or "").strip(), "kab": (kab or "").strip(), "prov": (prov or "").strip()}
+    kode = (kode or "").strip()
+    if not any(raw.values()) and not kode:
+        return {"status": "empty"}
+
+    def written(off: dict, mode: str, k: str) -> dict:
+        return {"mode": mode, "kode": k, **{f: raw[f] or off.get(f, "") for f in ("desa", "kec", "kab", "prov")}}
+
+    if kode:
+        i = info(kode)
+        if i:
+            i["kab"] = short_kab(i["kab"])
+            return {"status": "ok", "wil": written(i, "official", i["kode"])}
+    # provinsi
+    provs = None
+    if raw["prov"]:
+        n = _norm(raw["prov"])
+        provs = {k for k, v in _codes(1) if v == n or n in v} | ({_ALIAS[n]} if n in _ALIAS else set())
+    # kab/kota
+    kabs = None
+    if raw["kab"]:
+        n, pref = _kab_norm(raw["kab"])
+        kabs = {k for k, v in _codes(2) if (v == n if pref else v in ("kabupaten " + n, "kota " + n))
+                and (provs is None or k[:2] in provs)}
+    # kecamatan
+    kecs = None
+    if raw["kec"]:
+        n = _norm(raw["kec"])
+        kecs = {k for k, v in _codes(3) if v == n and (kabs is None or k[:5] in kabs)
+                and (provs is None or k[:2] in provs)}
+    if not raw["desa"]:
+        return {"status": "notfound", "msg": "Desa/Kelurahan is empty"}
+    n = _norm(raw["desa"])
+    hits = [k for k, v in _codes(4) if v == n and (kecs is None or k[:8] in kecs)
+            and (kabs is None or k[:5] in kabs) and (provs is None or k[:2] in provs)]
+
+    def cand(ks):
+        out = []
+        for k in ks[:6]:
+            i = info(k)
+            i["kab"] = short_kab(i["kab"])
+            out.append(i)
+        return out
+    if len(hits) == 1:
+        i = cand(hits)[0]
+        return {"status": "ok", "wil": written(i, "official", i["kode"])}
+    if len(hits) > 1:
+        return {"status": "ambiguous", "cands": cand(hits), "msg": f"{len(hits)} desa named like this — pick one"}
+    if kecs and len(kecs) == 1:
+        kc = next(iter(kecs))
+        sg = [x for x in suggest(raw["desa"], kc) if x["score"] >= 0.85]
+        if sg:
+            return {"status": "ambiguous", "cands": sg[:4], "kec": kc, "msg": "Close spelling found — pick one or keep as written"}
+        k = kec_info(kc)
+        k["kab"] = short_kab(k["kab"])
+        k["desa"] = ""
+        return {"status": "desa_manual", "wil": written(k, "desa_manual", kc), "msg": "Desa not in Kemendagri list — kept as written"}
+    if kecs and len(kecs) > 1:
+        return {"status": "notfound", "msg": "Kecamatan name exists in several kab/kota — fill Kab/Kota", "cands": []}
+    sg = suggest(raw["desa"], "", f"{raw['kec']} {raw['kab']}", 4)
+    return {"status": "notfound", "cands": [x for x in sg if x["score"] >= 0.7],
+            "msg": "Not found in Kemendagri data", "full": all(raw.values())}

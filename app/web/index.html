@@ -176,6 +176,13 @@
   .mn .nt{grid-column:1/-1;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
   /* pilih banyak lokasi (admin) + isi wilayah massal */
   .bk-col{display:none;width:34px}
+  .exp-grp{display:flex;gap:10px;align-items:flex-start;margin:12px 0 0;padding:10px 12px;border:1px solid var(--md-sys-color-outline-variant);border-radius:12px;cursor:pointer;font:var(--md-sys-typescale-body-medium)}
+  .exp-grp input{margin-top:3px;accent-color:var(--md-sys-color-primary)}
+  .imp-wil{display:flex;flex-direction:column;gap:4px;min-width:220px}
+  .imp-wil .w{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .imp-wil select{max-width:320px;padding:6px 8px;border-radius:8px;border:1px solid var(--md-sys-color-outline);background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-body-small)}
+  .wchip{display:inline-flex;align-items:center;gap:4px;width:max-content;font:var(--md-sys-typescale-label-small);font-weight:600;padding:2px 8px;border-radius:99px}
+  .wchip.ok{background:var(--good-bg);color:var(--good)}.wchip.man{background:var(--warn-bg);color:var(--warn)}.wchip.chk{background:var(--bad-bg);color:var(--bad)}
   #app.bk-on .bk-col{display:table-cell}
   .bk-ck{width:18px;height:18px;border-radius:4px;border:2px solid var(--md-sys-color-outline);display:inline-grid;place-items:center;vertical-align:middle;cursor:pointer}
   .bk-ck.on,.bk-ck.some{background:var(--md-sys-color-primary);border-color:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary)}
@@ -2244,7 +2251,7 @@
             </div>
             <div class="card hidden" id="imp-preview-card" style="margin-top:16px">
               <div class="sec"><span class="mi acc">fact_check</span><h3 style="font-size:16px">Preview <span style="font-weight:500;color:var(--md-sys-color-on-surface-variant);font-size:13px">· not saved yet</span></h3></div>
-              <table><thead><tr><th>#</th><th>Location</th><th>Items</th><th>Status</th></tr></thead><tbody id="imp-ptable"></tbody></table>
+              <table><thead><tr><th>#</th><th>Location</th><th>Items</th><th class="imp-wcol">Wilayah</th><th>Status</th></tr></thead><tbody id="imp-ptable"></tbody></table>
             </div>
           </div>
         </div>
@@ -2409,6 +2416,7 @@
       <label class="exp-opt sel"><input type="radio" name="expScope" value="filter" checked><span><b>Current filter results</b><br><span class="muted" id="expOptFilter"></span></span></label>
       <label class="exp-opt"><input type="radio" name="expScope" value="all"><span><b>All locations</b><br><span class="muted" id="expOptAll"></span></span></label>
     </div>
+    <label class="exp-grp wil-only" id="expGrpWrap"><input type="checkbox" id="expGrp"><span><b>Folders per wilayah</b><br><span class="muted">Provinsi / Kab-Kota / file.pdf · locations without wilayah go to "Tanpa wilayah"</span></span></label>
     <div class="exp-note"><span class="mi">info</span><span id="expNote"></span></div>
   </div>
   <div slot="actions"><md-button variant="text" id="expCancel">Cancel</md-button><md-button variant="filled" id="expOk">Create</md-button></div>
@@ -4531,6 +4539,7 @@ async function openBulkExport(kind){
   $('#expOptFilter').textContent=(LOC_TOTAL||0)+' locations ('+locFilterLabel()+')';
   $('#expOptAll').textContent='counting…';
   $$('#expBulkDlg .exp-opt').forEach((l,i)=>{l.classList.toggle('sel',i===0);l.querySelector('input').checked=(i===0);});
+  $('#expGrpWrap').style.display=isPdf&&WIL.on()?'':'none';
   $('#expBulkDlg').show();
   try{const r=await api('/api/locations?page=1&size=1&status=all');$('#expOptAll').textContent=(r.total||0)+' locations in the database';}
   catch{$('#expOptAll').textContent='all locations in the database';}
@@ -4544,7 +4553,8 @@ $('#expOk').addEventListener('click',()=>{
   const scope=($('#expBulkDlg input[name="expScope"]:checked')||{}).value||'filter';
   if(scope==='filter'&&!LOC_TOTAL){toast('No locations in this filter');return;}
   const base=_expKind==='pdfzip'?'/api/export/pdf-zip':'/api/export/excel';
-  const url=scope==='all'?`${base}?scope=all`:`${base}?scope=filter&${locFilterParams()}`;
+  let url=scope==='all'?`${base}?scope=all`:`${base}?scope=filter&${locFilterParams()}`;
+  if(_expKind==='pdfzip'&&WIL.on()&&$('#expGrp').checked)url+='&group=wilayah';
   $('#expBulkDlg').close();downloadExport(url);});
 /* Daftar kekurangan: foto + field lokasi kosong + inventory belum lengkap (inv_ok dari server) */
 function locLack(l){
@@ -4785,8 +4795,8 @@ window.purgeLoc=async(id,code)=>{if(!confirm('Delete '+code+' permanently?\nData
   try{await api('/api/locations/'+id+'/purge',{method:'DELETE'});toast(code+' permanently deleted');loadTrash();}catch(e){toast('Failed: '+e.message);}};
 
 /* ===== Import Lokasi (Excel) — admin ===== */
-let IMP={file:null,res:null};
-function loadImport(){IMP={file:null,res:null};
+let IMP={file:null,res:null,ch:{}};
+function loadImport(){IMP={file:null,res:null,ch:{}};
   const f=$('#imp-file');if(f)f.value='';$('#imp-fname').textContent='No file selected';
   $('#imp-preview-card').classList.add('hidden');$('#imp-commit').setAttribute('disabled','');
   ['imp-s1','imp-s2','imp-s3','imp-s4'].forEach(id=>$('#'+id).classList.remove('on','done'));
@@ -4798,21 +4808,34 @@ $('#imp-file')&&$('#imp-file').addEventListener('change',async e=>{const f=e.tar
   $('#imp-fname').innerHTML='<b>'+esc(f.name)+'</b>';$('#imp-s2').classList.add('done');$('#imp-s2sub').textContent=f.name;await impPreview();});
 async function impPreview(){const fd=new FormData();fd.append('file',IMP.file);
   try{const r=await fetch('/api/locations/import/preview',{method:'POST',credentials:'same-origin',body:fd});
-    if(!r.ok)throw new Error((await r.json()).detail||'Failed to read file');IMP.res=await r.json();renderImp();}
+    if(!r.ok)throw new Error((await r.json()).detail||'Failed to read file');IMP.res=await r.json();IMP.ch={};renderImp();}
   catch(e){toast('Failed: '+e.message);}}
 function renderImp(){const res=IMP.res;if(!res)return;const s=res.summary;
   $('#imp-preview-card').classList.remove('hidden');
   $('#imp-s3').classList.add('on');$('#imp-s3sub').textContent=s.ready+' ready · '+s.errors+' errors';
   const pct=s.total?Math.round(s.ready/s.total*100):0;$('#imp-pct').textContent=pct+'% ('+s.ready+'/'+s.total+')';
   $('#imp-ring').style.strokeDashoffset=(100.5*(1-pct/100)).toFixed(1);
+  const wc=!!s.wil_cols;$$('.imp-wcol').forEach(x=>x.style.display=wc?'':'none');
   $('#imp-mini').innerHTML=[['location_on',s.ready+' locations'],['inventory_2',s.items+' items'],['error',s.errors+' errors'],['content_copy',s.dup+' duplicates']]
+    .concat(wc?[['task_alt',s.wil_ok+' wilayah ✓'],['edit_location_alt',s.wil_manual+' desa manual'],['help',s.wil_check+' to check']]:[])
     .map(([i,t])=>`<div style="display:flex;align-items:center;gap:6px"><span class="mi" style="font-size:15px;color:var(--md-sys-color-primary)">${i}</span>${t}</div>`).join('');
   $('#imp-ptable').innerHTML=res.locations.map(l=>{const st=l.errors.length?`<span class="loc-st warn">${esc(l.errors[0])}</span>`:(l.dup?'<span class="loc-st warn">Duplicate</span>':'<span class="loc-st ok">OK</span>');
-    return `<tr${l.errors.length?' style="background:color-mix(in srgb,var(--md-sys-color-error) 7%,transparent)"':''}><td>${l.row}</td><td>${esc(l.nama||'(empty)')}</td><td>${l.inventory.length}</td><td>${st}</td></tr>`;}).join('')
+    return `<tr${l.errors.length?' style="background:color-mix(in srgb,var(--md-sys-color-error) 7%,transparent)"':''}><td>${l.row}</td><td>${esc(l.nama||'(empty)')}</td><td>${l.inventory.length}</td>${wc?`<td>${impWil(l)}</td>`:''}<td>${st}</td></tr>`;}).join('')
     ||'<tr><td colspan="4" class="muted">No rows</td></tr>';
-  $('#imp-commit').toggleAttribute('disabled', s.ready<=0);}
+  $('#imp-commit').toggleAttribute('disabled', s.ready<=0);
+  $$('#imp-ptable select[data-row]').forEach(sel=>sel.addEventListener('change',()=>{const v=sel.value;
+    IMP.ch[sel.dataset.row]=v==='manual'?{manual:1}:v?{kode:v}:{empty:1};}));}
+/* Wilayah per baris import: ✓ cocok · Desa manual · perlu dipilih (ambigu / tidak ditemukan) */
+function impWil(l){const w=l.wil;if(!w||w.status==='empty')return '<span class="muted">—</span>';
+  const raw=w.raw||{},txt=[raw.desa,raw.kec,raw.kab,raw.prov].filter(Boolean).map(esc).join(' · ');
+  if(w.status==='ok')return `<div class="imp-wil"><span class="wchip ok">✓ ${esc(w.wil.desa)}</span><span class="w">Kec. ${esc(w.wil.kec)} · ${esc(w.wil.kab)} · <span class="mono">${esc(w.wil.kode)}</span></span></div>`;
+  if(w.status==='desa_manual')return `<div class="imp-wil"><span class="wchip man">Desa manual</span><span class="w">${esc(w.wil.desa)} · Kec. ${esc(w.wil.kec)} · ${esc(w.wil.kab)}</span></div>`;
+  const c=IMP.ch[l.row]||{},cur=c.kode||(c.manual?'manual':'');
+  const opts=`<option value="">— leave wilayah empty —</option>`+(w.cands||[]).map(x=>`<option value="${esc(x.kode)}" ${cur===x.kode?'selected':''}>${esc(x.desa)} · Kec. ${esc(x.kec)} · ${esc(x.kab)}</option>`).join('')
+    +(raw.desa&&raw.kec&&raw.kab&&raw.prov?`<option value="manual" ${cur==='manual'?'selected':''}>Save as written (manual · unverified)</option>`:'');
+  return `<div class="imp-wil"><span class="wchip chk">${w.status==='ambiguous'?'? Pick one':'✗ Not found'}</span><span class="w">${txt} — ${esc(w.msg||'')}</span><select data-row="${l.row}">${opts}</select></div>`;}
 $('#imp-commit')&&$('#imp-commit').addEventListener('click',async()=>{if(!IMP.file)return;
-  const fd=new FormData();fd.append('file',IMP.file);fd.append('skip_dup',$('#imp-skipdup').checked?'true':'false');
+  const fd=new FormData();fd.append('file',IMP.file);fd.append('skip_dup',$('#imp-skipdup').checked?'true':'false');fd.append('wil_choices',JSON.stringify(IMP.ch||{}));
   $('#imp-commit').setAttribute('disabled','');
   try{const r=await fetch('/api/locations/import/commit',{method:'POST',credentials:'same-origin',body:fd});
     if(!r.ok)throw new Error((await r.json()).detail||'Failed');const res=await r.json();

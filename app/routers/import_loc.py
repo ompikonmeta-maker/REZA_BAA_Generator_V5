@@ -13,13 +13,23 @@ import sqlite3
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 
+import re
+
 from .. import db
 from ..deps import audit, get_db, require_admin
-from .locations import _format_code
+from ..services import wilayah
+from .locations import _format_code, _wil_values, _WIL_SET
 
 router = APIRouter(prefix="/api/locations/import", tags=["locations-import"])
 
 INV_COLS = ["nama_barang", "merk_type", "jumlah", "sn_tagging", "keterangan"]
+# Kolom wilayah (bila fitur wilayah aktif di project): judul template + pengenal judul
+WIL_COLS = [("kode", "Kode Wilayah", r"kode\s*wilayah|kode\s*desa"), ("desa", "Desa/Kelurahan", r"desa|kelurahan"), ("kec", "Kecamatan", r"kecamatan|\bkec\b"),
+            ("kab", "Kab/Kota", r"kabupaten|\bkab\b|kota"), ("prov", "Provinsi", r"provinsi|propinsi|\bprov\b")]
+
+
+def _wil_on(conn) -> bool:
+    return bool((getattr(conn, "project", None) or {}).get("wilayah_on", 1))
 XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
@@ -54,7 +64,8 @@ def template(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_ad
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Lokasi"
-    ws.append(["ref"] + [(_norm(f.get("label")) or f.get("key")) for f in fields])
+    wcols = [w[1] for w in WIL_COLS[1:]] + [WIL_COLS[0][1]] if _wil_on(conn) else []
+    ws.append(["ref"] + [(_norm(f.get("label")) or f.get("key")) for f in fields] + wcols)
     ex = ["L1"]
     for f in fields:
         if f.get("key") == "nama_lokasi":
@@ -63,6 +74,8 @@ def template(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_ad
             ex.append("2026-09-01")
         else:
             ex.append("")
+    if wcols:
+        ex += ["Cibodas", "Lembang", "Kab. Bandung Barat", "Jawa Barat", ""]
     ws.append(ex)
     wi = wb.create_sheet("Inventory")
     wi.append(["ref"] + INV_COLS)
@@ -97,13 +110,18 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
     if not rows:
         return {"locations": [], "summary": {"total": 0, "ready": 0, "items": 0, "errors": 0, "dup": 0}}
     header = [_norm(h) for h in rows[0]]
-    col_field, ref_idx = {}, None
+    col_field, ref_idx, wil_idx = {}, None, {}
     for idx, h in enumerate(header):
         hl = h.lower()
         if hl == "ref":
             ref_idx = idx
         elif hl in label_to_field:
             col_field[idx] = label_to_field[hl]
+        elif _wil_on(conn):
+            for key, _lab, rx in WIL_COLS:
+                if key not in wil_idx.values() and re.search(rx, hl) and not (key == "kab" and "kode" in hl):
+                    wil_idx[idx] = key
+                    break
 
     # Inventory dikelompokkan per ref
     inv_by_ref: dict[str, list] = {}
@@ -173,8 +191,14 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
             it["merk_type"] = fix_merk(it.get("nama_barang", ""), it.get("merk_type", ""))
             it["keterangan"] = ket_map.get(it.get("keterangan", "").lower(), it.get("keterangan", ""))
             inv.append(it)
+        wil = None
+        if wil_idx:
+            wv = {k: _norm(r[i]) if i < len(r) else "" for i, k in wil_idx.items()}
+            wil = wilayah.match(wv.get("desa", ""), wv.get("kec", ""), wv.get("kab", ""), wv.get("prov", ""),
+                                wv.get("kode", ""))
+            wil["raw"] = {k: wv.get(k, "") for k in ("desa", "kec", "kab", "prov")}
         out.append({"row": ri, "nama": nama, "data": data, "inventory": inv,
-                    "errors": errors, "dup": nama.lower() in existing})
+                    "errors": errors, "dup": nama.lower() in existing, "wil": wil})
 
     ok_rows = [x for x in out if not x["errors"]]
     return {"locations": out, "summary": {
@@ -183,6 +207,10 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
         "items": sum(len(x["inventory"]) for x in ok_rows),
         "errors": sum(1 for x in out if x["errors"]),
         "dup": sum(1 for x in ok_rows if x["dup"]),
+        "wil_cols": bool(wil_idx),
+        "wil_ok": sum(1 for x in ok_rows if x["wil"] and x["wil"]["status"] == "ok"),
+        "wil_manual": sum(1 for x in ok_rows if x["wil"] and x["wil"]["status"] == "desa_manual"),
+        "wil_check": sum(1 for x in ok_rows if x["wil"] and x["wil"]["status"] in ("ambiguous", "notfound")),
     }}
 
 
@@ -193,9 +221,15 @@ async def preview(file: UploadFile = File(...), conn: sqlite3.Connection = Depen
 
 
 @router.post("/commit")
-async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True),
+async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True), wil_choices: str = Form("{}"),
                  conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    """wil_choices: {baris: {"kode": desa resmi} | {"manual": 1} | {}}. Baris wilayah yang perlu dicek
+    tanpa pilihan disimpan TANPA wilayah (tidak ada penyimpanan diam-diam)."""
     res = _parse(conn, await file.read())
+    try:
+        choices = {str(k): v for k, v in (json.loads(wil_choices or "{}") or {}).items()}
+    except Exception:
+        choices = {}
     created = skipped = 0
     now = db.now_iso()
     for loc in res["locations"]:
@@ -211,6 +245,9 @@ async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True),
         lid = cur.lastrowid
         conn.execute("UPDATE locations SET code=?, modified_at=?, modified_by=? WHERE id=?",
                      (_format_code(conn, lid), now, user["id"], lid))
+        wv = _import_wil(loc.get("wil"), choices.get(str(loc["row"])) or {})
+        if wv:
+            conn.execute(f"UPDATE locations SET {_WIL_SET} WHERE id=?", (*wv, lid))
         db.log_activity(conn, lid, user["id"], "create", "import", now)
         for i, it in enumerate(loc["inventory"]):
             conn.execute(
@@ -223,3 +260,22 @@ async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True),
     conn.commit()
     audit(conn, user, "import", "location", "", f"{created} lokasi, {skipped} dilewati")
     return {"ok": True, "created": created, "skipped": skipped}
+
+
+def _import_wil(w: dict | None, ch: dict):
+    """Kolom wilayah untuk satu baris import (atau None = tanpa wilayah)."""
+    if not w or w.get("status") == "empty":
+        return None
+    raw = w.get("raw") or {}
+    try:
+        if ch.get("kode"):
+            return _wil_values({"mode": "official", "kode": ch["kode"], **raw})
+        if ch.get("manual") and all(raw.get(k) for k in ("desa", "kec", "kab", "prov")):
+            return _wil_values({"mode": "manual", **raw})
+        if ch.get("empty"):
+            return None
+        if w.get("status") in ("ok", "desa_manual"):
+            return _wil_values(w["wil"])
+    except HTTPException:
+        return None
+    return None

@@ -106,6 +106,21 @@ def _tpl_row(conn: sqlite3.Connection) -> dict | None:
     return {**dict(t), "path": str(db.fpath(conn, t["path"]))} if t else None
 
 
+def _wil_folder(loc: dict) -> str:
+    """Folder ZIP per wilayah: 'Provinsi/Kab-Kota/' memakai nama resmi bila ada kode (agar ejaan
+    berbeda tetap satu folder); isian manual memakai tulisannya; tanpa wilayah -> 'Tanpa wilayah/'."""
+    from ..services import wilayah
+    d = loc.get("data") or {}
+    k = d.get("wil_kode") or ""
+    if k and wilayah.name_of(k[:5]):
+        prov, kab = wilayah.name_of(k[:2]), wilayah.short_kab(wilayah.name_of(k[:5]))
+    elif d.get("wil_prov") or d.get("wil_kab"):
+        prov, kab = d.get("wil_prov") or "-", d.get("wil_kab") or "-"
+    else:
+        return "Tanpa wilayah/"
+    return f"{_safe_name(prov)}/{_safe_name(kab)}/"
+
+
 def _active_template(conn: sqlite3.Connection):
     """Template aktif + config, atau (None, None) bila tak ada / file hilang."""
     tpl = _tpl_row(conn)
@@ -363,10 +378,11 @@ def _run_job(j: dict, locs: list, tpl, tcfg, cats, title) -> None:
                         raise _Cancelled()
                     j["done"], j["total"] = n - 1, len(locs)
                     nm = _safe_name(f"{loc.get('code','')} {loc.get('name','') or loc.get('data',{}).get('nama_lokasi','')}")
-                    entry = f"{nm}.pdf"
+                    folder = _wil_folder(loc) if j.get("group") == "wilayah" else ""
+                    entry = f"{folder}{nm}.pdf"
                     k = 2
                     while entry.lower() in used:
-                        entry = f"{nm} ({k}).pdf"; k += 1
+                        entry = f"{folder}{nm} ({k}).pdf"; k += 1
                     used.add(entry.lower())
                     tmp = config.OUTPUT_DIR / f"_tmp_{j['id']}_{loc['id']}.pdf"
                     _, w = _render_pdf_with(tpl, tcfg, [loc], tmp, cats, title)
@@ -389,6 +405,7 @@ def _run_job(j: dict, locs: list, tpl, tcfg, cats, title) -> None:
 @router.post("/jobs")
 def start_job(kind: str = Query(...), scope: str = Query("one"), loc_id: int | None = None,
               q: str = Query(""), status: str = Query("all"), creator: int = Query(0), date: str = Query(""), wil: str = Query(""),
+              group: str = Query(""),
               conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     if kind not in ("excel", "pdf", "pdfzip"):
         raise HTTPException(400, "Unknown export type")
@@ -412,7 +429,8 @@ def start_job(kind: str = Query(...), scope: str = Query("one"), loc_id: int | N
     j = {"id": jid, "user_id": user["id"], "kind": kind, "scope": scope, "name": name, "stage": "queued",
          "done": 0, "total": n if n > 1 else 0, "state": "run", "error": "", "warn": "", "img_warn": 0,
          "scan_missing": sum(1 for loc in locs if not loc.get("scan")),
-         "cancel": False, "created": time.time(), "path": None, "filename": None, "media": None}
+         "cancel": False, "created": time.time(), "path": None, "filename": None, "media": None,
+         "group": group if kind == "pdfzip" else ""}
     with _JOBS_LOCK:
         _JOBS[jid] = j
     audit(conn, user, {"excel": "export_excel", "pdf": "export_pdf", "pdfzip": "export_pdf_zip"}[kind], "export", scope, name)
