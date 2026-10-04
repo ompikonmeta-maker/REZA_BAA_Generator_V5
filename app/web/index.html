@@ -160,7 +160,8 @@
   .tm-row .rg span.nw{cursor:default;opacity:.7}
   @media(max-width:600px){.tm-row{grid-template-columns:minmax(0,1fr)}}
   .pf-map{display:block;width:100%;height:92px}
-  .pf-map path{stroke:none}
+  .pf-map{border-radius:10px;background:color-mix(in srgb,var(--md-sys-color-surface-container-lowest) 60%,transparent)}
+  .pf-map path{stroke:var(--md-sys-color-surface-container-low);stroke-width:.5;vector-effect:non-scaling-stroke}
   /* ===== Wilayah (Desa → Provinsi) ===== */
   #app.wil-off .wil-only{display:none!important}
   .wl-f{position:relative;margin-top:16px}
@@ -3168,7 +3169,13 @@ async function loadWilTeam(){const host=$('#tmHost');if(!host)return;const show=
   host.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>wilOpenLog(b.dataset.log));bindTips();}
 /* Portfolio: peta mini area kerja per project */
 function pfMap(p){if(!PETA||!p.peta)return '';const P=PETA;
-  return `<svg class="pf-map" viewBox="0 0 ${P.w} ${P.h}" preserveAspectRatio="xMidYMid meet">${Object.entries(P.prov).map(([k,v])=>{const x=p.peta[k];
+  // perbesar ke area kerja project (gabungan kotak provinsi yang punya lokasi), dengan sedikit konteks
+  const ks=Object.keys(p.peta).filter(k=>P.prov[k]);let vb=[0,0,P.w,P.h];
+  if(ks.length){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;ks.forEach(k=>{const b=P.prov[k].b;x0=Math.min(x0,b[0]);y0=Math.min(y0,b[1]);x1=Math.max(x1,b[0]+b[2]);y1=Math.max(y1,b[1]+b[3]);});
+    let w=x1-x0,h=y1-y0;const pad=Math.max(w,h)*.25+20;x0-=pad;y0-=pad;w+=pad*2;h+=pad*2;const ar=3;
+    if(w/h<ar){const nw=h*ar;x0-=(nw-w)/2;w=nw;}else{const nh=w/ar;y0-=(nh-h)/2;h=nh;}
+    if(w<P.w*.98)vb=[x0,y0,w,h];}
+  return `<svg class="pf-map" viewBox="${vb.join(' ')}" preserveAspectRatio="xMidYMid meet">${Object.entries(P.prov).map(([k,v])=>{const x=p.peta[k];
     const f=x?`color-mix(in srgb,var(--pj) ${Math.round(35+(x[1]/x[0])*65)}%,var(--md-sys-color-surface-container-highest))`:'var(--md-sys-color-surface-container-highest)';
     return `<path d="${v.d}" fill="${f}"><title>${x?`${x[1]}/${x[0]} done`:''}</title></path>`;}).join('')}</svg>`;}
 
