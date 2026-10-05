@@ -4573,6 +4573,9 @@ function locStep(dir){const i=locIndex();if(i<0)return;const items=pickerSel.ite
 $('#loc-prev').addEventListener('click',()=>locStep(-1));
 $('#loc-next').addEventListener('click',()=>locStep(1));
 
+/* muat ulang lokasi aktif dari server (setelah aksi foto/SN) tanpa membuang wilayah yang belum disimpan */
+function locMerge(fresh){const o=S.loc;if(o&&o._wilDirty&&fresh&&o.id===fresh.id){fresh.wilayah=o.wilayah;fresh._wilDirty=true;}return fresh;}
+async function reloadLoc(){return S.loc=locMerge(await api('/api/locations/'+S.loc.id));}
 async function openLoc(id){S.loc=await api('/api/locations/'+id);
   if(pickerSel&&!pickerSel.items.some(o=>o.value===String(id)))await refreshPicker();  /* opsi belum ada -> refresh agar dropdown sinkron */
   pickerSel.setValue(String(id));
@@ -4889,7 +4892,7 @@ window.editExisting=async(id,cat)=>{try{const r=await fetch('/api/photos/'+id+'/
   openEditor(f,async blob=>{const nf=new File([blob],'foto.jpg',{type:'image/jpeg'});const fd=new FormData();
     fd.append('files',nf);fd.append('category',cat);fd.append('relpaths',JSON.stringify(['foto.jpg']));
     try{const rr=await fetch('/api/locations/'+S.loc.id+'/photos',{method:'POST',credentials:'same-origin',body:fd});if(!rr.ok)throw new Error((await rr.json()).detail);
-      S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();toast('Photo updated');}catch(e){toast('Failed: '+e.message);}});
+      await reloadLoc();renderPhotos();updateSummary();toast('Photo updated');}catch(e){toast('Failed: '+e.message);}});
   }catch(e){toast('Failed to load photo');}};
 /* Koreksi SN hasil OCR (inline) */
 window.editSn=(el,id)=>{if(!el||el.tagName==='INPUT')return;const v=el.textContent;
@@ -4919,7 +4922,7 @@ window.softRemove=id=>{
 };
 window.undoDel=id=>{const t=pendingDel.get(id);if(t)clearTimeout(t);pendingDel.delete(id);renderPhotos();updateSummary();toast('Undone');};
 async function commitDelete(id){pendingDel.delete(id);
-  try{await api('/api/photos/'+id,{method:'DELETE'});S.loc=await api('/api/locations/'+S.loc.id);}catch{}
+  try{await api('/api/photos/'+id,{method:'DELETE'});await reloadLoc();}catch{}
   renderPhotos();updateSummary();}
 
 /* ---- editor: zoom + crop rasio ---- */
@@ -4955,8 +4958,8 @@ window.replacePhoto=(oldId,cat)=>{if(roActive())return;pickFiles(false,files=>{c
   openEditor(f,async blob=>{const nf=new File([blob],f.name,{type:'image/jpeg'});
     const fd=new FormData();fd.append('files',nf);fd.append('category',cat);fd.append('relpaths',JSON.stringify([f.name]));
     try{const r=await fetch('/api/locations/'+S.loc.id+'/photos',{method:'POST',credentials:'same-origin',body:fd});if(!r.ok)throw new Error((await r.json()).detail);
-      S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();toast('Photo replaced');}catch(e){toast('Failed: '+e.message);}});});};
-window.reassignMenu=(btn,pid)=>openMenu(btn,S.cats.map(c=>({icon:c.ocr?'tag':'image',label:c.label,fn:async()=>{await api('/api/photos/'+pid,{method:'PATCH',body:JSON.stringify({category:c.key})});S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();toast('Dipindah');}})));
+      await reloadLoc();renderPhotos();updateSummary();toast('Photo replaced');}catch(e){toast('Failed: '+e.message);}});});};
+window.reassignMenu=(btn,pid)=>openMenu(btn,S.cats.map(c=>({icon:c.ocr?'tag':'image',label:c.label,fn:async()=>{await api('/api/photos/'+pid,{method:'PATCH',body:JSON.stringify({category:c.key})});await reloadLoc();renderPhotos();updateSummary();toast('Dipindah');}})));
 function roActive(){const f=$('#entry-form');return !!(f&&f.classList.contains('ro'));}
 /* ---- Dropzone dinamis: dock kecil (collapsed) <-> dropzone penuh (#21) ---- */
 let dzMiniTimer=null,dzBusy=false;
@@ -5006,7 +5009,7 @@ function doUpload(files,category,relpaths){return new Promise(async resolve=>{
       const saved=res.filter(x=>!x.error);const failed=res.length-saved.length;
       const uncat=saved.filter(x=>x.category==='uncategorized').length;
       const sn=saved.filter(x=>x.ocr_serial).map(x=>x.ocr_serial);
-      S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();updateSummary();upDone(saved.length,true);
+      await reloadLoc();renderPhotos();updateSummary();upDone(saved.length,true);
       let msg='Done · '+saved.length+' photos';
       if(uncat)msg+=' · '+uncat+' need a category';
       if(failed)msg+=' · '+failed+' failed (format/size)';
@@ -5072,7 +5075,7 @@ window.undoClearAll=()=>{clearTimeout(clrTimer);clrPending.clear();clrIds=[];$('
   renderPhotos();updateSummary();toast('Undone');};
 async function commitClearAll(){$('#clrSnack').classList.remove('on');const ids=clrIds.slice();clrIds=[];
   for(const id of ids){try{await fetch('/api/photos/'+id,{method:'DELETE',credentials:'same-origin'});}catch(e){}}
-  clrPending.clear();try{S.loc=await api('/api/locations/'+S.loc.id);}catch(e){}renderPhotos();updateSummary();
+  clrPending.clear();try{await reloadLoc();}catch(e){}renderPhotos();updateSummary();
   toast(ids.length+' photos deleted');}
 
 /* ---- Baca SN: barcode/QR-first + seleksi area OCR ---- */
@@ -5123,7 +5126,7 @@ $('#sn-read').addEventListener('click',async()=>{
 $('#sn-cancel').addEventListener('click',()=>$('#snDlg').close());
 $('#sn-save').addEventListener('click',async()=>{const val=$('#sn-serial').value.trim();const cat=sn.cat;
   try{await api('/api/photos/'+sn.photoId,{method:'PATCH',body:JSON.stringify({ocr_serial:val})});
-    S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();
+    await reloadLoc();renderPhotos();
     if(val)applySnToInventory(cat,val);else updateSummary();
     $('#snDlg').close(true);toast('SN saved'+(val?': '+val:''));}catch(e){toast('Failed: '+e.message);}});
 
@@ -5328,7 +5331,7 @@ async function ldSaveOne(pid,quiet){const p=LD_PEND.find(x=>x.id===pid);if(!p)re
     if(!r.ok)throw new Error((await r.json().catch(()=>({}))).detail||('HTTP '+r.status));
     URL.revokeObjectURL(p.url);LD_PEND=LD_PEND.filter(x=>x.id!==pid);
     const loc=await api('/api/locations/'+p.loc);if(LD_CUR===p.loc){LD_LOC=loc;fillLocDrawer(loc);}
-    loadLocations();if(S.loc&&S.loc.id===p.loc){S.loc=loc;if(typeof renderPhotos==='function')renderPhotos();if(typeof updateSummary==='function')updateSummary();}
+    loadLocations();if(S.loc&&S.loc.id===p.loc){S.loc=locMerge(loc);if(typeof renderPhotos==='function')renderPhotos();if(typeof updateSummary==='function')updateSummary();}
     if(!quiet)toast('Photo saved ✓');return true;}
   catch(err){toast('Failed: '+err.message);return false;}}
 async function ldSaveAll(){for(const p of [...LD_PEND]){if(!await ldSaveOne(p.id,true))return false;}toast('Photos saved ✓');return true;}
