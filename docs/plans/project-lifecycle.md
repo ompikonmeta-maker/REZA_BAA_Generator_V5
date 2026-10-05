@@ -1,6 +1,6 @@
 # Rencana: Setup → Active ⇄ Frozen + Ganti Prefix Kode
 
-Status: **Disetujui (mockup), belum diimplementasi** · 2026-10-05 · revisi: flow admin, mode Setup di sidebar, susunan menu baru
+Status: **Selesai diimplementasi** · 2026-10-05 · revisi: flow admin, mode Setup di sidebar, susunan menu baru
 
 ## Tujuan
 Tidak ada yang bisa entry BAA sebelum admin selesai menyiapkan project. Admin bisa membekukan project kapan saja untuk konfigurasi ulang, termasuk mengganti prefix kode pada project yang sudah berisi data.

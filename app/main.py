@@ -19,10 +19,17 @@ def _startup() -> None:
     db.init_db()
 
 
+from fastapi import Depends  # noqa: E402
+
+from .deps import data_gate  # noqa: E402
+
+# Router data: tulis & export dijaga status project (Setup/Frozen) di server
+_GATED = (import_loc.router, locations.router, photos.router, export.router, ocr.router,
+          notifications.router, scan.router)
 for r in (auth.router, settings.router, templates.router, import_loc.router, locations.router,
           photos.router, users.router, export.router, backup.router, ocr.router, stats.router,
           notifications.router, progress.router, projects.router, scan.router, wilayah.router):
-    app.include_router(r)
+    app.include_router(r, dependencies=[Depends(data_gate)] if r in _GATED else [])
 
 
 @app.get("/api/health")

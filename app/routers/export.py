@@ -33,8 +33,8 @@ def _filter_where(q: str, status: str, creator: int, date: str, user=None, wil: 
     where, params = ["deleted_at IS NULL"], []
     if q.strip():
         like = f"%{q.strip()}%"
-        where.append("(code LIKE ? OR name LIKE ?)")
-        params += [like, like]
+        where.append("(code LIKE ? OR name LIKE ? OR old_codes LIKE ?)")
+        params += [like, like, like]
     if status in ("draft", "selesai"):
         where.append("status = ?")
         params.append(status)
@@ -231,6 +231,13 @@ def _render_body(tpl, tcfg, locs, out_pdf: Path, cats, title, progress=None, sta
     return "builtin", ""
 
 
+def _log_export(conn, locs, kind: str, user) -> None:
+    now = db.now_iso()
+    conn.executemany("INSERT INTO export_log(location_id, kind, user_id, created_at) VALUES(?,?,?,?)",
+                     [(loc["id"], kind, user["id"], now) for loc in locs if loc.get("id")])
+    conn.commit()
+
+
 @router.get("/excel")
 def export_excel(scope: str = Query("one"), loc_id: int | None = None,
                  q: str = Query(""), status: str = Query("all"),
@@ -255,6 +262,7 @@ def export_excel(scope: str = Query("one"), loc_id: int | None = None,
         xlsx2pdf.recenter_images_excel(str(out), anchors)
     except Exception:
         pass
+    _log_export(conn, locs, "excel", user)
     audit(conn, user, "export_excel", "export", scope, out.name)
     resp = FileResponse(str(out), filename=out.name,
                         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -273,6 +281,7 @@ def export_pdf(scope: str = Query("one"), loc_id: int | None = None,
     title = db.app_title(conn)
     out = _stamp(locs[0]["code"] if scope == "one" else "BAA", "pdf")
     mode, warn = _render_pdf(conn, locs, out, cats, title)
+    _log_export(conn, locs, "pdf", user)
     audit(conn, user, "export_pdf", "export", scope, out.name)
     resp = FileResponse(str(out), filename=out.name, media_type="application/pdf")
     resp.headers["X-PDF-Mode"] = mode
@@ -309,6 +318,7 @@ def export_pdf_zip(scope: str = Query("filter"), loc_id: int | None = None,
                 tmp.unlink()
             except OSError:
                 pass
+    _log_export(conn, locs, "pdfzip", user)
     audit(conn, user, "export_pdf_zip", "export", scope, zpath.name)
     resp = FileResponse(str(zpath), filename=zpath.name, media_type="application/zip")
     if paper_warn:
@@ -433,6 +443,7 @@ def start_job(kind: str = Query(...), scope: str = Query("one"), loc_id: int | N
          "group": group if kind == "pdfzip" else ""}
     with _JOBS_LOCK:
         _JOBS[jid] = j
+    _log_export(conn, locs, kind, user)
     audit(conn, user, {"excel": "export_excel", "pdf": "export_pdf", "pdfzip": "export_pdf_zip"}[kind], "export", scope, name)
     threading.Thread(target=_run_job, args=(j, locs, tpl, tcfg, cats, title), daemon=True).start()
     return _job_public(j)

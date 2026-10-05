@@ -168,8 +168,8 @@ def list_locations(
         where.append(sc); params.extend(scp)
     if q.strip():
         like = f"%{q.strip()}%"
-        where.append("(l.code LIKE ? OR l.name LIKE ?)")
-        params += [like, like]
+        where.append("(l.code LIKE ? OR l.name LIKE ? OR l.old_codes LIKE ?)")
+        params += [like, like, like]
     if status in ("draft", "selesai"):
         where.append("l.status = ?")
         params.append(status)

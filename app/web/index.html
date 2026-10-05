@@ -1944,6 +1944,151 @@
   .uns-btn.discard:hover{background:var(--warn-bg)}
   .uns-btn.save{background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary)}
   .uns-btn.save:hover{filter:brightness(1.06)}
+
+  /* ===== Siklus project: onboarding · mode Setup · Team · Frozen ===== */
+  .onb{position:fixed;inset:0;z-index:4000;display:grid;place-items:center;padding:16px;background:var(--md-sys-color-surface);overflow:auto}
+  .onb .box{width:min(460px,100%);padding:32px;border-radius:var(--md-sys-shape-corner-extra-large);background:var(--md-sys-color-surface-container);box-shadow:var(--md-sys-elevation-level2)}
+  .onb .ov{font:var(--md-sys-typescale-label-medium);letter-spacing:.8px;text-transform:uppercase;color:var(--md-sys-color-primary)}
+  .onb h2{font:var(--md-sys-typescale-headline-small);margin:8px 0 6px;color:var(--md-sys-color-on-surface)}
+  .onb p{font:var(--md-sys-typescale-body-medium);color:var(--md-sys-color-on-surface-variant);margin:0 0 20px}
+  .onb .fld{display:flex;flex-direction:column;gap:12px}.onb md-text-field{width:100%}
+  .onb .hint{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant);margin-top:-6px}
+  .onb .lab{font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant);margin-bottom:8px}
+  .onb .err{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-error);background:var(--md-sys-color-error-container);padding:8px 12px;border-radius:var(--md-sys-shape-corner-small)}
+  .onb .acts{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+  .noproj md-button{margin-top:14px}
+  /* sidebar mode Setup */
+  #sxNav{display:none}
+  .setup-mode #sxNav{display:block}
+  .setup-mode .nav>.navitem,.setup-mode .nav>.navgroup,.setup-mode #bellWrap{display:none!important}
+  .sx-h{font:var(--md-sys-typescale-label-small);letter-spacing:.8px;text-transform:uppercase;color:var(--md-sys-color-on-surface-variant);margin:14px 14px 6px}
+  .sx-step{display:flex;align-items:center;gap:12px;height:46px;padding:0 12px;border-radius:14px;cursor:pointer;color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-large);text-decoration:none;transition:background .15s}
+  .sx-step:hover{background:color-mix(in srgb,var(--md-sys-color-on-surface) 6%,transparent)}
+  .sx-step.on{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}
+  .sx-step .n{width:24px;height:24px;border-radius:50%;flex:none;display:grid;place-items:center;font:700 11px/1 system-ui;border:2px solid var(--md-sys-color-outline-variant)}
+  .sx-step .n .mi{font-size:15px}
+  .sx-step.ok .n{background:var(--good-bg);color:var(--good);border-color:transparent}
+  .sx-step.todo .n{border:2px dashed var(--warn);color:var(--warn)}
+  .sx-step.ov .n{border-color:transparent;color:var(--md-sys-color-primary)}
+  .sx-step.ws>.mi{font-size:20px;width:24px;text-align:center}
+  .sx-step .tag{margin-left:auto;font:var(--md-sys-typescale-label-small);opacity:.8}
+  .sx-line{display:block;width:2px;height:6px;margin:-1px 0 -1px 23px;background:var(--md-sys-color-outline-variant)}
+  .shell.rail .sx-h,.shell.rail .sx-step .lbl,.shell.rail .sx-step .tag,.shell.rail .sx-line{display:none}
+  .shell.rail .sx-step{justify-content:center;padding:0;width:56px;margin:0 auto}
+  .sx-main{max-width:880px}
+  .sx-hero{display:flex;align-items:center;gap:20px;padding:22px 24px;border-radius:var(--md-sys-shape-corner-extra-large);background:var(--md-sys-color-surface-container);margin-bottom:16px}
+  .sx-hero h2{margin:0;font:var(--md-sys-typescale-headline-small)}.sx-hero p{margin:4px 0 0;color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-body-medium)}
+  .sx-ring{position:relative;width:72px;height:72px;flex:none;display:grid;place-items:center}
+  .sx-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}.sx-ring circle{fill:none;stroke-width:7}
+  .sx-ring .trk{stroke:var(--md-sys-color-surface-container-highest)}.sx-ring .prg{stroke:var(--md-sys-color-primary);stroke-linecap:round;transition:stroke-dashoffset .8s var(--md-sys-motion-easing-emphasized-decelerate,cubic-bezier(.05,.7,.1,1))}
+  .sx-ring b{position:relative;font:var(--md-sys-typescale-title-medium)}
+  .sx-card{display:flex;align-items:center;gap:16px;padding:14px 18px;border-radius:var(--md-sys-shape-corner-large);border:1px solid var(--md-sys-color-outline-variant);margin-bottom:10px;background:var(--md-sys-color-surface-container-low);cursor:pointer;color:inherit;text-decoration:none;transition:border-color .15s,transform .15s}
+  .sx-card:hover{border-color:var(--md-sys-color-outline);transform:translateY(-1px)}
+  .sx-card .ic{width:44px;height:44px;border-radius:14px;flex:none;display:grid;place-items:center;background:var(--md-sys-color-surface-container-highest);color:var(--md-sys-color-primary)}
+  .sx-card.ok .ic{background:var(--good-bg);color:var(--good)}
+  .sx-card.todo{border-style:dashed;border-color:color-mix(in srgb,var(--warn) 60%,transparent)}.sx-card.todo .ic{background:var(--warn-bg);color:var(--warn)}
+  .sx-card .tx{flex:1;min-width:0;display:flex;flex-direction:column}.sx-card .t{font:var(--md-sys-typescale-title-medium);color:var(--md-sys-color-on-surface)}
+  .sx-card .s{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant);margin-top:2px}
+  .sx-card .st{font:var(--md-sys-typescale-label-small);font-weight:600;padding:3px 9px;border-radius:99px;background:var(--md-sys-color-surface-container-highest);color:var(--md-sys-color-on-surface-variant)}
+  .sx-card.ok .st{background:var(--good-bg);color:var(--good)}.sx-card.todo .st{background:var(--warn-bg);color:var(--warn)}
+  .sx-card .chev{color:var(--md-sys-color-on-surface-variant)}
+  .sx-act{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:18px;padding:16px 18px;border-radius:var(--md-sys-shape-corner-large);background:var(--md-sys-color-surface-container)}
+  .sx-act .s{flex:1;min-width:200px;font:var(--md-sys-typescale-body-medium);color:var(--md-sys-color-on-surface-variant)}
+  .sx-foot{position:absolute;left:16px;right:16px;bottom:12px;z-index:7;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px 10px 18px;border-radius:var(--md-sys-shape-corner-large);
+    background:var(--md-sys-color-surface-container-high);box-shadow:var(--md-sys-elevation-level2)}
+  .sx-foot .s{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;font:var(--md-sys-typescale-body-medium);color:var(--md-sys-color-on-surface-variant)}
+  .sx-foot .okc{color:var(--good);font-size:20px}
+  .canvas.has-sxfoot .canvas-body{padding-bottom:96px}
+  /* Location data: tab */
+  .ld-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+  .ld-tabs button{display:flex;align-items:center;gap:6px;height:36px;padding:0 16px;border-radius:99px;border:1px solid var(--md-sys-color-outline-variant);background:none;cursor:pointer;
+    font:var(--md-sys-typescale-label-large);color:var(--md-sys-color-on-surface-variant)}
+  .ld-tabs button.on{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);border-color:transparent}
+  .ld-tabs i{font-style:normal;font:var(--md-sys-typescale-label-small);padding:1px 7px;border-radius:99px;background:var(--md-sys-color-surface-container-highest)}
+  .ld-tabs i.zero{background:var(--warn-bg);color:var(--warn)}
+  /* menu: grup Settings, lonceng, Location Log Active | Deleted */
+  .sn-h{display:flex;align-items:center;gap:8px;margin:12px 0 4px 30px;font:var(--md-sys-typescale-label-small);letter-spacing:.8px;text-transform:uppercase;color:var(--md-sys-color-on-surface-variant)}
+  .sn-h .pj-av{width:20px;height:20px;border-radius:6px;font-size:7.5px}
+  .shell.rail .sn-h{display:none}
+  .navfly .fh+a,.navfly a+.fh{margin-top:2px}
+  .nav-x{display:none!important}
+  .bell{position:relative;display:inline-flex}
+  .bell b{position:absolute;right:2px;top:2px;min-width:16px;height:16px;padding:0 4px;border-radius:99px;background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);font:700 10px/16px system-ui;text-align:center;pointer-events:none}
+  .bell b:empty{display:none}
+  .lg-head{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .lg-seg{display:inline-flex;border:1px solid var(--md-sys-color-outline-variant);border-radius:99px;overflow:hidden}
+  .lg-seg>button{display:flex;align-items:center;gap:6px;height:36px;padding:0 16px;border:0;background:none;cursor:pointer;font:var(--md-sys-typescale-label-large);color:var(--md-sys-color-on-surface-variant)}
+  .lg-seg>button+button{border-left:1px solid var(--md-sys-color-outline-variant)}
+  .lg-seg>button.on{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}
+  .lg-seg>button .mi{font-size:17px}.lg-seg i{font-style:normal;opacity:.75}
+  /* Project & status: tunggal (tanpa daftar) */
+  #v-projects.single .pjm{grid-template-columns:minmax(0,880px)}#v-projects.single .pjm>.card:first-child{display:none}
+  .pjm-hint .lnk,.st-strip a{color:var(--md-sys-color-primary);font-weight:600;cursor:pointer}
+  .pst{font-weight:700}.pst.setup{color:var(--md-sys-color-on-surface-variant)}.pst.frozen{color:var(--fz)}
+  .st-strip{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:var(--md-sys-shape-corner-large);margin-bottom:16px;background:var(--md-sys-color-surface-container)}
+  .st-strip.fz{background:color-mix(in srgb,var(--fz) 12%,var(--md-sys-color-surface-container))}
+  .st-strip .pill{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 11px;border-radius:99px;font:var(--md-sys-typescale-label-small);font-weight:700;letter-spacing:.4px}
+  .st-strip .pill i{width:8px;height:8px;border-radius:50%;background:currentColor}
+  .st-strip .pill.setup{background:var(--md-sys-color-surface-container-highest);color:var(--md-sys-color-on-surface-variant)}
+  .st-strip .pill.active{background:var(--good-bg);color:var(--good)}
+  .st-strip .pill.frozen{background:color-mix(in srgb,var(--fz) 18%,transparent);color:var(--fz)}
+  .st-strip .tx{flex:1;min-width:200px;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .st-strip .tx b{display:block;font:var(--md-sys-typescale-title-small);color:var(--md-sys-color-on-surface)}
+  /* Team */
+  .tm-main{max-width:880px;display:flex;flex-direction:column;gap:16px}
+  .tm-new{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto;gap:10px;align-items:center}
+  @media(max-width:760px){.tm-new{grid-template-columns:minmax(0,1fr)}}
+  .tm-note{margin-top:10px;font:var(--md-sys-typescale-body-small)}
+  .tm-temp{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding:10px 14px;border-radius:var(--md-sys-shape-corner-medium);background:var(--good-bg);color:var(--good)}
+  .tm-temp span:not(.mi){flex:1;color:var(--md-sys-color-on-surface)}.tm-temp code{font:600 14px ui-monospace,monospace;padding:2px 8px;border-radius:6px;background:var(--md-sys-color-surface-container-highest)}
+  .tm-list{display:flex;flex-direction:column;gap:8px}
+  .tm-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--md-sys-color-outline-variant);border-radius:14px;cursor:pointer}
+  .tm-row.off{opacity:.55}.tm-row .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+  .tm-row .t{font:var(--md-sys-typescale-title-small)}.tm-row .s{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .tm-cnt{font:var(--md-sys-typescale-label-medium)}.tm-cnt.okc{color:var(--good)}.tm-cnt.warnc{color:var(--warn)}
+  /* Frozen */
+  :root{--fz:#2f7ed8}:root[data-theme="dark"]{--fz:#7cb6ff}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--fz:#7cb6ff}}
+  .fz-ban{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 16px;margin-bottom:16px;border-radius:var(--md-sys-shape-corner-large);
+    background:color-mix(in srgb,var(--fz) 12%,var(--md-sys-color-surface-container));border:1px solid color-mix(in srgb,var(--fz) 35%,transparent)}
+  .fz-ban>.mi{color:var(--fz);font-size:24px}
+  .fz-ban .tx{flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px}
+  .fz-ban b{font:var(--md-sys-typescale-title-small);color:var(--md-sys-color-on-surface)}
+  .fz-ban .m{font:var(--md-sys-typescale-body-medium);color:var(--md-sys-color-on-surface);white-space:pre-wrap}
+  .fz-ban small{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .fz-ban.pv{margin:0}
+  #fzPaused:empty{display:none}
+  .frozen-ro #v-entry>*:not(#fzPaused),.frozen-ro #entryTools,.frozen-ro #locTools,.frozen-ro #meNew,.frozen-ro #meCont,.frozen-ro .wr-only{display:none!important}
+  .eb{display:flex;flex-direction:column;align-items:center;text-align:center;padding:64px 20px}
+  .eb .ic{width:64px;height:64px;border-radius:20px;display:grid;place-items:center;margin-bottom:14px;background:color-mix(in srgb,var(--fz) 14%,transparent);color:var(--fz)}
+  .eb .ic .mi{font-size:32px}.eb h3{font:var(--md-sys-typescale-title-large);margin:0 0 6px}
+  .eb p{max-width:440px;margin:0 0 8px;font:var(--md-sys-typescale-body-medium);color:var(--md-sys-color-on-surface-variant);white-space:pre-wrap}
+  .eb small{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .fzd .box{width:min(560px,100%)}
+  .fzd .lab{font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant);margin:14px 0 6px}
+  .fzd textarea{width:100%;box-sizing:border-box;min-height:84px;padding:12px 14px;border:1px solid var(--md-sys-color-outline);border-radius:var(--md-sys-shape-corner-small);background:none;
+    color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-body-large);resize:vertical}
+  .fzd textarea:focus{outline:2px solid var(--md-sys-color-primary);outline-offset:-1px}
+  .fzd .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .fzd .chips button{padding:5px 10px;border-radius:8px;border:1px solid var(--md-sys-color-outline-variant);background:none;cursor:pointer;font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant)}
+  .fzd .chips button:hover{background:color-mix(in srgb,var(--md-sys-color-on-surface) 6%,transparent)}
+  .rc-in{display:flex;gap:10px;align-items:center}.rc-in md-text-field{flex:1}
+  .rc h4{margin:16px 0 0;font:var(--md-sys-typescale-title-medium)}
+  .rc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+  .rc-grid .kp{padding:10px 14px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-surface-container-high)}
+  .rc-grid b{display:block;font:var(--md-sys-typescale-title-large)}.rc-grid span{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .rc-map{display:grid;grid-template-columns:auto auto 1fr;gap:4px 10px;padding:10px 14px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-surface-container-highest);font:500 13px ui-monospace,monospace}
+  .rc-map .ar{color:var(--md-sys-color-primary)}.rc-map .dots{color:var(--md-sys-color-on-surface-variant)}
+  .rc-ok{display:flex;gap:8px;align-items:flex-start;margin-top:8px;font:var(--md-sys-typescale-body-medium);color:var(--md-sys-color-on-surface-variant)}
+  .rc-ok .mi{font-size:18px;flex:none}.rc-ok.g .mi{color:var(--good)}.rc-ok.w .mi{color:var(--warn)}
+
+  .lf-sys .keyf{opacity:.6;pointer-events:none}.lf-sys .ecard-del{display:none}
+  .lf-sys label.tg{pointer-events:none;opacity:.75}
+  .lf-sug{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}
+  .lf-sug:empty{display:none}
+  .lf-sug button{padding:6px 12px;border-radius:8px;border:1px dashed var(--md-sys-color-outline);background:none;cursor:pointer;font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface)}
+  .lf-sug button:hover{background:color-mix(in srgb,var(--md-sys-color-primary) 8%,transparent);border-color:var(--md-sys-color-primary)}
+  .frozen-ro:has(#v-entry:not(.hidden)) #fzBan{display:none}
 </style>
 </head>
 <body>
@@ -1974,33 +2119,37 @@
       </span>
     </div>
     <button class="psw hidden" id="psw" data-tip="Switch project (Ctrl+K)"><span class="pj-av" id="pswAv"></span><span class="pj-tx"><span class="pj-nm" id="pswName"></span><span class="pj-sb" id="pswSub"></span></span><span class="mi">unfold_more</span></button>
+    <div id="sxNav"></div>
     <a class="navitem multi-only hidden" data-view="portfolio" data-short="Portf" data-tip="Portfolio"><span class="mi">dashboard_customize</span><span class="lbl">Portfolio</span></a>
     <a class="navitem active" data-view="dashboard" data-short="Dash" data-tip="Dashboard"><span class="mi">dashboard</span><span class="lbl">Dashboard</span></a>
     <a class="navitem prog-nav" data-view="progress" data-short="Prog" data-tip="Progress"><span class="mi">insights</span><span class="lbl">Progress</span></a>
     <a class="navitem" data-view="entry" data-short="Entry" data-tip="BAA Entry"><span class="mi">edit_document</span><span class="lbl">BAA Entry</span></a>
     <a class="navitem" data-view="locations" data-short="LOG" data-tip="Location Log"><span class="mi">table_rows</span><span class="lbl">Location Log</span><span class="pill" id="loc-count"></span></a>
-    <a class="navitem admin-only" data-view="import" data-short="Import" data-tip="Import Locations"><span class="mi">upload_file</span><span class="lbl">Import Locations</span></a>
-    <a class="navitem admin-only" data-view="trash" data-short="Trash" data-tip="Deleted Locations"><span class="mi">delete_sweep</span><span class="lbl">Deleted Locations</span><span class="pill" id="trash-count"></span></a>
-    <a class="navitem admin-only" data-view="notif" data-short="Notif" data-tip="Notifications"><span class="mi">notifications</span><span class="lbl">Notifications</span><span class="pill" id="notif-count"></span></a>
+    <a class="navitem admin-only nav-x" data-view="import" data-short="Import" data-tip="Import Locations"><span class="mi">upload_file</span><span class="lbl">Import Locations</span></a>
+    <a class="navitem admin-only nav-x" data-view="trash" data-short="Trash" data-tip="Deleted Locations"><span class="mi">delete_sweep</span><span class="lbl">Deleted Locations</span><span class="pill" id="trash-count"></span></a>
+    <a class="navitem admin-only nav-x" data-view="notif" data-short="Notif" data-tip="Notifications"><span class="mi">notifications</span><span class="lbl">Notifications</span><span class="pill" id="notif-count"></span></a>
     <div class="navgroup admin-only" id="navSettings">
       <a class="navitem grouphead" id="setToggle" data-short="Set" data-tip="Settings"><span class="mi">settings</span><span class="lbl">Settings</span><span class="mi chev">expand_more</span></a>
       <div class="navsub"><div class="navsub-inner">
-        <a class="subnav" data-sub="projects"><span class="mi">folder_copy</span><span class="lbl">Projects</span></a>
-        <a class="subnav" data-sub="lokasi"><span class="mi">list_alt</span><span class="lbl">Location Fields</span></a>
-        <a class="subnav" data-sub="inventory"><span class="mi">inventory_2</span><span class="lbl">Inventory Fields</span></a>
-        <a class="subnav" data-sub="photo"><span class="mi">photo_library</span><span class="lbl">Photo &amp; Capture Fields</span></a>
+        <div class="sn-h"><span class="pj-av" id="snAv"></span><span class="lbl">This project</span></div>
+        <a class="subnav" data-sub="pjstatus"><span class="mi">tune</span><span class="lbl">Project &amp; status</span></a>
+        <a class="subnav" data-sub="templates"><span class="mi">description</span><span class="lbl">Template BAA</span></a>
+        <a class="subnav" data-sub="lokasi" data-grp="data"><span class="mi">list_alt</span><span class="lbl">Location data</span></a>
+        <a class="subnav" data-sub="team"><span class="mi">group_add</span><span class="lbl">Team</span></a>
+        <div class="sn-h"><span class="lbl">Workspace</span></div>
+        <a class="subnav" data-sub="projects"><span class="mi">folder_copy</span><span class="lbl">All projects</span></a>
         <a class="subnav" data-sub="users"><span class="mi">group</span><span class="lbl">Users</span></a>
-        <a class="subnav" data-sub="templates"><span class="mi">description</span><span class="lbl">Template</span></a>
         <a class="subnav" data-sub="backup"><span class="mi">backup</span><span class="lbl">Backup &amp; Restore</span></a>
       </div></div>
       <div class="navfly">
-        <div class="fh">Settings</div>
-        <a onclick="flyGo('projects')"><span class="mi">folder_copy</span>Projects</a>
-        <a onclick="flyGo('lokasi')"><span class="mi">list_alt</span>Location Fields</a>
-        <a onclick="flyGo('inventory')"><span class="mi">inventory_2</span>Inventory Fields</a>
-        <a onclick="flyGo('photo')"><span class="mi">photo_library</span>Photo &amp; Capture Fields</a>
+        <div class="fh">This project</div>
+        <a onclick="flyGo('pjstatus')"><span class="mi">tune</span>Project &amp; status</a>
+        <a onclick="flyGo('templates')"><span class="mi">description</span>Template BAA</a>
+        <a onclick="flyGo('lokasi')"><span class="mi">list_alt</span>Location data</a>
+        <a onclick="flyGo('team')"><span class="mi">group_add</span>Team</a>
+        <div class="fh">Workspace</div>
+        <a onclick="flyGo('projects')"><span class="mi">folder_copy</span>All projects</a>
         <a onclick="flyGo('users')"><span class="mi">group</span>Users</a>
-        <a onclick="flyGo('templates')"><span class="mi">description</span>Template</a>
         <a onclick="flyGo('backup')"><span class="mi">backup</span>Backup &amp; Restore</a>
       </div>
     </div>
@@ -2011,6 +2160,7 @@
           <span class="mi" id="wbIco">schedule</span></span>
         <span class="wb-lbl"><span id="wbTime">0h 00m</span><small id="wbSub">active</small></span>
       </button>
+      <span class="bell admin-only" id="bellWrap"><md-icon-button id="bellBtn" data-tip="Notifications · edit requests"><span>notifications</span></md-icon-button><b id="bellCount"></b></span>
       <md-icon-button id="pwBtn" data-tip="Change password"><span>password</span></md-icon-button>
       <md-icon-button id="themeBtn" data-tip="Toggle theme"><span>dark_mode</span></md-icon-button>
       <md-icon-button id="logoutBtn" data-tip="Sign out"><span>logout</span></md-icon-button>
@@ -2061,6 +2211,7 @@
       </section>
 
       <section id="v-entry" class="hidden">
+        <div id="fzPaused"></div>
         <div id="entry-empty" class="card muted">Pick a location at the top right, or create a new one to start.</div>
         <div id="entry-form" class="entry-grid hidden">
           <div class="entry-main">
@@ -2162,6 +2313,8 @@
 
       <section id="v-locations" class="hidden">
         <div class="card">
+          <div class="lg-head admin-only"><span class="lg-seg"><button class="on" type="button">Active <i id="lgActN"></i></button><button type="button" onclick="navTo('trash')"><span class="mi">delete</span>Deleted <i id="lgDelN"></i></button></span>
+            <span class="grow"></span><md-button variant="tonal" icon="upload_file" class="wr-only" onclick="navTo('import')">Import locations</md-button></div>
           <div class="rowflex" style="margin-bottom:14px;flex-wrap:wrap;gap:10px">
             <md-text-field id="loc-search" variant="outlined" label="Search code / name" leading-icon="search" style="min-width:220px"></md-text-field>
             <div class="md-select" id="loc-creator"></div>
@@ -2335,6 +2488,7 @@
 
       <section id="v-trash" class="hidden">
         <div class="card">
+          <div class="lg-head"><span class="lg-seg"><button type="button" onclick="navTo('locations')">Active</button><button class="on" type="button"><span class="mi">delete</span>Deleted <i id="trash-count2"></i></button></span></div>
           <div class="sec"><span class="mi acc">delete_sweep</span><h3>Deleted Locations</h3><span class="grow"></span>
             <span class="code-chip"><span class="mi" style="font-size:15px">admin_panel_settings</span>Admin only</span></div>
           <p class="muted" style="margin:0 0 12px">Deleted locations are kept here (data &amp; photos stay). Restore to bring one back to the Location Log, or delete permanently.</p>
@@ -2358,6 +2512,9 @@
         <div class="pf-grid" id="pfGrid"></div>
       </section>
 
+      <section id="v-setup" class="hidden"></section>
+      <section id="v-team" class="hidden"></section>
+
       <section id="v-projects" class="hidden">
         <div class="pjm">
           <div class="card">
@@ -2378,10 +2535,12 @@
       </section>
 
       <section id="v-settings" class="hidden">
+        <div class="ld-tabs" id="ldTabs"><button data-k="lokasi">Location fields <i></i></button><button data-k="photo">Photos <i></i></button><button data-k="inventory">Inventory <i></i></button></div>
         <div class="card setview hidden" id="set-lokasi">
           <div class="sec"><span class="mi acc">list_alt</span><h3>Location Fields</h3><span class="grow"></span>
             <md-button id="lf-add" variant="tonal" icon="add">Field</md-button></div>
           <div id="lf-list"></div>
+          <div class="lf-sug" id="lf-sug"></div>
           <div style="margin-top:12px"><md-button id="lf-save" variant="filled" icon="save">Save fields</md-button></div>
         </div>
         <div class="card setview hidden" id="set-inventory">
@@ -2679,9 +2838,14 @@ addEventListener('load',()=>sbScan());sbScanSoon();
 new ResizeObserver(es=>es.forEach(en=>{const c=en.target.closest('.canvas');if(c)c.style.setProperty('--topbar-h',Math.round(en.target.getBoundingClientRect().height)+'px');})).observe(document.querySelector('.topbar'));
 /* Multi-project: setiap permintaan /api membawa project aktif (server tetap memeriksa aksesnya) */
 const PJ={id:null,list:[],cur:null};
-const VIEWS=['portfolio','dashboard','progress','entry','locations','import','trash','notif','templates','users','settings','projects'];
+const VIEWS=['portfolio','dashboard','progress','entry','locations','import','trash','notif','templates','users','settings','projects','setup','team'];
 const _fetch=window.fetch.bind(window);
-window.fetch=(u,o={})=>{if(PJ.id&&typeof u==='string'&&u.startsWith('/api/')){const h=new Headers(o.headers||{});if(!h.has('X-Project'))h.set('X-Project',PJ.id);o={...o,headers:h};}return _fetch(u,o);};
+window.fetch=(u,o={})=>{if(PJ.id&&typeof u==='string'&&u.startsWith('/api/')){const h=new Headers(o.headers||{});if(!h.has('X-Project'))h.set('X-Project',PJ.id);o={...o,headers:h};}
+  const pr=_fetch(u,o);
+  if(o.method&&o.method!=='GET'&&typeof u==='string')pr.then(r=>{if(!r.ok)return;
+    if(u.startsWith('/api/settings'))setTimeout(()=>ldTabsSync(curSetSub),300);
+    if(typeof SX!=='undefined'&&SX.on&&!u.includes('/activate'))sxSoon();}).catch(()=>{});
+  return pr;};
 const api=async(url,opts={})=>{const r=await fetch(url,{credentials:'same-origin',headers:{'Content-Type':'application/json'},...opts});
   if(!r.ok){let d;try{d=await r.json()}catch{d={detail:r.statusText}}throw new Error(d.detail||('HTTP '+r.status));}
   const ct=r.headers.get('content-type')||'';return ct.includes('json')?r.json():r;};
@@ -2829,7 +2993,7 @@ $('#lg-btn').addEventListener('click',async()=>{const el=$('#lg-err');el.classLi
   btn.setAttribute('disabled','');btn.style.opacity='.7';
   try{
     const u=await api('/api/auth/login',{method:'POST',body:JSON.stringify({username:uName,password:$('#lg-pass').value})});
-    S.user=await api('/api/auth/me');
+    S.user=await api('/api/auth/me');if(S.user.must_change)S._lp=$('#lg-pass').value;
     const nm=(S.user.full_name||S.user.username||'').trim()||'Teman';
     $('#lgCard').classList.add('gone');$('#lgIris').classList.add('on');
     setTimeout(()=>{$('#lgGreetTxt').textContent='Hi, '+nm;$('#lgGreet').classList.add('on');},700);
@@ -2961,6 +3125,7 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
   if(fromLogin&&!reduced){lg.classList.add('leaving');$('#app').classList.add('app-enter');
     setTimeout(()=>{lg.classList.add('hidden');lg.classList.remove('leaving');$('#lgGreet').classList.remove('on','out');$('#lgIris').classList.remove('on');$('#lgCard').classList.remove('gone');$('#app').classList.remove('app-enter');},800);}
   else{lg.classList.add('hidden');$('#lgGreet').classList.remove('on','out');$('#lgIris').classList.remove('on');$('#lgCard').classList.remove('gone');}
+  if(S.user.must_change)await onbPassword();
   if(!await pjInit())return;
   S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.keterangan=s.inventory_keterangan||[];S.appTitle=s.app_title||'BAA Generator';});
   await S.settingsReady;
@@ -2969,9 +3134,9 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
   const dn=document.querySelector('.navitem[data-view="dashboard"]');if(dn)dn.classList.toggle('hidden',S.user.role==='viewer');
   $('#app').classList.toggle('is-operator',S.user.role!=='admin');
   $('#app').classList.toggle('is-viewer',S.user.role==='viewer');
+  fzApply();
   refreshPicker();loadLocations();loadCreators();pjLand();if(S.user.role==='admin'){loadTemplates();loadUsers();loadNotifCount();}bindTips();
-  wbInit();expAskSync();
-  if(S.user.must_change)setTimeout(()=>openPw(true),400);}
+  wbInit();expAskSync();}
 /* ===== Wilayah (Desa/Kelurahan → Provinsi), per project bisa on/off =====
    Pencarian di server (data Kemendagri offline): beberapa kata urutan bebas, singkatan provinsi,
    toleran salah ketik, kode wilayah, tombol penyempit provinsi → kab/kota.
@@ -3259,7 +3424,7 @@ function pjCookie(){if(PJ.id)document.cookie='baa_project='+PJ.id+'; path=/; Sam
 addEventListener('focus',pjCookie);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')pjCookie();});
 async function pjInit(){let L=[];try{L=(await api('/api/projects/mine')).projects||[];}catch(e){}
   PJ.list=L;
-  if(!L.length){pjNone();return false;}
+  if(!L.length){if(S.user.role==='admin')onbFirstProject();else pjNone();return false;}
   let want='';try{want=localStorage.getItem(pjKey())||'';}catch(e){}
   PJ.cur=L.find(p=>String(p.id)===want)||L.find(p=>!p.archived)||L[0];PJ.id=String(PJ.cur.id);
   try{localStorage.setItem(pjKey(),PJ.id);}catch(e){}
@@ -3268,16 +3433,18 @@ async function pjInit(){let L=[];try{L=(await api('/api/projects/mine')).project
   $$('.multi-only').forEach(x=>x.classList.toggle('hidden',!multi||S.user.role==='operator'));
   return true;}
 function pjNone(){$('#psw').classList.add('hidden');$$('.navitem,.navgroup').forEach(x=>x.classList.add('hidden'));
+  if(S.user&&S.user.role!=='admin')$$('.admin-only').forEach(x=>x.classList.add('hidden'));
   VIEWS.forEach(x=>{const el=$('#v-'+x);if(el)el.classList.add('hidden');});$('#pageTitle').textContent='';
   let el=$('#noProj');if(!el){el=document.createElement('section');el.id='noProj';$('.canvas-body').appendChild(el);}
-  el.innerHTML='<div class="noproj"><div><span class="mi">folder_off</span><h2>No project access yet</h2><p>Ask your admin to give you access to a project, then sign in again.</p></div></div>';}
-function pjSub(p){return `${p.done}/${p.total} done`+(p.archived?' · archived':'');}
+  el.innerHTML='<div class="noproj"><div><span class="mi">folder_off</span><h2>No project is ready yet</h2><p>Admin is still setting up your project, or has not given you access yet. You can start entering BAA as soon as it is activated.</p><md-button variant="text" icon="logout" onclick="onbLogout()">Sign out</md-button></div></div>';}
+function pjSub(p){return p.status==='setup'?'Setup · not active yet':`${p.done}/${p.total} done`+(p.status==='frozen'?' · frozen':'')+(p.archived?' · archived':'');}
 function pjPaint(){const p=PJ.cur;if(!p)return;const b=$('#psw');b.classList.remove('hidden');
   b.style.setProperty('--pj',p.color);$('#pswAv').style.setProperty('--pj',p.color);$('#pswAv').textContent=p.prefix;
   $('#pswName').textContent=p.name;$('#pswSub').textContent=pjSub(p);b.dataset.tip=p.name+' · switch project (Ctrl+K)';
-  $('#pjChip').innerHTML=pjAv(p,'sm')+esc(p.name);}
+  $('#pjChip').innerHTML=pjAv(p,'sm')+esc(p.name);
+  const sa=$('#snAv');if(sa){sa.style.setProperty('--pj',p.color);sa.textContent=p.prefix;}}
 function pjChipShow(on){const c=$('#pjChip');if(c)c.classList.toggle('hidden',!on||PJ.list.length<2);}
-async function pjRefresh(){try{PJ.list=(await api('/api/projects/mine')).projects||PJ.list;PJ.cur=PJ.list.find(p=>String(p.id)===PJ.id)||PJ.cur;pjPaint();}catch(e){}}
+async function pjRefresh(){try{PJ.list=(await api('/api/projects/mine')).projects||PJ.list;PJ.cur=PJ.list.find(p=>String(p.id)===PJ.id)||PJ.cur;pjPaint();fzApply();}catch(e){}}
 function pjItems(q){q=(q||'').toLowerCase().trim();const L=PJ.list.filter(p=>!q||(p.name+' '+p.prefix).toLowerCase().includes(q));
   return L.map((p,i)=>{const b=S.user.role==='admin'?(p.pending?`<span class="bdg" data-tip="Pending edit requests">${p.pending}</span>`:''):(p.my_drafts?`<span class="bdg" data-tip="My open drafts">${p.my_drafts}</span>`:'');
     return `<div class="pj-it${p.archived?' arch':''}" data-id="${p.id}">${pjAv(p)}<span class="pj-tx"><span class="pj-nm">${esc(p.name)}</span><span class="pj-sb">${esc(p.prefix)}_xxxxx · ${pjSub(p)}</span></span>${b}${String(p.id)===PJ.id?'<span class="mi ck">check</span>':(i<5&&!q?`<kbd>${i+1}</kbd>`:'')}</div>`;}).join('')
@@ -3319,9 +3486,230 @@ function pjGo(land){if(!land){loadDashboard();return;}
   if(land.startsWith('set:')){if(S.user.role==='admin')openSettings(land.slice(4));else loadDashboard();return;}
   const n=$('.navitem[data-view="'+land+'"]');if(n&&!n.classList.contains('hidden'))navTo(land);else loadDashboard();}
 function pjLand(){let land='';try{land=sessionStorage.getItem('pjLand')||'';sessionStorage.removeItem('pjLand');sessionStorage.removeItem('pjVeil');}catch(e){}
+  if(isSetup()&&S.user.role==='admin'){sxEnter(land.startsWith('setup:')?land.slice(6):'overview');
+    const h=document.documentElement;if(h.classList.contains('pj-sw'))requestAnimationFrame(()=>{h.classList.add('pj-out');setTimeout(()=>h.classList.remove('pj-sw','pj-out'),480);});return;}
+  if(land.startsWith('setup:'))land='';
   const multi=!$('.navitem[data-view="portfolio"]').classList.contains('hidden');
   pjGo(land||(multi?'portfolio':''));
   const h=document.documentElement;if(h.classList.contains('pj-sw'))requestAnimationFrame(()=>{h.classList.add('pj-out');setTimeout(()=>h.classList.remove('pj-sw','pj-out'),480);});}
+
+/* ===== Siklus project: onboarding · mode Setup · Team · Freeze · ganti prefix =====
+   Setup  = project baru, belum ada yang bisa entry (termasuk admin); sidebar admin berubah jadi langkah.
+   Active = normal. Frozen = operator/viewer read-only (+ banner pesan admin); admin tetap bisa edit. */
+const PST=()=>(PJ.cur&&PJ.cur.status)||'active';
+const isSetup=()=>PST()==='setup';
+const isFrozen=()=>PST()==='frozen';
+const frozenRO=()=>isFrozen()&&!!S.user&&S.user.role!=='admin';
+const fmtWhen=iso=>{if(!iso)return '';try{const d=new Date(iso),t=new Date();const hm=d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  return d.toDateString()===t.toDateString()?'today '+hm:d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+hm;}catch(e){return '';}};
+const tfInput=f=>f&&f.shadowRoot&&f.shadowRoot.querySelector('input,textarea');
+
+/* --- layar penuh: ganti password paksa & project pertama --- */
+function onbShell(html){let el=$('#onb');if(!el){el=document.createElement('div');el.id='onb';el.className='onb';document.body.appendChild(el);}
+  el.innerHTML=`<div class="box">${html}</div>`;return el;}
+function onbClose(){const el=$('#onb');if(el)el.remove();}
+async function onbLogout(){try{await api('/api/auth/logout',{method:'POST'});}catch(e){}document.cookie='baa_project=; path=/; max-age=0';location.reload();}
+function onbErr(m){const e=$('#onbErr');e.textContent=m;e.classList.remove('hidden');}
+function onbPassword(){return new Promise(res=>{const known=!!S._lp;
+  const el=onbShell(`<div class="ov">First sign-in</div><h2>Set your own password</h2>
+    <p>${S.user.role==='admin'?'The default admin password is public. Replace it before anything else.':'Your account uses a temporary password from admin. Choose your own to continue.'}</p>
+    <div class="fld">${known?'':'<md-text-field id="onbOld" variant="outlined" type="password" label="Current password"></md-text-field>'}
+      <md-text-field id="onbNew" variant="outlined" type="password" label="New password"></md-text-field>
+      <md-text-field id="onbNew2" variant="outlined" type="password" label="Repeat new password"></md-text-field>
+      <div class="hint">At least 4 characters.</div><div class="err hidden" id="onbErr"></div>
+      <div class="acts"><md-button variant="text" icon="logout" id="onbOut">Sign out</md-button><md-button variant="filled" icon="arrow_forward" id="onbGo">Save &amp; continue</md-button></div></div>`);
+  const go=async()=>{const a=$('#onbNew').value||'',b=$('#onbNew2').value||'',old=known?S._lp:($('#onbOld').value||'');
+    if(a.length<4)return onbErr('New password needs at least 4 characters.');
+    if(a!==b)return onbErr('The two new passwords are different.');
+    if(a===old)return onbErr('Choose a password different from the current one.');
+    try{await api('/api/auth/change-password',{method:'POST',body:JSON.stringify({old_password:old,new_password:a})});
+      S.user.must_change=false;S._lp='';onbClose();toast('Password changed');res();}catch(e){onbErr(e.message);}};
+  $('#onbGo').addEventListener('click',go);$('#onbOut').addEventListener('click',onbLogout);
+  el.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+  setTimeout(()=>{const i=tfInput(el.querySelector('md-text-field'));if(i)i.focus();},120);});}
+async function onbFirstProject(){let colors=['#0aa39d','#7b5cd6','#d07a1f','#3b7be0','#d0496a','#5a9e3a'];
+  try{colors=(await api('/api/projects')).colors||colors;}catch(e){}
+  let col=colors[0];
+  const el=onbShell(`<div class="ov">Welcome</div><h2>Create your first project</h2>
+    <p>One project = one BAA job with its own template, data and team. You'll set it up next — nobody can enter BAA until you activate it.</p>
+    <div class="fld"><md-text-field id="onbName" variant="outlined" label="Project name"></md-text-field>
+      <md-text-field id="onbPre" variant="outlined" label="Location code prefix"></md-text-field>
+      <div class="hint" id="onbPreH">2–4 letters · first code: <b>???_00001</b></div>
+      <div><div class="lab">Color</div><div class="pjm-sw">${colors.map((c,i)=>`<button type="button" style="--c:${c}" data-c="${c}" class="${i?'':'on'}" aria-label="${c}"></button>`).join('')}</div></div>
+      <div class="err hidden" id="onbErr"></div>
+      <div class="acts"><md-button variant="text" icon="logout" id="onbOut">Sign out</md-button><md-button variant="filled" icon="arrow_forward" id="onbGo">Create &amp; start setup</md-button></div></div>`);
+  const pre=$('#onbPre');
+  pre.addEventListener('input',()=>{const v=(pre.value||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);const i=tfInput(pre);if(i&&i.value!==v)i.value=v;$('#onbPreH').innerHTML=`2–4 letters · first code: <b>${v||'???'}_00001</b>`;});
+  el.querySelectorAll('.pjm-sw button').forEach(b=>b.onclick=()=>{el.querySelectorAll('.pjm-sw button').forEach(x=>x.classList.toggle('on',x===b));col=b.dataset.c;});
+  $('#onbOut').addEventListener('click',onbLogout);
+  $('#onbGo').addEventListener('click',async()=>{try{
+    const r=await api('/api/projects',{method:'POST',body:JSON.stringify({name:($('#onbName').value||'').trim(),prefix:(pre.value||'').trim(),color:col})});
+    try{localStorage.setItem(pjKey(),String(r.id));sessionStorage.setItem('pjLand','setup:overview');}catch(e){}
+    document.cookie='baa_project='+r.id+'; path=/; SameSite=Lax';location.reload();}catch(e){onbErr(e.message);}});
+  setTimeout(()=>{const i=tfInput($('#onbName'));if(i)i.focus();},120);}
+
+/* --- mode Setup (admin, project berstatus setup) --- */
+const SX={on:false,step:'overview',st:null,t:0};
+const SX_STEPS=[['overview','Overview','flag'],['data','Location data','list_alt'],['template','Template BAA','description'],['team','Team','group_add'],['target','Target','event']];
+const SX_REQ=['data','template','team'];
+async function sxRefresh(){try{const r=await api('/api/projects');const p=(r.projects||[]).find(x=>String(x.id)===PJ.id);
+    if(p){SX.st=p.setup;PJ.cur={...PJ.cur,...p};}}catch(e){}sxNav();}
+function sxSoon(){clearTimeout(SX.t);SX.t=setTimeout(sxRefresh,500);}
+function sxOk(k){const s=SX.st;return !!(s&&s[k]&&s[k].ok);}
+function sxSub(k){const s=SX.st&&SX.st[k];if(!s)return '';
+  if(k==='data')return s.ok?`${s.fields} field${s.fields===1?'':'s'} · ${s.photos} photo${s.photos===1?'':'s'} · ${s.inventory} inventory item${s.inventory===1?'':'s'}`
+    :(!s.fields&&!s.photos?'No location fields or photo categories yet':!s.fields?'Add at least 1 location field':'Add at least 1 photo category');
+  if(k==='template')return s.ok?`${s.name} · mapped`:s.name?`${s.name} · cells not mapped yet`:'Upload the BAA Excel template and map its cells';
+  if(k==='team')return s.ok?`${s.operators} operator${s.operators===1?'':'s'}${s.viewers?` · ${s.viewers} viewer${s.viewers===1?'':'s'}`:''}`:'Give at least 1 operator access';
+  if(k==='target')return s.ok?`${s.total} BAA${s.target_date?' · by '+pfDate(s.target_date):''}`:'Not set — can be added any time';return '';}
+function sxNav(){const nav=$('#sxNav');if(!nav)return;if(!SX.on){nav.innerHTML='';return;}
+  nav.innerHTML=`<div class="sx-h">Set up this project</div>`+SX_STEPS.map(([k,l],i)=>{const st=k==='overview'?'ov':sxOk(k)?'ok':SX_REQ.includes(k)?'todo':'opt';
+      return `${i>1?'<i class="sx-line"></i>':''}<a class="sx-step ${st}${SX.step===k?' on':''}" data-k="${k}"><span class="n">${st==='ov'?'<span class="mi">flag</span>':st==='ok'?'<span class="mi">check</span>':st==='todo'?'!':'–'}</span><span class="lbl">${l}</span>${k==='target'?'<span class="tag">optional</span>':''}</a>`;}).join('')
+    +`<div class="sx-h">Workspace</div><a class="sx-step ws${SX.step==='projects'?' on':''}" data-k="projects"><span class="mi">folder_copy</span><span class="lbl">All projects</span></a><a class="sx-step ws${SX.step==='users'?' on':''}" data-k="users"><span class="mi">group</span><span class="lbl">Users</span></a>`;
+  nav.querySelectorAll('.sx-step').forEach(a=>a.addEventListener('click',()=>{const k=a.dataset.k;if(k===SX.step&&k!=='data')return;guardLeave(()=>sxGo(k),a.querySelector('.lbl').textContent);}));}
+function sxEnter(land){SX.on=true;$('#app').classList.add('setup-mode');sxRefresh().then(()=>sxGo(land||'overview'));}
+function sxShow(view,title){VIEWS.forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!==view);});
+  $('#pageTitle').textContent=title;$('#pageTitle').classList.remove('hidden');$('#topGrow').classList.remove('hidden');
+  $('#entryTools').classList.add('hidden');$('#locTools').classList.add('hidden');$('#setSaveWrap').classList.add('hidden');}
+function sxGo(k){SX.step=k;sxNav();sxFoot();
+  if(k==='overview'){sxShow('setup','Set up · '+PJ.cur.name);sxOverview();sxRefresh().then(()=>{if(SX.step==='overview')sxOverview();});}
+  else if(k==='data')openSettings('lokasi');
+  else if(k==='template')openSettings('templates');
+  else if(k==='team'){openSettings('team');}
+  else if(k==='target'){sxShow('setup','Set up · Target');sxTarget();}
+  else if(k==='projects'||k==='users')openSettings(k);
+  sxFoot();revealCards($('.canvas-body'));}
+function sxFoot(){let f=$('#sxFoot');if(!f){f=document.createElement('div');f.id='sxFoot';f.className='sx-foot';$('.canvas').appendChild(f);}
+  const i=SX_STEPS.findIndex(s=>s[0]===SX.step);
+  if(!SX.on||i<1){f.classList.add('hidden');$('.canvas').classList.remove('has-sxfoot');return;}
+  const prev=SX_STEPS[i-1],next=SX_STEPS[i+1];
+  const hint={data:'Required: at least 1 location field and 1 photo category. Inventory items are optional.',template:'Required: active template with its cells mapped. Needs Location data first.',
+    team:'Required: at least 1 operator. New accounts get a temporary password to share.',target:'Optional — can be set or changed any time later.'}[SX.step]||'';
+  f.innerHTML=`<span class="s">${sxOk(SX.step)?'<span class="mi okc">check_circle</span>':''}${hint}</span><md-button variant="text" id="sxBack">Back</md-button>
+    ${next?`<md-button variant="filled" icon="arrow_forward" id="sxNext">Next: ${next[1]}</md-button>`:`<md-button variant="filled" icon="flag" id="sxNext">Back to overview</md-button>`}`;
+  f.classList.remove('hidden');$('.canvas').classList.add('has-sxfoot');
+  $('#sxBack').onclick=()=>guardLeave(()=>sxGo(prev[0]),prev[1]);
+  $('#sxNext').onclick=()=>guardLeave(()=>sxGo(next?next[0]:'overview'),next?next[1]:'Overview');}
+function sxOverview(){const left=SX_REQ.filter(k=>!sxOk(k)),done=SX_REQ.length-left.length,C=2*Math.PI*30;
+  const nm=k=>SX_STEPS.find(s=>s[0]===k)[1];
+  $('#v-setup').innerHTML=`<div class="sx-main">
+    <div class="sx-hero"><div class="sx-ring"><svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="30" class="trk"/><circle cx="36" cy="36" r="30" class="prg" style="stroke-dasharray:${C};stroke-dashoffset:${C*(1-done/3)}"/></svg><b>${done}/3</b></div>
+      <div><h2>${left.length?(done?'Almost ready':`Let's set up ${esc(PJ.cur.name)}`):'Ready to activate'}</h2><p>Finish the required steps, then activate. Until then nobody — including admin — can enter BAA.</p></div></div>
+    ${SX_STEPS.slice(1).map(([k,l,ic])=>{const ok=sxOk(k),req=SX_REQ.includes(k);const c=ok?'ok':req?'todo':'opt';
+      return `<a class="sx-card ${c}" data-k="${k}"><span class="ic"><span class="mi">${ok?'check':ic}</span></span><span class="tx"><span class="t">${l}</span><span class="s">${esc(sxSub(k))}</span></span>
+        <span class="st">${ok?'Done':req?'Required':'Optional'}</span><span class="mi chev">chevron_right</span></a>`;}).join('')}
+    <div class="sx-act"><span class="s">${left.length?`${left.length} required step${left.length>1?'s':''} left: <b>${left.map(nm).join('</b>, <b>')}</b>`:'All required steps are done. Activating opens BAA entry for the team.'}</span>
+      <md-button variant="filled" icon="rocket_launch" id="sxActivate" ${left.length?'disabled':''}>Activate project</md-button></div></div>`;
+  $$('#v-setup .sx-card').forEach(c=>c.addEventListener('click',()=>sxGo(c.dataset.k)));
+  $('#sxActivate').addEventListener('click',()=>confirmDo('Activate '+PJ.cur.name+'?',
+    `The team can start entering BAA right away. Settings stay editable later; the code prefix <b>${esc(PJ.cur.prefix)}</b> locks once the first location code is issued.`,async()=>{
+      try{await api('/api/projects/'+PJ.id+'/activate',{method:'POST'});try{sessionStorage.setItem('pjLand','dashboard');}catch(e){}toast('Project activated');setTimeout(()=>location.reload(),500);}
+      catch(e){toast('Failed: '+e.message);}},{okLabel:'Activate'}));}
+function sxTarget(){const s=(SX.st&&SX.st.target)||{};
+  $('#v-setup').innerHTML=`<div class="sx-main"><div class="card"><div class="sec"><span class="mi acc">event</span><h3>Target</h3></div>
+    <p class="muted" style="margin:0 0 16px">How many BAA this project must deliver, and by when. Drives the pace & projection in Dashboard and Progress. Optional now — it can change any time.</p>
+    <div class="pjm-f"><div><md-text-field id="sxTot" variant="outlined" type="number" label="Target (BAA)" value="${s.total??''}"></md-text-field></div>
+      <div><md-text-field id="sxDate" variant="outlined" type="date" label="Target date" value="${esc(s.target_date||'')}"></md-text-field></div></div>
+    <div class="pjm-act"><md-button variant="filled" icon="check" id="sxTSave">Save target</md-button></div></div></div>`;
+  $('#sxTSave').addEventListener('click',async()=>{const t=$('#sxTot').value;try{
+    await api('/api/projects/'+PJ.id+'/target',{method:'PUT',body:JSON.stringify({total:t?+t:null,target_date:$('#sxDate').value||null})});toast('Target saved');}catch(e){toast('Failed: '+e.message);}});}
+
+/* --- Team: akses project + buat akun langsung (Setup & Settings › This project) --- */
+let TM={users:[],members:[]};
+async function loadTeam(){try{const [u,r]=await Promise.all([api('/api/users'),api('/api/projects')]);
+    TM.users=u.filter(x=>x.role!=='admin');const p=(r.projects||[]).find(x=>String(x.id)===PJ.id);TM.members=p?p.members:[];}catch(e){toast('Failed: '+e.message);return;}
+  renderTeam();}
+function renderTeam(){const n=TM.members.length,ops=TM.users.filter(u=>u.role==='operator'&&u.active&&TM.members.includes(u.id)).length;
+  $('#v-team').innerHTML=`<div class="tm-main">
+    <div class="card"><div class="sec"><span class="mi acc">person_add</span><h3>New account</h3></div>
+      <div class="tm-new"><md-text-field id="tmName" variant="outlined" label="Full name"></md-text-field><md-text-field id="tmUser" variant="outlined" label="Username"></md-text-field>
+        <span class="lg-seg tm-role"><button type="button" class="on" data-r="operator">Operator</button><button type="button" data-r="viewer">Viewer</button></span>
+        <md-button variant="filled" icon="person_add" id="tmAdd">Add</md-button></div>
+      <div class="muted tm-note">Gets access to <b>${esc(PJ.cur.name)}</b> and a temporary password to share. They must change it on first sign-in.</div>
+      <div id="tmTemp"></div></div>
+    <div class="card"><div class="sec"><span class="mi acc">group</span><h3>Access to ${esc(PJ.cur.name)}</h3><span class="grow"></span><span class="tm-cnt ${ops?'okc':'warnc'}">${n} ${n===1?'person':'people'} · ${ops} operator${ops===1?'':'s'}</span></div>
+      <div class="tm-list">${TM.users.map(u=>`<label class="tm-row${u.active?'':' off'}"><span class="tx"><span class="t">${esc(u.full_name||u.username)}</span><span class="s">${esc(u.username)} · ${u.role}${u.active?'':' · inactive'}</span></span>
+        <md-switch data-u="${u.id}" ${TM.members.includes(u.id)?'selected':''}></md-switch></label>`).join('')||'<div class="muted">No operator or viewer accounts yet — add one above.</div>'}</div>
+      <div class="muted tm-note">Admin can always open every project.</div></div></div>`;
+  $$('#v-team .tm-role button').forEach(b=>b.onclick=()=>$$('#v-team .tm-role button').forEach(x=>x.classList.toggle('on',x===b)));
+  $$('#v-team md-switch[data-u]').forEach(sw=>sw.addEventListener('change',async()=>{const ids=$$('#v-team md-switch[data-u]').filter(x=>x.selected).map(x=>+x.dataset.u);
+    try{const r=await api('/api/projects/'+PJ.id+'/members',{method:'PUT',body:JSON.stringify({members:ids})});TM.members=r.members;renderTeam();}catch(e){toast('Failed: '+e.message);sw.selected=!sw.selected;}}));
+  $('#tmAdd').addEventListener('click',async()=>{const name=($('#tmName').value||'').trim(),un=($('#tmUser').value||'').trim().toLowerCase();
+    const role=$('#v-team .tm-role button.on').dataset.r;if(!un){toast('Username is required');return;}
+    try{const r=await api('/api/users',{method:'POST',body:JSON.stringify({username:un,full_name:name,role,projects:[+PJ.id]})});
+      await loadTeam();$('#tmTemp').innerHTML=`<div class="tm-temp"><span class="mi">key</span><span>Account <b>${esc(un)}</b> created · temporary password <code>${esc(r.temp_password)}</code></span>
+        <md-button variant="text" icon="content_copy" id="tmCopy">Copy</md-button></div>`;
+      $('#tmCopy').onclick=()=>{try{navigator.clipboard.writeText(`Username: ${un}\nPassword: ${r.temp_password}`);toast('Copied');}catch(e){}};
+      if(SX.on)sxRefresh();}catch(e){toast('Failed: '+e.message);}});
+  bindTips();}
+
+/* --- Frozen: banner semua view + strip status admin + dialog freeze + ganti prefix --- */
+function fzApply(){const a=$('#app');a.classList.toggle('pj-frozen',isFrozen());a.classList.toggle('frozen-ro',frozenRO());
+  let b=$('#fzBan');const host=$('.canvas-body');
+  const fp=$('#fzPaused');if(fp)fp.innerHTML=frozenRO()?pausedHtml():'';
+  if(!isFrozen()){if(b)b.remove();return;}
+  if(!b){b=document.createElement('div');b.id='fzBan';b.className='fz-ban';host.prepend(b);}
+  const p=PJ.cur,admin=S.user.role==='admin';
+  b.innerHTML=`<span class="mi">ac_unit</span><span class="tx"><b>${esc(p.name)} is frozen${admin?' — users can only view':' — input is paused'}</b>${p.freeze_msg?`<span class="m">${esc(p.freeze_msg)}</span>`:''}
+    <small>by ${esc(p.frozen_by||'admin')}${p.frozen_at?' · since '+fmtWhen(p.frozen_at):''}</small></span>${admin?'<md-button variant="tonal" icon="tune" id="fzGo">Project &amp; status</md-button>':''}`;
+  const g=$('#fzGo');if(g)g.onclick=()=>openSettings('pjstatus');}
+function pausedHtml(){const p=PJ.cur;return `<div class="eb"><div class="ic"><span class="mi">ac_unit</span></div><h3>Input is paused</h3>
+  <p>${p.freeze_msg?esc(p.freeze_msg):'Admin has frozen this project for a while. You can still view data.'}</p><small>Frozen by ${esc(p.frozen_by||'admin')}${p.frozen_at?' · '+fmtWhen(p.frozen_at):''}</small></div>`;}
+const FZ_CHIPS=['Template BAA is being revised. Input is paused, please wait for admin.','Location codes are being changed. Input is paused for a moment.','Admin is checking the data. Input is paused, please wait.'];
+function pjStatusStrip(q){const st=q.status||'active';
+  if(st==='setup')return `<div class="st-strip"><span class="pill setup"><i></i>SETUP</span><span class="tx"><b>Not active yet</b>Finish the setup steps, then activate.</span><md-button variant="tonal" icon="flag" id="pjmSetup">Open setup</md-button></div>`;
+  if(st==='frozen')return `<div class="st-strip fz"><span class="pill frozen"><i></i>FROZEN</span><span class="tx"><b>Input paused for everyone except admin</b>${q.freeze_msg?`“${esc(q.freeze_msg)}” · `:''}<a id="pjmMsg">Edit message</a></span><md-button variant="filled" icon="play_arrow" id="pjmUnfreeze">Unfreeze</md-button></div>`;
+  return `<div class="st-strip"><span class="pill active"><i></i>ACTIVE</span><span class="tx"><b>Team can enter BAA</b>Freeze to pause all input while you reconfigure.</span><md-button variant="tonal" icon="ac_unit" id="pjmFreeze">Freeze</md-button></div>`;}
+function pjStatusBind(q){const after=async r=>{PJM.sel=r;await loadProjects(true);await pjRefresh();if(String(r.id)===PJ.id){PJ.cur={...PJ.cur,...r};fzApply();}};
+  const f=$('#pjmFreeze');if(f)f.onclick=()=>fzDialog(q,after);
+  const m=$('#pjmMsg');if(m)m.onclick=()=>fzDialog(q,after,true);
+  const u=$('#pjmUnfreeze');if(u)u.onclick=()=>confirmDo('Unfreeze '+q.name+'?','Members can enter and edit BAA again right away.',async()=>{
+    try{after(await api('/api/projects/'+q.id+'/unfreeze',{method:'POST'}));toast('Project unfrozen');}catch(e){toast('Failed: '+e.message);}},{okLabel:'Unfreeze'});
+  const s=$('#pjmSetup');if(s)s.onclick=()=>{if(String(q.id)===PJ.id){try{sessionStorage.setItem('pjLand','setup:overview');}catch(e){}location.reload();}else{try{sessionStorage.setItem('pjLand','setup:overview');}catch(e){}pjSwitch(String(q.id),'setup:overview');}};
+  const rc=$('#pjmRecode');if(rc)rc.onclick=()=>rcDialog(q,after);}
+function fzDialog(q,after,edit){const d=document.createElement('div');d.className='bk-dlg fzd';
+  d.innerHTML=`<div class="box"><h3>${edit?'Edit freeze message':'Freeze '+esc(q.name)+'?'}</h3>
+    ${edit?'':'<p>All input stops for members: entry, edit, photo &amp; scan upload, import and export. They can still view data. Admin can still change settings and fix location data.</p>'}
+    <div class="lab">Message shown to users</div><textarea id="fzMsg" maxlength="300" placeholder="e.g. Template BAA is being revised, please wait.">${esc(edit?q.freeze_msg:'')}</textarea>
+    <div class="chips">${FZ_CHIPS.map((c,i)=>`<button type="button" data-i="${i}">${['Template revision','Code prefix change','Data check'][i]}</button>`).join('')}</div>
+    <div class="lab">Preview</div><div class="fz-ban pv"><span class="mi">ac_unit</span><span class="tx"><b>${esc(q.name)} is frozen — input is paused</b><span class="m" id="fzPv"></span><small>by ${esc((S.user.full_name||S.user.username||'').trim())} · since ${edit?fmtWhen(q.frozen_at):'now'}</small></span></div>
+    <div class="acts"><md-button variant="text" id="fzCancel">Cancel</md-button><md-button variant="filled" icon="${edit?'check':'ac_unit'}" id="fzOk">${edit?'Save message':'Freeze project'}</md-button></div></div>`;
+  document.body.appendChild(d);const ta=d.querySelector('#fzMsg'),pv=()=>{d.querySelector('#fzPv').textContent=ta.value.trim();};pv();
+  ta.addEventListener('input',pv);d.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>{ta.value=FZ_CHIPS[+b.dataset.i];pv();});
+  const close=()=>d.remove();d.querySelector('#fzCancel').onclick=close;d.addEventListener('click',e=>{if(e.target===d)close();});
+  d.querySelector('#fzOk').onclick=async()=>{try{const r=await api('/api/projects/'+q.id+'/freeze',{method:'POST',body:JSON.stringify({message:ta.value})});close();after(r);toast(edit?'Message updated':'Project frozen');}
+    catch(e){toast('Failed: '+e.message);}};
+  setTimeout(()=>ta.focus(),60);}
+function rcDialog(q,after){const d=document.createElement('div');d.className='bk-dlg fzd rc';
+  d.innerHTML=`<div class="box"><h3>Change code prefix</h3><p>Every location code in <b>${esc(q.name)}</b> changes prefix; numbers stay the same. Photo &amp; scan folders move with them.</p>
+    <div class="rc-in"><md-text-field id="rcPre" variant="outlined" label="New prefix (2–4 letters)"></md-text-field><md-button variant="tonal" icon="analytics" id="rcAn">Analyse</md-button></div>
+    <div id="rcOut"></div><div class="acts"><md-button variant="text" id="rcCancel">Cancel</md-button><md-button variant="filled" icon="sync_alt" id="rcGo" disabled>Re-code</md-button></div></div>`;
+  document.body.appendChild(d);const close=()=>d.remove();d.querySelector('#rcCancel').onclick=close;d.addEventListener('click',e=>{if(e.target===d)close();});
+  const pre=d.querySelector('#rcPre'),go=d.querySelector('#rcGo'),out=d.querySelector('#rcOut');let plan=null;
+  const dis=on=>go.toggleAttribute('disabled',on);
+  pre.addEventListener('input',()=>{const v=(pre.value||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);const i=tfInput(pre);if(i&&i.value!==v)i.value=v;plan=null;dis(true);out.innerHTML='';});
+  const an=async()=>{try{plan=await api('/api/projects/'+q.id+'/recode?prefix='+encodeURIComponent(pre.value||''));}catch(e){out.innerHTML=`<div class="rc-ok w"><span class="mi">error</span><span>${esc(e.message)}</span></div>`;return;}
+    const sz=plan.size>=1048576?(plan.size/1048576).toFixed(1)+' MB':Math.max(1,Math.round(plan.size/1024))+' KB';
+    out.innerHTML=`<h4>${esc(plan.old)} → ${esc(plan.new)}</h4><div class="rc-grid"><div class="kp"><b>${plan.count}</b><span>locations re-coded${plan.deleted?` (incl. ${plan.deleted} deleted)`:''}</span></div>
+      <div class="kp"><b>${plan.photos}</b><span>photos</span></div><div class="kp"><b>${plan.scans}</b><span>scan PDFs</span></div><div class="kp"><b>${plan.folders}</b><span>folders moved · ${sz}</span></div></div>
+      ${plan.sample.length?`<div class="rc-map">${plan.sample.map((m,i)=>`${i===2&&plan.count>3?'<span class="dots">…</span><span></span><span></span>':''}<span>${esc(m.old)}</span><span class="ar">→</span><span>${esc(m.new)}</span>`).join('')}</div>`:''}
+      ${plan.conflicts.length?`<div class="rc-ok w"><span class="mi">error</span><span><b>Conflict:</b> ${plan.conflicts.map(esc).join(', ')}</span></div>`:'<div class="rc-ok g"><span class="mi">check_circle</span><span>Numbers stay the same — no conflicts.</span></div>'}
+      ${plan.exported?`<div class="rc-ok w"><span class="mi">warning</span><span><b>${plan.exported} location${plan.exported>1?'s were':' was'} already exported</b> (PDF/Excel/ZIP). Files sent before keep the old ${esc(plan.old)} codes.</span></div>`:''}
+      ${plan.skipped.length?`<div class="rc-ok w"><span class="mi">info</span><span>${plan.skipped.length} code${plan.skipped.length>1?'s':''} with another prefix stay as they are.</span></div>`:''}
+      <div class="rc-ok g"><span class="mi">history</span><span>Old codes stay searchable in Location Log and are recorded in the audit log.</span></div>`;
+    dis(!!plan.conflicts.length||!plan.count);go.textContent=`Re-code ${plan.count} location${plan.count===1?'':'s'}`;};
+  d.querySelector('#rcAn').onclick=an;pre.addEventListener('keydown',e=>{if(e.key==='Enter')an();});
+  go.onclick=async()=>{if(!plan||go.hasAttribute('disabled'))return;dis(true);try{const r=await api('/api/projects/'+q.id+'/recode',{method:'POST',body:JSON.stringify({prefix:plan.new})});
+      close();toast(`Re-coded ${plan.count} locations to ${plan.new}`);after(r);if(String(q.id)===PJ.id){PJ.cur.prefix=plan.new;pjPaint();loadLocations();}}
+    catch(e){dis(false);toast('Failed: '+e.message);}};
+  setTimeout(()=>{const i=tfInput(pre);if(i)i.focus();},60);}
+
+/* --- Location data: tab Fields · Photos · Inventory (satu menu) --- */
+$$('#ldTabs button').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.k;if(k===curSetSub)return;guardLeave(()=>openSettings(k),b.textContent.trim());}));
+function ldTabsSync(sub){const on=['lokasi','photo','inventory'].includes(sub);$('#ldTabs').classList.toggle('hidden',!on);if(!on)return;
+  const n={lokasi:(S.locFields||[]).filter(f=>f.key!=='nama_lokasi').length,photo:(S.cats||[]).length,inventory:(S.invItems||[]).length};
+  $$('#ldTabs button').forEach(b=>{b.classList.toggle('on',b.dataset.k===sub);const i=b.querySelector('i');i.textContent=n[b.dataset.k];i.classList.toggle('zero',!n[b.dataset.k]);});}
+$('#bellBtn').addEventListener('click',()=>{if(SX.on){toast('Notifications open once the project is active');return;}navTo('notif');});
 
 /* Portfolio (admin & viewer): satu kartu per project */
 const PF_LT={good:'On track',warn:'Behind',bad:'At risk',none:'No pace yet'};
@@ -3350,17 +3738,18 @@ let PJM={rows:[],max:5,colors:[],sel:null,users:[]};
 async function loadProjects(keep){try{const r=await api('/api/projects');PJM.rows=r.projects;PJM.max=r.max;PJM.colors=r.colors;PJM.users=(await api('/api/users')).filter(u=>u.role!=='admin');}catch(e){toast('Failed: '+e.message);return;}
   pjmList();const cur=keep&&PJM.sel&&PJM.rows.find(x=>x.id===PJM.sel.id);pjmEdit(cur||PJM.rows.find(x=>String(x.id)===PJ.id)||PJM.rows[0]);}
 function pjmList(){$('#pjmList').innerHTML=PJM.rows.map(p=>`<div class="pjm-row${PJM.sel&&PJM.sel.id===p.id?' on':''}" data-id="${p.id}">${pjAv(p)}<span class="pj-tx"><span class="pj-nm">${esc(p.name)}</span>
-    <span class="pj-sb">${esc(p.prefix)} · ${p.members.length} ${p.members.length===1?'person':'people'} · ${p.done}/${p.total}${p.archived?' · archived':''}</span></span></div>`).join('');
+    <span class="pj-sb">${esc(p.prefix)} · ${p.members.length} ${p.members.length===1?'person':'people'} · ${p.status==='setup'?'<b class="pst setup">setup</b>':`${p.done}/${p.total}`}${p.status==='frozen'?' · <b class="pst frozen">frozen</b>':''}${p.archived?' · archived':''}</span></span></div>`).join('');
   $$('#pjmList .pjm-row').forEach(r=>r.onclick=()=>{pjmEdit(PJM.rows.find(x=>x.id===+r.dataset.id));});
   $('#pjm-new').toggleAttribute('disabled',PJM.rows.filter(p=>!p.archived).length>=PJM.max);}
 function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
   PJM.sel=p||{id:null,name:'',prefix:'',color:PJM.colors.find(c=>!used.has(c))||PJM.colors[0],members:[],prefix_locked:false,total:null,target_date:'',template:null,archived:false};
   const q=PJM.sel;pjmList();
   $('#pjmEd').innerHTML=`<div class="sec"><span class="mi acc">${isNew?'create_new_folder':'edit'}</span><h3>${isNew?'New project':esc(q.name)}</h3></div>
+    ${isNew?'<div class="pjm-hint" style="margin:-4px 0 14px">Starts in <b>Setup</b> with empty location data. Nobody can enter BAA until you finish setup and activate it.</div>':pjStatusStrip(q)}
     <div class="pjm-f">
       <div class="full"><md-text-field id="pjm-name" variant="outlined" label="Project name" value="${esc(q.name)}"></md-text-field></div>
       <div><md-text-field id="pjm-pre" variant="outlined" label="Location code prefix" value="${esc(q.prefix)}" maxlength="4" ${q.prefix_locked?'disabled':''}></md-text-field>
-        <div class="pjm-hint" id="pjm-next">${q.prefix_locked?`Next code: <b>${esc(q.next_code)}</b> · locked (codes already issued)`:`Next code: <b>${esc((q.prefix||'???').toUpperCase())}_${String(isNew?1:+(q.next_code||'_1').split('_').pop()).padStart(5,'0')}</b> · 2–4 letters, unique`}</div></div>
+        <div class="pjm-hint" id="pjm-next">${q.prefix_locked?`Next code: <b>${esc(q.next_code)}</b> · `+(q.status==='frozen'?`<a class="lnk" id="pjmRecode">Change prefix…</a> (${q.locations} location${q.locations===1?'':'s'} will be re-coded)`:'locked · freeze the project to change the prefix'):`Next code: <b>${esc((q.prefix||'???').toUpperCase())}_${String(isNew?1:+(q.next_code||'_1').split('_').pop()).padStart(5,'0')}</b> · 2–4 letters, unique`}</div></div>
       <div><div class="pjm-lab">Color</div><div class="pjm-sw">${PJM.colors.map(c=>`<button type="button" style="--c:${c}" data-c="${c}" class="${c===q.color?'on':''}" aria-label="${c}"></button>`).join('')}</div></div>
       <div><md-text-field id="pjm-total" variant="outlined" type="number" label="Target (BAA)" value="${q.total??''}"></md-text-field></div>
       <div><md-text-field id="pjm-date" variant="outlined" type="date" label="Target date" value="${esc(q.target_date||'')}"></md-text-field></div>
@@ -3391,6 +3780,7 @@ function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
     confirmDo('Count wilayah in progress?',`<b>${q.wil_missing} location${q.wil_missing>1?'s':''}</b> in ${esc(q.name)} ${q.wil_missing>1?'have':'has'} no wilayah yet. Their completeness will drop and a <b>Wilayah</b> chip will appear until it is filled.<br><br>Use <b>Set wilayah</b> in Location Log to fill many at once.`,()=>{},
       {okLabel:'Turn on',onCancel:()=>{sw.selected=false;ftSync();}});};
   $('#ft-wil').addEventListener('change',()=>{ftSync();ftWarn($('#ft-wil'));});$('#ft-prog').addEventListener('change',()=>{ftSync();ftWarn($('#ft-prog'));});ftSync();
+  if(!isNew)pjStatusBind(q);
   $('#pjm-save').onclick=()=>pjmSave();bindTips();revealCards($('#pjmEd').parentElement);}
 async function pjmSave(archived){const q=PJM.sel,isNew=!q.id;const tot=$('#pjm-total').value;
   const body={name:($('#pjm-name').value||'').trim(),prefix:($('#pjm-pre').value||'').trim(),color:q.color,total:tot?+tot:null,target_date:$('#pjm-date').value||null,
@@ -3447,14 +3837,14 @@ $$('.navitem[data-view]').forEach(n=>n.addEventListener('click',()=>{
   if(n.classList.contains('active'))run(); else guardLeave(run,n.querySelector('.lbl').textContent.trim());}));
 
 /* Sub-menu Pengaturan (accordion) */
-const SET_SUBS={lokasi:{id:'set-lokasi',title:'Location Fields'},inventory:{id:'set-inventory',title:'Inventory Fields'},
-  photo:{id:'set-photo',title:'Photo & Capture Fields'},backup:{id:'set-backup',title:'Backup & Restore'}};
+const SET_SUBS={lokasi:{id:'set-lokasi',title:'Location data'},inventory:{id:'set-inventory',title:'Location data'},
+  photo:{id:'set-photo',title:'Location data'},backup:{id:'set-backup',title:'Backup & Restore'}};
 let curSetSub='lokasi';
 function showSetSub(key){curSetSub=key;const cfg=SET_SUBS[key];
-  $$('.subnav').forEach(s=>s.classList.toggle('active',s.dataset.sub===key));
+  $$('.subnav').forEach(s=>s.classList.toggle('active',subOn(s,key)));
   Object.values(SET_SUBS).forEach(c=>{const el=$('#'+c.id);if(el)el.classList.toggle('hidden',c.id!==cfg.id);});
   const active=$('#'+cfg.id);if(active){active.classList.remove('setview');void active.offsetWidth;active.classList.add('setview');}
-  $('#pageTitle').textContent='Settings · '+cfg.title;$('#pageTitle').classList.remove('hidden');$('#topGrow').classList.remove('hidden');setSaveShow(key);}
+  $('#pageTitle').textContent=(typeof SX!=='undefined'&&SX.on?'Set up · ':'Settings · ')+cfg.title;$('#pageTitle').classList.remove('hidden');$('#topGrow').classList.remove('hidden');setSaveShow(key);}
 /* Save button + status in the title bar for field submenus (lokasi/inventory/photo) */
 const SETFS_SAVE={lokasi:{sel:'#lf-save',lbl:'Save fields'},inventory:{sel:'#di-save',lbl:'Save defaults'},photo:{sel:'#pc-save',lbl:'Save categories'}};
 function setSaveShow(key){const w=$('#setSaveWrap');if(!w)return;
@@ -3469,18 +3859,21 @@ function setSaveDirty(d){$('#setStatus').className='set-status '+(d?'dirty':'ok'
   v.addEventListener('click',e=>{if(SETFS_SAVE[curSetSub]&&e.target.closest('.segt button,.ecard-del,#lf-add,#di-add,#pc-add'))mark();});
   $('#setSaveBtn').addEventListener('click',()=>{const c=SETFS_SAVE[curSetSub];if(!c||$('#setSaveBtn').disabled)return;$(c.sel).click();setSaveDirty(false);});})();
 /* sub yang mengarah ke view tersendiri (bukan kartu di v-settings) */
-const SET_VIEWS={projects:{view:'projects',title:'Projects',load:()=>loadProjects()},users:{view:'users',title:'Users',load:()=>loadUsers()},templates:{view:'templates',title:'Template',load:()=>loadTemplates()}};
+const SET_VIEWS={projects:{view:'projects',title:'All projects',load:()=>loadProjects()},pjstatus:{view:'projects',title:'Project & status',load:()=>loadProjects()},
+  users:{view:'users',title:'Users',load:()=>loadUsers()},templates:{view:'templates',title:'Template BAA',load:()=>loadTemplates()},team:{view:'team',title:'Team',load:()=>loadTeam()}};
+const subOn=(s,sub)=>s.dataset.sub===sub||(s.dataset.grp==='data'&&['lokasi','photo','inventory'].includes(sub));
 function openSettings(sub){
-  sub=sub||curSetSub;pjChipShow(sub!=='projects'&&sub!=='users');
+  sub=sub||curSetSub;pjChipShow(!['projects','users','backup'].includes(sub));
+  $('#v-projects').classList.toggle('single',sub==='pjstatus');ldTabsSync(sub);
   $$('.navitem[data-view]').forEach(x=>x.classList.remove('active'));
   $('#setToggle').classList.add('active');$('#navSettings').classList.add('open');
   $('#entryTools').classList.add('hidden');$('#locTools').classList.add('hidden');
-  $$('.subnav').forEach(s=>s.classList.toggle('active',s.dataset.sub===sub));
+  $$('.subnav').forEach(s=>s.classList.toggle('active',subOn(s,sub)));
   curSetSub=sub;
   const sv=SET_VIEWS[sub];
   if(sv){
     VIEWS.forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!==sv.view);});
-    $('#pageTitle').textContent='Settings · '+sv.title;$('#pageTitle').classList.remove('hidden');$('#topGrow').classList.remove('hidden');$('#setSaveWrap').classList.add('hidden');sv.load();revealCards($('#v-'+sv.view));
+    $('#pageTitle').textContent=(typeof SX!=='undefined'&&SX.on?'Set up · ':'Settings · ')+sv.title;$('#pageTitle').classList.remove('hidden');$('#topGrow').classList.remove('hidden');$('#setSaveWrap').classList.add('hidden');sv.load();revealCards($('#v-'+sv.view));
   }else{
     VIEWS.forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!=='settings');});
     loadSettingsPage();showSetSub(sub);
@@ -3985,7 +4378,7 @@ function requiredCats(){return S.cats||[];} /* semua kategori wajib (konsep "req
 
 /* ENTRY */
 async function refreshPicker(){const r=await api('/api/locations/options');const opts=r.options||[];
-  $('#loc-count').textContent=r.total||'';
+  $('#loc-count').textContent=r.total||'';const an=$('#lgActN');if(an)an.textContent=r.total||'';lgTrashCount();
   pickerSel.setOptions(opts.map(l=>({value:String(l.id),code:l.code,nama:l.nama||'',status:l.status||'draft'})));
   if(S.loc)pickerSel.setValue(String(S.loc.id));}
 /* ---- Draft-first (#23): kode dibuat hanya saat ada data pertama ---- */
@@ -4814,7 +5207,7 @@ function fillLocDrawer(loc){
   const st=locDetailState(loc);const C=226,off=(C*(1-st.pct/100)).toFixed(1);
   const nama=(loc.data&&loc.data.nama_lokasi)||loc.name||'(no name)';
   const owner=loc.owner_name||'—';
-  const canEdit=loc.can_edit!==false;
+  const canEdit=loc.can_edit!==false&&!frozenRO();
   const stEn=loc.status==='selesai'?'DONE':'DRAFT';
   const data=loc.data||{};const fields=S.locFields||[];const cats=S.cats||[];
   // stat cells: field non-nama (maks 3)
@@ -4875,7 +5268,8 @@ function fillLocDrawer(loc){
   requestAnimationFrame(()=>{const p=$('#ldHero .ld-ring .prg');if(p)p.style.strokeDashoffset=off;});
   // FOOT
   const foot=$('#ldFoot');
-  if(canEdit){foot.innerHTML=`<button class="ld-btn" onclick="closeLocDrawer(()=>openFromLog(${loc.id}))"><span class="mi">edit</span>Edit in BAA Entry</button>`;}
+  if(frozenRO()){foot.innerHTML=`<button class="ld-btn req" disabled><span class="mi">ac_unit</span>Input paused</button>`;}
+  else if(canEdit){foot.innerHTML=`<button class="ld-btn" onclick="closeLocDrawer(()=>openFromLog(${loc.id}))"><span class="mi">edit</span>Edit in BAA Entry</button>`;}
   else if(loc.my_request==='pending'){foot.innerHTML=`<button class="ld-btn req" disabled><span class="mi">hourglass_top</span>Awaiting approval</button>`;}
   else{foot.innerHTML=`<button class="ld-btn req" id="ldReq"><span class="mi">lock_open</span>Request edit</button>`;$('#ldReq').onclick=()=>sendEditReq(loc.id,$('#ldReq'));}
 }
@@ -4919,7 +5313,7 @@ document.addEventListener('click',e=>{const dr=$('#ldDrawer');
 let NOTIF_ROWS=[];
 async function loadNotifCount(){if(!S.user||S.user.role!=='admin')return;
   try{const r=await api('/api/edit-requests/pending-count');const el=$('#notif-count');
-    if(el)el.textContent=r.count?String(r.count):'';}catch(e){}}
+    if(el)el.textContent=r.count?String(r.count):'';const b=$('#bellCount');if(b)b.textContent=r.count?String(r.count):'';}catch(e){}}
 async function loadNotif(){if(!S.user||S.user.role!=='admin')return;
   try{const r=await api('/api/edit-requests?status=all');NOTIF_ROWS=r.rows||[];renderNotif();loadNotifCount();}
   catch(e){toast('Failed: '+e.message);}}
@@ -4975,8 +5369,11 @@ async function doTransfer(l,u){try{const r=await api('/api/locations/transfer',{
 
 /* ===== Lokasi Terhapus (soft-delete) — admin ===== */
 let TRASH=[];
+let _lgTrT=0;
+async function lgTrashCount(){if(!S.user||S.user.role!=='admin'||Date.now()-_lgTrT<4000)return;_lgTrT=Date.now();
+  try{const r=await api('/api/locations/trash/list');const n=(r.rows||[]).length;const e=$('#lgDelN');if(e)e.textContent=n||'';}catch(e){}}
 async function loadTrash(){try{const r=await api('/api/locations/trash/list');TRASH=r.rows||[];
-  const el=$('#trash-count');if(el)el.textContent=r.total||'';renderTrash();}catch(e){toast('Failed: '+e.message);}}
+  const el=$('#trash-count');if(el)el.textContent=r.total||'';const e2=$('#trash-count2');if(e2)e2.textContent=r.total||'';renderTrash();}catch(e){toast('Failed: '+e.message);}}
 function renderTrash(){$('#trash-table').innerHTML=(TRASH.length?TRASH.map(l=>`<tr>
   <td class="mono">${esc(l.code)}</td><td>${esc(l.name||'—')}</td><td>${esc(l.owner_name||'—')}</td>
   <td class="mono" style="white-space:nowrap">${fmtDateTime(l.deleted_at)}</td><td>${esc(l.deleted_by_name||'—')}</td>
@@ -5606,15 +6003,22 @@ document.addEventListener('change',e=>{const c=e.target;if(c.matches&&c.matches(
   if(c.dataset.k==='ocr'){const card=c.closest('.ecard.pc');const sf=card&&card.querySelector('.snitem-f');if(sf)sf.style.display=c.checked?'':'none';}}});
 function delBtnCell(){return `<button type="button" class="ecard-del" data-tip="Delete" onclick="this.closest('.ecard').remove()"><span class="mi">close</span></button>`;}
 function pill(k,label,on){return `<label class="tg ${on?'on':''}"><input type="checkbox" data-k="${k}" ${on?'checked':''} hidden><span class="sw"></span>${label}</label>`;}
-function lfRow(f={}){return `<div class="ecard lf" data-lf>
+function lfRow(f={}){const sys=f.key==='nama_lokasi';return `<div class="ecard lf${sys?' lf-sys':''}" data-lf${sys?' data-tip="System field — always required, used for search &amp; import. Only its label can change."':''}>
   <div class="erow">
-    <input class="keyf" data-k="key" placeholder="key" value="${esc(f.key)}">
+    <input class="keyf" data-k="key" placeholder="key" value="${esc(f.key)}"${sys?' readonly':''}>
     <input class="labelf" data-k="label" placeholder="Field name" value="${esc(f.label)}">
     <div class="segt" data-seg><button type="button" data-v="text" class="${f.type!=='date'?'on':''}">Text</button><button type="button" data-v="date" class="${f.type==='date'?'on':''}">Date</button></div>
     ${pill('required','Required',f.required)}${delBtnCell()}
   </div></div>`;}
-function renderLF(){$('#lf-list').innerHTML=(S.locFields||[]).map(lfRow).join('');bindTips();}
+function renderLF(){$('#lf-list').innerHTML=(S.locFields||[]).map(lfRow).join('');lfSug();bindTips();}
 $('#lf-add').addEventListener('click',()=>{$('#lf-list').insertAdjacentHTML('beforeend',lfRow());bindTips();});
+/* Saran field umum (project baru mulai kosong) */
+const LF_SUG=[{key:'tanggal',label:'Tanggal Aktivasi',type:'date'},{key:'teknisi',label:'Teknisi',type:'text'},{key:'pic',label:'PIC Lokasi',type:'text'},
+  {key:'hp_pic',label:'No. HP PIC',type:'text'},{key:'alamat',label:'Alamat',type:'text'}];
+function lfSug(){const host=$('#lf-sug');if(!host)return;const have=new Set($$('#lf-list [data-k="key"]').map(i=>(i.value||'').trim()));
+  const L=LF_SUG.filter(f=>!have.has(f.key));host.innerHTML=L.length?`<span class="muted">Quick add:</span>${L.map(f=>`<button type="button" data-key="${f.key}">+ ${esc(f.label)}</button>`).join('')}`:'';
+  host.querySelectorAll('button').forEach(b=>b.onclick=()=>{const f=LF_SUG.find(x=>x.key===b.dataset.key);$('#lf-list').insertAdjacentHTML('beforeend',lfRow({...f,required:false}));
+    $('#lf-list').lastElementChild.dispatchEvent(new Event('input',{bubbles:true}));lfSug();bindTips();});}
 $('#lf-save').addEventListener('click',async()=>{const fields=$$('#lf-list .ecard').map(r=>{const g=k=>r.querySelector(`[data-k="${k}"]`);
   const seg=r.querySelector('.segt button.on');
   return {key:(g('key').value||'').trim(),label:(g('label').value||'').trim(),type:seg?seg.dataset.v:'text',required:g('required').checked};}).filter(f=>f.key&&f.label);

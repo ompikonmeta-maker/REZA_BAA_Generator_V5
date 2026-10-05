@@ -22,12 +22,16 @@ def get_hub():
 
 
 def current_user(
+    request: Request,
     conn: sqlite3.Connection = Depends(get_hub),
     reza_baa_session: Optional[str] = Cookie(default=None),
 ):
     user = auth.get_session_user(conn, reza_baa_session)
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not signed in")
+    # Password default/sementara wajib diganti dulu: semua API lain ditolak di server
+    if user["must_change"] and not request.url.path.startswith("/api/auth/"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Change your password first")
     _touch_seen(conn, user)
     return user
 
@@ -47,13 +51,13 @@ def _touch_seen(conn: sqlite3.Connection, user) -> None:
 
 
 def accessible_projects(hub: sqlite3.Connection, user) -> list:
-    """Project yang boleh dibuka user: admin semua (termasuk arsip), lainnya
-    hanya project aktif tempat ia jadi anggota."""
+    """Project yang boleh dibuka user: admin semua (termasuk arsip & Setup), lainnya
+    hanya project tidak diarsip, sudah diaktifkan (bukan Setup), tempat ia jadi anggota."""
     if user["role"] == "admin":
         return hub.execute("SELECT * FROM projects ORDER BY archived, id").fetchall()
     return hub.execute(
         "SELECT p.* FROM projects p JOIN project_members m ON m.project_id=p.id "
-        "WHERE m.user_id=? AND p.archived=0 ORDER BY p.id", (user["id"],)).fetchall()
+        "WHERE m.user_id=? AND p.archived=0 AND p.status<>'setup' ORDER BY p.id", (user["id"],)).fetchall()
 
 
 def current_project(request: Request, hub: sqlite3.Connection = Depends(get_hub),
@@ -71,6 +75,31 @@ def current_project(request: Request, hub: sqlite3.Connection = Depends(get_hub)
             raise HTTPException(status.HTTP_403_FORBIDDEN, detail="No access to this project")
         return by_id[want]
     return by_id.get(request.cookies.get(PROJECT_COOKIE) or "", rows[0])
+
+
+def gate_reason(project, user) -> str | None:
+    """Alasan input data ditolak untuk project ini, atau None bila boleh.
+    Setup: semua (termasuk admin). Frozen: semua kecuali admin."""
+    st = project["status"] if "status" in project.keys() else "active"
+    if st == "setup":
+        return "This project is still being set up. Input opens once admin activates it."
+    if st == "frozen" and user["role"] != "admin":
+        msg = (project["freeze_msg"] or "").strip()
+        return "Project is frozen — input is paused." + (f" {msg}" if msg else "")
+    return None
+
+
+def data_gate(request: Request, project=Depends(current_project), user=Depends(current_user)):
+    """Dipasang di router data (lokasi, foto, scan, import, export, permintaan edit).
+    Baca (GET) tetap boleh; tulis & semua export ditolak bila project Setup/Frozen."""
+    path = request.url.path
+    if path.startswith("/api/export/jobs/"):          # status/batal/unduh job yang sudah berjalan
+        return
+    if request.method in ("GET", "HEAD") and not path.startswith("/api/export/"):
+        return
+    why = gate_reason(project, user)
+    if why:
+        raise HTTPException(status.HTTP_423_LOCKED, detail=why)
 
 
 def get_db(project=Depends(current_project)):

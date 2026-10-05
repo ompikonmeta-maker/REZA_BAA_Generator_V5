@@ -62,7 +62,11 @@ CREATE TABLE IF NOT EXISTS projects (
     archived   INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     wilayah_on       INTEGER NOT NULL DEFAULT 1,   -- fitur data wilayah
-    wilayah_progress INTEGER NOT NULL DEFAULT 1    -- wilayah dihitung dalam kelengkapan lokasi
+    wilayah_progress INTEGER NOT NULL DEFAULT 1,   -- wilayah dihitung dalam kelengkapan lokasi
+    status     TEXT NOT NULL DEFAULT 'active',     -- setup | active | frozen
+    freeze_msg TEXT DEFAULT '',                    -- pesan untuk user saat frozen
+    frozen_by  TEXT DEFAULT '',
+    frozen_at  TEXT
 );
 
 CREATE TABLE IF NOT EXISTS project_members (
@@ -107,7 +111,8 @@ CREATE TABLE IF NOT EXISTS locations (
     done_at     TEXT,
     wil_kode    TEXT,                             -- kode desa Kemendagri; mode desa_manual = kode kecamatan
     wil_desa    TEXT, wil_kec TEXT, wil_kab TEXT, wil_prov TEXT,  -- nama SESUAI TULISAN TEKNISI (dicetak)
-    wil_mode    TEXT                              -- official | desa_manual | manual
+    wil_mode    TEXT,                             -- official | desa_manual | manual
+    old_codes   TEXT                              -- kode lama setelah ganti prefix, dipisah spasi (bisa dicari)
 );
 
 CREATE TABLE IF NOT EXISTS inventory_items (
@@ -172,7 +177,17 @@ CREATE TABLE IF NOT EXISTS scan_docs (
     created_at  TEXT NOT NULL
 );
 
+-- Riwayat export per lokasi (peringatan saat ganti prefix: file terkirim memakai kode lama)
+CREATE TABLE IF NOT EXISTS export_log (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    location_id INTEGER NOT NULL,
+    kind        TEXT NOT NULL,                   -- excel | pdf | pdfzip
+    user_id     INTEGER,
+    created_at  TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_inv_loc ON inventory_items(location_id);
+CREATE INDEX IF NOT EXISTS ix_export_loc ON export_log(location_id);
 CREATE INDEX IF NOT EXISTS idx_photo_loc ON photos(location_id);
 CREATE INDEX IF NOT EXISTS ix_activity_time ON activity(created_at);
 """
@@ -199,6 +214,14 @@ DEFAULT_PHOTO_CATEGORIES = [
 
 # Default baris inventory untuk lokasi baru (prefilled nama perangkat)
 DEFAULT_INVENTORY_ITEMS = ["Kit Starlink", "Router", "Access Point"]
+
+# Pengaturan project BARU (lewat mode Setup): selalu mulai kosong, hanya field sistem Nama Lokasi
+EMPTY_PROJECT_SETTINGS = {
+    "photo_categories": [],
+    "default_inventory_items": [],
+    "item_merks": {},
+    "inventory_keterangan": ["OK"],
+}
 
 # Field lokasi default (bisa ditambah custom field lewat Pengaturan)
 DEFAULT_LOCATION_FIELDS = [
@@ -277,6 +300,12 @@ def _migrate_hub(conn: sqlite3.Connection) -> None:
             conn.execute(f"ALTER TABLE projects ADD COLUMN {col} INTEGER NOT NULL DEFAULT 1")
     if not _has_column(conn, "audit_log", "project_id"):
         conn.execute("ALTER TABLE audit_log ADD COLUMN project_id INTEGER")
+    # Siklus project: project lama otomatis 'active' (pengaturan lama tetap dipakai)
+    if not _has_column(conn, "projects", "status"):
+        conn.execute("ALTER TABLE projects ADD COLUMN status TEXT NOT NULL DEFAULT 'active'")
+    for col, typ in (("freeze_msg", "TEXT DEFAULT ''"), ("frozen_by", "TEXT DEFAULT ''"), ("frozen_at", "TEXT")):
+        if not _has_column(conn, "projects", col):
+            conn.execute(f"ALTER TABLE projects ADD COLUMN {col} {typ}")
     conn.commit()
 
 
@@ -385,7 +414,7 @@ def init_project_db(p, base: dict | None = None) -> None:
     try:
         conn.execute("PRAGMA journal_mode = WAL")
         conn.executescript(PROJECT_SCHEMA)
-        for col in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_mode"):
+        for col in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_mode", "old_codes"):
             if not _has_column(conn, "locations", col):
                 conn.execute(f"ALTER TABLE locations ADD COLUMN {col} TEXT")
         conn.execute("CREATE INDEX IF NOT EXISTS ix_loc_wil ON locations(wil_kode)")
@@ -451,9 +480,9 @@ def _move_legacy_to_project(hub: sqlite3.Connection, p) -> None:
 
 
 def create_project(hub: sqlite3.Connection, name: str, prefix: str, color: str,
-                   base: dict | None = None) -> int:
-    cur = hub.execute("INSERT INTO projects(name, prefix, color, db_file, created_at) VALUES(?,?,?,?,?)",
-                      (name, prefix.upper(), color, "", now_iso()))
+                   base: dict | None = None, status: str = "active") -> int:
+    cur = hub.execute("INSERT INTO projects(name, prefix, color, db_file, created_at, status) VALUES(?,?,?,?,?,?)",
+                      (name, prefix.upper(), color, "", now_iso(), status))
     pid = cur.lastrowid
     hub.execute("UPDATE projects SET db_file=? WHERE id=?", (f"p{pid}/project.db", pid))
     hub.commit()
@@ -558,14 +587,14 @@ def init_db() -> None:
                 ("admin", hash_password("admin"), "admin", "Administrator", 1, now_iso()),
             )
         conn.commit()
-        # Project pertama: dari data lama (bila ada) atau kosong untuk instalasi baru.
-        if not conn.execute("SELECT 1 FROM projects LIMIT 1").fetchone():
+        # Data lama (pra multi-project) -> project pertama. Instalasi baru TIDAK membuat
+        # project otomatis: admin membuatnya sendiri lalu menyiapkannya di mode Setup.
+        if not conn.execute("SELECT 1 FROM projects LIMIT 1").fetchone() and _has_table(conn, "locations"):
             pid = create_project(conn, "Project 1", "LOK", PROJECT_COLORS[0])
             p = conn.execute("SELECT * FROM projects WHERE id=?", (pid,)).fetchone()
-            if _has_table(conn, "locations"):
-                _move_legacy_to_project(conn, p)
-                conn.execute("UPDATE audit_log SET project_id=? WHERE project_id IS NULL "
-                             "AND entity NOT IN ('user','data')", (pid,))
+            _move_legacy_to_project(conn, p)
+            conn.execute("UPDATE audit_log SET project_id=? WHERE project_id IS NULL "
+                         "AND entity NOT IN ('user','data')", (pid,))
             # Semua user lama mendapat akses ke project pertama (perilaku sama seperti sebelumnya)
             conn.execute("INSERT OR IGNORE INTO project_members(project_id, user_id) "
                          "SELECT ?, id FROM users WHERE role <> 'admin'", (pid,))

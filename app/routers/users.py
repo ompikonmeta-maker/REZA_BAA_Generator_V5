@@ -50,6 +50,11 @@ def create_user(body: UserIn, conn: sqlite3.Connection = Depends(get_hub),
         raise HTTPException(400, "Invalid role")
     if conn.execute("SELECT 1 FROM users WHERE username=?", (body.username.strip(),)).fetchone():
         raise HTTPException(400, "Username already taken")
+    # Password kosong -> dibuatkan password sementara (wajib diganti saat login pertama)
+    temp = None
+    if not body.password:
+        import secrets
+        temp = body.password = "".join(secrets.choice("abcdefghjkmnpqrstuvwxyz23456789") for _ in range(8))
     if len(body.password) < 4:
         raise HTTPException(400, "Password needs at least 4 characters")
     cur = conn.execute(
@@ -61,7 +66,7 @@ def create_user(body: UserIn, conn: sqlite3.Connection = Depends(get_hub),
     _set_projects(conn, cur.lastrowid, body.projects)
     conn.commit()
     audit(conn, user, "create", "user", cur.lastrowid, body.username)
-    return {"ok": True, "id": cur.lastrowid}
+    return {"ok": True, "id": cur.lastrowid, "temp_password": temp}
 
 
 @router.put("/users/{uid}")
