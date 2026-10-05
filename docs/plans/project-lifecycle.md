@@ -1,6 +1,6 @@
 # Rencana: Setup → Active ⇄ Frozen + Ganti Prefix Kode
 
-Status: **Disetujui (mockup), belum diimplementasi** · 2026-10-05
+Status: **Disetujui (mockup), belum diimplementasi** · 2026-10-05 · revisi: flow admin, mode Setup di sidebar, susunan menu baru
 
 ## Tujuan
 Tidak ada yang bisa entry BAA sebelum admin selesai menyiapkan project. Admin bisa membekukan project kapan saja untuk konfigurasi ulang, termasuk mengganti prefix kode pada project yang sudah berisi data.
@@ -8,9 +8,10 @@ Tidak ada yang bisa entry BAA sebelum admin selesai menyiapkan project. Admin bi
 ## Keputusan
 | Topik | Keputusan |
 |---|---|
-| Item wajib sebelum Activate | Nama & prefix, **template BAA + mapping**, **akses tim** (min. 1 operator), **password admin sudah diganti** dari default |
+| Item wajib sebelum Activate | **Location data** (min. 1 field + 1 kategori foto), **template BAA + mapping**, **akses tim** (min. 1 operator) |
+| Password admin | **Dipaksa diganti saat login pertama** (bukan item checklist, karena berlaku per akun, bukan per project) |
 | Target & deadline | **Opsional**, boleh menyusul (variabel yang bisa berubah) |
-| Field lokasi · kategori foto · inventory · wilayah | Sudah terisi default, hanya ditandai "Review" (tidak memblok) |
+| Field lokasi · kategori foto · inventory untuk project baru | **Selalu mulai kosong** (tidak menyalin dari project lain). Nama Lokasi tetap ada sebagai field sistem terkunci. Inventory opsional. Wilayah default ON |
 | Admin sebelum Activate | **Ikut diblokir** entry |
 | Frozen: operator & viewer | **Semua diblokir**: entry, edit, upload foto/scan, import, **export**. Masih bisa melihat data |
 | Frozen: admin | Boleh ubah konfigurasi **dan** edit data lokasi |
@@ -57,6 +58,57 @@ Tidak ada yang bisa entry BAA sebelum admin selesai menyiapkan project. Admin bi
 
 ## Catatan
 - Pencatatan export **belum ada** saat ini → perlu log export baru (lokasi + jenis + waktu + user). Peringatan "sudah di-export" hanya akurat untuk export setelah fitur ini aktif.
-- Password admin: item checklist tercentang bila password akun admin sudah bukan default `admin123`.
 - Prefix yang belum pernah menerbitkan kode tetap bisa diganti langsung seperti sekarang (tanpa Freeze/analisa).
-- Mockup: Setup checklist, layar "not ready", Active, dialog Freeze, Frozen, analisa ganti prefix, operator Dashboard & BAA Entry saat Frozen.
+- Mockup: Setup checklist, layar "not ready", Active, dialog Freeze, Frozen, analisa ganti prefix, operator Dashboard & BAA Entry saat Frozen; revisi: ganti password login pertama, buat project pertama, mode Setup (Overview, Location data, Team), menu baru.
+- Checklist di Settings › Projects (mockup pertama) **digantikan** oleh Overview mode Setup; strip status Active/Frozen tetap di "Project & status".
+
+## Flow admin (revisi UX)
+### Masalah flow lama
+- Settings mencampur pengaturan **global** (Projects, Users, Backup) dan **per project** (Template, Fields, Photo, Inventory) tanpa pembeda; konteks project hanya dari pemilih di sidebar → rawan mengedit project yang salah.
+- Setup project butuh ±6 perpindahan halaman + 1 reload (Manage template = pindah project), dan bolak-balik Users ↔ Projects untuk memberi akses.
+- Checklist tanpa "rumah": tiap link membawa admin keluar tanpa jalan kembali.
+
+### Instalasi baru
+```
+Login → wajib ganti password (layar penuh, langkah 1/2)
+→ "Create your first project" (nama · prefix · warna, langkah 2/2)
+→ langsung masuk mode Setup
+```
+
+### Mode Setup (sidebar = langkah)
+Saat project yang dipilih berstatus Setup, menu operasional (Dashboard, Progress, BAA Entry, Location Log) **disembunyikan**; sidebar berubah menjadi:
+```
+[BTS] BTS Jatim · SETUP
+SET UP THIS PROJECT
+  ● Overview        ← progres x/3, kartu tiap langkah, tombol Activate project
+  ○ Location data   ← tab Location fields · Photos · Inventory (mulai kosong)
+  ○ Template BAA    ← upload + mapping (butuh Location data dulu)
+  ○ Team            ← akses + "+ New user" langsung di sini
+  ○ Target          (optional)
+WORKSPACE
+  All projects · Users
+```
+- **Urutan**: Location data → Template BAA, karena mapping template butuh field & kategori foto yang sudah ada.
+- Tiap langkah punya status (✓ / ! / –) dan tombol **Back / Next: …** di bawah halaman → admin cukup turun dari atas ke bawah.
+- Location data kosong: Nama Lokasi (sistem, terkunci) + empty state "Add the fields technicians must fill" dengan **chip saran** (Tanggal Aktivasi, Teknisi, PIC Lokasi, No. HP PIC, Alamat, Koordinat) + "Add field". Syarat: min. 1 field + 1 kategori foto.
+- Team: form inline (Full name · Username · Role · Add) → akun baru langsung dapat akses ke project ini + password sementara untuk dibagikan; user lain lewat switch. Syarat: min. 1 operator.
+- Pindah antar langkah **tanpa reload** dan tanpa pindah project.
+- Setelah **Activate**, sidebar kembali ke menu normal dan admin mendarat di Dashboard project.
+- Project ke-2 dst.: "New project" → flow yang sama (mulai kosong).
+
+### Susunan menu baru (project Active)
+```
+Portfolio · Dashboard · Progress · BAA Entry · Location Log · Settings
+Settings
+  [LOK] THIS PROJECT → Project & status · Template BAA · Location data · Team
+  WORKSPACE          → All projects · Users · Backup & Restore
+```
+- **Import Locations** → tombol "Import locations" di Location Log.
+- **Deleted Locations** → tab segmented **Active · N | Deleted · N** di Location Log.
+- **Notifications** → ikon lonceng + badge di footer sidebar (samping ganti password/tema/logout).
+- "Location data" menyatukan Location Fields, Inventory Fields, Photo & Capture Fields (tab).
+- "Project & status" = editor project + strip status (Freeze/Unfreeze, Change prefix).
+- Chip project di judul grup "This project" → admin selalu tahu project mana yang diedit.
+
+### Pertanyaan terbuka
+- Project lama (LOK, SKL, PKM) diasumsikan **tetap memakai pengaturan yang ada & otomatis Active** — menunggu konfirmasi.
