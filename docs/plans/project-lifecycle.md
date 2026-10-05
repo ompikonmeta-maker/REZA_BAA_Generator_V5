@@ -11,7 +11,7 @@ Tidak ada yang bisa entry BAA sebelum admin selesai menyiapkan project. Admin bi
 | Item wajib sebelum Activate | **Location data** (min. 1 field + 1 kategori foto), **template BAA + mapping**, **akses tim** (min. 1 operator) |
 | Password admin | **Dipaksa diganti saat login pertama** (bukan item checklist, karena berlaku per akun, bukan per project) |
 | Target & deadline | **Opsional**, boleh menyusul (variabel yang bisa berubah) |
-| Field lokasi · kategori foto · inventory untuk project baru | **Selalu mulai kosong** (tidak menyalin dari project lain). Nama Lokasi tetap ada sebagai field sistem terkunci. Inventory opsional. Wilayah default ON |
+| Field lokasi · kategori foto · inventory untuk project baru | **Revisi 2026-10-05** (menggantikan "selalu mulai kosong"): project **pertama** memakai **pengaturan bawaan BAA**; project **berikutnya** admin memilih sumber: *Pengaturan bawaan BAA* · *Salin dari project lain* · *Kosong*. Nama Lokasi tetap field sistem terkunci. Wilayah default ON |
 | Admin sebelum Activate | **Ikut diblokir** entry |
 | Frozen: operator & viewer | **Semua diblokir**: entry, edit, upload foto/scan, import, **export**. Masih bisa melihat data |
 | Frozen: admin | Boleh ubah konfigurasi **dan** edit data lokasi |
@@ -108,3 +108,13 @@ Settings
 - Pencatatan export **belum ada** saat ini → perlu log export baru (lokasi + jenis + waktu + user). Peringatan "sudah di-export" hanya akurat untuk export setelah fitur ini aktif.
 - Prefix yang belum pernah menerbitkan kode tetap bisa diganti langsung seperti sekarang (tanpa Freeze/analisa).
 - Mockup: Setup checklist, layar "not ready", Active, dialog Freeze, Frozen, analisa ganti prefix, operator Dashboard & BAA Entry saat Frozen; revisi: ganti password login pertama, buat project pertama, mode Setup (Overview, Location data, Team), menu baru.
+
+## Revisi: isi awal project baru (2026-10-05) — dicatat, menunggu "gas"
+| Topik | Keputusan |
+|---|---|
+| Project pertama (layar Create your first project) | Langsung terisi **pengaturan bawaan BAA**: 4 field (Nama Lokasi, Tanggal Aktivasi, Teknisi, PIC Lokasi), 11 kategori foto, 3 inventory (Kit Starlink, Router, Access Point) — sesuai template BAA resmi, sehingga mapping template hampir langsung cocok |
+| Project ke-2 dst. (New project) | Pilihan **Mulai dari**: `Pengaturan bawaan BAA` (default) · `Salin dari project lain` (pilih project; menyalin field, kategori foto, inventory, notes/merk) · `Kosong` (hanya Nama Lokasi) |
+| Konfirmasi Location data | Bila project terisi dari bawaan/salinan, langkah **Location data** berstatus **Check** (oranye, belum ✓). Admin wajib membuka sekali, meninjau, lalu klik **Looks good — confirm** → baru ✓. Banner di atas tab: "Default BAA settings are filled in. Check …, then confirm." Pilihan *Kosong* tetap memakai syarat lama (min. 1 field + 1 kategori foto) |
+| Activate | Tetap butuh Location data ✓ (terkonfirmasi) + Template + Team |
+| Panduan | Topik Setup & Location data diperbarui (teks + screenshot) |
+
