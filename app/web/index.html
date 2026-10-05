@@ -1102,12 +1102,6 @@
   .ld-hstat.miss .v{color:#ffb4ab}
   /* ===== BODY (terang, scroll) ===== */
   .ld-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding:16px 16px 8px}
-  .ld-act.pend{border-color:color-mix(in srgb,var(--md-sys-color-primary) 40%,transparent);background:color-mix(in srgb,var(--md-sys-color-primary) 6%,var(--md-sys-color-surface))}
-  .ld-act.pend .s{color:var(--md-sys-color-primary)}
-  .ld-pth{width:52px;height:40px;border-radius:9px;object-fit:cover;flex:0 0 auto}
-  .ld-pbtn{flex:0 0 auto;border:0;cursor:pointer;border-radius:999px;font:var(--md-sys-typescale-label-large);font-weight:600}
-  .ld-pbtn.x{background:none;color:var(--md-sys-color-on-surface-variant);width:34px;height:34px;display:grid;place-items:center}.ld-pbtn.x .mi{font-size:18px}
-  .ld-pbtn.save{background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);padding:8px 16px}
   .ld-body{animation:ldswap .34s cubic-bezier(.2,0,0,1)}
   @keyframes ldswap{from{opacity:0;transform:translateY(8px)}}
   .ld-sec{display:flex;align-items:baseline;gap:8px;margin:6px 2px 9px}
@@ -1115,12 +1109,39 @@
   .ld-sec .t{font-size:15px;font-weight:700;color:var(--md-sys-color-on-surface)}
   .ld-sec .n{margin-left:auto;font-size:12.5px;font-weight:700;color:var(--md-sys-color-on-surface-variant)}
   .ld-sec .n.warnc{color:var(--bad)}.ld-sec .n.okc{color:var(--good)}
-  .ld-act{display:flex;align-items:center;gap:12px;background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-surface-container-high);border-radius:16px;padding:13px 14px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.06)}
-  .ld-act .txt{min-width:0;flex:1}
-  .ld-act .h{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--md-sys-color-on-surface)}
-  .ld-act .s{font-size:12px;color:var(--md-sys-color-on-surface-variant);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ld-add{flex:0 0 auto;width:38px;height:38px;border-radius:12px;border:none;background:var(--warn-bg);color:var(--warn);font-size:20px;cursor:pointer;display:grid;place-items:center}
-  .ld-add:hover{filter:brightness(.97)}.ld-add:disabled{opacity:.5;cursor:default}
+  .ld-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+  .ld-tile{position:relative;aspect-ratio:1;border:1.5px dashed color-mix(in srgb,var(--warn) 55%,var(--md-sys-color-outline-variant));border-radius:var(--md-sys-shape-corner-medium,12px);background:none;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:6px 5px;text-align:center;color:var(--md-sys-color-on-surface-variant);font:inherit;transition:background .15s,border-color .15s,transform .15s}
+  button.ld-tile{cursor:pointer}
+  .ld-tile .mi{font-size:22px;color:var(--warn)}
+  .ld-tile small{font-size:10px;font-weight:600;line-height:1.2;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .ld-tile .plus{position:absolute;right:5px;top:5px;width:18px;height:18px;border-radius:6px;background:var(--warn-bg);color:var(--warn);display:grid;place-items:center;font-size:13px;font-weight:700;line-height:1;opacity:0;transition:opacity .15s}
+  button.ld-tile:hover{background:color-mix(in srgb,var(--warn) 8%,transparent);border-color:var(--warn);transform:translateY(-1px)}
+  button.ld-tile:hover .plus,button.ld-tile:focus-visible .plus{opacity:1}
+  .ld-tile.pend{border:2px solid var(--md-sys-color-primary);padding:0;overflow:hidden}
+  .ld-tile.pend img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .ld-tile.pend .tag{position:absolute;left:5px;top:5px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:99px;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary)}
+  .ld-tile.pend .bar{position:absolute;left:0;right:0;bottom:0;display:flex;gap:4px;padding:4px;background:linear-gradient(transparent,rgba(0,0,0,.75))}
+  .ld-tile.pend .bar button{border:0;cursor:pointer;border-radius:7px;height:22px;font:inherit;font-size:10.5px;font-weight:700}
+  .ld-tile.pend .bar .sv{flex:1;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary)}
+  .ld-tile.pend .bar .x{width:22px;background:rgba(255,255,255,.2);color:#fff}
+  .ld-doc{display:flex;align-items:center;gap:12px;border-radius:14px;padding:10px 12px;margin-bottom:4px;color:inherit;text-decoration:none}
+  .ld-doc.miss{border:1.5px dashed color-mix(in srgb,var(--warn) 55%,var(--md-sys-color-outline-variant))}
+  .ld-doc.miss.wr{cursor:pointer;transition:background .15s,border-color .15s}
+  .ld-doc.miss.wr:hover{background:color-mix(in srgb,var(--warn) 8%,transparent);border-color:var(--warn)}
+  .ld-doc.ok{background:var(--md-sys-color-surface);border:1px solid var(--md-sys-color-surface-container-high);cursor:pointer}
+  .ld-doc .ic{position:relative;overflow:hidden;width:36px;height:46px;flex:none;border-radius:6px;display:grid;place-items:center}
+  .ld-doc.miss .ic{background:var(--warn-bg);color:var(--warn)}
+  .ld-doc.ok .ic{background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-primary)}
+  .ld-doc.ok .ic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#fff}
+  .ld-doc .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .ld-doc .tx b{font-size:13.5px;font-weight:700;color:var(--md-sys-color-on-surface);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ld-doc .tx span{font-size:11.5px;color:var(--md-sys-color-on-surface-variant);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ld-doc .act{flex:none;height:30px;padding:0 12px;border-radius:99px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700}
+  .ld-doc.miss .act{background:var(--warn-bg);color:var(--warn)}
+  .ld-doc.ok .act{color:var(--md-sys-color-primary)}
+  .ld-doc .act .mi{font-size:18px}
+  .ld-doc.busy{opacity:.6;pointer-events:none}
   .ld-done{display:flex;align-items:center;gap:12px;background:var(--md-sys-color-surface-container);border-radius:16px;padding:11px 14px;cursor:pointer}
   .ld-stack{display:flex;flex:0 0 auto}
   .ld-stack .th{width:34px;height:34px;border-radius:9px;border:2px solid var(--md-sys-color-surface);margin-left:-10px;object-fit:cover;box-shadow:0 1px 2px rgba(0,0,0,.10);background:var(--md-sys-color-surface-container-highest)}
@@ -2422,6 +2443,7 @@
   <div class="ld-foot" id="ldFoot"></div>
 </aside>
 <input type="file" id="ldFile" accept="image/*" multiple hidden>
+<input type="file" id="ldScanFile" accept="application/pdf,.pdf" hidden>
 
 <!-- Guard: perubahan belum disimpan (Opsi B) -->
 <div class="uns-ov" id="unsOv"><div class="uns-box">
@@ -4785,6 +4807,8 @@ async function ldSaveOne(pid,quiet){const p=LD_PEND.find(x=>x.id===pid);if(!p)re
 async function ldSaveAll(){for(const p of [...LD_PEND]){if(!await ldSaveOne(p.id,true))return false;}toast('Photos saved ✓');return true;}
 window.ldSavePend=pid=>ldSaveOne(pid);
 window.ldDropPend=pid=>{const p=LD_PEND.find(x=>x.id===pid);if(p)URL.revokeObjectURL(p.url);LD_PEND=LD_PEND.filter(x=>x.id!==pid);ldRefill();};
+const LD_ICON={dashboard:'monitoring',tampak_depan:'storefront',teknisi:'groups',outdoor:'satellite_alt',indoor:'router',
+  sn_kit:'qr_code_2',sn_router:'qr_code_2',sn_ap:'qr_code_2',ping:'network_ping',speed:'speed',simkopdes:'language'};
 const LD_STAT_SHORT={tanggal:'Activation',teknisi:'Teknisi',pic:'PIC'};
 function fillLocDrawer(loc){
   const st=locDetailState(loc);const C=226,off=(C*(1-st.pct/100)).toFixed(1);
@@ -4816,10 +4840,22 @@ function fillLocDrawer(loc){
   const invHave=reqNames.filter(n=>inv.some(r=>((r.nama_barang||'')+'').trim()===n&&rowComplete(r))).length;
   // BODY — perlu tindakan (foto belum) + foto lengkap + perangkat
   const missCats=cats.filter(c=>!st.byCat[c.key]);
-  const actHtml=missCats.map(c=>{const pend=LD_PEND.filter(p=>p.loc===loc.id&&p.cat===c.key);
-    if(pend.length)return pend.map(p=>`<div class="ld-act pend"><img class="ld-pth" src="${p.url}" alt=""><div class="txt"><div class="h">${esc(c.label)}</div><div class="s">${esc(p.file.name)} · not saved</div></div>
-      <button class="ld-pbtn x" onclick="ldDropPend(${p.id})" aria-label="Remove"><span class="mi">close</span></button><button class="ld-pbtn save" onclick="ldSavePend(${p.id})">Save</button></div>`).join('');
-    return `<div class="ld-act"><div class="txt"><div class="h">${esc(c.label)}</div><div class="s">Not uploaded</div></div>${canEdit?`<button class="ld-add" onclick="ldPickPhoto(${loc.id},'${c.key}')">+</button>`:''}</div>`;}).join('');
+  const tileHtml=missCats.map(c=>{const pend=LD_PEND.filter(p=>p.loc===loc.id&&p.cat===c.key);
+    if(pend.length)return pend.map(p=>`<div class="ld-tile pend" title="${esc(c.label)} · ${esc(p.file.name)}"><img src="${p.url}" alt=""><span class="tag">not saved</span>
+      <span class="bar"><button class="sv" onclick="ldSavePend(${p.id})">Save</button><button class="x" onclick="ldDropPend(${p.id})" aria-label="Remove">✕</button></span></div>`).join('');
+    const inner=`<span class="mi">${LD_ICON[c.key]||'add_a_photo'}</span><small>${esc(c.label)}</small>`;
+    return canEdit?`<button class="ld-tile" title="Upload ${esc(c.label)}" onclick="ldPickPhoto(${loc.id},'${c.key}')"><span class="plus">+</span>${inner}</button>`
+      :`<div class="ld-tile" title="${esc(c.label)}">${inner}</div>`;}).join('');
+  const sc=loc.scan,busy=LD_SCAN_BUSY===loc.id;
+  const scanHtml=`<div class="ld-sec"><span class="t">Scan PDF</span><span class="n ${sc?'okc':'warnc'}">${busy?'Uploading…':sc?'Uploaded':'Missing'}</span></div>`+(sc
+    ?`<a class="ld-doc ok${busy?' busy':''}" href="/api/locations/${loc.id}/scan/file?v=${encodeURIComponent(sc.created_at||'')}" target="_blank" rel="noopener" title="Open scan PDF">
+        <span class="ic"><span class="mi">picture_as_pdf</span><img src="/api/locations/${loc.id}/scan/thumb?v=${encodeURIComponent(sc.created_at||'')}" alt="" onerror="this.remove()"></span>
+        <span class="tx"><b>${esc(sc.orig_name||'scan.pdf')}</b><span>${sc.pages} page${sc.pages>1?'s':''} · ${fmtSize(sc.size)}${sc.by?' · '+esc(sc.by):''}</span></span>
+        <span class="act"><span class="mi">open_in_new</span>Open</span></a>`
+    :`<div class="ld-doc miss${canEdit?' wr':''}${busy?' busy':''}"${canEdit?` onclick="ldPickScan(${loc.id})" title="Upload scan PDF"`:''}>
+        <span class="ic"><span class="mi">picture_as_pdf</span></span>
+        <span class="tx"><b>${busy?'Uploading…':'Not uploaded yet'}</b><span>Becomes the first page of the PDF export</span></span>
+        ${canEdit?'<span class="act"><span class="mi">upload</span>Upload</span>':''}</div>`);
   const thumbs=(loc.photos||[]).slice(0,4).map(p=>`<img class="th" src="/api/photos/${p.id}/file" loading="lazy">`).join('');
   const moreN=st.fotoDone-4;
   const doneHtml=st.fotoDone?`<div class="ld-done" onclick="closeLocDrawer(()=>openFromLog(${loc.id}))">
@@ -4830,8 +4866,9 @@ function fillLocDrawer(loc){
     if(r&&rowComplete(r))return `<div class="ld-dev"><span class="h">${esc(n)}</span><span class="sn">${esc(r.sn_tagging||'—')}</span><span class="qty">×${esc(r.jumlah||'1')}</span></div>`;
     return `<div class="ld-dev miss"><span class="h">${esc(n)}</span><span class="sn">—</span><span class="qty">missing</span></div>`;}).join('');
   $('#ldBody').innerHTML=`<div class="ld-body">
-    ${missCats.length?`<div class="ld-sec"><span class="t">Needs action</span><span class="n warnc">${missCats.length} photos</span></div>${actHtml}`:''}
+    ${missCats.length?`<div class="ld-sec"><span class="t">Needs photo</span><span class="n warnc">${missCats.length} of ${cats.length}</span></div><div class="ld-tiles">${tileHtml}</div>`:''}
     ${doneHtml}
+    ${scanHtml}
     <div class="ld-sec"><span class="t">Installed devices</span><span class="n ${invHave<reqInv?'warnc':'okc'}">${invHave}/${reqInv} good</span></div>
     ${devHtml}
   </div>`;
@@ -4842,6 +4879,22 @@ function fillLocDrawer(loc){
   else if(loc.my_request==='pending'){foot.innerHTML=`<button class="ld-btn req" disabled><span class="mi">hourglass_top</span>Awaiting approval</button>`;}
   else{foot.innerHTML=`<button class="ld-btn req" id="ldReq"><span class="mi">lock_open</span>Request edit</button>`;$('#ldReq').onclick=()=>sendEditReq(loc.id,$('#ldReq'));}
 }
+/* Scan PDF dari drawer: langsung diunggah (ganti/hapus tetap lewat BAA Entry) */
+let LD_SCAN_BUSY=-1,LD_SCAN_ID=null;
+function ldPickScan(id){if(LD_SCAN_BUSY===id)return;LD_SCAN_ID=id;const f=$('#ldScanFile');f.value='';f.click();}
+$('#ldScanFile').addEventListener('change',async e=>{const file=e.target.files[0],id=LD_SCAN_ID;if(!file||!id)return;
+  if(!isPdf(file)){toast('Scan must be a .pdf file');return;}
+  if(file.size>25*1048576){toast('PDF is larger than 25 MB');return;}
+  LD_SCAN_BUSY=id;ldRefill();
+  const fd=new FormData();fd.append('file',file,file.name);
+  try{const r=await fetch('/api/locations/'+id+'/scan',{method:'POST',body:fd,credentials:'same-origin'});
+    const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.detail||('HTTP '+r.status));
+    if(S.loc&&S.loc.id===id){S.loc.scan=d.scan;renderScan();updateSummary();}
+    if(LD_LOC&&LD_LOC.id===id)LD_LOC.scan=d.scan;
+    toast('Scan PDF uploaded');loadLocations();}
+  catch(err){toast('Scan upload failed: '+err.message);}
+  LD_SCAN_BUSY=-1;ldRefill();
+});
 /* "+" pada kartu Perlu tindakan → unggah foto langsung ke kategori itu */
 let LD_UP={id:null,cat:null};
 function ldPickPhoto(id,cat){LD_UP={id,cat};const f=$('#ldFile');f.value='';f.click();}
@@ -4859,7 +4912,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#ldDrawer').clas
 /* Klik di luar drawer (bukan pada baris tabel) -> tutup; klik baris tetap update in-place */
 document.addEventListener('click',e=>{const dr=$('#ldDrawer');
   if(!dr||!dr.classList.contains('on'))return;
-  if(e.target.closest('#ldDrawer')||e.target.closest('#loc-table tr.lrow')||e.target.closest('#unsOv')||e.target.id==='ldFile')return;
+  if(e.target.closest('#ldDrawer')||e.target.closest('#loc-table tr.lrow')||e.target.closest('#unsOv')||e.target.id==='ldFile'||e.target.id==='ldScanFile')return;
   closeLocDrawer();});
 
 /* ===== Notifikasi (permintaan edit) — admin ===== */
