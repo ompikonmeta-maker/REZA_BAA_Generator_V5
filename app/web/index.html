@@ -2089,6 +2089,8 @@
   .lf-sug button{padding:6px 12px;border-radius:8px;border:1px dashed var(--md-sys-color-outline);background:none;cursor:pointer;font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface)}
   .lf-sug button:hover{background:color-mix(in srgb,var(--md-sys-color-primary) 8%,transparent);border-color:var(--md-sys-color-primary)}
   .frozen-ro:has(#v-entry:not(.hidden)) #fzBan{display:none}
+  /* footer sidebar (timer, lonceng, password, tema, keluar) selalu terlihat walau menu di atasnya di-scroll */
+  .nav>.nav-foot{position:sticky;bottom:-14px;z-index:3;margin-bottom:-14px;padding-bottom:14px;background:var(--md-sys-color-surface-container-low)}
 </style>
 </head>
 <body>
