@@ -109,7 +109,7 @@ Settings
 - Prefix yang belum pernah menerbitkan kode tetap bisa diganti langsung seperti sekarang (tanpa Freeze/analisa).
 - Mockup: Setup checklist, layar "not ready", Active, dialog Freeze, Frozen, analisa ganti prefix, operator Dashboard & BAA Entry saat Frozen; revisi: ganti password login pertama, buat project pertama, mode Setup (Overview, Location data, Team), menu baru.
 
-## Revisi: isi awal project baru (2026-10-05) — dicatat, menunggu "gas"
+## Revisi: isi awal project baru (2026-10-05) — selesai
 | Topik | Keputusan |
 |---|---|
 | Project pertama (layar Create your first project) | Langsung terisi **pengaturan bawaan BAA**: 4 field (Nama Lokasi, Tanggal Aktivasi, Teknisi, PIC Lokasi), 11 kategori foto, 3 inventory (Kit Starlink, Router, Access Point) — sesuai template BAA resmi, sehingga mapping template hampir langsung cocok |

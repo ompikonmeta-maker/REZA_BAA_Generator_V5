@@ -2117,6 +2117,10 @@
   .mtg .sel-dd{flex:1}.mtg.none .sel-dd{border-style:dashed;color:var(--md-sys-color-on-surface-variant)}
   .mtg.bad .sel-dd{border-color:var(--md-sys-color-error);background:var(--bad-bg)}
   .imp-wil .sel-dd{max-width:320px;font:var(--md-sys-typescale-body-small);background:var(--md-sys-color-surface-container)}
+  .ld-confirm{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;margin-bottom:14px;border-radius:var(--md-sys-shape-corner-large);background:var(--warn-bg);color:var(--md-sys-color-on-surface)}
+  .ld-confirm>.mi{color:var(--warn)}.ld-confirm .tx{flex:1;min-width:220px;font:var(--md-sys-typescale-body-medium)}
+  .pjm-src{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}.pjm-src .lg-seg button{height:34px;font-size:13px}.pjm-src .sel-dd{height:34px}
+  .pjm-src .sel-dd.hidden{display:none}.lg-seg>button:disabled{opacity:.4;cursor:default}
 </style>
 </head>
 <body>
@@ -2564,6 +2568,7 @@
       </section>
 
       <section id="v-settings" class="hidden">
+        <div class="ld-confirm hidden" id="ldConfirm"></div>
         <div class="ld-tabs" id="ldTabs"><button data-k="lokasi">Location fields <i></i></button><button data-k="photo">Photos <i></i></button><button data-k="inventory">Inventory <i></i></button></div>
         <div class="card setview hidden" id="set-lokasi">
           <div class="sec"><span class="mi acc">list_alt</span><h3>Location Fields</h3><span class="grow"></span>
@@ -3589,13 +3594,13 @@ async function onbFirstProject(){let colors=['#0aa39d','#7b5cd6','#d07a1f','#3b7
   const el=onbShell(`<div class="ov">Welcome</div><h2>Create your first project</h2>
     <p>One project = one BAA job with its own template, data and team. You'll set it up next — nobody can enter BAA until you activate it.</p>
     <div class="fld"><md-text-field id="onbName" variant="outlined" label="Project name"></md-text-field>
-      <md-text-field id="onbPre" variant="outlined" label="Location code prefix"></md-text-field>
-      <div class="hint" id="onbPreH">2–4 letters · first code: <b>???_00001</b></div>
+      <md-text-field id="onbPre" variant="outlined" label="Project code"></md-text-field>
+      <div class="hint" id="onbPreH">2–4 letters · used as prefix for location codes · first code: <b>???_00001</b></div>
       <div><div class="lab">Color</div><div class="pjm-sw">${colors.map((c,i)=>`<button type="button" style="--c:${c}" data-c="${c}" class="${i?'':'on'}" aria-label="${c}"></button>`).join('')}</div></div>
       <div class="err hidden" id="onbErr"></div>
       <div class="acts"><md-button variant="text" icon="logout" id="onbOut">Sign out</md-button><md-button variant="filled" icon="arrow_forward" id="onbGo">Create &amp; start setup</md-button></div></div>`);
   const pre=$('#onbPre');
-  pre.addEventListener('input',()=>{const v=(pre.value||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);const i=tfInput(pre);if(i&&i.value!==v)i.value=v;$('#onbPreH').innerHTML=`2–4 letters · first code: <b>${v||'???'}_00001</b>`;});
+  pre.addEventListener('input',()=>{const v=(pre.value||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);const i=tfInput(pre);if(i&&i.value!==v)i.value=v;$('#onbPreH').innerHTML=`2–4 letters · used as prefix for location codes · first code: <b>${v||'???'}_00001</b>`;});
   el.querySelectorAll('.pjm-sw button').forEach(b=>b.onclick=()=>{el.querySelectorAll('.pjm-sw button').forEach(x=>x.classList.toggle('on',x===b));col=b.dataset.c;});
   $('#onbOut').addEventListener('click',onbLogout);
   $('#onbGo').addEventListener('click',async()=>{try{
@@ -3611,8 +3616,10 @@ const SX_REQ=['data','template','team'];
 async function sxRefresh(){try{const r=await api('/api/projects');const p=(r.projects||[]).find(x=>String(x.id)===PJ.id);
     if(p){SX.st=p.setup;PJ.cur={...PJ.cur,...p};}}catch(e){}sxNav();}
 function sxSoon(){clearTimeout(SX.t);SX.t=setTimeout(sxRefresh,500);}
+function sxCheck(){const d=SX.st&&SX.st.data;return !!(d&&!d.confirmed&&d.fields&&d.photos);}
 function sxOk(k){const s=SX.st;return !!(s&&s[k]&&s[k].ok);}
 function sxSub(k){const s=SX.st&&SX.st[k];if(!s)return '';
+  if(k==='data'&&!s.confirmed&&s.fields&&s.photos)return `${s.source||'Default BAA settings'} are filled in · open once to check, then click Confirm`;
   if(k==='data')return s.ok?`${s.fields} field${s.fields===1?'':'s'} · ${s.photos} photo${s.photos===1?'':'s'} · ${s.inventory} inventory item${s.inventory===1?'':'s'}`
     :(!s.fields&&!s.photos?'No location fields or photo categories yet':!s.fields?'Add at least 1 location field':'Add at least 1 photo category');
   if(k==='template')return s.ok?`${s.name} · mapped`:s.name?`${s.name} · cells not mapped yet`:'Upload the BAA Excel template and map its cells';
@@ -3639,7 +3646,7 @@ function sxFoot(){let f=$('#sxFoot');if(!f){f=document.createElement('div');f.id
   const i=SX_STEPS.findIndex(s=>s[0]===SX.step);
   if(!SX.on||i<1){f.classList.add('hidden');$('.canvas').classList.remove('has-sxfoot');return;}
   const prev=SX_STEPS[i-1],next=SX_STEPS[i+1];
-  const hint={data:'Required: at least 1 location field and 1 photo category. Inventory items are optional.',template:'Required: active template with its cells mapped. Needs Location data first.',
+  const hint={data:sxCheck()?'Required: check the filled-in settings, then click “Looks good — confirm” at the top.':'Required: at least 1 location field and 1 photo category. Inventory items are optional.',template:'Required: active template with its cells mapped. Needs Location data first.',
     team:'Required: at least 1 operator. New accounts get a temporary password to share.',target:'Optional — can be set or changed any time later.'}[SX.step]||'';
   f.innerHTML=`<span class="s">${sxOk(SX.step)?'<span class="mi okc">check_circle</span>':''}${hint}</span><md-button variant="text" id="sxBack">Back</md-button>
     ${next?`<md-button variant="filled" icon="arrow_forward" id="sxNext">Next: ${next[1]}</md-button>`:`<md-button variant="filled" icon="flag" id="sxNext">Back to overview</md-button>`}`;
@@ -3653,12 +3660,12 @@ function sxOverview(){const left=SX_REQ.filter(k=>!sxOk(k)),done=SX_REQ.length-l
       <div><h2>${left.length?(done?'Almost ready':`Let's set up ${esc(PJ.cur.name)}`):'Ready to activate'}</h2><p>Finish the required steps, then activate. Until then nobody — including admin — can enter BAA.</p></div></div>
     ${SX_STEPS.slice(1).map(([k,l,ic])=>{const ok=sxOk(k),req=SX_REQ.includes(k);const c=ok?'ok':req?'todo':'opt';
       return `<a class="sx-card ${c}" data-k="${k}"><span class="ic"><span class="mi">${ok?'check':ic}</span></span><span class="tx"><span class="t">${l}</span><span class="s">${esc(sxSub(k))}</span></span>
-        <span class="st">${ok?'Done':req?'Required':'Optional'}</span><span class="mi chev">chevron_right</span></a>`;}).join('')}
+        <span class="st">${ok?'Done':k==='data'&&sxCheck()?'Check':req?'Required':'Optional'}</span><span class="mi chev">chevron_right</span></a>`;}).join('')}
     <div class="sx-act"><span class="s">${left.length?`${left.length} required step${left.length>1?'s':''} left: <b>${left.map(nm).join('</b>, <b>')}</b>`:'All required steps are done. Activating opens BAA entry for the team.'}</span>
       <md-button variant="filled" icon="rocket_launch" id="sxActivate" ${left.length?'disabled':''}>Activate project</md-button></div></div>`;
   $$('#v-setup .sx-card').forEach(c=>c.addEventListener('click',()=>sxGo(c.dataset.k)));
   $('#sxActivate').addEventListener('click',()=>confirmDo('Activate '+PJ.cur.name+'?',
-    `The team can start entering BAA right away. Settings stay editable later; the code prefix <b>${esc(PJ.cur.prefix)}</b> locks once the first location code is issued.`,async()=>{
+    `The team can start entering BAA right away. Settings stay editable later; the project code <b>${esc(PJ.cur.prefix)}</b> locks once the first location code is issued.`,async()=>{
       try{await api('/api/projects/'+PJ.id+'/activate',{method:'POST'});try{sessionStorage.setItem('pjLand','dashboard');}catch(e){}toast('Project activated');setTimeout(()=>location.reload(),500);}
       catch(e){toast('Failed: '+e.message);}},{okLabel:'Activate'}));}
 function sxTarget(){const s=(SX.st&&SX.st.target)||{};
@@ -3728,12 +3735,12 @@ function pjStatusBind(q){const after=async r=>{PJM.sel=r;await loadProjects(true
   const u=$('#pjmUnfreeze');if(u)u.onclick=()=>guardLeave(()=>confirmDo('Unfreeze '+q.name+'?','Members can enter and edit BAA again right away.',async()=>{
     try{after(await api('/api/projects/'+q.id+'/unfreeze',{method:'POST'}));toast('Project unfrozen');}catch(e){toast('Failed: '+e.message);}},{okLabel:'Unfreeze'}),'Unfreeze');
   const s=$('#pjmSetup');if(s)s.onclick=()=>guardLeave(()=>{if(String(q.id)===PJ.id){try{sessionStorage.setItem('pjLand','setup:overview');}catch(e){}location.reload();}else{try{sessionStorage.setItem('pjLand','setup:overview');}catch(e){}pjSwitch(String(q.id),'setup:overview');}},'Setup');
-  const rc=$('#pjmRecode');if(rc)rc.onclick=()=>guardLeave(()=>rcDialog(q,after),'Change prefix');}
+  const rc=$('#pjmRecode');if(rc)rc.onclick=()=>guardLeave(()=>rcDialog(q,after),'Change project code');}
 function fzDialog(q,after,edit){const d=document.createElement('div');d.className='bk-dlg fzd';
   d.innerHTML=`<div class="box"><h3>${edit?'Edit freeze message':'Freeze '+esc(q.name)+'?'}</h3>
     ${edit?'':'<p>All input stops for members: entry, edit, photo &amp; scan upload, import and export. They can still view data. Admin can still change settings and fix location data.</p>'}
     <div class="lab">Message shown to users</div><textarea id="fzMsg" maxlength="300" placeholder="e.g. Template BAA is being revised, please wait.">${esc(edit?q.freeze_msg:'')}</textarea>
-    <div class="chips">${FZ_CHIPS.map((c,i)=>`<button type="button" data-i="${i}">${['Template revision','Code prefix change','Data check'][i]}</button>`).join('')}</div>
+    <div class="chips">${FZ_CHIPS.map((c,i)=>`<button type="button" data-i="${i}">${['Template revision','Project code change','Data check'][i]}</button>`).join('')}</div>
     <div class="lab">Preview</div><div class="fz-ban pv"><span class="mi">ac_unit</span><span class="tx"><b>${esc(q.name)} is frozen — input is paused</b><span class="m" id="fzPv"></span><small>by ${esc((S.user.full_name||S.user.username||'').trim())} · since ${edit?fmtWhen(q.frozen_at):'now'}</small></span></div>
     <div class="acts"><md-button variant="text" id="fzCancel">Cancel</md-button><md-button variant="filled" icon="${edit?'check':'ac_unit'}" id="fzOk">${edit?'Save message':'Freeze project'}</md-button></div></div>`;
   document.body.appendChild(d);const ta=d.querySelector('#fzMsg'),pv=()=>{d.querySelector('#fzPv').textContent=ta.value.trim();};pv();
@@ -3745,11 +3752,11 @@ function fzDialog(q,after,edit){const d=document.createElement('div');d.classNam
     catch(e){toast('Failed: '+e.message);}};
   setTimeout(()=>ta.focus(),60);}
 function rcDialog(q,after){const d=document.createElement('div');d.className='bk-dlg fzd rc';
-  d.innerHTML=`<div class="box"><h3>Change code prefix</h3><p>Every location code in <b>${esc(q.name)}</b> changes prefix; numbers stay the same. Photo &amp; scan folders move with them.</p>
-    <div class="rc-in"><md-text-field id="rcPre" variant="outlined" label="New prefix (2–4 letters)"></md-text-field><md-button variant="tonal" icon="analytics" id="rcAn">Analyse</md-button></div>
+  d.innerHTML=`<div class="box"><h3>Change project code</h3><p>Every location code in <b>${esc(q.name)}</b> gets the new project code; numbers stay the same. Photo &amp; scan folders move with them.</p>
+    <div class="rc-in"><md-text-field id="rcPre" variant="outlined" label="New project code (2–4 letters)"></md-text-field><md-button variant="tonal" icon="analytics" id="rcAn">Analyse</md-button></div>
     <div id="rcOut"></div><div class="acts"><md-button variant="text" id="rcCancel">Cancel</md-button><md-button variant="filled" icon="sync_alt" id="rcGo" disabled>Re-code</md-button></div></div>`;
   document.body.appendChild(d);const close=()=>d.remove();
-  const ask=()=>{if((d.querySelector('#rcPre').value||'').trim())confirmDo('Discard changes?','The new prefix you typed will not be applied.',close,{okLabel:'Discard'});else close();};
+  const ask=()=>{if((d.querySelector('#rcPre').value||'').trim())confirmDo('Discard changes?','The new project code you typed will not be applied.',close,{okLabel:'Discard'});else close();};
   d.querySelector('#rcCancel').onclick=ask;d.addEventListener('click',e=>{if(e.target===d)ask();});
   const pre=d.querySelector('#rcPre'),go=d.querySelector('#rcGo'),out=d.querySelector('#rcOut');let plan=null;
   const dis=on=>go.toggleAttribute('disabled',on);
@@ -3772,7 +3779,12 @@ function rcDialog(q,after){const d=document.createElement('div');d.className='bk
 
 /* --- Location data: tab Fields · Photos · Inventory (satu menu) --- */
 $$('#ldTabs button').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.k;if(k===curSetSub)return;guardLeave(()=>openSettings(k),b.textContent.trim());}));
-function ldTabsSync(sub){const on=['lokasi','photo','inventory'].includes(sub);$('#ldTabs').classList.toggle('hidden',!on);if(!on)return;
+function ldConfirmSync(sub){const b=$('#ldConfirm'),on=SX.on&&['lokasi','photo','inventory'].includes(sub)&&sxCheck();b.classList.toggle('hidden',!on);if(!on)return;
+  b.innerHTML=`<span class="mi">fact_check</span><div class="tx"><b>${esc((SX.st.data.source)||'Default BAA settings')} are filled in.</b> Check the location fields, photo categories and inventory (all three tabs), then confirm.</div>
+    <md-button variant="filled" icon="check" id="ldConfirmBtn">Looks good — confirm</md-button>`;
+  $('#ldConfirmBtn').onclick=()=>guardLeave(async()=>{try{await api('/api/projects/'+PJ.id+'/confirm-data',{method:'POST'});await sxRefresh();ldConfirmSync(curSetSub);sxFoot();toast('Location data confirmed');}
+    catch(e){toast('Failed: '+e.message);}},'Confirm');}
+function ldTabsSync(sub){ldConfirmSync(sub);const on=['lokasi','photo','inventory'].includes(sub);$('#ldTabs').classList.toggle('hidden',!on);if(!on)return;
   const n={lokasi:(S.locFields||[]).filter(f=>f.key!=='nama_lokasi').length,photo:(S.cats||[]).length,inventory:(S.invItems||[]).length};
   $$('#ldTabs button').forEach(b=>{b.classList.toggle('on',b.dataset.k===sub);const i=b.querySelector('i');i.textContent=n[b.dataset.k];i.classList.toggle('zero',!n[b.dataset.k]);});}
 $('#bellBtn').addEventListener('click',()=>{if(SX.on){toast('Notifications open once the project is active');return;}navTo('notif');});
@@ -3811,11 +3823,15 @@ function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
   PJM.sel=p||{id:null,name:'',prefix:'',color:PJM.colors.find(c=>!used.has(c))||PJM.colors[0],members:[],prefix_locked:false,total:null,target_date:'',template:null,archived:false};
   const q=PJM.sel;pjmList();
   $('#pjmEd').innerHTML=`<div class="sec"><span class="mi acc">${isNew?'create_new_folder':'edit'}</span><h3>${isNew?'New project':esc(q.name)}</h3></div>
-    ${isNew?'<div class="pjm-hint" style="margin:-4px 0 14px">Starts in <b>Setup</b> with empty location data. Nobody can enter BAA until you finish setup and activate it.</div>':pjStatusStrip(q)}
+    ${isNew?`<div class="pjm-hint" style="margin:-4px 0 14px">Starts in <b>Setup</b>. Nobody can enter BAA until you finish setup and activate it.</div>
+      <div class="pjm-lab">Start from</div><div class="pjm-src"><span class="lg-seg" id="pjmSrc"><button type="button" class="on" data-s="default"><span class="mi">verified</span>Default BAA settings</button>
+        <button type="button" data-s="copy"><span class="mi">content_copy</span>Copy from project</button><button type="button" data-s="empty"><span class="mi">check_box_outline_blank</span>Empty</button></span>
+        <select id="pjmSrcPj" class="hidden">${PJM.rows.map(p=>`<option value="${p.id}">${esc(p.name)} (${esc(p.prefix)})</option>`).join('')}</select></div>
+      <div class="pjm-hint" id="pjmSrcH" style="margin-bottom:14px"></div>`:pjStatusStrip(q)}
     <div class="pjm-f">
       <div class="full"><md-text-field id="pjm-name" variant="outlined" label="Project name" value="${esc(q.name)}"></md-text-field></div>
-      <div><md-text-field id="pjm-pre" variant="outlined" label="Location code prefix" value="${esc(q.prefix)}" maxlength="4" ${q.prefix_locked?'disabled':''}></md-text-field>
-        <div class="pjm-hint" id="pjm-next">${q.prefix_locked?`Next code: <b>${esc(q.next_code)}</b> · `+(q.status==='frozen'?`<a class="lnk" id="pjmRecode">Change prefix…</a> (${q.locations} location${q.locations===1?'':'s'} will be re-coded)`:'locked · freeze the project to change the prefix'):`Next code: <b>${esc((q.prefix||'???').toUpperCase())}_${String(isNew?1:+(q.next_code||'_1').split('_').pop()).padStart(5,'0')}</b> · 2–4 letters, unique`}</div></div>
+      <div><md-text-field id="pjm-pre" variant="outlined" label="Project code" value="${esc(q.prefix)}" maxlength="4" ${q.prefix_locked?'disabled':''}></md-text-field>
+        <div class="pjm-hint" id="pjm-next">${q.prefix_locked?`Next code: <b>${esc(q.next_code)}</b> · `+(q.status==='frozen'?`<a class="lnk" id="pjmRecode">Change project code…</a> (${q.locations} location${q.locations===1?'':'s'} will be re-coded)`:'locked · freeze the project to change the project code'):`Next code: <b>${esc((q.prefix||'???').toUpperCase())}_${String(isNew?1:+(q.next_code||'_1').split('_').pop()).padStart(5,'0')}</b> · 2–4 letters, unique · used as prefix for location codes`}</div></div>
       <div><div class="pjm-lab">Color</div><div class="pjm-sw">${PJM.colors.map(c=>`<button type="button" style="--c:${c}" data-c="${c}" class="${c===q.color?'on':''}" aria-label="${c}"></button>`).join('')}</div></div>
       <div><md-text-field id="pjm-total" variant="outlined" type="number" label="Target (BAA)" value="${q.total??''}"></md-text-field></div>
       <div><md-text-field id="pjm-date" variant="outlined" type="date" label="Target date" value="${esc(q.target_date||'')}"></md-text-field></div>
@@ -3834,7 +3850,7 @@ function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
     <div class="pjm-act">${isNew?'':`<md-button variant="text" id="pjm-arch" icon="${q.archived?'unarchive':'archive'}">${q.archived?'Unarchive':'Archive'}</md-button>`}<span class="grow"></span>
       <md-button variant="filled" id="pjm-save" icon="check">${isNew?'Create project':'Save'}</md-button></div>`;
   const pre=$('#pjm-pre');if(!q.prefix_locked)pre.addEventListener('input',()=>{const v=(pre.value||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);if(pre.value!==v)pre.value=v;
-    $('#pjm-next').innerHTML=`Next code: <b>${v||'???'}_${String(isNew?1:+(q.next_code||'_1').split('_').pop()).padStart(5,'0')}</b> · 2–4 letters, unique`;});
+    $('#pjm-next').innerHTML=`Next code: <b>${v||'???'}_${String(isNew?1:+(q.next_code||'_1').split('_').pop()).padStart(5,'0')}</b> · 2–4 letters, unique · used as prefix for location codes`;});
   $$('#pjmEd .pjm-sw button').forEach(b=>b.onclick=()=>{$$('#pjmEd .pjm-sw button').forEach(x=>x.classList.toggle('on',x===b));q.color=b.dataset.c;});
   const tb=$('#pjm-tpl');if(tb)tb.onclick=()=>guardLeave(()=>pjSwitch(String(q.id),'set:templates'),'Template');
   const ab=$('#pjm-arch');if(ab)ab.onclick=()=>guardLeave(()=>confirmDo(q.archived?'Unarchive project':'Archive project',q.archived?`Make <b>${esc(q.name)}</b> available to its members again?`:`Hide <b>${esc(q.name)}</b> from members and the Portfolio? Its data is kept; admin can still open it.`,()=>pjmSave(!q.archived),{okLabel:q.archived?'Unarchive':'Archive'}),q.archived?'Unarchive':'Archive');
@@ -3847,6 +3863,11 @@ function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
       {okLabel:'Turn on',onCancel:()=>{sw.selected=false;ftSync();}});};
   $('#ft-wil').addEventListener('change',()=>{ftSync();ftWarn($('#ft-wil'));});$('#ft-prog').addEventListener('change',()=>{ftSync();ftWarn($('#ft-prog'));});ftSync();
   if(!isNew)pjStatusBind(q);
+  if(isNew){const H={default:'4 location fields, 11 photo categories and 3 inventory items that match the standard BAA template. You check them once during setup.',
+      copy:'Location fields, photo categories, inventory and notes are copied from the chosen project. You check them once during setup.',empty:'Only the system field Nama Lokasi. You add fields and photo categories yourself.'};
+    const sync=()=>{const s=$('#pjmSrc button.on').dataset.s;const sel=$('#pjmSrcPj');sel.classList.toggle('hidden',s!=='copy');if(sel._ddBtn)sel._ddBtn.classList.toggle('hidden',s!=='copy');$('#pjmSrcH').textContent=H[s];};
+    $$('#pjmSrc button').forEach(b=>b.onclick=()=>{if(b.dataset.s==='copy'&&!PJM.rows.length)return;$$('#pjmSrc button').forEach(x=>x.classList.toggle('on',x===b));sync();});
+    if(!PJM.rows.length)$('#pjmSrc button[data-s="copy"]').disabled=true;setTimeout(sync,0);}
   $('#pjm-save').onclick=()=>pjmSave();bindTips();revealCards($('#pjmEd').parentElement);
   PJM.snap=null;setTimeout(()=>{PJM.snap=fgSnap($('#pjmEd'));fgTick();},0);}
 async function pjmSave(archived){const q=PJM.sel,isNew=!q.id;const tot=$('#pjm-total').value;
@@ -3854,6 +3875,7 @@ async function pjmSave(archived){const q=PJM.sel,isNew=!q.id;const tot=$('#pjm-t
     members:$$('#pjmEd md-switch[data-u]').filter(x=>x.selected).map(x=>+x.dataset.u),
     wilayah_on:!!$('#ft-wil').selected,wilayah_progress:!!$('#ft-prog').selected};
   if(archived!==undefined)body.archived=archived;
+  if(isNew){const s=($('#pjmSrc button.on')||{dataset:{s:'default'}}).dataset.s;body.source=s==='copy'?'copy:'+$('#pjmSrcPj').value:s;}
   try{const r=await api(isNew?'/api/projects':'/api/projects/'+q.id,{method:isNew?'POST':'PUT',body:JSON.stringify(body)});
     toast(isNew?'Project created':'Project saved');PJM.sel=r;PJM.snap=null;await loadProjects(true);await pjRefresh();
     const multi=PJ.list.filter(p=>!p.archived).length>1;$$('.multi-only').forEach(x=>x.classList.toggle('hidden',!multi||S.user.role==='operator'));
@@ -3957,6 +3979,8 @@ const subOn=(s,sub)=>s.dataset.sub===sub||(s.dataset.grp==='data'&&['lokasi','ph
 function openSettings(sub){
   sub=sub||curSetSub;pjChipShow(!['projects','users','backup'].includes(sub));
   $('#v-projects').classList.toggle('single',sub==='pjstatus');ldTabsSync(sub);
+  if(typeof SX!=='undefined'&&SX.on){const st={lokasi:'data',photo:'data',inventory:'data',templates:'template',team:'team',projects:'projects',users:'users'}[sub];
+    if(st&&st!==SX.step){SX.step=st;sxNav();}setTimeout(sxFoot,0);}
   $$('.navitem[data-view]').forEach(x=>x.classList.remove('active'));
   $('#setToggle').classList.add('active');$('#navSettings').classList.add('open');
   $('#entryTools').classList.add('hidden');$('#locTools').classList.add('hidden');

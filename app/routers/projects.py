@@ -43,8 +43,10 @@ def _readiness(hub, pc, pid: int) -> dict:
         "SELECT u.role, COUNT(*) n FROM project_members m JOIN users u ON u.id=m.user_id "
         "WHERE m.project_id=? AND u.active=1 GROUP BY u.role", (pid,))}
     g = db.get_setting(pc, "progress_goal", None) or {}      # target yang benar-benar diisi admin
+    confirmed = db.get_setting(pc, "setup_data_confirmed", True) is not False   # project lama: dianggap sudah
     steps = {
-        "data": {"ok": bool(fields) and bool(cats), "fields": len(fields), "photos": len(cats), "inventory": len(inv)},
+        "data": {"ok": bool(fields) and bool(cats) and confirmed, "fields": len(fields), "photos": len(cats),
+                 "inventory": len(inv), "confirmed": confirmed, "source": db.get_setting(pc, "setup_source", None)},
         "template": {"ok": bool(tpl) and mapped, "name": tpl["name"] if tpl else None, "mapped": mapped},
         "team": {"ok": team.get("operator", 0) > 0, "operators": team.get("operator", 0), "viewers": team.get("viewer", 0)},
         "target": {"ok": bool(g.get("total")), "total": g.get("total"), "target_date": g.get("target_date")},
@@ -128,6 +130,7 @@ class ProjectIn(BaseModel):
     archived: bool | None = None
     wilayah_on: bool | None = None
     wilayah_progress: bool | None = None
+    source: str | None = None        # isi awal project baru: default | copy:<id> | empty
 
 
 def _members(hub, pid: int) -> list[int]:
@@ -167,9 +170,9 @@ def _validate(hub, body: ProjectIn, pid: int | None = None) -> tuple[str, str]:
     if not name:
         raise HTTPException(400, "Project name is required")
     if not _PREFIX.match(prefix):
-        raise HTTPException(400, "Code prefix must be 2–4 letters (A–Z)")
+        raise HTTPException(400, "Project code must be 2–4 letters (A–Z)")
     if hub.execute("SELECT 1 FROM projects WHERE prefix=? AND id IS NOT ?", (prefix, pid)).fetchone():
-        raise HTTPException(400, f"Prefix {prefix} is already used by another project")
+        raise HTTPException(400, f"Project code {prefix} is already used by another project")
     if hub.execute("SELECT 1 FROM projects WHERE name=? COLLATE NOCASE AND id IS NOT ?", (name, pid)).fetchone():
         raise HTTPException(400, "Another project already has this name")
     if not _COLOR.match(body.color or ""):
@@ -195,11 +198,30 @@ def create_project(body: ProjectIn, hub: sqlite3.Connection = Depends(get_hub), 
     if _active_count(hub) >= db.MAX_PROJECTS:
         raise HTTPException(400, f"Maximum {db.MAX_PROJECTS} active projects")
     name, prefix = _validate(hub, body)
-    # Project baru selalu mulai kosong (hanya field sistem Nama Lokasi) dan berstatus
-    # Setup: belum ada yang bisa entry sampai admin menyiapkan & mengaktifkannya.
-    nama = [f for f in db.DEFAULT_LOCATION_FIELDS if f["key"] == "nama_lokasi"]
-    base = {**db.EMPTY_PROJECT_SETTINGS, "location_fields": nama}
+    # Project baru berstatus Setup (belum ada yang bisa entry sampai diaktifkan).
+    # Isi awal: project pertama = pengaturan bawaan BAA; berikutnya admin memilih
+    # bawaan / salin dari project lain / kosong. Bawaan & salinan wajib dikonfirmasi admin.
+    first = not hub.execute("SELECT 1 FROM projects LIMIT 1").fetchone()
+    src = "default" if first else (body.source or "default")
+    if src == "empty":
+        nama = [f for f in db.DEFAULT_LOCATION_FIELDS if f["key"] == "nama_lokasi"]
+        base, label = {**db.EMPTY_PROJECT_SETTINGS, "location_fields": nama}, "Empty"
+    elif src.startswith("copy:"):
+        sp = hub.execute("SELECT * FROM projects WHERE id=?", (int(src[5:] or 0),)).fetchone()
+        if not sp:
+            raise HTTPException(400, "Project to copy from was not found")
+        keep = ("photo_categories", "location_fields", "default_inventory_items", "item_merks", "inventory_keterangan", "aging_days")
+        base, label = {k: v for k, v in db.project_settings(sp).items() if k in keep}, f"Copied from {sp['name']}"
+    else:
+        base, label = None, "Default BAA settings"
     pid = db.create_project(hub, name, prefix, body.color, base, status="setup")
+    pc = db.connect_project(hub.execute("SELECT * FROM projects WHERE id=?", (pid,)).fetchone())
+    try:
+        db.set_setting(pc, "setup_source", label)
+        db.set_setting(pc, "setup_data_confirmed", src == "empty")
+        pc.commit()
+    finally:
+        pc.close()
     hub.execute("UPDATE projects SET wilayah_on=?, wilayah_progress=? WHERE id=?",
                 (int(body.wilayah_on if body.wilayah_on is not None else True),
                  int(body.wilayah_progress if body.wilayah_progress is not None else True), pid))
@@ -226,8 +248,8 @@ def update_project(pid: int, body: ProjectIn, hub: sqlite3.Connection = Depends(
     pc = db.connect_project(p)
     try:
         if prefix != p["prefix"].upper() and _seq(pc) > 0:
-            raise HTTPException(400, "Prefix is locked: location codes were already issued. "
-                                     "Freeze the project and use Change prefix.")
+            raise HTTPException(400, "Project code is locked: location codes were already issued. "
+                                     "Freeze the project and use Change project code.")
         archived = p["archived"] if body.archived is None else int(body.archived)
         if p["archived"] and not archived and _active_count(hub) >= db.MAX_PROJECTS:
             raise HTTPException(400, f"Maximum {db.MAX_PROJECTS} active projects")
@@ -314,11 +336,11 @@ def _recode_plan(hub, p, new: str) -> dict:
     new = (new or "").strip().upper()
     old = p["prefix"].upper()
     if not _PREFIX.match(new):
-        raise HTTPException(400, "Code prefix must be 2–4 letters (A–Z)")
+        raise HTTPException(400, "Project code must be 2–4 letters (A–Z)")
     if new == old:
-        raise HTTPException(400, "That is already the current prefix")
+        raise HTTPException(400, "That is already the current project code")
     if hub.execute("SELECT 1 FROM projects WHERE prefix=? AND id<>?", (new, p["id"])).fetchone():
-        raise HTTPException(400, f"Prefix {new} is already used by another project")
+        raise HTTPException(400, f"Project code {new} is already used by another project")
     base = db.project_dir(p)
     pc = db.connect_project(p)
     try:
@@ -374,7 +396,7 @@ def recode_apply(pid: int, body: RecodeIn, hub: sqlite3.Connection = Depends(get
     import shutil
     p = _project_or_404(hub, pid)
     if p["status"] != "frozen":
-        raise HTTPException(400, "Freeze the project before changing its code prefix")
+        raise HTTPException(400, "Freeze the project before changing its project code")
     plan = _recode_plan(hub, p, body.prefix)
     if plan["conflicts"]:
         raise HTTPException(400, "Conflict: " + ", ".join(plan["conflicts"][:3]))
@@ -440,4 +462,18 @@ def set_target(pid: int, body: TargetIn, hub: sqlite3.Connection = Depends(get_h
         pg.apply_goal(pc, user, body.total, body.target_date or None)
     finally:
         pc.close()
+    return _admin_row(hub, _project_or_404(hub, pid))
+
+
+@router.post("/{pid}/confirm-data")
+def confirm_data(pid: int, hub: sqlite3.Connection = Depends(get_hub), user=Depends(require_admin)):
+    """Langkah Setup: admin sudah meninjau isi Location data (bawaan / salinan)."""
+    p = _project_or_404(hub, pid)
+    pc = db.connect_project(p)
+    try:
+        db.set_setting(pc, "setup_data_confirmed", True)
+        pc.commit()
+    finally:
+        pc.close()
+    audit(hub, user, "confirm_data", "project", pid, p["name"])
     return _admin_row(hub, _project_or_404(hub, pid))

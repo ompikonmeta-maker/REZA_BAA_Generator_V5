@@ -50,7 +50,7 @@ if(!ONLY||ONLY==='admin'){const p=await mk();
   await sw(p,4,'setup:overview');await p.waitForTimeout(800);
   await cap(p,'a_setup_overview',['#sxNav','.sx-card[data-k="data"]','.sx-card[data-k="template"]','.sx-card[data-k="team"]','.sx-card[data-k="target"]','#sxActivate']);
   await p.click('.sx-step[data-k="data"]');await p.waitForTimeout(1500);
-  await cap(p,'a_setup_fields',['#ldTabs','#lf-list .ecard','#lf-sug','#lf-add','#setSaveBtn','#sxFoot']);
+  await cap(p,'a_setup_fields',['#ldConfirm','#ldTabs','#lf-list .ecard','#lf-sug','#lf-add','#ldConfirmBtn']);
   await p.click('#ldTabs button[data-k="photo"]');await p.waitForTimeout(1300);
   await cap(p,'a_setup_photos',['#ldTabs button[data-k="photo"]','#pc-list','#pc-add']);
   await p.click('#ldTabs button[data-k="inventory"]');await p.waitForTimeout(1300);
@@ -61,6 +61,11 @@ if(!ONLY||ONLY==='admin'){const p=await mk();
   await cap(p,'a_setup_team',['.tm-new','#tmAdd','#tmTemp','.tm-list']);
   await p.click('.sx-step[data-k="target"]');await p.waitForTimeout(1200);
   await cap(p,'a_setup_target',['#sxTot','#sxDate','#sxTSave']);
+  // project berikutnya: pilihan "Start from"
+  await p.click('.sx-step[data-k="projects"]');await p.waitForTimeout(1500);await p.click('#pjm-new');await p.waitForTimeout(800);
+  await tf(p,'#pjm-name','Puskesmas Jateng');await tf(p,'#pjm-pre','PKJ');await p.click('#pjmSrc button[data-s="copy"]');await p.waitForTimeout(500);
+  await cap(p,'a_newproject',['#pjmSrc','.pjm-src .sel-dd','#pjm-pre','#setSaveBtn, #pjm-save']);
+  await p.evaluate(()=>{PJM.snap=null;});
   // Template (project 1)
   await sw(p,1,'set:templates');await set(p,'templates');
   await cap(p,'a_template',['#map-cur','#tpl-up-btn','#mstep1 >>up .mstep','#mstep2 >>up .mstep','#mstep3 >>up .mstep','#map-save']);

@@ -15,9 +15,5 @@ for l in sari[:2]:
 # project setup
 r=a.post(B+'/api/projects',json={'name':'BTS Jatim','prefix':'BTS','color':'#3b7be0','members':[]});pid=r.json()['id'];print('setup pid',pid)
 h={'X-Project':str(pid)}
-f=[{'key':'nama_lokasi','label':'Nama Lokasi','type':'text','required':True},{'key':'tanggal','label':'Tanggal Aktivasi','type':'date','required':True},
-   {'key':'teknisi','label':'Teknisi','type':'text','required':True},{'key':'pic','label':'PIC Lokasi','type':'text','required':False}]
-print(a.put(B+'/api/settings/location-fields',headers=h,json={'fields':f}).status_code)
-cats=[{'key':'img_depan','label':'Foto Tampak Depan','ocr':False,'keywords':['depan']},{'key':'img_perangkat','label':'Perangkat Terpasang','ocr':False,'keywords':['perangkat']}]
-print(a.put(B+'/api/settings/photo-categories',headers=h,json={'categories':cats}).status_code)
+# isi awal = pengaturan bawaan BAA (status Check sampai dikonfirmasi admin)
 print(a.put(B+f'/api/projects/{pid}/members',json={'members':[2,3,6]}).json()['setup'])
