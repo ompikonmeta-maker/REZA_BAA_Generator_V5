@@ -179,7 +179,7 @@ def _loc_label(loc) -> dict:
 
 def _open_drafts(conn, where: str = "", params: tuple = ()) -> list[dict]:
     """Draft aktif + kelengkapan, kekurangan, dan umur (hari kerja sejak last modified)."""
-    fields = db.get_setting(conn, "location_fields", []) or []
+    fields = db.req_fields(conn)   # hanya field Required yang dihitung
     cats = db.get_setting(conn, "photo_categories", []) or []
     rows = conn.execute(
         "SELECT l.*, COALESCE(NULLIF(TRIM(o.full_name),''), o.username, '—') owner_name "

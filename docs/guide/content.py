@@ -30,7 +30,7 @@ ADMIN = {
    'lead': 'Tentukan data apa saja yang wajib diisi teknisi untuk setiap lokasi.',
    'shot': 'a_setup_fields',
    'notes': ['Isian bawaan sudah ada. Cek ketiga tab dulu.', 'Tiga tab: **Location fields**, **Photos**, **Inventory**. Angka = jumlah isian.', 'Setiap baris = satu field. *Nama Lokasi* adalah field sistem (terkunci).', '**Quick add** — tambah field umum dengan sekali klik.', '**+ Field** — buat field sendiri.', 'Sudah sesuai? Klik **Looks good — confirm**. Langkah ini baru ✓ setelah dikonfirmasi.'],
-   'tips': ['Nyalakan **Required** untuk field yang wajib diisi. Pilih **Date** untuk tanggal. Jangan lupa **Save fields** bila mengubah sesuatu.']},
+   'tips': ['Nyalakan **Required** untuk field yang wajib diisi. Hanya field Required yang dihitung dalam persentase kelengkapan dan wajib terisi sebelum Done; field lain boleh diisi tapi tidak memengaruhi progres.', 'Pilih **Date** untuk tanggal. Jangan lupa **Save fields** bila mengubah sesuatu.']},
   {'id': 'a-photos', 'title': 'Location data · Kategori foto',
    'lead': 'Setiap kategori = satu kotak foto di BAA Entry dan satu gambar di BAA.',
    'shot': 'a_setup_photos',

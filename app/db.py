@@ -375,6 +375,12 @@ def wil_counted(conn) -> bool:
     return bool(pj.get("wilayah_on", 1)) and bool(pj.get("wilayah_progress", 1))
 
 
+def req_fields(conn) -> list[dict]:
+    """Field lokasi yang dihitung dalam kelengkapan: hanya yang Required (nama_lokasi selalu)."""
+    return [f for f in (get_setting(conn, "location_fields", []) or [])
+            if f.get("required") or f.get("key") == "nama_lokasi"]
+
+
 def scan_counted(conn) -> bool:
     """Scan PDF wajib & dihitung dalam kelengkapan lokasi untuk project ini?"""
     pj = getattr(conn, "project", None) or {}

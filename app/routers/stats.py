@@ -239,7 +239,7 @@ def supervisor(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_
 
     # bottleneck dari draft
     cats = db.get_setting(conn, "photo_categories", [])
-    fields = db.get_setting(conn, "location_fields", [])
+    fields = db.req_fields(conn)
     drafts = conn.execute("SELECT id, data_json FROM locations WHERE deleted_at IS NULL AND status!='selesai'").fetchall()
     nd = len(drafts)
     miss = {}

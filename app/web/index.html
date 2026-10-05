@@ -2576,6 +2576,7 @@
         <div class="card setview hidden" id="set-lokasi">
           <div class="sec"><span class="mi acc">list_alt</span><h3>Location Fields</h3><span class="grow"></span>
             <md-button id="lf-add" variant="tonal" icon="add">Field</md-button></div>
+          <div class="scan-info"><span class="mi">percent</span><span><b>Required</b> fields count toward completeness % and must be filled before Done. Optional fields can still be filled but don’t affect progress.</span></div>
           <div id="lf-list"></div>
           <div class="lf-sug" id="lf-sug"></div>
           <div style="margin-top:12px"><md-button id="lf-save" variant="filled" icon="save">Save fields</md-button></div>
@@ -4504,6 +4505,9 @@ function vwWow(m){if(!m.vel_prev)return '<span class="flat">—</span>';const w=
   return w>=0?`<span class="up">▲ ${w}%</span>`:`<span class="down">▼ ${Math.abs(w)}%</span>`;}
 function vwFeedIcon(a){return ({create:'add_location',update:'edit',save_inventory:'inventory_2',upload_photos:'photo_camera',delete:'delete',delete_photo:'delete',rename:'edit',register:'description',activate:'star'})[a]||'bolt';}
 
+/* field lokasi yang dihitung dalam kelengkapan & Done: hanya Required (nama_lokasi selalu) */
+function isReqField(f){return !!(f.required||f.key==='nama_lokasi');}
+function reqFields(){return (S.locFields||[]).filter(isReqField);}
 function requiredCats(){return S.cats||[];} /* semua kategori wajib (konsep "required" dihapus) */
 
 /* ENTRY */
@@ -4769,7 +4773,7 @@ $('#entry-form').addEventListener('focusout',()=>{setTimeout(()=>{
 
 /* progress summary */
 function computeState(){
-  const data=collectData();const fields=S.locFields;
+  const data=collectData();const fields=reqFields();
   const filledF=fields.filter(f=>(data[f.key]||'').trim()).length;
   const locDone=fields.length?filledF===fields.length:Object.values(data).some(v=>(v||'').trim());
   const rows=$$('#inv-body .tr');let cells=0,filledCells=0,items=0,rowsDone=0;
@@ -5250,12 +5254,12 @@ function locLack(l){
   const have=new Set(l.photo_cats||[]);
   const miss=S.cats.filter(c=>!have.has(c.key)).map(c=>c.label);
   if(miss.length)parts.push('Photos: '+(miss.length>2?miss.slice(0,2).join(', ')+', +'+(miss.length-2):miss.join(', ')));
-  (S.locFields||[]).forEach(f=>{if(!((l.data[f.key]||'').trim()))parts.push(f.label);});
+  reqFields().forEach(f=>{if(!((l.data[f.key]||'').trim()))parts.push(f.label);});
   if(!l.inv_ok)parts.push('Inventory');
   return parts.length?esc(parts.join(' · ')):'<span class="muted">—</span>';}
 /* Persentase kelengkapan sebuah baris Log Lokasi (mirror rumus Ringkasan BAA) */
 function locPct(l){
-  const fields=S.locFields||[];
+  const fields=reqFields();
   const filledF=fields.filter(f=>(((l.data&&l.data[f.key])||'')+'').trim()).length;
   const cats=S.cats||[];const have=new Set(l.photo_cats||[]);
   const fotoDone=cats.filter(c=>have.has(c.key)).length;
@@ -5288,7 +5292,7 @@ window.openFromLog=id=>{gotoEntry();openLoc(id);};
 let LD_CUR=-1;
 /* kelengkapan dari objek lokasi lengkap (punya inventory[] & photos[]) — mirror computeState() */
 function locDetailState(loc){
-  const fields=S.locFields||[];const data=loc.data||{};
+  const fields=reqFields();const data=loc.data||{};
   const filledF=fields.filter(f=>(((data[f.key])||'')+'').trim()).length;
   const inv=loc.inventory||[];let cells=0,filled=0,items=0;
   inv.forEach(r=>{const vals=[r.nama_barang,r.merk_type,r.jumlah,r.sn_tagging,r.keterangan].map(v=>((v||'')+'').trim());
@@ -5342,7 +5346,7 @@ function fillLocDrawer(loc){
   const data=loc.data||{};const fields=S.locFields||[];const cats=S.cats||[];
   // stat cells: field non-nama (maks 3)
   const statFields=fields.filter(f=>f.key!=='nama_lokasi').slice(0,3);
-  const statsHtml=statFields.map(f=>{const v=((data[f.key])||'').trim();const miss=!v;
+  const statsHtml=statFields.map(f=>{const v=((data[f.key])||'').trim();const miss=!v&&isReqField(f);
     return `<div class="ld-hstat ${miss?'miss':''}"><div class="l">${esc(LD_STAT_SHORT[f.key]||f.label)}</div><div class="v">${esc(v||'—')}</div></div>`;}).join('');
   // HERO
   $('#ldHero').innerHTML=`

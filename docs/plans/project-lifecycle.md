@@ -127,3 +127,11 @@ Settings
 | Sakelar | Settings › Project & status › Features: **Scan PDF required** (default ON; project lama ON) |
 | Saat OFF | Tidak dihitung dalam % kelengkapan, tanpa chip/baris "Scan PDF" (BAA Entry, BAA Summary, Location Log, panel detail, Dashboard), kartu Scan PDF disembunyikan di BAA Entry & panel detail, tanpa peringatan "scan missing" saat export. Scan yang sudah terunggah tetap tersimpan & tetap jadi halaman 1 PDF |
 | Panduan | Topik Photos & Project & status diperbarui |
+
+## Field Required = dihitung dalam progres (2026-10-05) — selesai
+| Topik | Keputusan |
+|---|---|
+| Aturan | Hanya field lokasi dengan **Required** ON (Nama Lokasi selalu) yang dihitung dalam % kelengkapan, chip "Data x/y", daftar kekurangan, bottleneck Dashboard, dan syarat Done |
+| Field opsional | Tetap tampil & bisa diisi, tetap masuk export; tidak memengaruhi progres |
+| Info | Baris keterangan di Settings › Location data › Location fields |
+| Berlaku di | Server (Progress/Dashboard) & UI (BAA Entry, Location Log, panel detail) — langsung setelah Save fields |
