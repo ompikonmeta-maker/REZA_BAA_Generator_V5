@@ -1,6 +1,6 @@
 # Rencana: Rapikan UI (penjaga simpan, animasi dropdown, sidebar)
 
-Status: **Dicatat, belum diimplementasi** (kecuali sidebar) · 2026-10-05
+Status: **Selesai diimplementasi** · 2026-10-05
 
 ## 1. Sidebar: bagian bawah selalu terlihat — selesai (3bd67b9)
 - Footer sidebar (timer, lonceng, ganti password, tema, keluar) dibuat menempel di bawah.

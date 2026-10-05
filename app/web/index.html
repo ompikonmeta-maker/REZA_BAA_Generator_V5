@@ -2092,6 +2092,31 @@
   /* footer sidebar (timer, lonceng, password, tema, keluar) selalu terlihat walau menu di atasnya di-scroll */
   .nav>.nav-foot{position:sticky;bottom:-14px;z-index:3;margin-bottom:-14px;padding-bottom:14px;background:var(--md-sys-color-surface-container-low)}
   #cfmDlg{z-index:3600}
+
+  /* ===== Dropdown/popover: tampilan & gerak sama dengan MDMenu ===== */
+  .dd-in{animation:ddIn 520ms cubic-bezier(.42,1.67,.21,.9) both!important}
+  .dd-out{animation:ddFade 300ms linear both,ddCollapse 165ms cubic-bezier(.3,0,.8,.15) 135ms both!important;pointer-events:none!important}
+  @keyframes ddIn{0%{opacity:0;transform:scaleY(.4)}55%{opacity:1}100%{opacity:1;transform:scaleY(1)}}
+  @keyframes ddFade{from{opacity:1}to{opacity:0}}
+  @keyframes ddCollapse{from{transform:scaleY(1)}to{transform:scaleY(.4)}}
+  .lp-panel,.dp-pop,.pj-pop,.ac-pop,.wl-pop,.pg-pop{border:0;border-radius:12px;background:var(--md-sys-color-surface-container-low);
+    box-shadow:var(--md-sys-elevation-level3),0 6px 22px -6px color-mix(in srgb,var(--md-sys-color-shadow,#000) 55%,transparent)}
+  .dp-pop,.pj-pop,.ac-pop{transition:none}
+  .dp-pop.on,.pj-pop.on,.ac-pop.on{transform:none}
+  .lp-panel.show,.pg-pop.on{animation:none}
+  .bk-dlg .wl-pop{box-shadow:none;background:var(--md-sys-color-surface-container-high)}
+  @media (prefers-reduced-motion:reduce){.dd-in,.dd-out{animation:none!important}}
+  /* <select> bawaan diganti tombol yang membuka MDMenu */
+  select.sel-native{display:none!important}
+  .sel-dd{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%;height:30px;padding:0 4px 0 10px;border:1px solid var(--md-sys-color-outline-variant);border-radius:8px;
+    background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-body-medium);cursor:pointer;text-align:left}
+  .sel-dd .v{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sel-dd .v.ph{color:var(--md-sys-color-on-surface-variant)}
+  .sel-dd .mi{font-size:20px;color:var(--md-sys-color-on-surface-variant)}
+  .sel-dd:hover{border-color:var(--md-sys-color-outline)}.sel-dd[data-menu-open]{border-color:var(--md-sys-color-primary)}
+  .sel-dd:disabled{opacity:.5;cursor:default}
+  .mtg .sel-dd{flex:1}.mtg.none .sel-dd{border-style:dashed;color:var(--md-sys-color-on-surface-variant)}
+  .mtg.bad .sel-dd{border-color:var(--md-sys-color-error);background:var(--bad-bg)}
+  .imp-wil .sel-dd{max-width:320px;font:var(--md-sys-typescale-body-small);background:var(--md-sys-color-surface-container)}
 </style>
 </head>
 <body>
@@ -2908,6 +2933,31 @@ class MDSelect{
     onSelect:()=>{this.value=o.value;this._render();this.onChange&&this.onChange(o.value);}})),{openerEl:this.el});}
 }
 
+/* ===== Dropdown/popover: satu gerak dengan MDMenu (expressive) =====
+   Buka: tumbuh scaleY dari sisi anchor + fade (spring 520ms). Tutup: fade 300ms + collapse ke anchor.
+   Dipakai pemilih lokasi, Wilayah, date picker, autocomplete, pemilih project, popover aging. */
+const DDM={dur:520,cdur:300};
+function ddIn(el,anchor){el._ddG=(el._ddG||0)+1;el.classList.remove('dd-out');if(reduced)return;
+  if(anchor){const a=anchor.getBoundingClientRect(),r=el.getBoundingClientRect();
+    el.style.transformOrigin=(r.left<a.left-4?'right':'left')+' '+(r.top+4>=a.top?'top':'bottom');}
+  el.classList.remove('dd-in');void el.offsetWidth;el.classList.add('dd-in');const g=el._ddG;
+  setTimeout(()=>{if(el._ddG===g)el.classList.remove('dd-in');},DDM.dur);}
+function ddOut(el,fin){const g=el._ddG=(el._ddG||0)+1;el.classList.remove('dd-in');
+  if(reduced){fin&&fin();return;}el.classList.add('dd-out');
+  setTimeout(()=>{if(el._ddG!==g)return;el.classList.remove('dd-out');fin&&fin();},DDM.cdur);}
+const ddShown=el=>!el.classList.contains('dd-out');
+/* <select> bawaan -> tombol + MDMenu (nilai & event change tetap di <select> asli) */
+function selEnhance(sel){if(sel._dd||!window.MDMenu)return;sel._dd=1;sel.classList.add('sel-native');
+  const b=document.createElement('button');b.type='button';b.className='sel-dd';sel.after(b);sel._ddBtn=b;
+  const sync=()=>{const o=sel.options[sel.selectedIndex];b.innerHTML=`<span class="v${!sel.value?' ph':''}">${esc(o?o.textContent:'')}</span><span class="mi">arrow_drop_down</span>`;b.disabled=sel.disabled;};
+  sync();sel.addEventListener('change',sync);
+  b.addEventListener('click',()=>{const items=[];[...sel.children].forEach(c=>{
+      if(c.tagName==='OPTGROUP'){items.push({header:c.label});[...c.children].forEach(o=>items.push(opt(o)));}else items.push(opt(c));});
+    MDMenu.open(b,items,{openerEl:b});});
+  const opt=o=>({label:esc(o.textContent),select:'single',group:'sel',selected:o.selected,disabled:o.disabled,
+    onSelect:()=>{sel.value=o.value;sel.dispatchEvent(new Event('change',{bubbles:true}));sync();}});}
+new MutationObserver(()=>document.querySelectorAll('select:not(.sel-native)').forEach(selEnhance)).observe(document.body,{childList:true,subtree:true});
+
 /* Searchable location picker — untuk daftar lokasi yang banyak */
 class LocationPicker{
   constructor(el,{onChange=null,onNew=null}={}){
@@ -2940,8 +2990,8 @@ class LocationPicker{
     const left=Math.min(r.left,window.innerWidth-w-8);
     this.panel.style.width=w+'px';this.panel.style.left=Math.max(8,left)+'px';this.panel.style.top=(r.bottom+6)+'px';}
   toggle(){this.open?this.close():this.openPanel();}
-  openPanel(){this.open=true;this.act=0;this.q.value='';this._position();this.panel.classList.add('show');this.el.classList.add('open');this._renderList();setTimeout(()=>this.q.focus(),20);}
-  close(){this.open=false;this.panel.classList.remove('show');this.el.classList.remove('open');}
+  openPanel(){this.open=true;this.act=0;this.q.value='';this._position();this.panel.classList.add('show');this.el.classList.add('open');this._renderList();ddIn(this.panel,this.el);setTimeout(()=>this.q.focus(),20);}
+  close(){if(!this.open)return;this.open=false;this.el.classList.remove('open');ddOut(this.panel,()=>{if(!this.open)this.panel.classList.remove('show');});}
   _filtered(){const q=(this.q.value||'').toLowerCase().trim();
     return q?this.items.filter(o=>o.code.toLowerCase().includes(q)||(o.nama||'').toLowerCase().includes(q)):this.items;}
   _renderList(){const rows=this._filtered();
@@ -3160,7 +3210,8 @@ function wilPicker(host,{value=null,required=false,onPick=null,onManual=null,lab
   const dflt=v=>isK?`Kec. ${v.kec} · ${v.kab}`:(v.kel?'Kel. ':'Desa ')+v.desa;
   const show=()=>{inp.value=st.v?(display||dflt)(st.v):'';x.style.visibility=st.v?'':'hidden';ic.textContent=st.v?'location_on':'search';
     if(sel)sel.innerHTML=st.v&&!isK?`<span><small>${st.v.kel?'Kel.':'Desa'}</small>${esc(st.v.desa)}</span><span><small>Kec.</small>${esc(st.v.kec)}</span><span>${esc(st.v.kab)}</span><span><small>Prov.</small>${esc(st.v.prov)}</span><span class="kd">${esc(st.v.kode)}</span>`:'';};
-  const close=()=>{pop.classList.add('hidden');host.classList.remove('focus');};
+  const popHide=()=>{if(pop.classList.contains('hidden'))return;ddOut(pop,()=>pop.classList.add('hidden'));};
+  const close=()=>{popHide();host.classList.remove('focus');};
   const pick=v=>{st.v=v;show();close();inp.blur();onPick&&onPick(v);};
   const manRow=()=>onManual?`<div class="wl-man" data-man="1"><span class="mi">edit_location_alt</span><div><b>Desa not in the list? Enter it manually</b><div>Pick the official kecamatan, then type the desa as written by the technician</div></div></div>`:'';
   const render=d=>{st.items=d.items||[];st.act=0;
@@ -3170,13 +3221,13 @@ function wilPicker(host,{value=null,required=false,onPick=null,onManual=null,lab
     const its=st.items.map((it,i)=>isK?`<div class="wl-it${i===0?' act':''}" data-i="${i}"><span class="mi">map</span><div class="tx"><b>Kec. ${esc(it.kec)}</b>${it.used?'<span class="tag">used in this project</span>':''}<div class="bc">${esc(it.kab)} · ${esc(it.prov)}</div></div><span class="kd">${esc(it.kode)}</span></div>`
       :`<div class="wl-it${i===0?' act':''}" data-i="${i}"><span class="mi">location_on</span><div class="tx"><b>${esc(it.desa)}</b>${it.used?'<span class="tag">used in this project</span>':''}<div class="bc">${it.kel?'Kel.':'Desa'} · Kec. ${esc(it.kec)} · ${esc(it.kab)} · ${esc(it.prov)}</div></div><span class="kd">${esc(it.kode)}</span></div>`).join('');
     const ft=d.total?`<div class="wl-ft">${d.total} result${d.total>1?'s':''}${d.total>st.items.length?' · add a word (kecamatan, kabupaten, jabar…) or pick above to narrow':' · ↑↓ Enter'}</div>`:'<div class="wl-ft">No match · try fewer words or check spelling</div>';
-    pop.innerHTML=fc+mt+its+ft+manRow();pop.classList.remove('hidden');
+    const was=!pop.classList.contains('hidden')&&ddShown(pop);pop.innerHTML=fc+mt+its+ft+manRow();pop.classList.remove('hidden');if(!was)ddIn(pop,host.querySelector('.wl-box'));
     pop.querySelectorAll('.wl-it').forEach(e=>e.addEventListener('mousedown',ev=>{ev.preventDefault();pick(st.items[+e.dataset.i]);}));
     pop.querySelectorAll('[data-f]').forEach(b=>b.addEventListener('mousedown',ev=>{ev.preventDefault();if(st.prov)st.kab=b.dataset.f;else st.prov=b.dataset.f;run(0);}));
     pop.querySelectorAll('[data-clr]').forEach(b=>b.addEventListener('mousedown',ev=>{ev.preventDefault();if(b.dataset.clr==='prov'){st.prov='';st.kab='';}else st.kab='';run(0);}));
     const mr=pop.querySelector('[data-man]');if(mr)mr.addEventListener('mousedown',ev=>{ev.preventDefault();const q=inp.value.trim();close();inp.blur();onManual(q);});};
   const run=(delay=160)=>{clearTimeout(st.t);const q=inp.value.trim();
-    if(!q&&!st.prov&&!under){pop.classList.add('hidden');return;}
+    if(!q&&!st.prov&&!under){popHide();return;}
     st.t=setTimeout(async()=>{const my=++st.seq;
       try{const d=await api(`/api/wilayah/search?q=${encodeURIComponent(q)}&prov=${st.prov}&kab=${st.kab}&limit=20&level=${level}&under=${encodeURIComponent(under)}`);if(my===st.seq&&host.classList.contains('focus'))render(d);}catch(e){}},delay);};
   inp.addEventListener('focus',()=>{if(inp.disabled)return;host.classList.add('focus');if(st.v)inp.select();else if(under)run(0);});
@@ -3457,10 +3508,10 @@ function pjBind(root){root.querySelectorAll('.pj-it').forEach(e=>e.addEventListe
   if(e.dataset.new){openSettings('projects');setTimeout(()=>pjmEdit(null),60);return;}pjSwitch(e.dataset.id);}));bindTips();}
 let _pjPop=null,_pjPal=null;
 function pjPop(){if(!_pjPop){_pjPop=document.createElement('div');_pjPop.className='pj-pop';document.body.appendChild(_pjPop);}return _pjPop;}
-function pjToggle(){const el=pjPop();if(el.classList.contains('on')){pjClose();return;}pjRefresh().then(()=>{el.innerHTML=pjItems();pjBind(el);
+function pjToggle(){const el=pjPop();if(el.classList.contains('on')&&ddShown(el)){pjClose();return;}pjRefresh().then(()=>{el.innerHTML=pjItems();pjBind(el);
   const r=$('#psw').getBoundingClientRect();el.style.left=Math.min(r.left,innerWidth-308)+'px';el.style.top=(r.bottom+8)+'px';
   if($('#app').classList.contains('rail')){el.style.left=(r.right+12)+'px';el.style.top=r.top+'px';}
-  el.classList.add('on');});}
+  el.classList.add('on');ddIn(el,$('#psw'));});}
 function pjPalOpen(){if(!PJ.list.length)return;if(!_pjPal){_pjPal=document.createElement('div');_pjPal.className='pj-pal';
     _pjPal.innerHTML='<div class="box"><div class="q"><span class="mi">search</span><input id="pjQ" placeholder="Switch project…" autocomplete="off"></div><div class="lst" id="pjL"></div><div class="ft">↑↓ choose · Enter open · 1–5 jump · Esc close</div></div>';
     document.body.appendChild(_pjPal);_pjPal.addEventListener('click',e=>{if(e.target===_pjPal)pjClose();});
@@ -3471,9 +3522,9 @@ function pjPalOpen(){if(!PJ.list.length)return;if(!_pjPal){_pjPal=document.creat
       else if(/^[1-5]$/.test(e.key)&&!q.value){e.preventDefault();const p=PJ.list[+e.key-1];if(p){pjClose();pjSwitch(String(p.id));}}});}
   _pjPal.classList.add('on');const q=_pjPal.querySelector('#pjQ');q.value='';pjPalList('');setTimeout(()=>q.focus(),20);}
 function pjPalList(q){const l=_pjPal.querySelector('#pjL');l.innerHTML=pjItems(q);const f=l.querySelector('.pj-it');if(f)f.classList.add('act');pjBind(l);}
-function pjClose(){if(_pjPop)_pjPop.classList.remove('on');if(_pjPal)_pjPal.classList.remove('on');}
+function pjClose(){if(_pjPop&&_pjPop.classList.contains('on')&&ddShown(_pjPop)){const el=_pjPop;ddOut(el,()=>el.classList.remove('on'));}if(_pjPal)_pjPal.classList.remove('on');}
 $('#psw').addEventListener('click',e=>{e.stopPropagation();pjToggle();});
-document.addEventListener('click',e=>{if(_pjPop&&!e.target.closest('.pj-pop')&&!e.target.closest('#psw'))_pjPop.classList.remove('on');});
+document.addEventListener('click',e=>{if(_pjPop&&_pjPop.classList.contains('on')&&ddShown(_pjPop)&&!e.target.closest('.pj-pop')&&!e.target.closest('#psw')){const el=_pjPop;ddOut(el,()=>el.classList.remove('on'));}});
 addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&!e.altKey&&e.key.toLowerCase()==='k'&&S.user&&PJ.list.length&&!$('#app').classList.contains('hidden')){e.preventDefault();pjPalOpen();}
   else if(e.key==='Escape')pjClose();});
 /* Halaman yang dibuka sesudah pindah project (land): view sekarang bila ada, mis. 'progress' atau 'set:templates' */
@@ -4131,7 +4182,7 @@ function renderProgress(){const d=PG,t=d.team,ed=d.can_edit,el=$('#pgBody');
   drawBurn($('#pgBurn'),d);drawScatter($('#pgScat'),drafts,d.aging);drawCycle($('#pgCyc'),d.cycle);bindHover(el);bindTips();
   if(ed){$('#pgEdTot').onclick=()=>pgInline($('#pgEdTot'),'number',t.total_set?t.total:'',v=>({total:parseInt(v)}));
     $('#pgEdTgt').onclick=()=>pgInline($('#pgEdTgt'),'date',t.target_date||'',v=>({target_date:v}));
-    $('#pgGear').onclick=e=>{e.stopPropagation();const p=$('#pgPop');if(p.classList.contains('on'))pgPopClose();else{p.classList.add('on');p._snap=fgSnap(p);}};$('#pgAgX').onclick=()=>pgPopClose();
+    $('#pgGear').onclick=e=>{e.stopPropagation();const p=$('#pgPop');if(p.classList.contains('on')&&ddShown(p))pgPopClose();else{p.classList.add('on');ddIn(p,$('#pgGear'));p._snap=fgSnap(p);}};$('#pgAgX').onclick=()=>pgPopClose();
     $('#pgAgOk').onclick=async()=>{const b={fresh:+$('#pgAgF').value,warm:+$('#pgAgW').value,stale:+$('#pgAgS').value};
       try{await api('/api/progress/aging',{method:'PUT',body:JSON.stringify(b)});toast('Aging durations saved');loadProgress(true);}catch(e){toast('Failed: '+e.message);}};}}
 function pgInline(btn,type,val,body){const w=document.createElement('span');w.className='pg-edin';w.id='pgEditing';
@@ -4142,9 +4193,9 @@ function pgInline(btn,type,val,body){const w=document.createElement('span');w.cl
   const v0=i.value;FG.pgedit={label:'Save target',active:()=>!!w.isConnected&&_visible('v-progress'),dirty:()=>i.value!==v0,save,discard:()=>{delete FG.pgedit;}};fgTick();
   w.querySelector('.ok').onclick=save;w.querySelector('.no').onclick=()=>renderProgress();
   i.onkeydown=e=>{if(e.key==='Enter')save();if(e.key==='Escape')renderProgress();};}
-function pgPopClose(force){const p=$('#pgPop');if(!p||!p.classList.contains('on'))return;
+function pgPopClose(force){const p=$('#pgPop');if(!p||!p.classList.contains('on')||!ddShown(p))return;
   if(force!==true&&p._snap!=null&&fgSnap(p)!==p._snap){confirmDo('Discard changes?','The aging durations you changed are not saved yet.',()=>pgPopClose(true),{okLabel:'Discard'});return;}
-  p._snap=null;p.classList.remove('on');}
+  p._snap=null;ddOut(p,()=>p.classList.remove('on'));}
 document.addEventListener('click',e=>{const p=$('#pgPop');if(p&&p.classList.contains('on')&&!e.target.closest('#pgPop')&&!e.target.closest('#pgGear')&&!e.target.closest('#cfmDlg'))pgPopClose();});
 window.openLocFromDash=id=>{navTo('locations');setTimeout(()=>openLocDrawer(id),350);};
 function drawBurn(host,d){const t=d.team,s=d.series;if(!s.length){host.innerHTML='<div class="pg-empty">No locations yet.</div>';return;}
@@ -4520,8 +4571,8 @@ const DP={anchor:null,cb:null,view:null,sel:null,sub:'days',
   open(anchor,iso,cb){this.anchor=anchor;this.cb=cb;this.sub='days';
     this.sel=iso?iso:null;const base=iso?iso.split('-').map(Number):null;
     this.view=base?new Date(base[0],base[1]-1,1):new Date();
-    anchor.classList.add('open');this.render();const p=$('#dpPop');p.classList.add('on');this.pos();},
-  close(){$('#dpPop').classList.remove('on');if(this.anchor)this.anchor.classList.remove('open');this.anchor=null;},
+    anchor.classList.add('open');this.render();const p=$('#dpPop');p.classList.add('on');this.pos();ddIn(p,anchor);},
+  close(){const p=$('#dpPop');if(p.classList.contains('on'))ddOut(p,()=>{if(!this.anchor)p.classList.remove('on');});if(this.anchor)this.anchor.classList.remove('open');this.anchor=null;},
   pos(){const p=$('#dpPop'),r=this.anchor.getBoundingClientRect();
     let top=r.bottom+6,left=r.left;const pw=Math.min(300,window.innerWidth-24);
     if(left+pw>window.innerWidth-8)left=window.innerWidth-8-pw;
@@ -4617,17 +4668,17 @@ const AC={input:null,matches:[],act:-1,icon:'label',typed:'',
     pop.innerHTML=this.matches.map((o,i)=>{let disp=esc(o);const idx=low?o.toLowerCase().indexOf(low):-1;
       if(idx>=0)disp=esc(o.slice(0,idx))+'<b>'+esc(o.slice(idx,idx+low.length))+'</b>'+esc(o.slice(idx+low.length));
       return `<div class="ac-item${i===this.act?' act':''}" data-i="${i}"><span class="mi">${this.icon}</span><span>${disp}</span></div>`;}).join('');
-    pop.classList.add('on');
+    if(!(pop.classList.contains('on')&&ddShown(pop)))pop._ddNew=1;pop.classList.add('on');
     pop.querySelectorAll('.ac-item').forEach(el=>el.onmousedown=e=>{e.preventDefault();this.accept(this.matches[+el.dataset.i]);});},
   pos(){const p=$('#acPop'),r=this.input.getBoundingClientRect();let left=r.left,top=r.bottom+4;
     const pw=Math.max(150,r.width);p.style.minWidth=r.width+'px';
     if(left+pw>innerWidth-8)left=innerWidth-8-pw;if(top+244>innerHeight&&r.top>244)top=r.top-4-Math.min(244,p.offsetHeight||200);
-    p.style.left=Math.max(8,left)+'px';p.style.top=top+'px';},
+    p.style.left=Math.max(8,left)+'px';p.style.top=top+'px';if(p._ddNew){p._ddNew=0;ddIn(p,this.input);}},
   move(d){if(!this.matches.length)return;this.act=(this.act+d+this.matches.length)%this.matches.length;this.render();
     const el=$('#acPop').querySelector('.ac-item.act');if(el)el.scrollIntoView({block:'nearest'});},
   accept(v){if(!this.input||v==null)return;const inp=this.input;inp.value=v;try{inp.setSelectionRange(v.length,v.length);}catch(e){}
     this.close();updateSummary();if(S.loc)entryDirty=true;},
-  open_(){},close(){$('#acPop').classList.remove('on');this.input=null;this.matches=[];this.act=-1;}};
+  open_(){},close(){const p=$('#acPop');if(p.classList.contains('on'))ddOut(p,()=>p.classList.remove('on'));this.input=null;this.matches=[];this.act=-1;}};
 window.addEventListener('scroll',()=>{if(AC.input)AC.pos();},true);
 window.addEventListener('resize',()=>{if(AC.input)AC.close();});
 
