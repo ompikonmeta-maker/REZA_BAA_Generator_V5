@@ -2091,6 +2091,7 @@
   .frozen-ro:has(#v-entry:not(.hidden)) #fzBan{display:none}
   /* footer sidebar (timer, lonceng, password, tema, keluar) selalu terlihat walau menu di atasnya di-scroll */
   .nav>.nav-foot{position:sticky;bottom:-14px;z-index:3;margin-bottom:-14px;padding-bottom:14px;background:var(--md-sys-color-surface-container-low)}
+  #cfmDlg{z-index:3600}
 </style>
 </head>
 <body>
@@ -2861,6 +2862,7 @@ const DEFAULT_MAP={log:{header_row:2,start_row:3,columns:{no:"A",lokasi:"B",nama
     photo_status:{dashboard:"I",tampak_depan:"J",teknisi:"K",outdoor:"L",indoor:"M",sn_kit:"N",sn_router:"O",sn_ap:"P",ping:"Q",speed:"R",simkopdes:"S"}},
   detail:{location_cells:{},static_cells:{},inventory:{start_row:32,max_rows:5,cols:{nama_barang:"B",merk_type:"C",jumlah:"E",sn_tagging:"F",keterangan:"H"}},
     photos:{dashboard:"B12:H26",tampak_depan:"B59:H73",teknisi:"B76:H90",outdoor:"K11:Q25",indoor:"K28:Q42",sn_kit:"K59:Q73",sn_router:"K76:Q90",sn_ap:"T9:Z23",ping:"T28:Z42",speed:"T59:Z73",simkopdes:"T76:Z90"},photo_w:600}};
+const FG={};   // form generik yang dijaga: id -> {label, active(), dirty(), save():Promise<bool>, discard()}
 let S={user:null,cats:[],locFields:[],ocr:false,loc:null,scope:'one',pending:null,mapTplId:null,sheets:[]};
 
 /* calm palette */
@@ -3104,7 +3106,7 @@ function wbRestMode(k){$$('#wbRest .tabs button').forEach(b=>b.classList.toggle(
     const t=()=>{if(!WB.rest)return;S2.innerHTML=`<div class="wb-stretch"><div style="color:#a9cfca">${i%4+1} / 4</div><h5>${C[i%4][0]}</h5><div style="color:#cfe7e4">${C[i%4][1]}</div></div>`;
       if(!reduced)S2.firstChild.animate([{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:500,easing:'cubic-bezier(.05,.7,.1,1)'});i++;WB.rest.t=setTimeout(t,5000);};t();}}
 addEventListener('keydown',e=>{if(e.key==='Escape'&&WB.rest)wbRestEnd();});
-window.addEventListener('beforeunload',e=>{if(ldPending()||tplDirty()||(typeof expRunning==='function'&&expRunning())){e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',e=>{if((S.user&&dirtyCtx())||(typeof expRunning==='function'&&expRunning())){e.preventDefault();e.returnValue='';}});
 /* Transisi tema "veil": tirai warna latar tema baru muncul (linear) → tema diganti di puncak (±5ms, tersembunyi) → tirai memudar.
    Hanya opacity satu elemen yang dianimasikan, jadi ringan; tanpa snapshot halaman. */
 const THEME_FX={dur:620,ease:'linear',peak:.92};
@@ -3613,8 +3615,12 @@ function sxTarget(){const s=(SX.st&&SX.st.target)||{};
     <div class="pjm-f"><div><md-text-field id="sxTot" variant="outlined" type="number" label="Target (BAA)" value="${s.total??''}"></md-text-field></div>
       <div><md-text-field id="sxDate" variant="outlined" type="date" label="Target date" value="${esc(s.target_date||'')}"></md-text-field></div></div>
     <div class="pjm-act"><md-button variant="filled" icon="check" id="sxTSave">Save target</md-button></div></div></div>`;
-  $('#sxTSave').addEventListener('click',async()=>{const t=$('#sxTot').value;try{
-    await api('/api/projects/'+PJ.id+'/target',{method:'PUT',body:JSON.stringify({total:t?+t:null,target_date:$('#sxDate').value||null})});toast('Target saved');}catch(e){toast('Failed: '+e.message);}});}
+  SX.tsnap=fgSnap($('#v-setup'));$('#sxTSave').addEventListener('click',()=>sxTSave());fgTick();}
+async function sxTSave(){const t=$('#sxTot').value;try{
+    const r=await api('/api/projects/'+PJ.id+'/target',{method:'PUT',body:JSON.stringify({total:t?+t:null,target_date:$('#sxDate').value||null})});
+    SX.st=r.setup;SX.tsnap=fgSnap($('#v-setup'));sxNav();toast('Target saved');return true;}catch(e){toast('Failed: '+e.message);return false;}}
+FG.target={label:'Save target',active:()=>SX.on&&SX.step==='target'&&_visible('v-setup')&&!!$('#sxTSave'),dirty:()=>SX.tsnap!=null&&fgSnap($('#v-setup'))!==SX.tsnap,
+  save:()=>sxTSave(),discard:()=>{SX.tsnap=null;}};
 
 /* --- Team: akses project + buat akun langsung (Setup & Settings › This project) --- */
 let TM={users:[],members:[]};
@@ -3636,14 +3642,16 @@ function renderTeam(){const n=TM.members.length,ops=TM.users.filter(u=>u.role===
   $$('#v-team .tm-role button').forEach(b=>b.onclick=()=>$$('#v-team .tm-role button').forEach(x=>x.classList.toggle('on',x===b)));
   $$('#v-team md-switch[data-u]').forEach(sw=>sw.addEventListener('change',async()=>{const ids=$$('#v-team md-switch[data-u]').filter(x=>x.selected).map(x=>+x.dataset.u);
     try{const r=await api('/api/projects/'+PJ.id+'/members',{method:'PUT',body:JSON.stringify({members:ids})});TM.members=r.members;renderTeam();}catch(e){toast('Failed: '+e.message);sw.selected=!sw.selected;}}));
-  $('#tmAdd').addEventListener('click',async()=>{const name=($('#tmName').value||'').trim(),un=($('#tmUser').value||'').trim().toLowerCase();
-    const role=$('#v-team .tm-role button.on').dataset.r;if(!un){toast('Username is required');return;}
+  $('#tmAdd').addEventListener('click',()=>tmAdd());bindTips();fgTick();}
+FG.team={label:'Add account',active:()=>_visible('v-team')&&!!$('#tmAdd'),dirty:()=>!!(($('#tmName').value||'').trim()||($('#tmUser').value||'').trim()),
+  save:()=>tmAdd(),discard:()=>{['#tmName','#tmUser'].forEach(s=>{const i=tfInput($(s));if(i)i.value='';});}};
+async function tmAdd(){{const name=($('#tmName').value||'').trim(),un=($('#tmUser').value||'').trim().toLowerCase();
+    const role=$('#v-team .tm-role button.on').dataset.r;if(!un){toast('Username is required');return false;}
     try{const r=await api('/api/users',{method:'POST',body:JSON.stringify({username:un,full_name:name,role,projects:[+PJ.id]})});
       await loadTeam();$('#tmTemp').innerHTML=`<div class="tm-temp"><span class="mi">key</span><span>Account <b>${esc(un)}</b> created · temporary password <code>${esc(r.temp_password)}</code></span>
         <md-button variant="text" icon="content_copy" id="tmCopy">Copy</md-button></div>`;
       $('#tmCopy').onclick=()=>{try{navigator.clipboard.writeText(`Username: ${un}\nPassword: ${r.temp_password}`);toast('Copied');}catch(e){}};
-      if(SX.on)sxRefresh();}catch(e){toast('Failed: '+e.message);}});
-  bindTips();}
+      if(SX.on)sxRefresh();return true;}catch(e){toast('Failed: '+e.message);return false;}}}
 
 /* --- Frozen: banner semua view + strip status admin + dialog freeze + ganti prefix --- */
 function fzApply(){const a=$('#app');a.classList.toggle('pj-frozen',isFrozen());a.classList.toggle('frozen-ro',frozenRO());
@@ -3654,7 +3662,7 @@ function fzApply(){const a=$('#app');a.classList.toggle('pj-frozen',isFrozen());
   const p=PJ.cur,admin=S.user.role==='admin';
   b.innerHTML=`<span class="mi">ac_unit</span><span class="tx"><b>${esc(p.name)} is frozen${admin?' — users can only view':' — input is paused'}</b>${p.freeze_msg?`<span class="m">${esc(p.freeze_msg)}</span>`:''}
     <small>by ${esc(p.frozen_by||'admin')}${p.frozen_at?' · since '+fmtWhen(p.frozen_at):''}</small></span>${admin?'<md-button variant="tonal" icon="tune" id="fzGo">Project &amp; status</md-button>':''}`;
-  const g=$('#fzGo');if(g)g.onclick=()=>openSettings('pjstatus');}
+  const g=$('#fzGo');if(g)g.onclick=()=>guardLeave(()=>openSettings('pjstatus'),'Project & status');}
 function pausedHtml(){const p=PJ.cur;return `<div class="eb"><div class="ic"><span class="mi">ac_unit</span></div><h3>Input is paused</h3>
   <p>${p.freeze_msg?esc(p.freeze_msg):'Admin has frozen this project for a while. You can still view data.'}</p><small>Frozen by ${esc(p.frozen_by||'admin')}${p.frozen_at?' · '+fmtWhen(p.frozen_at):''}</small></div>`;}
 const FZ_CHIPS=['Template BAA is being revised. Input is paused, please wait for admin.','Location codes are being changed. Input is paused for a moment.','Admin is checking the data. Input is paused, please wait.'];
@@ -3663,12 +3671,12 @@ function pjStatusStrip(q){const st=q.status||'active';
   if(st==='frozen')return `<div class="st-strip fz"><span class="pill frozen"><i></i>FROZEN</span><span class="tx"><b>Input paused for everyone except admin</b>${q.freeze_msg?`“${esc(q.freeze_msg)}” · `:''}<a id="pjmMsg">Edit message</a></span><md-button variant="filled" icon="play_arrow" id="pjmUnfreeze">Unfreeze</md-button></div>`;
   return `<div class="st-strip"><span class="pill active"><i></i>ACTIVE</span><span class="tx"><b>Team can enter BAA</b>Freeze to pause all input while you reconfigure.</span><md-button variant="tonal" icon="ac_unit" id="pjmFreeze">Freeze</md-button></div>`;}
 function pjStatusBind(q){const after=async r=>{PJM.sel=r;await loadProjects(true);await pjRefresh();if(String(r.id)===PJ.id){PJ.cur={...PJ.cur,...r};fzApply();}};
-  const f=$('#pjmFreeze');if(f)f.onclick=()=>fzDialog(q,after);
-  const m=$('#pjmMsg');if(m)m.onclick=()=>fzDialog(q,after,true);
-  const u=$('#pjmUnfreeze');if(u)u.onclick=()=>confirmDo('Unfreeze '+q.name+'?','Members can enter and edit BAA again right away.',async()=>{
-    try{after(await api('/api/projects/'+q.id+'/unfreeze',{method:'POST'}));toast('Project unfrozen');}catch(e){toast('Failed: '+e.message);}},{okLabel:'Unfreeze'});
-  const s=$('#pjmSetup');if(s)s.onclick=()=>{if(String(q.id)===PJ.id){try{sessionStorage.setItem('pjLand','setup:overview');}catch(e){}location.reload();}else{try{sessionStorage.setItem('pjLand','setup:overview');}catch(e){}pjSwitch(String(q.id),'setup:overview');}};
-  const rc=$('#pjmRecode');if(rc)rc.onclick=()=>rcDialog(q,after);}
+  const f=$('#pjmFreeze');if(f)f.onclick=()=>guardLeave(()=>fzDialog(q,after),'Freeze');
+  const m=$('#pjmMsg');if(m)m.onclick=()=>guardLeave(()=>fzDialog(q,after,true),'Edit message');
+  const u=$('#pjmUnfreeze');if(u)u.onclick=()=>guardLeave(()=>confirmDo('Unfreeze '+q.name+'?','Members can enter and edit BAA again right away.',async()=>{
+    try{after(await api('/api/projects/'+q.id+'/unfreeze',{method:'POST'}));toast('Project unfrozen');}catch(e){toast('Failed: '+e.message);}},{okLabel:'Unfreeze'}),'Unfreeze');
+  const s=$('#pjmSetup');if(s)s.onclick=()=>guardLeave(()=>{if(String(q.id)===PJ.id){try{sessionStorage.setItem('pjLand','setup:overview');}catch(e){}location.reload();}else{try{sessionStorage.setItem('pjLand','setup:overview');}catch(e){}pjSwitch(String(q.id),'setup:overview');}},'Setup');
+  const rc=$('#pjmRecode');if(rc)rc.onclick=()=>guardLeave(()=>rcDialog(q,after),'Change prefix');}
 function fzDialog(q,after,edit){const d=document.createElement('div');d.className='bk-dlg fzd';
   d.innerHTML=`<div class="box"><h3>${edit?'Edit freeze message':'Freeze '+esc(q.name)+'?'}</h3>
     ${edit?'':'<p>All input stops for members: entry, edit, photo &amp; scan upload, import and export. They can still view data. Admin can still change settings and fix location data.</p>'}
@@ -3678,7 +3686,9 @@ function fzDialog(q,after,edit){const d=document.createElement('div');d.classNam
     <div class="acts"><md-button variant="text" id="fzCancel">Cancel</md-button><md-button variant="filled" icon="${edit?'check':'ac_unit'}" id="fzOk">${edit?'Save message':'Freeze project'}</md-button></div></div>`;
   document.body.appendChild(d);const ta=d.querySelector('#fzMsg'),pv=()=>{d.querySelector('#fzPv').textContent=ta.value.trim();};pv();
   ta.addEventListener('input',pv);d.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>{ta.value=FZ_CHIPS[+b.dataset.i];pv();});
-  const close=()=>d.remove();d.querySelector('#fzCancel').onclick=close;d.addEventListener('click',e=>{if(e.target===d)close();});
+  const close=()=>d.remove(),init=(edit?q.freeze_msg||'':'').trim();
+  const ask=()=>{if(ta.value.trim()!==init)confirmDo('Discard changes?','The message you typed will be lost.',close,{okLabel:'Discard'});else close();};
+  d.querySelector('#fzCancel').onclick=ask;d.addEventListener('click',e=>{if(e.target===d)ask();});
   d.querySelector('#fzOk').onclick=async()=>{try{const r=await api('/api/projects/'+q.id+'/freeze',{method:'POST',body:JSON.stringify({message:ta.value})});close();after(r);toast(edit?'Message updated':'Project frozen');}
     catch(e){toast('Failed: '+e.message);}};
   setTimeout(()=>ta.focus(),60);}
@@ -3686,7 +3696,9 @@ function rcDialog(q,after){const d=document.createElement('div');d.className='bk
   d.innerHTML=`<div class="box"><h3>Change code prefix</h3><p>Every location code in <b>${esc(q.name)}</b> changes prefix; numbers stay the same. Photo &amp; scan folders move with them.</p>
     <div class="rc-in"><md-text-field id="rcPre" variant="outlined" label="New prefix (2–4 letters)"></md-text-field><md-button variant="tonal" icon="analytics" id="rcAn">Analyse</md-button></div>
     <div id="rcOut"></div><div class="acts"><md-button variant="text" id="rcCancel">Cancel</md-button><md-button variant="filled" icon="sync_alt" id="rcGo" disabled>Re-code</md-button></div></div>`;
-  document.body.appendChild(d);const close=()=>d.remove();d.querySelector('#rcCancel').onclick=close;d.addEventListener('click',e=>{if(e.target===d)close();});
+  document.body.appendChild(d);const close=()=>d.remove();
+  const ask=()=>{if((d.querySelector('#rcPre').value||'').trim())confirmDo('Discard changes?','The new prefix you typed will not be applied.',close,{okLabel:'Discard'});else close();};
+  d.querySelector('#rcCancel').onclick=ask;d.addEventListener('click',e=>{if(e.target===d)ask();});
   const pre=d.querySelector('#rcPre'),go=d.querySelector('#rcGo'),out=d.querySelector('#rcOut');let plan=null;
   const dis=on=>go.toggleAttribute('disabled',on);
   pre.addEventListener('input',()=>{const v=(pre.value||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);const i=tfInput(pre);if(i&&i.value!==v)i.value=v;plan=null;dis(true);out.innerHTML='';});
@@ -3741,7 +3753,7 @@ async function loadProjects(keep){try{const r=await api('/api/projects');PJM.row
   pjmList();const cur=keep&&PJM.sel&&PJM.rows.find(x=>x.id===PJM.sel.id);pjmEdit(cur||PJM.rows.find(x=>String(x.id)===PJ.id)||PJM.rows[0]);}
 function pjmList(){$('#pjmList').innerHTML=PJM.rows.map(p=>`<div class="pjm-row${PJM.sel&&PJM.sel.id===p.id?' on':''}" data-id="${p.id}">${pjAv(p)}<span class="pj-tx"><span class="pj-nm">${esc(p.name)}</span>
     <span class="pj-sb">${esc(p.prefix)} · ${p.members.length} ${p.members.length===1?'person':'people'} · ${p.status==='setup'?'<b class="pst setup">setup</b>':`${p.done}/${p.total}`}${p.status==='frozen'?' · <b class="pst frozen">frozen</b>':''}${p.archived?' · archived':''}</span></span></div>`).join('');
-  $$('#pjmList .pjm-row').forEach(r=>r.onclick=()=>{pjmEdit(PJM.rows.find(x=>x.id===+r.dataset.id));});
+  $$('#pjmList .pjm-row').forEach(r=>r.onclick=()=>{const p=PJM.rows.find(x=>x.id===+r.dataset.id);if(PJM.sel&&PJM.sel.id===p.id)return;guardLeave(()=>pjmEdit(p),p.name);});
   $('#pjm-new').toggleAttribute('disabled',PJM.rows.filter(p=>!p.archived).length>=PJM.max);}
 function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
   PJM.sel=p||{id:null,name:'',prefix:'',color:PJM.colors.find(c=>!used.has(c))||PJM.colors[0],members:[],prefix_locked:false,total:null,target_date:'',template:null,archived:false};
@@ -3772,8 +3784,8 @@ function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
   const pre=$('#pjm-pre');if(!q.prefix_locked)pre.addEventListener('input',()=>{const v=(pre.value||'').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);if(pre.value!==v)pre.value=v;
     $('#pjm-next').innerHTML=`Next code: <b>${v||'???'}_${String(isNew?1:+(q.next_code||'_1').split('_').pop()).padStart(5,'0')}</b> · 2–4 letters, unique`;});
   $$('#pjmEd .pjm-sw button').forEach(b=>b.onclick=()=>{$$('#pjmEd .pjm-sw button').forEach(x=>x.classList.toggle('on',x===b));q.color=b.dataset.c;});
-  const tb=$('#pjm-tpl');if(tb)tb.onclick=()=>pjSwitch(String(q.id),'set:templates');
-  const ab=$('#pjm-arch');if(ab)ab.onclick=()=>confirmDo(q.archived?'Unarchive project':'Archive project',q.archived?`Make <b>${esc(q.name)}</b> available to its members again?`:`Hide <b>${esc(q.name)}</b> from members and the Portfolio? Its data is kept; admin can still open it.`,()=>pjmSave(!q.archived),{okLabel:q.archived?'Unarchive':'Archive'});
+  const tb=$('#pjm-tpl');if(tb)tb.onclick=()=>guardLeave(()=>pjSwitch(String(q.id),'set:templates'),'Template');
+  const ab=$('#pjm-arch');if(ab)ab.onclick=()=>guardLeave(()=>confirmDo(q.archived?'Unarchive project':'Archive project',q.archived?`Make <b>${esc(q.name)}</b> available to its members again?`:`Hide <b>${esc(q.name)}</b> from members and the Portfolio? Its data is kept; admin can still open it.`,()=>pjmSave(!q.archived),{okLabel:q.archived?'Unarchive':'Archive'}),q.archived?'Unarchive':'Archive');
   const ftSync=()=>{const w=$('#ft-wil').selected,pr=$('#ft-prog').selected;$('#ft-prog').disabled=!w;$('#ft-prog-row').classList.toggle('dis',!w);
     $('#ft-prog-s').textContent=pr?'Required (*) · part of completeness % · "Wilayah" chip when empty':'Optional · does not affect completeness %';
     $('#ft-hint').textContent=w?'Turning it off hides the field and filter for this project. Data already entered is kept.':'Off — wilayah field and filter are hidden in this project. Existing data is kept.';};
@@ -3783,32 +3795,55 @@ function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
       {okLabel:'Turn on',onCancel:()=>{sw.selected=false;ftSync();}});};
   $('#ft-wil').addEventListener('change',()=>{ftSync();ftWarn($('#ft-wil'));});$('#ft-prog').addEventListener('change',()=>{ftSync();ftWarn($('#ft-prog'));});ftSync();
   if(!isNew)pjStatusBind(q);
-  $('#pjm-save').onclick=()=>pjmSave();bindTips();revealCards($('#pjmEd').parentElement);}
+  $('#pjm-save').onclick=()=>pjmSave();bindTips();revealCards($('#pjmEd').parentElement);
+  PJM.snap=null;setTimeout(()=>{PJM.snap=fgSnap($('#pjmEd'));fgTick();},0);}
 async function pjmSave(archived){const q=PJM.sel,isNew=!q.id;const tot=$('#pjm-total').value;
   const body={name:($('#pjm-name').value||'').trim(),prefix:($('#pjm-pre').value||'').trim(),color:q.color,total:tot?+tot:null,target_date:$('#pjm-date').value||null,
     members:$$('#pjmEd md-switch[data-u]').filter(x=>x.selected).map(x=>+x.dataset.u),
     wilayah_on:!!$('#ft-wil').selected,wilayah_progress:!!$('#ft-prog').selected};
   if(archived!==undefined)body.archived=archived;
   try{const r=await api(isNew?'/api/projects':'/api/projects/'+q.id,{method:isNew?'POST':'PUT',body:JSON.stringify(body)});
-    toast(isNew?'Project created':'Project saved');PJM.sel=r;await loadProjects(true);await pjRefresh();
+    toast(isNew?'Project created':'Project saved');PJM.sel=r;PJM.snap=null;await loadProjects(true);await pjRefresh();
     const multi=PJ.list.filter(p=>!p.archived).length>1;$$('.multi-only').forEach(x=>x.classList.toggle('hidden',!multi||S.user.role==='operator'));
-    if(String(r.id)===PJ.id){PJ.cur={...PJ.cur,...r};paint();pjPaint();wilApply();}}catch(e){toast('Failed: '+e.message);}}
-$('#pjm-new').addEventListener('click',()=>pjmEdit(null));
+    if(String(r.id)===PJ.id){PJ.cur={...PJ.cur,...r};paint();pjPaint();wilApply();}return true;}catch(e){toast('Failed: '+e.message);return false;}}
+$('#pjm-new').addEventListener('click',()=>guardLeave(()=>pjmEdit(null),'New project'));
+FG.pjm={label:'Save project',active:()=>_visible('v-projects')&&!!$('#pjm-save'),dirty:()=>PJM.snap!=null&&fgSnap($('#pjmEd'))!==PJM.snap,
+  save:()=>pjmSave(),discard:()=>{PJM.snap=null;}};
 
 /* ===== Guard: perubahan belum disimpan ===== */
+customElements.whenDefined('md-dialog').then(()=>['#userDlg','#pwDlg','#snDlg','#inpDlg'].forEach(s=>dlgGuard($(s))));
 let entryDirty=false;
+/* Form generik (editor project, Target, Team): dirty = isi form berbeda dari snapshot saat dibuka. */
+function fgSnap(root){if(!root)return '';return [...root.querySelectorAll('input,textarea,select,md-text-field,md-switch,md-checkbox,.pjm-sw button,.lg-seg button,.segt button,#uPj button,.urole')]
+  .filter(e=>!e.closest('[data-noguard]')).map(e=>{const t=e.tagName;
+    if(t==='MD-SWITCH'||t==='MD-CHECKBOX')return e.hasAttribute('selected')||e.hasAttribute('checked')?1:0;
+    if(t==='BUTTON'||e.classList.contains('urole'))return e.classList.contains('on')||e.classList.contains('sel')?1:0;
+    if(e.type==='checkbox'||e.type==='radio')return e.checked?1:0;
+    if(e.type==='file')return e.files&&e.files.length?1:0;
+    return e.value??'';}).join('\u0001');}
+function fgActive(){return Object.values(FG).find(f=>f.active())||null;}
+function fgDirty(){const f=fgActive();return f&&f.dirty()?f:null;}
+function fgTick(){if(SETFS_SAVE[curSetSub]&&_visible('v-settings'))return;const f=fgActive(),w=$('#setSaveWrap');if(!w)return;
+  if(!f){w.classList.add('hidden');return;}w.classList.remove('hidden');$('#setSaveLbl').textContent=f.label;setSaveDirty(!!f.dirty());}
+let _fgT=0;const fgSoon=()=>{cancelAnimationFrame(_fgT);_fgT=requestAnimationFrame(fgTick);};
+['input','change','click'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target.closest&&e.target.closest('.canvas'))fgSoon();},true));
+/* Dialog md-dialog dengan isian: tutup (Cancel / Esc / klik luar) saat ada perubahan -> konfirmasi buang. Simpan memanggil close(true). */
+function dlgGuard(d){if(!d||d._g)return;d._g=1;const show=d.show.bind(d),close=d.close.bind(d);
+  d.show=(...a)=>{const r=show(...a);d._snap=null;setTimeout(()=>{d._snap=fgSnap(d);},120);return r;};
+  d.close=force=>{if(force!==true&&d._snap!=null&&fgSnap(d)!==d._snap){confirmDo('Discard changes?','You have unsaved changes in this dialog. Close it and lose them?',()=>{d._snap=null;close();},{okLabel:'Discard'});return;}
+    d._snap=null;close();};}
 function _visible(id){const el=$('#'+id);return el&&!el.classList.contains('hidden');}
 function isSetDirty(){return !!SETFS_SAVE[curSetSub]&&_visible('v-settings')&&$('#setSaveBtn')&&!$('#setSaveBtn').disabled;}
 function isEntryDirty(){return _visible('v-entry')&&entryDirty&&!!S.loc;}
-function dirtyCtx(){if(isEntryDirty())return 'entry';if(isSetDirty())return 'set';if(ldPending())return 'drawer';if(tplDirty())return 'tpl';return null;}
+function dirtyCtx(){if(isEntryDirty())return 'entry';if(isSetDirty())return 'set';if(ldPending())return 'drawer';if(tplDirty())return 'tpl';if(fgDirty())return 'fg';return null;}
 function tplDirty(){return typeof M!=='undefined'&&M.dirty&&!!S.mapTplId&&_visible('v-templates');}
-let _unsGo=null,_unsCtx=null,_unsCancel=null;
+let _unsGo=null,_unsCtx=null,_unsCancel=null,_unsFg=null;
 function guardLeave(go,dest,onCancel){
   if(isDraft()&&_visible('v-entry')){                    // draft belum punya kode
     if(!S._creating&&!draftHasData()){toast('No data entered — new location discarded');S.loc=null;entryDirty=false;go();return;}
     entryDirty=true;                                     // ada isian/among creating -> perlakukan sbg perubahan belum disimpan
   }
-  const ctx=dirtyCtx();if(!ctx){go();return;}_unsGo=go;_unsCtx=ctx;_unsCancel=onCancel||null;
+  const ctx=dirtyCtx();if(!ctx){go();return;}_unsGo=go;_unsCtx=ctx;_unsCancel=onCancel||null;_unsFg=ctx==='fg'?fgDirty():null;
   const to=dest?(' to <b>'+esc(dest)+'</b>'):'';
   $('#unsBody').innerHTML=ctx==='drawer'?ldPendMsg():'You have unsaved changes on this page. Save before moving'+to+'?';
   const o=$('#unsOv');o.style.display='flex';requestAnimationFrame(()=>requestAnimationFrame(()=>o.classList.add('on')));}
@@ -3816,11 +3851,12 @@ function _unsClose(){const o=$('#unsOv');o.classList.remove('on');setTimeout(()=
 function _unsStay(){const cb=_unsCancel;_unsGo=null;_unsCancel=null;_unsClose();if(cb)cb();}
 $('#unsStay').addEventListener('click',_unsStay);
 $('#unsDiscard').addEventListener('click',()=>{if(_unsCtx==='entry')entryDirty=false;else if(_unsCtx==='drawer')ldClearPend();
-  else if(_unsCtx==='tpl'){mapSaved();M.reload=true;}else setSaveDirty(false);
+  else if(_unsCtx==='tpl'){mapSaved();M.reload=true;}else if(_unsCtx==='fg'){if(_unsFg)_unsFg.discard();}else setSaveDirty(false);
   const go=_unsGo;_unsGo=null;_unsCancel=null;_unsClose();if(go)go();});
 $('#unsSave').addEventListener('click',async()=>{
   if(_unsCtx==='drawer'){if(!await ldSaveAll())return;}
   else if(_unsCtx==='tpl'){if(!await mapSaveNow()){_unsStay();return;}}
+  else if(_unsCtx==='fg'){if(!_unsFg||!await _unsFg.save()){_unsStay();return;}}
   else if(_unsCtx==='entry'){entryDirty=false;$('#save-btn').click();}else{$('#setSaveBtn').click();}
   const go=_unsGo;_unsGo=null;_unsCancel=null;_unsClose();if(go)go();});
 $('#unsOv').addEventListener('click',e=>{if(e.target.id==='unsOv')_unsStay();});
@@ -3859,7 +3895,9 @@ function setSaveDirty(d){$('#setStatus').className='set-status '+(d?'dirty':'ok'
   const mark=()=>{if(SETFS_SAVE[curSetSub])setSaveDirty(true);};
   v.addEventListener('input',mark);v.addEventListener('change',mark);
   v.addEventListener('click',e=>{if(SETFS_SAVE[curSetSub]&&e.target.closest('.segt button,.ecard-del,#lf-add,#di-add,#pc-add'))mark();});
-  $('#setSaveBtn').addEventListener('click',()=>{const c=SETFS_SAVE[curSetSub];if(!c||$('#setSaveBtn').disabled)return;$(c.sel).click();setSaveDirty(false);});})();
+  $('#setSaveBtn').addEventListener('click',()=>{if($('#setSaveBtn').disabled)return;
+    const c=SETFS_SAVE[curSetSub];if(c&&_visible('v-settings')){$(c.sel).click();setSaveDirty(false);return;}
+    const f=fgActive();if(f)f.save().then(()=>fgTick());});})();
 /* sub yang mengarah ke view tersendiri (bukan kartu di v-settings) */
 const SET_VIEWS={projects:{view:'projects',title:'All projects',load:()=>loadProjects()},pjstatus:{view:'projects',title:'Project & status',load:()=>loadProjects()},
   users:{view:'users',title:'Users',load:()=>loadUsers()},templates:{view:'templates',title:'Template BAA',load:()=>loadTemplates()},team:{view:'team',title:'Team',load:()=>loadTeam()}};
@@ -4093,17 +4131,21 @@ function renderProgress(){const d=PG,t=d.team,ed=d.can_edit,el=$('#pgBody');
   drawBurn($('#pgBurn'),d);drawScatter($('#pgScat'),drafts,d.aging);drawCycle($('#pgCyc'),d.cycle);bindHover(el);bindTips();
   if(ed){$('#pgEdTot').onclick=()=>pgInline($('#pgEdTot'),'number',t.total_set?t.total:'',v=>({total:parseInt(v)}));
     $('#pgEdTgt').onclick=()=>pgInline($('#pgEdTgt'),'date',t.target_date||'',v=>({target_date:v}));
-    $('#pgGear').onclick=e=>{e.stopPropagation();$('#pgPop').classList.toggle('on');};$('#pgAgX').onclick=()=>$('#pgPop').classList.remove('on');
+    $('#pgGear').onclick=e=>{e.stopPropagation();const p=$('#pgPop');if(p.classList.contains('on'))pgPopClose();else{p.classList.add('on');p._snap=fgSnap(p);}};$('#pgAgX').onclick=()=>pgPopClose();
     $('#pgAgOk').onclick=async()=>{const b={fresh:+$('#pgAgF').value,warm:+$('#pgAgW').value,stale:+$('#pgAgS').value};
       try{await api('/api/progress/aging',{method:'PUT',body:JSON.stringify(b)});toast('Aging durations saved');loadProgress(true);}catch(e){toast('Failed: '+e.message);}};}}
 function pgInline(btn,type,val,body){const w=document.createElement('span');w.className='pg-edin';w.id='pgEditing';
   w.innerHTML=`<input type="${type}" ${type==='number'?'min="1"':''} value="${esc(String(val))}"><button class="ok" aria-label="Save"><span class="mi">check</span></button><button class="no" aria-label="Cancel"><span class="mi">close</span></button>`;
   btn.replaceWith(w);const i=w.querySelector('input');i.focus();if(i.select)i.select();
-  const save=async()=>{const v=i.value.trim();if(!v){toast('Enter a value');return;}
-    try{await api('/api/progress/goal',{method:'PUT',body:JSON.stringify(body(v))});toast('Saved');loadProgress(true);}catch(e){toast('Failed: '+e.message);}};
+  const save=async()=>{const v=i.value.trim();if(!v){toast('Enter a value');return false;}
+    try{await api('/api/progress/goal',{method:'PUT',body:JSON.stringify(body(v))});toast('Saved');loadProgress(true);return true;}catch(e){toast('Failed: '+e.message);return false;}};
+  const v0=i.value;FG.pgedit={label:'Save target',active:()=>!!w.isConnected&&_visible('v-progress'),dirty:()=>i.value!==v0,save,discard:()=>{delete FG.pgedit;}};fgTick();
   w.querySelector('.ok').onclick=save;w.querySelector('.no').onclick=()=>renderProgress();
   i.onkeydown=e=>{if(e.key==='Enter')save();if(e.key==='Escape')renderProgress();};}
-document.addEventListener('click',e=>{const p=$('#pgPop');if(p&&p.classList.contains('on')&&!e.target.closest('#pgPop')&&!e.target.closest('#pgGear'))p.classList.remove('on');});
+function pgPopClose(force){const p=$('#pgPop');if(!p||!p.classList.contains('on'))return;
+  if(force!==true&&p._snap!=null&&fgSnap(p)!==p._snap){confirmDo('Discard changes?','The aging durations you changed are not saved yet.',()=>pgPopClose(true),{okLabel:'Discard'});return;}
+  p._snap=null;p.classList.remove('on');}
+document.addEventListener('click',e=>{const p=$('#pgPop');if(p&&p.classList.contains('on')&&!e.target.closest('#pgPop')&&!e.target.closest('#pgGear')&&!e.target.closest('#cfmDlg'))pgPopClose();});
 window.openLocFromDash=id=>{navTo('locations');setTimeout(()=>openLocDrawer(id),350);};
 function drawBurn(host,d){const t=d.team,s=d.series;if(!s.length){host.innerHTML='<div class="pg-empty">No locations yet.</div>';return;}
   const W=760,H=300,L=40,R=24,T=18,B=34,iw=W-L-R,ih=H-T-B;const day=864e5,d0=new Date(s[0].d+'T00:00:00'),today=new Date(s[s.length-1].d+'T00:00:00');
@@ -4993,7 +5035,7 @@ $('#sn-save').addEventListener('click',async()=>{const val=$('#sn-serial').value
   try{await api('/api/photos/'+sn.photoId,{method:'PATCH',body:JSON.stringify({ocr_serial:val})});
     S.loc=await api('/api/locations/'+S.loc.id);renderPhotos();
     if(val)applySnToInventory(cat,val);else updateSummary();
-    $('#snDlg').close();toast('SN saved'+(val?': '+val:''));}catch(e){toast('Failed: '+e.message);}});
+    $('#snDlg').close(true);toast('SN saved'+(val?': '+val:''));}catch(e){toast('Failed: '+e.message);}});
 
 /* save + export (selalu lokasi aktif) */
 $('#save-btn').addEventListener('click',async()=>{try{
@@ -5552,7 +5594,7 @@ $('#cfmCancel').addEventListener('click',()=>{$('#cfmDlg').close();const c=_cfmC
 $('#cfmOk').addEventListener('click',()=>{$('#cfmDlg').close();const f=_cfmFn;_cfmFn=null;_cfmCancelFn=null;if(f)f();});
 window.askInput=(title,cur,fn)=>{_inpFn=fn;$('#inpTitle').textContent=title;const f=$('#inpField');f.setAttribute('value',cur||'');$('#inpDlg').show();setTimeout(()=>f.focus&&f.focus(),60);};
 $('#inpCancel').addEventListener('click',()=>$('#inpDlg').close());
-$('#inpOk').addEventListener('click',()=>{$('#inpDlg').close();const v=$('#inpField').value;const f=_inpFn;_inpFn=null;if(f)f(v);});
+$('#inpOk').addEventListener('click',()=>{$('#inpDlg').close(true);const v=$('#inpField').value;const f=_inpFn;_inpFn=null;if(f)f(v);});
 
 /* TEMPLATES + MAPPING */
 $('#tpl-file-btn')&&$('#tpl-file-btn').addEventListener('click',()=>$('#tpl-file').click());
@@ -5956,7 +5998,7 @@ $('#userCancel').addEventListener('click',()=>$('#userDlg').close());
 $('#userSave').addEventListener('click',async()=>{const body={username:$('#u-username').value.trim(),full_name:$('#u-fullname').value.trim(),role:userRole(),active:$('#u-active').checked,password:$('#u-pass').value,projects:$$('#uPj button.on').map(b=>+b.dataset.id)};
   try{ if(editUserId){await api('/api/users/'+editUserId,{method:'PUT',body:JSON.stringify(body)});}
     else{ if(!body.username||body.password.length<4)return toast('Username & password (min 4) required');await api('/api/users',{method:'POST',body:JSON.stringify(body)});}
-    $('#userDlg').close();toast('User saved');loadUsers();}catch(e){toast('Failed: '+e.message);}});
+    $('#userDlg').close(true);toast('User saved');loadUsers();}catch(e){toast('Failed: '+e.message);}});
 async function delUser(u){if(u.id===S.user.id)return toast('You cannot delete your own account');
   if(!confirm('Delete user '+u.username+'?'))return;
   try{await api('/api/users/'+u.id,{method:'DELETE'});toast('User deleted');loadUsers();}catch(e){toast('Failed: '+e.message);}}
@@ -5975,7 +6017,7 @@ $('#pwBtn').addEventListener('click',()=>openPw(false));
 $('#pwCancel').addEventListener('click',()=>$('#pwDlg').close());
 $('#pwSave').addEventListener('click',async()=>{try{
   await api('/api/auth/change-password',{method:'POST',body:JSON.stringify({old_password:$('#pw-old').value,new_password:$('#pw-new').value})});
-  $('#pwDlg').close();S.user.must_change=false;toast('Password changed');}catch(e){toast('Failed: '+e.message);}});
+  $('#pwDlg').close(true);S.user.must_change=false;toast('Password changed');}catch(e){toast('Failed: '+e.message);}});
 
 /* Galeri foto per kategori */
 let galCat=null;
