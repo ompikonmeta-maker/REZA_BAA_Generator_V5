@@ -118,3 +118,12 @@ Settings
 | Activate | Tetap butuh Location data ✓ (terkonfirmasi) + Template + Team |
 | Panduan | Topik Setup & Location data diperbarui (teks + screenshot) |
 
+
+## Scan PDF per project (2026-10-05) — dikerjakan
+| Topik | Keputusan |
+|---|---|
+| Langkah Setup | Scan PDF **tidak** menjadi langkah Setup (diunggah per lokasi oleh operator) |
+| Info | Baris read-only di Location data › tab Photos: "Scan PDF — required for every location · becomes page 1 of the PDF export" (atau "off for this project") |
+| Sakelar | Settings › Project & status › Features: **Scan PDF required** (default ON; project lama ON) |
+| Saat OFF | Tidak dihitung dalam % kelengkapan, tanpa chip/baris "Scan PDF" (BAA Entry, BAA Summary, Location Log, panel detail, Dashboard), kartu Scan PDF disembunyikan di BAA Entry & panel detail, tanpa peringatan "scan missing" saat export. Scan yang sudah terunggah tetap tersimpan & tetap jadi halaman 1 PDF |
+| Panduan | Topik Photos & Project & status diperbarui |
