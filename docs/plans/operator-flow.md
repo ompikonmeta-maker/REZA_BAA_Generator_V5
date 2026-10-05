@@ -1,6 +1,6 @@
 # Rencana: Alur kerja operator lebih efisien
 
-Status: 0, 1, 2A, 4, 5 **selesai** · 3 **hold** (belum dibahas) · 2026-10-05 · desktop saja
+Status: 0, 1, 2A, 4, 5 **selesai** · 3 **dibatalkan** · 2026-10-05 · desktop saja
 
 Dasar: tes Playwright alur operator end-to-end (login → lokasi baru → data → wilayah → inventory → 11 foto → scan → Save → Log → export).
 
@@ -22,7 +22,7 @@ Location Log → panel detail → **Edit in BAA Entry** → bar atas memuat pick
 - **A (disarankan):** Done hanya bila 100% dari yang dihitung (mengikuti sakelar Scan PDF / Wilayah / field Required). Tombol: `Finish BAA · 2 left`.
 - **B:** Done tetap seperti sekarang, tapi label jelas `DONE · Scan missing` di Log, drawer, Summary.
 
-## 3. Foto berurutan (guided capture) — hold
+## 3. Foto berurutan (guided capture) — dibatalkan (desktop: klik kotak kosong sudah cukup)
 **Masalah:** kategori otomatis mengandalkan nama file; foto HP (`IMG_1234.jpg`) masuk *Uncategorized* → dipindah satu per satu.
 **Usul:** tombol **Take photos in order** → kartu "Next: Foto SN Router (3/11)" → kamera/galeri → otomatis masuk kategori itu → lanjut ke kategori kosong berikutnya. Ada **Skip** dan **Retake**. OCR SN tetap jalan. Catatan: tampilan app belum responsif untuk layar HP (sidebar menutupi layar) — mockup dibuat di desktop; versi HP perlu keputusan terpisah.
 
