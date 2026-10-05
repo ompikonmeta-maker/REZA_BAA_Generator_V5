@@ -135,3 +135,4 @@ Settings
 | Field opsional | Tetap tampil & bisa diisi, tetap masuk export; tidak memengaruhi progres |
 | Info | Baris keterangan di Settings › Location data › Location fields |
 | Berlaku di | Server (Progress/Dashboard) & UI (BAA Entry, Location Log, panel detail) — langsung setelah Save fields |
+| Bawaan | Pengaturan bawaan BAA: Nama Lokasi, Tanggal Aktivasi, Teknisi, PIC Lokasi semuanya **Required** untuk project baru. Project lama tidak diubah (admin atur sendiri) |

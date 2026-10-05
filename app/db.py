@@ -227,9 +227,9 @@ EMPTY_PROJECT_SETTINGS = {
 # Field lokasi default (bisa ditambah custom field lewat Pengaturan)
 DEFAULT_LOCATION_FIELDS = [
     {"key": "nama_lokasi", "label": "Nama Lokasi / Koperasi", "type": "text", "required": True, "builtin": True},
-    {"key": "tanggal", "label": "Tanggal Aktivasi", "type": "date", "required": False, "builtin": True},
-    {"key": "teknisi", "label": "Teknisi", "type": "text", "required": False, "builtin": True},
-    {"key": "pic", "label": "PIC Lokasi", "type": "text", "required": False, "builtin": True},
+    {"key": "tanggal", "label": "Tanggal Aktivasi", "type": "date", "required": True, "builtin": True},
+    {"key": "teknisi", "label": "Teknisi", "type": "text", "required": True, "builtin": True},
+    {"key": "pic", "label": "PIC Lokasi", "type": "text", "required": True, "builtin": True},
 ]
 
 
