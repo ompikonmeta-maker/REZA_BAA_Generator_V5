@@ -26,6 +26,7 @@ def _public(p) -> dict:
     return {"id": p["id"], "name": p["name"], "prefix": p["prefix"], "color": p["color"],
             "archived": bool(p["archived"]), "wilayah_on": bool(p["wilayah_on"]),
             "wilayah_progress": bool(p["wilayah_progress"]), "status": p["status"] or "active",
+            "scan_on": bool(p["scan_on"]),
             "freeze_msg": p["freeze_msg"] or "", "frozen_by": p["frozen_by"] or "", "frozen_at": p["frozen_at"]}
 
 
@@ -131,6 +132,7 @@ class ProjectIn(BaseModel):
     wilayah_on: bool | None = None
     wilayah_progress: bool | None = None
     source: str | None = None        # isi awal project baru: default | copy:<id> | empty
+    scan_on: bool | None = None
 
 
 def _members(hub, pid: int) -> list[int]:
@@ -222,9 +224,10 @@ def create_project(body: ProjectIn, hub: sqlite3.Connection = Depends(get_hub), 
         pc.commit()
     finally:
         pc.close()
-    hub.execute("UPDATE projects SET wilayah_on=?, wilayah_progress=? WHERE id=?",
+    hub.execute("UPDATE projects SET wilayah_on=?, wilayah_progress=?, scan_on=? WHERE id=?",
                 (int(body.wilayah_on if body.wilayah_on is not None else True),
-                 int(body.wilayah_progress if body.wilayah_progress is not None else True), pid))
+                 int(body.wilayah_progress if body.wilayah_progress is not None else True),
+                 int(body.scan_on if body.scan_on is not None else True), pid))
     _set_members(hub, pid, body.members)
     hub.commit()
     p = hub.execute("SELECT * FROM projects WHERE id=?", (pid,)).fetchone()
@@ -261,8 +264,9 @@ def update_project(pid: int, body: ProjectIn, hub: sqlite3.Connection = Depends(
         pc.close()
     w_on = p["wilayah_on"] if body.wilayah_on is None else int(body.wilayah_on)
     w_pr = p["wilayah_progress"] if body.wilayah_progress is None else int(body.wilayah_progress)
-    hub.execute("UPDATE projects SET name=?, prefix=?, color=?, archived=?, wilayah_on=?, wilayah_progress=? "
-                "WHERE id=?", (name, prefix, body.color, archived, w_on, w_pr, pid))
+    s_on = p["scan_on"] if body.scan_on is None else int(body.scan_on)
+    hub.execute("UPDATE projects SET name=?, prefix=?, color=?, archived=?, wilayah_on=?, wilayah_progress=?, scan_on=? "
+                "WHERE id=?", (name, prefix, body.color, archived, w_on, w_pr, s_on, pid))
     _set_members(hub, pid, body.members)
     hub.commit()
     audit(hub, user, "update", "project", pid, f"{name} ({prefix})")

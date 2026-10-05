@@ -2121,6 +2121,9 @@
   .ld-confirm>.mi{color:var(--warn)}.ld-confirm .tx{flex:1;min-width:220px;font:var(--md-sys-typescale-body-medium)}
   .pjm-src{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}.pjm-src .lg-seg button{height:34px;font-size:13px}.pjm-src .sel-dd{height:34px}
   .pjm-src .sel-dd.hidden{display:none}.lg-seg>button:disabled{opacity:.4;cursor:default}
+  .scan-off #scanCard,.scan-off #sum-scan-row{display:none!important}
+  .scan-info{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:12px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-surface-container);font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .scan-info .mi{color:var(--md-sys-color-primary);font-size:20px}.scan-info b{color:var(--md-sys-color-on-surface)}
 </style>
 </head>
 <body>
@@ -2604,6 +2607,7 @@
         <div class="card setview hidden" id="set-photo">
           <div class="sec"><span class="mi acc">photo_library</span><h3>Photo &amp; Capture Fields</h3><span class="grow"></span>
             <md-button id="pc-add" variant="tonal" icon="add">Category</md-button></div>
+          <div class="scan-info" id="scanInfo"></div>
           <div id="pc-list"></div>
           <div style="margin-top:12px"><md-button id="pc-save" variant="filled" icon="save">Save categories</md-button></div>
         </div>
@@ -3194,7 +3198,7 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
   const dn=document.querySelector('.navitem[data-view="dashboard"]');if(dn)dn.classList.toggle('hidden',S.user.role==='viewer');
   $('#app').classList.toggle('is-operator',S.user.role!=='admin');
   $('#app').classList.toggle('is-viewer',S.user.role==='viewer');
-  fzApply();
+  fzApply();scanApply();
   refreshPicker();loadLocations();loadCreators();pjLand();if(S.user.role==='admin'){loadTemplates();loadUsers();loadNotifCount();}bindTips();
   wbInit();expAskSync();}
 /* ===== Wilayah (Desa/Kelurahan → Provinsi), per project bisa on/off =====
@@ -3202,6 +3206,11 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
    toleran salah ketik, kode wilayah, tombol penyempit provinsi → kab/kota.
    Mode isian: official (desa resmi) · desa_manual (kecamatan resmi + desa diketik) · manual (4 tingkat diketik).
    Nama yang disimpan & dicetak = sesuai tulisan teknisi (default = nama resmi). */
+/* Scan PDF per project: off = tidak wajib, tidak dihitung, tidak ditampilkan */
+const SCAN={on:()=>!(PJ.cur&&PJ.cur.scan_on===false)};
+function scanApply(){$('#app').classList.toggle('scan-off',!SCAN.on());const i=$('#scanInfo');if(!i)return;
+  i.innerHTML=SCAN.on()?'<span class="mi">picture_as_pdf</span><span><b>Scan PDF</b> — required for every location · becomes page 1 of the PDF export. Switch off in Project &amp; status › Features.</span>'
+    :'<span class="mi">picture_as_pdf</span><span><b>Scan PDF</b> is off for this project — not required and not counted in completeness.</span>';}
 const WIL={on:()=>!!(PJ.cur&&PJ.cur.wilayah_on),req:()=>!!(PJ.cur&&PJ.cur.wilayah_on&&PJ.cur.wilayah_progress)};
 function wilApply(){const a=$('#app');a.classList.toggle('wil-off',!WIL.on());a.classList.toggle('bk-on',WIL.on()&&!!S.user&&S.user.role==='admin');}
 const wilShort=v=>v?`${v.desa}, ${v.kec}, ${v.kab}`:'';
@@ -3841,7 +3850,8 @@ function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
         ${isNew?'':'<md-button variant="tonal" id="pjm-tpl" icon="open_in_new">Manage</md-button>'}</div></div>
       <div class="full"><div class="pjm-lab">Features</div><div class="ft-box">
         <div class="ft-row"><span class="mi">location_on</span><div class="tx"><div class="t">Wilayah data (Desa → Provinsi)</div><div class="s">Desa/Kelurahan, Kecamatan, Kab/Kota, Provinsi on each location · wilayah filter</div></div><md-switch id="ft-wil" ${q.wilayah_on!==false?'selected':''}></md-switch></div>
-        <div class="ft-row sub" id="ft-prog-row"><div class="tx"><div class="t">Count in location progress</div><div class="s" id="ft-prog-s"></div></div><md-switch id="ft-prog" ${q.wilayah_progress!==false?'selected':''}></md-switch></div></div>
+        <div class="ft-row sub" id="ft-prog-row"><div class="tx"><div class="t">Count in location progress</div><div class="s" id="ft-prog-s"></div></div><md-switch id="ft-prog" ${q.wilayah_progress!==false?'selected':''}></md-switch></div>
+        <div class="ft-row"><span class="mi">picture_as_pdf</span><div class="tx"><div class="t">Scan PDF required</div><div class="s">Signed scan uploaded per location · page 1 of the PDF export · part of completeness %</div></div><md-switch id="ft-scan" ${q.scan_on!==false?'selected':''}></md-switch></div></div>
         <div class="pjm-hint" id="ft-hint"></div></div>
       <div class="full"><div class="pjm-lab">People with access</div><div class="pjm-mem">${PJM.users.map(u=>`<label><span class="pj-tx"><span class="pj-nm">${esc(u.full_name||u.username)}</span><span class="pj-sb">${esc(u.username)} · ${u.role}${u.active?'':' · inactive'}</span></span>
           <md-switch data-u="${u.id}" ${q.members.includes(u.id)?'selected':''}></md-switch></label>`).join('')||'<span class="pj-sb">No operator or viewer accounts yet.</span>'}</div>
@@ -3856,7 +3866,7 @@ function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
   const ab=$('#pjm-arch');if(ab)ab.onclick=()=>guardLeave(()=>confirmDo(q.archived?'Unarchive project':'Archive project',q.archived?`Make <b>${esc(q.name)}</b> available to its members again?`:`Hide <b>${esc(q.name)}</b> from members and the Portfolio? Its data is kept; admin can still open it.`,()=>pjmSave(!q.archived),{okLabel:q.archived?'Unarchive':'Archive'}),q.archived?'Unarchive':'Archive');
   const ftSync=()=>{const w=$('#ft-wil').selected,pr=$('#ft-prog').selected;$('#ft-prog').disabled=!w;$('#ft-prog-row').classList.toggle('dis',!w);
     $('#ft-prog-s').textContent=pr?'Required (*) · part of completeness % · "Wilayah" chip when empty':'Optional · does not affect completeness %';
-    $('#ft-hint').textContent=w?'Turning it off hides the field and filter for this project. Data already entered is kept.':'Off — wilayah field and filter are hidden in this project. Existing data is kept.';};
+    $('#ft-hint').textContent=w?'Wilayah: turning it off hides the field and filter for this project. Data already entered is kept.':'Wilayah off — field and filter are hidden in this project. Existing data is kept.';};
   const ftWarn=sw=>{const w=$('#ft-wil').selected,pr=$('#ft-prog').selected;
     if(isNew||!w||!pr||!q.wil_missing||(q.wilayah_on!==false&&q.wilayah_progress!==false))return;
     confirmDo('Count wilayah in progress?',`<b>${q.wil_missing} location${q.wil_missing>1?'s':''}</b> in ${esc(q.name)} ${q.wil_missing>1?'have':'has'} no wilayah yet. Their completeness will drop and a <b>Wilayah</b> chip will appear until it is filled.<br><br>Use <b>Set wilayah</b> in Location Log to fill many at once.`,()=>{},
@@ -3873,13 +3883,13 @@ function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
 async function pjmSave(archived){const q=PJM.sel,isNew=!q.id;const tot=$('#pjm-total').value;
   const body={name:($('#pjm-name').value||'').trim(),prefix:($('#pjm-pre').value||'').trim(),color:q.color,total:tot?+tot:null,target_date:$('#pjm-date').value||null,
     members:$$('#pjmEd md-switch[data-u]').filter(x=>x.selected).map(x=>+x.dataset.u),
-    wilayah_on:!!$('#ft-wil').selected,wilayah_progress:!!$('#ft-prog').selected};
+    wilayah_on:!!$('#ft-wil').selected,wilayah_progress:!!$('#ft-prog').selected,scan_on:!!$('#ft-scan').selected};
   if(archived!==undefined)body.archived=archived;
   if(isNew){const s=($('#pjmSrc button.on')||{dataset:{s:'default'}}).dataset.s;body.source=s==='copy'?'copy:'+$('#pjmSrcPj').value:s;}
   try{const r=await api(isNew?'/api/projects':'/api/projects/'+q.id,{method:isNew?'POST':'PUT',body:JSON.stringify(body)});
     toast(isNew?'Project created':'Project saved');PJM.sel=r;PJM.snap=null;await loadProjects(true);await pjRefresh();
     const multi=PJ.list.filter(p=>!p.archived).length>1;$$('.multi-only').forEach(x=>x.classList.toggle('hidden',!multi||S.user.role==='operator'));
-    if(String(r.id)===PJ.id){PJ.cur={...PJ.cur,...r};paint();pjPaint();wilApply();}return true;}catch(e){toast('Failed: '+e.message);return false;}}
+    if(String(r.id)===PJ.id){PJ.cur={...PJ.cur,...r};paint();pjPaint();wilApply();scanApply();}return true;}catch(e){toast('Failed: '+e.message);return false;}}
 $('#pjm-new').addEventListener('click',()=>guardLeave(()=>pjmEdit(null),'New project'));
 FG.pjm={label:'Save project',active:()=>_visible('v-projects')&&!!$('#pjm-save'),dirty:()=>PJM.snap!=null&&fgSnap($('#pjmEd'))!==PJM.snap,
   save:()=>pjmSave(),discard:()=>{PJM.snap=null;}};
@@ -4776,8 +4786,8 @@ function computeState(){
 }
 function updateSummary(){
   if(!S.loc)return;const s=computeState();
-  const total=(s.nF||1)+1+s.rc.length+1;                // +1 = scan PDF (wajib); nF termasuk wilayah bila dihitung
-  const done=(s.nF?s.filledAll:(s.locDone?1:0))+(s.invOk?1:(s.items>0?0.5:0))+s.fotoDone+(s.scanOk?1:0);
+  const sOn=SCAN.on();const total=(s.nF||1)+1+s.rc.length+(sOn?1:0);   // +1 = scan PDF (bila wajib); nF termasuk wilayah bila dihitung
+  const done=(s.nF?s.filledAll:(s.locDone?1:0))+(s.invOk?1:(s.items>0?0.5:0))+s.fotoDone+(sOn&&s.scanOk?1:0);
   const pct=Math.round(done/total*100);
   $('#sum-pct').textContent=pct+'%';$('#sum-ring-pct').textContent=pct+'%';
   const _sc=$('.summary .card');if(_sc){const lvl=pct>=100?'done':pct>=80?'high':pct>=40?'mid':'low';
@@ -5251,8 +5261,8 @@ function locPct(l){
   const fotoDone=cats.filter(c=>have.has(c.key)).length;
   const invOk=!!l.inv_ok;
   const wr=WIL.req(),wil=!!l.wil_desa;
-  const total=(fields.length||1)+1+cats.length+1+(wr?1:0);
-  const scan=!!l.has_scan;const done=filledF+(invOk?1:((l.inv_count||0)>0?0.5:0))+fotoDone+(scan?1:0)+(wr&&wil?1:0);
+  const sOn=SCAN.on();const total=(fields.length||1)+1+cats.length+(sOn?1:0)+(wr?1:0);
+  const scan=!sOn||!!l.has_scan;const done=filledF+(invOk?1:((l.inv_count||0)>0?0.5:0))+fotoDone+(sOn&&scan?1:0)+(wr&&wil?1:0);
   return {pct:Math.min(100,Math.round(done/total*100)),filledF,nFields:fields.length,fotoDone,nCats:cats.length,invOk,scan,wilMiss:wr&&!wil};
 }
 /* Sel kolom "Kelengkapan": 100% -> hanya persentase; kurang -> % + chip grup yg kurang (mirror donut) */
@@ -5287,8 +5297,8 @@ function locDetailState(loc){
   const cats=S.cats||[];const byCat={};(loc.photos||[]).forEach(p=>byCat[p.category]=1);
   const fotoDone=cats.filter(c=>byCat[c.key]).length;
   const wr=WIL.req();
-  const total=(fields.length||1)+1+cats.length+1+(wr?1:0);
-  const done=filledF+(invOk?1:(items>0?0.5:0))+fotoDone+(loc.scan?1:0)+(wr&&loc.wilayah&&loc.wilayah.desa?1:0);
+  const sOn=SCAN.on();const total=(fields.length||1)+1+cats.length+(sOn?1:0)+(wr?1:0);
+  const done=filledF+(invOk?1:(items>0?0.5:0))+fotoDone+(sOn&&loc.scan?1:0)+(wr&&loc.wilayah&&loc.wilayah.desa?1:0);
   return {pct:Math.min(100,Math.round(done/total*100)),filledF,nFields:fields.length,invOk,items,fotoDone,nCats:cats.length,byCat};
 }
 async function openLocDrawer(id){
@@ -5381,7 +5391,7 @@ function fillLocDrawer(loc){
   $('#ldBody').innerHTML=`<div class="ld-body">
     ${missCats.length?`<div class="ld-sec"><span class="t">Needs photo</span><span class="n warnc">${missCats.length} of ${cats.length}</span></div><div class="ld-tiles">${tileHtml}</div>`:''}
     ${doneHtml}
-    ${scanHtml}
+    ${SCAN.on()?scanHtml:''}
     <div class="ld-sec"><span class="t">Installed devices</span><span class="n ${invHave<reqInv?'warnc':'okc'}">${invHave}/${reqInv} good</span></div>
     ${devHtml}
   </div>`;

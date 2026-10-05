@@ -119,7 +119,7 @@ Settings
 | Panduan | Topik Setup & Location data diperbarui (teks + screenshot) |
 
 
-## Scan PDF per project (2026-10-05) — dikerjakan
+## Scan PDF per project (2026-10-05) — selesai
 | Topik | Keputusan |
 |---|---|
 | Langkah Setup | Scan PDF **tidak** menjadi langkah Setup (diunggah per lokasi oleh operator) |

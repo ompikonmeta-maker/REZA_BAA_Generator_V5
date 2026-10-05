@@ -438,7 +438,7 @@ def start_job(kind: str = Query(...), scope: str = Query("one"), loc_id: int | N
     jid = uuid.uuid4().hex[:12]
     j = {"id": jid, "user_id": user["id"], "kind": kind, "scope": scope, "name": name, "stage": "queued",
          "done": 0, "total": n if n > 1 else 0, "state": "run", "error": "", "warn": "", "img_warn": 0,
-         "scan_missing": sum(1 for loc in locs if not loc.get("scan")),
+         "scan_missing": sum(1 for loc in locs if not loc.get("scan")) if db.scan_counted(conn) else 0,
          "cancel": False, "created": time.time(), "path": None, "filename": None, "media": None,
          "group": group if kind == "pdfzip" else ""}
     with _JOBS_LOCK:

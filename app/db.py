@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS projects (
     wilayah_on       INTEGER NOT NULL DEFAULT 1,   -- fitur data wilayah
     wilayah_progress INTEGER NOT NULL DEFAULT 1,   -- wilayah dihitung dalam kelengkapan lokasi
     status     TEXT NOT NULL DEFAULT 'active',     -- setup | active | frozen
+    scan_on    INTEGER NOT NULL DEFAULT 1,         -- scan PDF wajib & dihitung dalam kelengkapan
     freeze_msg TEXT DEFAULT '',                    -- pesan untuk user saat frozen
     frozen_by  TEXT DEFAULT '',
     frozen_at  TEXT
@@ -303,7 +304,8 @@ def _migrate_hub(conn: sqlite3.Connection) -> None:
     # Siklus project: project lama otomatis 'active' (pengaturan lama tetap dipakai)
     if not _has_column(conn, "projects", "status"):
         conn.execute("ALTER TABLE projects ADD COLUMN status TEXT NOT NULL DEFAULT 'active'")
-    for col, typ in (("freeze_msg", "TEXT DEFAULT ''"), ("frozen_by", "TEXT DEFAULT ''"), ("frozen_at", "TEXT")):
+    for col, typ in (("freeze_msg", "TEXT DEFAULT ''"), ("frozen_by", "TEXT DEFAULT ''"), ("frozen_at", "TEXT"),
+                     ("scan_on", "INTEGER NOT NULL DEFAULT 1")):
         if not _has_column(conn, "projects", col):
             conn.execute(f"ALTER TABLE projects ADD COLUMN {col} {typ}")
     conn.commit()
@@ -371,6 +373,12 @@ def wil_counted(conn) -> bool:
     """Wilayah wajib & dihitung dalam kelengkapan lokasi untuk project ini?"""
     pj = getattr(conn, "project", None) or {}
     return bool(pj.get("wilayah_on", 1)) and bool(pj.get("wilayah_progress", 1))
+
+
+def scan_counted(conn) -> bool:
+    """Scan PDF wajib & dihitung dalam kelengkapan lokasi untuk project ini?"""
+    pj = getattr(conn, "project", None) or {}
+    return bool(pj.get("scan_on", 1))
 
 
 def format_code(conn, n: int) -> str:
