@@ -172,6 +172,16 @@ def _completeness(loc, fields, cats, inv_rows, photo_cats, has_scan: bool = True
     return pct, miss
 
 
+def loc_completeness(conn, row) -> tuple[int, list[str]]:
+    """Kelengkapan satu lokasi (rumus sama dengan daftar draft & UI) — dipakai syarat Done."""
+    lid = row["id"]
+    inv = conn.execute("SELECT * FROM inventory_items WHERE location_id=? ORDER BY sort_order,id", (lid,)).fetchall()
+    pc = {r["category"] for r in conn.execute("SELECT category FROM photos WHERE location_id=?", (lid,))}
+    has_scan = bool(conn.execute("SELECT 1 FROM scan_docs WHERE location_id=?", (lid,)).fetchone())
+    return _completeness(row, db.req_fields(conn), db.get_setting(conn, "photo_categories", []) or [], inv, pc,
+                         has_scan, db.wil_counted(conn), db.scan_counted(conn))
+
+
 def _loc_label(loc) -> dict:
     data = json.loads(loc["data_json"] or "{}") if "data_json" in loc.keys() else {}
     return {"id": loc["id"], "code": loc["code"], "name": (data.get("nama_lokasi") or loc["name"] or "").strip()}

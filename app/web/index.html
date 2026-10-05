@@ -447,6 +447,17 @@
   .set-status .dot{width:8px;height:8px;border-radius:50%;background:currentColor;transition:background .3s ease}
   .set-status.ok{color:var(--md-sys-color-primary)}
   .set-status.dirty{color:var(--save-active)}
+  .set-status.saving{color:var(--md-sys-color-on-surface-variant)}.set-status.saving .dot{animation:asPulse 1s var(--md-sys-motion-easing-standard,ease) infinite alternate}
+  .set-status.err{color:var(--md-sys-color-error);cursor:pointer}
+  #asStat{margin-left:12px;white-space:nowrap}
+  @keyframes asPulse{from{opacity:1}to{opacity:.25}}
+  @media (prefers-reduced-motion:reduce){.set-status.saving .dot{animation:none}}
+  .fin-hint{margin:0 0 10px;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .fin-hint b{color:var(--md-sys-color-on-surface)}
+  .next-draft{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:12px 14px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-tertiary-container);color:var(--md-sys-color-on-tertiary-container);font:var(--md-sys-typescale-body-medium);cursor:pointer;transition:filter .2s ease}
+  .next-draft:hover{filter:brightness(.97)}.next-draft b{font-weight:700}.next-draft .mi{font-size:22px}
+  .next-draft .go{margin-left:auto;font-weight:700;color:var(--md-sys-color-primary);white-space:nowrap}
+  .next-draft.none{cursor:default}
   .set-savebtn{border:0;border-radius:20px;padding:9px 17px;font:var(--md-sys-typescale-label-large);font-weight:600;display:inline-flex;align-items:center;gap:7px;
     background:var(--md-sys-color-surface-container-highest);color:var(--md-sys-color-on-surface-variant);cursor:not-allowed;box-shadow:0 0 0 rgba(0,0,0,0);
     transition:background .35s cubic-bezier(.2,.8,.2,1),color .35s ease,box-shadow .35s ease,transform .15s ease}
@@ -2213,6 +2224,7 @@
           <md-icon-button id="loc-prev" data-tip="Previous location"><span>chevron_left</span></md-icon-button>
           <md-icon-button id="loc-next" data-tip="Next location"><span>chevron_right</span></md-icon-button>
         </span>
+        <span class="set-status hidden" id="asStat"><span class="dot"></span><span id="asTxt">Saved</span></span>
         <span class="grow"></span>
         <button class="addloc" id="entry-new" data-tip="New location"><span class="mi">add</span><span class="albl">Add Location</span></button>
       </span>
@@ -2333,8 +2345,10 @@
                 <div class="crow" id="sum-foto-row"><span class="mi ci" id="sum-foto-ic">error</span><span class="lbl">Photos &amp; Capture</span><span class="st" id="sum-foto">0 / 0</span></div>
                 <div class="crow" id="sum-scan-row"><span class="mi ci" id="sum-scan-ic">error</span><span class="lbl">Scan PDF</span><span class="st no" id="sum-scan">Missing</span></div>
               </div>
+              <div class="next-draft hidden" id="nextDraft"></div>
+              <p class="fin-hint" id="finHint"></p>
               <div class="sum-actions">
-                <md-button variant="filled" size="l" icon="save" id="save-btn">Save BAA</md-button>
+                <md-button variant="filled" size="l" icon="task_alt" id="save-btn">Finish BAA</md-button>
                 <div class="exp2">
                   <md-button variant="outlined" icon="grid_on" id="exp-xlsx">Excel</md-button>
                   <md-button variant="outlined" icon="picture_as_pdf" id="exp-pdf">PDF</md-button>
@@ -3260,7 +3274,7 @@ function wilPicker(host,{value=null,required=false,onPick=null,onManual=null,lab
   return {get:()=>st.v,set:v=>{st.v=v;show();},disable:d=>{inp.disabled=!!d;},focus:()=>inp.focus()};}
 /* ---- BAA Entry: editor wilayah (3 mode + tulisan teknisi) ---- */
 let wilEntry=null,_wilWritten=false;
-function wilSet(w){S.loc.wilayah=w;S.loc._wilDirty=true;if(S.loc)entryDirty=true;updateSummary();}
+function wilSet(w){S.loc.wilayah=w;S.loc._wilDirty=true;updateSummary();markEntry();}
 const wilDisp=w=>w.mode==='manual'?`${w.desa} (manual)`:w.mode==='desa_manual'?`Desa ${w.desa} (manual)`:(w.kel?'Kel. ':'Desa ')+w.desa;
 function renderWil(){const h=$('#wil-field');if(!h)return;h.classList.toggle('hidden',!WIL.on()||!S.loc);if(!WIL.on()||!S.loc)return;
   const ro=roActive(),w=S.loc.wilayah||null;
@@ -3924,6 +3938,10 @@ function dirtyCtx(){if(isEntryDirty())return 'entry';if(isSetDirty())return 'set
 function tplDirty(){return typeof M!=='undefined'&&M.dirty&&!!S.mapTplId&&_visible('v-templates');}
 let _unsGo=null,_unsCtx=null,_unsCancel=null,_unsFg=null;
 function guardLeave(go,dest,onCancel){
+  if(_visible('v-entry')&&asOn()&&entryDirty&&(S.loc.id||S._creating||draftHasData())){   // draft auto-save: simpan dulu lalu lanjut
+    asRun().then(()=>{if(!entryDirty)go();else _guardAsk(go,dest,onCancel);});return;}
+  _guardAsk(go,dest,onCancel);}
+function _guardAsk(go,dest,onCancel){
   if(isDraft()&&_visible('v-entry')){                    // draft belum punya kode
     if(!S._creating&&!draftHasData()){toast('No data entered — new location discarded');S.loc=null;entryDirty=false;go();return;}
     entryDirty=true;                                     // ada isian/among creating -> perlakukan sbg perubahan belum disimpan
@@ -3942,7 +3960,7 @@ $('#unsSave').addEventListener('click',async()=>{
   if(_unsCtx==='drawer'){if(!await ldSaveAll())return;}
   else if(_unsCtx==='tpl'){if(!await mapSaveNow()){_unsStay();return;}}
   else if(_unsCtx==='fg'){if(!_unsFg||!await _unsFg.save()){_unsStay();return;}}
-  else if(_unsCtx==='entry'){entryDirty=false;$('#save-btn').click();}else{$('#setSaveBtn').click();}
+  else if(_unsCtx==='entry'){if(!await saveEntry(false)){_unsStay();return;}}else{$('#setSaveBtn').click();}
   const go=_unsGo;_unsGo=null;_unsCancel=null;_unsClose();if(go)go();});
 $('#unsOv').addEventListener('click',e=>{if(e.target.id==='unsOv')_unsStay();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#unsOv').classList.contains('on'))_unsStay();});
@@ -4537,7 +4555,7 @@ function newDraft(){
     if(v){v.innerHTML='<span class="lp-nm-main">New location</span><span class="lp-code">not saved</span>';v.classList.remove('ph');}}
   updateLocNav();
   renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();renderScan();renderWil();
-  entryDirty=false;
+  entryDirty=false;asReset();
   requestAnimationFrame(()=>revealCards($('#v-entry')));
   const f=$('#loc-fields input');if(f)setTimeout(()=>f.focus(),120);}
 async function ensureLoc(){                                  // buat lokasi (kode) bila masih draft
@@ -4582,7 +4600,7 @@ async function openLoc(id){S.loc=await api('/api/locations/'+id);
   $('#entry-empty').classList.add('hidden');$('#entry-form').classList.remove('hidden');
   updateLocNav();
   renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();renderScan();renderWil();
-  entryDirty=false;
+  entryDirty=false;asReset();
   requestAnimationFrame(()=>revealCards($('#v-entry')));}
 /* Read-only bila viewer, atau operator membuka lokasi milik user lain (boleh lihat,
    tak boleh edit). Field dikunci + tombol tulis disembunyikan (class .ro). */
@@ -4678,7 +4696,7 @@ function invRow(it={}){
 function renderInventory(){let rows=S.loc.inventory;
   if(!rows.length)rows=(S.invItems.length?S.invItems:['','','']).map(n=>({nama_barang:n,jumlah:'1',keterangan:'OK'}));
   $('#inv-body').innerHTML=rows.map(invRow).join('');bindTips();}
-$('#inv-add').addEventListener('click',()=>{$('#inv-body').insertAdjacentHTML('beforeend',invRow({jumlah:'1',keterangan:'OK'}));bindTips();updateSummary();if(S.loc)entryDirty=true;});
+$('#inv-add').addEventListener('click',()=>{$('#inv-body').insertAdjacentHTML('beforeend',invRow({jumlah:'1',keterangan:'OK'}));bindTips();updateSummary();markEntry();});
 /* Combobox Merk/Type: selalu tampilkan SELURUH opsi item (MDMenu), tetap boleh ketik */
 window.openMerkMenu=(el)=>{const tr=el.closest('.tr');const input=tr.querySelector('[data-iv="merk_type"]');
   const name=(tr.querySelector('[data-iv="nama_barang"]').value||'').trim();const opts=merkOpts(name);
@@ -4688,7 +4706,7 @@ window.openMerkMenu=(el)=>{const tr=el.closest('.tr');const input=tr.querySelect
 window.openKetMenu=(el)=>{const tr=el.closest('.tr');const input=tr.querySelector('[data-iv="keterangan"]');
   const opts=S.keterangan||[];
   if(!opts.length){toast('No notes options yet. Set them in Settings → Inventory Fields.');input.focus();return;}
-  openMenu(input,opts.map(o=>({icon:'notes',label:o,fn:()=>{input.value=o;updateSummary();if(S.loc)entryDirty=true;}})));};
+  openMenu(input,opts.map(o=>({icon:'notes',label:o,fn:()=>{input.value=o;updateSummary();markEntry();}})));};
 function collectInventory(){return $$('#inv-body .tr').map(tr=>{const o={};tr.querySelectorAll('[data-iv]').forEach(i=>o[i.dataset.iv]=i.value);return o;}).filter(o=>Object.values(o).some(v=>v&&v.trim()));}
 
 /* ===== Autocomplete / type-ahead (inline completion + filter + auto-correct) ===== */
@@ -4719,7 +4737,7 @@ const AC={input:null,matches:[],act:-1,icon:'label',typed:'',
   move(d){if(!this.matches.length)return;this.act=(this.act+d+this.matches.length)%this.matches.length;this.render();
     const el=$('#acPop').querySelector('.ac-item.act');if(el)el.scrollIntoView({block:'nearest'});},
   accept(v){if(!this.input||v==null)return;const inp=this.input;inp.value=v;try{inp.setSelectionRange(v.length,v.length);}catch(e){}
-    this.close();updateSummary();if(S.loc)entryDirty=true;},
+    this.close();updateSummary();markEntry();},
   open_(){},close(){const p=$('#acPop');if(p.classList.contains('on'))ddOut(p,()=>p.classList.remove('on'));this.input=null;this.matches=[];this.act=-1;}};
 window.addEventListener('scroll',()=>{if(AC.input)AC.pos();},true);
 window.addEventListener('resize',()=>{if(AC.input)AC.close();});
@@ -4748,7 +4766,7 @@ $('#inv-body').addEventListener('focusout',e=>{const inp=e.target;
   if(!inp.dataset||(inp.dataset.iv!=='merk_type'&&inp.dataset.iv!=='keterangan'))return;
   const {opts}=AC.provider(inp);const v=(inp.value||'').trim();
   const m=opts.find(o=>o.toLowerCase()===v.toLowerCase());
-  if(m&&m!==inp.value){inp.value=m;updateSummary();if(S.loc)entryDirty=true;}
+  if(m&&m!==inp.value){inp.value=m;updateSummary();markEntry();}
   setTimeout(()=>{if(AC.input===inp)AC.close();},130);});
 
 /* Enter-to-advance di kartu Data Lokasi */
@@ -4764,10 +4782,10 @@ $('#loc-fields').addEventListener('keydown',e=>{if(e.key!=='Enter')return;
 $('#loc-fields').addEventListener('keydown',e=>{if(e.key!==' '&&e.key!=='Spacebar')return;
   const df=e.target.closest&&e.target.closest('.datefield');if(df){e.preventDefault();dpOpenFor(df);}});
 function collectData(){const d={};$$('[data-lf]').forEach(el=>d[el.dataset.lf]=el.value);return d;}
-$('#entry-form').addEventListener('input',e=>{if(S.loc)entryDirty=true;updateSummary();
+$('#entry-form').addEventListener('input',e=>{updateSummary();markEntry();
   if(isDraft()&&e.target&&String(e.target.value||'').trim())ensureLoc();   // data pertama -> buat kode
   const nm=e.target.closest('[data-lf="nama_lokasi"]');if(nm&&pickerSel)pickerSel.updateCurrentName(nm.value.trim());});
-$('#entry-form').addEventListener('change',()=>{if(S.loc)entryDirty=true;});
+$('#entry-form').addEventListener('change',()=>markEntry());
 /* Highlight kartu aktif (andal walau field di dalam shadow DOM) */
 $('#entry-form').addEventListener('focusin',e=>{const card=e.target.closest('.entry-main .card');
   $$('#entry-form .entry-main .card').forEach(c=>c.classList.toggle('active-card',c===card));});
@@ -4788,14 +4806,18 @@ function computeState(){
   const scanOk=!!(S.loc&&S.loc.scan);
   const wilReq=WIL.req(),wilOk=!!(S.loc&&wilValid(S.loc.wilayah));
   const nF=fields.length+(wilReq?1:0),filledAll=filledF+(wilReq&&wilOk?1:0),locAll=locDone&&(!wilReq||wilOk);
-  // Done (selesai) hanya dari data, inventory & foto: scan PDF & wilayah cukup ditandai kurang, tidak memblok Done
+  // Done (selesai) hanya bila 100% (data, wilayah, inventory, foto, scan PDF — sesuai sakelar project), lihat entryCalc()
   return {data,fields,filledF,locDone,items,cells,filledCells,rowsDone,invOk,rc,fotoDone,fotoOk,missing,checklist,scanOk,wilReq,wilOk,nF,filledAll,locAll,complete:locDone&&invOk&&fotoOk};
 }
-function updateSummary(){
-  if(!S.loc)return;const s=computeState();
+/* % kelengkapan entry aktif + grup yang masih kurang (Done hanya bila 100%) */
+function entryCalc(s){s=s||computeState();
   const sOn=SCAN.on();const total=(s.nF||1)+1+s.rc.length+(sOn?1:0);   // +1 = scan PDF (bila wajib); nF termasuk wilayah bila dihitung
   const done=(s.nF?s.filledAll:(s.locDone?1:0))+(s.invOk?1:(s.items>0?0.5:0))+s.fotoDone+(sOn&&s.scanOk?1:0);
-  const pct=Math.round(done/total*100);
+  const miss=[];if(!s.locDone)miss.push('Location data');if(s.wilReq&&!s.wilOk)miss.push('Wilayah');if(!s.invOk)miss.push('Inventory');
+  if(!s.fotoOk)miss.push('Photos');if(sOn&&!s.scanOk)miss.push('Scan PDF');
+  return {pct:Math.min(100,Math.round(done/total*100)),miss};}
+function updateSummary(){
+  if(!S.loc)return;const s=computeState();const ec=entryCalc(s);const pct=ec.pct;
   $('#sum-pct').textContent=pct+'%';$('#sum-ring-pct').textContent=pct+'%';
   const _sc=$('.summary .card');if(_sc){const lvl=pct>=100?'done':pct>=80?'high':pct>=40?'mid':'low';
     _sc.classList.remove('sum-lvl-low','sum-lvl-mid','sum-lvl-high','sum-lvl-done');_sc.classList.add('sum-lvl-'+lvl);}
@@ -4817,7 +4839,14 @@ function updateSummary(){
   setRow('#sum-foto-row','#sum-foto-ic',ft,s.fotoOk,s.fotoDone+'/'+s.rc.length);
   const sc=S.loc.scan;
   setRow('#sum-scan-row','#sum-scan-ic',$('#sum-scan'),s.scanOk,sc?(sc.pages+' page'+(sc.pages>1?'s':'')):'Missing');
+  finPaint(ec);
 }
+/* Tombol Finish BAA + keterangan: draft -> "Finish BAA · N left" sampai 100%; Done -> "Save changes" (simpan manual) */
+function finPaint(ec){const b=$('#save-btn'),h=$('#finHint');if(!b||!S.loc)return;const done=S.loc.status==='selesai',left=ec.miss.length;
+  const lbl=done?'Save changes':left?`Finish BAA · ${left} left`:'Finish BAA',ic=done?'save':'task_alt',v=!done&&left?'tonal':'filled';
+  if(b.textContent!==lbl)b.textContent=lbl;if(b.getAttribute('icon')!==ic)b.setAttribute('icon',ic);if(b.getAttribute('variant')!==v)b.setAttribute('variant',v);
+  if(h)h.innerHTML=done?(left?`Done, but now missing: <b>${ec.miss.join(', ')}</b> — saving returns it to draft.`:'This BAA is Done. Edits are saved with <b>Save changes</b>.')
+    :left?`Done unlocks at 100% — still missing: <b>${ec.miss.join(', ')}</b>. Draft saves automatically.`:'All complete — click <b>Finish BAA</b> to mark it Done.';}
 
 /* photos — tile kompak: klik=Edit, ⋯=aksi lain, strip SN (OCR), undo bercincin in-tile */
 function renderPhotos(){
@@ -4909,7 +4938,7 @@ window.applySnToInventory=(cat,serial)=>{if(!serial)return;
   if(item)target=$$('#inv-body .tr').find(tr=>{const nb=tr.querySelector('[data-iv="nama_barang"]');return nb&&nb.value.trim().toLowerCase()===item.toLowerCase();});
   if(target){target.querySelector('[data-iv="sn_tagging"]').value=serial;target.querySelector('[data-iv="sn_tagging"]').classList.add('sn');}
   else{$('#inv-body').insertAdjacentHTML('beforeend',invRow({nama_barang:item||'',sn_tagging:serial}));bindTips();}
-  updateSummary();toast(target?('SN → '+item):'Baris inventory + SN ditambah');};
+  updateSummary();markEntry();toast(target?('SN → '+item):'Baris inventory + SN ditambah');};
 
 /* ---- soft delete + undo in-card (timer 5s, cincin di dalam kartu) ---- */
 const pendingDel=new Map();  // id -> timeoutId
@@ -5131,25 +5160,66 @@ $('#sn-save').addEventListener('click',async()=>{const val=$('#sn-serial').value
     $('#snDlg').close(true);toast('SN saved'+(val?': '+val:''));}catch(e){toast('Failed: '+e.message);}});
 
 /* save + export (selalu lokasi aktif) */
-$('#save-btn').addEventListener('click',async()=>{try{
+/* Simpan entry. finish=true (tombol Finish BAA): tandai Done bila 100%. Lokasi Done: simpan manual, kembali draft bila tidak lengkap lagi. */
+async function saveEntry(finish){try{
+  clearTimeout(AS.t);AS.t=0;if(AS.busy)await AS.busy;
   if(isDraft())await ensureLoc();                     // draft -> buat kode dulu sebelum simpan
-  if(!S.loc||!S.loc.id){toast('Fill in the location data first');return;}
-  const st=computeState();
-  const status=st.complete?'selesai':'draft';
+  if(!S.loc||!S.loc.id){toast('Fill in the location data first');return false;}
+  const st=computeState(),ec=entryCalc(st),was=S.loc.status==='selesai';
+  const status=ec.pct>=100&&(was||finish)?'selesai':'draft';
+  await api('/api/locations/'+S.loc.id+'/inventory',{method:'PUT',body:JSON.stringify({items:collectInventory()})});   // inventory dulu: server cek kelengkapan saat Done
   await api('/api/locations/'+S.loc.id,{method:'PUT',body:JSON.stringify({name:st.data.nama_lokasi||'',data:st.data,status,...wilBody()})});
-  S.loc._wilDirty=false;
-  await api('/api/locations/'+S.loc.id+'/inventory',{method:'PUT',body:JSON.stringify({items:collectInventory()})});
-  toast(status==='selesai'?'Saved — BAA complete ✓':'Saved (draft)');
-  await openLoc(S.loc.id);refreshPicker();loadLocations();}catch(e){toast('Failed: '+e.message);}});
-/* Export selalu untuk lokasi yang sedang aktif; konfirmasi dulu sebelum unduh */
+  S.loc._wilDirty=false;entryDirty=false;
+  toast(status==='selesai'?(was?'Changes saved':'BAA complete ✓'):was?'Saved — back to draft (no longer complete)':finish?'Saved — still missing: '+ec.miss.join(', '):'Saved (draft)');
+  const id=S.loc.id;await openLoc(id);refreshPicker();loadLocations();
+  if(status==='selesai'&&!was)nextDraft(id);
+  return true;}catch(e){toast('Failed: '+e.message);return false;}}
+$('#save-btn').addEventListener('click',()=>saveEntry(true));
+/* ===== Auto-save draft: data lokasi, wilayah, inventory tersimpan ±1 dtk setelah berhenti mengetik ===== */
+const AS={t:0,busy:null,again:false,at:0,err:''};
+function asOn(){return !!(S.loc&&S.loc.status!=='selesai'&&S.loc.can_edit!==false&&!roActive()&&!frozenRO()&&S.user&&S.user.role!=='viewer');}
+function markEntry(){if(!S.loc)return;entryDirty=true;$('#nextDraft').classList.add('hidden');
+  if(asOn()){clearTimeout(AS.t);AS.t=setTimeout(asRun,1000);}asPaint();}
+function asReset(){clearTimeout(AS.t);AS.t=0;AS.at=0;AS.err='';$('#nextDraft').classList.add('hidden');asPaint();}
+async function asRun(){clearTimeout(AS.t);AS.t=0;
+  if(AS.busy){AS.again=true;return AS.busy;}
+  if(!asOn()||!entryDirty)return;
+  AS.busy=(async()=>{try{
+      if(isDraft()){if(!draftHasData()&&!S._creating)return;await ensureLoc();}
+      const lid=S.loc.id,st=computeState(),wb=wilBody(false),nm0=S.loc.name;entryDirty=false;asPaint();
+      await api('/api/locations/'+lid+'/inventory',{method:'PUT',body:JSON.stringify({items:collectInventory()})});
+      const r=await api('/api/locations/'+lid,{method:'PUT',body:JSON.stringify({name:st.data.nama_lokasi||'',data:st.data,status:'draft',...wb})});
+      if(S.loc&&S.loc.id===lid){if(wb.wil)S.loc._wilDirty=false;S.loc.name=r.name;S.loc.data=r.data;S.loc.modified_at=r.modified_at;if(r.name!==nm0)refreshPicker();}
+      AS.at=Date.now();AS.err='';
+    }catch(e){entryDirty=true;AS.err=e.message||'Save failed';}
+    finally{AS.busy=null;asPaint();if(AS.again){AS.again=false;if(entryDirty)asRun();}}})();
+  return AS.busy;}
+function asAgo(){const m=Math.floor((Date.now()-AS.at)/60000);if(m<1)return 'just now';if(m<60)return m+' min ago';
+  const d=new Date(AS.at);return 'at '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function asPaint(){const el=$('#asStat');if(!el)return;
+  const show=!!(S.loc&&(S.loc.id||entryDirty)&&S.loc.can_edit!==false&&!roActive()&&S.user&&S.user.role!=='viewer');
+  el.classList.toggle('hidden',!show);if(!show)return;
+  const st=AS.err?'err':(AS.t||AS.busy)?'saving':entryDirty?(asOn()?'saving':'dirty'):'ok';
+  el.className='set-status '+st;
+  $('#asTxt').textContent=st==='err'?'Not saved — retry':st==='saving'?'Saving…':st==='dirty'?'Unsaved changes':'Saved'+(AS.at?' · '+asAgo():'');
+  if(st==='err')el.dataset.tip=AS.err;else delete el.dataset.tip;}
+$('#asStat').addEventListener('click',()=>{if(AS.err){AS.err='';entryDirty=true;asRun();}});
+setInterval(()=>{if(AS.at&&_visible('v-entry'))asPaint();},30000);
+/* Setelah Finish: tawarkan draft berikutnya milik user (terlama diubah dulu) */
+async function nextDraft(curId){const el=$('#nextDraft');if(!el||!S.user)return;
+  try{const r=await api('/api/locations?status=draft&size=200');
+    const L=(r.rows||[]).filter(x=>x.id!==curId&&x.owner_id===S.user.id).sort((a,b)=>String(a.modified_at||a.updated_at||'').localeCompare(String(b.modified_at||b.updated_at||'')));
+    const n=L[0];
+    el.className='next-draft'+(n?'':' none');
+    el.innerHTML=n?`<span class="mi">check_circle</span><span><b>BAA complete ✓</b><br>Next draft: ${esc(n.code)} · ${esc((n.data&&n.data.nama_lokasi)||n.name||'')}</span><span class="go">Open →</span>`
+      :'<span class="mi">celebration</span><span><b>BAA complete ✓</b><br>No drafts left — all your locations are done.</span>';
+    el.onclick=n?()=>guardLeave(()=>openLoc(n.id),n.code):null;
+  }catch(e){}}
+/* Export selalu untuk lokasi yang sedang aktif; satu lokasi langsung diunduh */
 function askExport(kind){        // kind: 'excel' | 'pdf'
   if(!S.loc)return toast('Pick a location first');
   if(!S.loc.id)return toast('Save the location before exporting');
-  const nm=(S.loc.data&&S.loc.data.nama_lokasi)||S.loc.name||'';
-  const lbl=kind==='excel'?'Excel':'PDF';
-  confirmDo('Download '+lbl,
-    `Download the BAA document <b>${lbl}</b> for location <b>${esc(S.loc.code)}</b>${nm?' · '+esc(nm):''}?`,
-    ()=>downloadExport(`/api/export/${kind}?scope=one&loc_id=${S.loc.id}`));
+  downloadExport(`/api/export/${kind}?scope=one&loc_id=${S.loc.id}`);   // satu lokasi: langsung unduh (tanpa dialog Yes)
 }
 $('#exp-xlsx').addEventListener('click',()=>askExport('excel'));
 $('#exp-pdf').addEventListener('click',()=>askExport('pdf'));
@@ -5574,7 +5644,8 @@ $('#imp-commit')&&$('#imp-commit').addEventListener('click',async()=>{if(!IMP.fi
   catch(e){toast('Failed: '+e.message);$('#imp-commit').removeAttribute('disabled');}});
 function gotoEntry(){$$('.navitem[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view==='entry'));
   VIEWS.forEach(x=>{const el=$('#v-'+x);if(el)el.classList.toggle('hidden',x!=='entry');});
-  $('#pageTitle').classList.add('hidden');$('#topGrow').classList.add('hidden');$('#entryTools').classList.remove('hidden');}
+  $('#pageTitle').classList.add('hidden');$('#topGrow').classList.add('hidden');$('#entryTools').classList.remove('hidden');
+  $('#locTools').classList.add('hidden');$('#setSaveWrap').classList.add('hidden');}
 
 /* DELETE */
 let delTarget=null,delFromEntry=false;
@@ -5602,7 +5673,7 @@ function expSpin(){const nv=document.querySelector('.navitem[data-view="location
 /* "Ask where to save": On = jendela Save As (Chrome/Edge) sebelum export dimulai; Off / browser lain = folder Downloads.
    Setelan per user, disimpan di perangkat. Dialog harus dibuka saat klik (aturan browser), jadi nama file dibuat di sini. */
 const expAskKey=()=>'exp:ask:'+((S.user&&S.user.id)||0);
-function expAsk(){try{return localStorage.getItem(expAskKey())!=='0';}catch(e){return true;}}
+function expAsk(){try{return localStorage.getItem(expAskKey())==='1';}catch(e){return false;}}   /* default OFF: langsung unduh */
 function expAskSync(){const on=expAsk();$$('.exp-ask-sw').forEach(w=>{w.selected=on;});$$('.exp-ask').forEach(l=>l.classList.toggle('hidden',!window.showSaveFilePicker));}
 $$('.exp-ask-sw').forEach(w=>w.addEventListener('change',()=>{try{localStorage.setItem(expAskKey(),w.selected?'1':'0');}catch(e){}expAskSync();}));
 $$('.exp-ask').forEach(l=>l.addEventListener('click',e=>{if(e.target===l){const w=l.querySelector('md-switch');w.selected=!w.selected;w.dispatchEvent(new Event('change'));}}));

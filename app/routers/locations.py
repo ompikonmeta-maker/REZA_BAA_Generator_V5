@@ -427,6 +427,12 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
         (body.name, new_json, body.status, db.now_iso(), loc_id),
     )
     if body.status == "selesai" and row["status"] != "selesai":
+        # Done hanya bila kelengkapan 100% (data Required, wilayah, inventory, foto, scan — sesuai sakelar project)
+        from .progress import loc_completeness
+        pct, miss = loc_completeness(conn, conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone())
+        if pct < 100:
+            conn.rollback()
+            raise HTTPException(400, f"Not complete yet ({pct}%) — missing: {', '.join(miss)}")
         conn.execute("UPDATE locations SET done_at=? WHERE id=?", (db.now_iso(), loc_id))
     elif body.status != "selesai" and row["status"] == "selesai":
         conn.execute("UPDATE locations SET done_at=NULL WHERE id=?", (loc_id,))
