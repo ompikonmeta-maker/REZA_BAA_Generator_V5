@@ -48,3 +48,9 @@ Status: **Selesai diimplementasi** · 2026-10-05
 - Yang berupa popover khusus (Wilayah, date picker, project) → tetap kontennya, tapi animasi buka/tutup, origin, durasi, easing, elevasi, dan radius disamakan dengan MDMenu (token motion bersama).
 - Animasi dengan toggle class/attribute pada elemen yang sama (tidak render ulang DOM); hormati `prefers-reduced-motion`.
 - Uji di tema terang & gelap, mode rail, dan layar pendek (panel membalik ke atas bila ruang di bawah kurang).
+
+## 4. Label "Location code prefix" → "Project code" — dicatat, menunggu "gas"
+- Label baru **Project code**; keterangan: `2–4 letters · used as prefix for location codes · first code: KDMP_00001`.
+- Berlaku di semua tempat: layar Create your first project, editor project (label + teks terkunci), link `Change project code…`, dialog ganti kode ("Change project code" / "New project code"), pesan error server, checklist Setup.
+- Panduan (HTML + PDF) ikut diperbarui: teks & screenshot yang memuat label lama.
+- Kolom database tetap `prefix` (hanya tampilan).
