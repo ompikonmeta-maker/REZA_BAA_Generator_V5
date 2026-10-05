@@ -18,7 +18,7 @@ Tidak ada yang bisa entry BAA sebelum admin selesai menyiapkan project. Admin bi
 | Pesan Freeze | Wajib tampil ke user. Admin bisa mengedit pesan (chip cepat: Template revision, Code prefix change, Data check); ada preview banner |
 | Ganti kode | **Hanya prefix** (LOK → KMP). Nomor urut & 5 digit tetap |
 | Syarat ganti prefix | Project harus **Frozen** |
-| Project yang sudah ada | Migrasi otomatis → **Active** (tidak mengganggu data) |
+| Project yang sudah ada | Migrasi otomatis → **Active** dan **tetap memakai pengaturan lama** (field, foto, inventory, template, akses) — dikonfirmasi |
 | Instalasi baru | Tidak lagi membuat "Project 1" otomatis → admin langsung diarahkan membuat project pertama |
 | Project baru berikutnya | Lewat flow yang sama (mulai dari Setup) |
 
@@ -108,6 +108,3 @@ Settings
 - Pencatatan export **belum ada** saat ini → perlu log export baru (lokasi + jenis + waktu + user). Peringatan "sudah di-export" hanya akurat untuk export setelah fitur ini aktif.
 - Prefix yang belum pernah menerbitkan kode tetap bisa diganti langsung seperti sekarang (tanpa Freeze/analisa).
 - Mockup: Setup checklist, layar "not ready", Active, dialog Freeze, Frozen, analisa ganti prefix, operator Dashboard & BAA Entry saat Frozen; revisi: ganti password login pertama, buat project pertama, mode Setup (Overview, Location data, Team), menu baru.
-
-## Pertanyaan terbuka
-- Project lama (LOK, SKL, PKM) diasumsikan **tetap memakai pengaturan yang ada & otomatis Active** — menunggu konfirmasi.
