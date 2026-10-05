@@ -113,7 +113,7 @@ def portfolio(hub: sqlite3.Connection = Depends(get_hub), user=Depends(current_u
     """Ringkasan visual semua project yang boleh dilihat (admin & viewer)."""
     if user["role"] not in ("admin", "viewer"):
         raise HTTPException(403, "Admins and viewers only")
-    rows = [p for p in accessible_projects(hub, user) if not p["archived"]]
+    rows = [p for p in accessible_projects(hub, user) if not p["archived"] and p["status"] != "setup"]
     return {"projects": [_summary(p, user, detail=True) for p in rows]}
 
 

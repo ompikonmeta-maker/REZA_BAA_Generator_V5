@@ -2189,6 +2189,7 @@
         <span class="wb-lbl"><span id="wbTime">0h 00m</span><small id="wbSub">active</small></span>
       </button>
       <span class="bell admin-only" id="bellWrap"><md-icon-button id="bellBtn" data-tip="Notifications · edit requests"><span>notifications</span></md-icon-button><b id="bellCount"></b></span>
+      <md-icon-button id="helpBtn" data-tip="Help · user guide"><span>help</span></md-icon-button>
       <md-icon-button id="pwBtn" data-tip="Change password"><span>password</span></md-icon-button>
       <md-icon-button id="themeBtn" data-tip="Toggle theme"><span>dark_mode</span></md-icon-button>
       <md-icon-button id="logoutBtn" data-tip="Sign out"><span>logout</span></md-icon-button>
@@ -6065,6 +6066,8 @@ function openPw(force){$('#pwForce').classList.toggle('hidden',!force);$('#pwCan
     const eye=f&&f.querySelector('.eye');if(eye)eye.textContent='visibility';});
   pwStr();$('#pwDlg').show();setTimeout(()=>$('#pw-old').focus(),80);}
 $('#pwBtn').addEventListener('click',()=>openPw(false));
+/* Panduan Admin & Operator (tab baru, langsung ke bagian sesuai peran) */
+$('#helpBtn').addEventListener('click',()=>window.open('/guide/#'+(S.user&&S.user.role==='admin'?'admin':'operator'),'_blank','noopener'));
 $('#pwCancel').addEventListener('click',()=>$('#pwDlg').close());
 $('#pwSave').addEventListener('click',async()=>{try{
   await api('/api/auth/change-password',{method:'POST',body:JSON.stringify({old_password:$('#pw-old').value,new_password:$('#pw-new').value})});

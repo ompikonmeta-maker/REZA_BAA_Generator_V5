@@ -43,6 +43,9 @@ if config.WEB_DIR.exists():
     assets = config.WEB_DIR / "assets"
     if assets.exists():
         app.mount("/assets", StaticFiles(directory=str(assets)), name="assets")
+    guide = config.WEB_DIR / "guide"
+    if guide.exists():   # panduan Admin & Operator (HTML + PDF), dibuka dari tombol Help
+        app.mount("/guide", StaticFiles(directory=str(guide), html=True), name="guide")
 
     @app.get("/favicon.ico", include_in_schema=False)
     def favicon():
