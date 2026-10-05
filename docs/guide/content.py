@@ -128,7 +128,8 @@ ADMIN = {
   {'id': 'a-backup', 'title': 'Backup & Restore',
    'lead': 'Simpan cadangan seluruh data secara rutin.',
    'shot': 'a_backup',
-   'notes': ['**Download backup** — satu file berisi semua data & foto.', None, 'Pulihkan dari file backup.'],
+   'notes': ['**Download backup** — satu file berisi semua data & foto.', None, 'Pulihkan dari file backup.', 'Kecilkan foto lama yang masih besar.'],
+   'tips': ['Foto baru otomatis dikecilkan saat upload (maks. 2000 px) agar folder data tidak cepat penuh — tanggal & GPS kamera tetap tersimpan, hasil export BAA tetap sama.', '**Compress existing photos** — kecilkan foto lama sekali jalan. Download backup dulu bila ingin menyimpan file aslinya.'],
    'warn': ['Restore mengganti seluruh data saat ini dengan isi file backup.']},
  ],
  'cheat': [

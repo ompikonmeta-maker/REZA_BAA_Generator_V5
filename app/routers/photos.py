@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse
 
 from .. import config, db
 from ..deps import audit, current_user, get_db, loc_access, require_editor
-from ..services import autosort, ocr
+from ..services import autosort, imgstore, ocr
 
 router = APIRouter(prefix="/api", tags=["photos"])
 
@@ -95,6 +95,15 @@ def upload_photos(
         ocr_serial, ocr_text = "", ""
         if autosort.category_needs_ocr(cat_key, categories):
             ocr_serial, ocr_text = ocr.read_serial(fpath)
+        # Simpan versi kompres (OCR di atas sudah membaca foto asli)
+        small = imgstore.compress(data)
+        if small:
+            nb, next_ = small
+            npath = fpath.with_suffix(next_)
+            npath.write_bytes(nb)
+            if npath != fpath:
+                fpath.unlink(missing_ok=True)
+            fpath, fname = npath, npath.name
 
         # Satu kategori = maksimal satu foto: buang foto lama di kategori yang
         # sama (kecuali "uncategorized" yang boleh menampung banyak).

@@ -2634,6 +2634,12 @@
             <input id="bk-file" type="file" accept=".zip" class="hidden">
             <md-button id="bk-restore" variant="outlined" icon="restore">Restore from ZIP…</md-button>
           </div>
+          <div class="sec" style="margin-top:22px"><span class="mi acc">compress</span><h3>Photo storage</h3></div>
+          <p class="muted" style="margin:0 0 12px" id="bkPhotoInfo">New photos are compressed automatically on upload (max 2000 px · JPEG 85%; screenshots stay PNG; camera date &amp; GPS kept).</p>
+          <div class="rowflex" style="align-items:center;gap:14px">
+            <md-button id="bk-compress" variant="tonal" icon="compress">Compress existing photos</md-button>
+            <span class="muted" id="bkCmpProg"></span>
+          </div>
         </div>
       </section>
     </div>
@@ -4006,7 +4012,7 @@ const SET_VIEWS={projects:{view:'projects',title:'All projects',load:()=>loadPro
   users:{view:'users',title:'Users',load:()=>loadUsers()},templates:{view:'templates',title:'Template BAA',load:()=>loadTemplates()},team:{view:'team',title:'Team',load:()=>loadTeam()}};
 const subOn=(s,sub)=>s.dataset.sub===sub||(s.dataset.grp==='data'&&['lokasi','photo','inventory'].includes(sub));
 function openSettings(sub){
-  sub=sub||curSetSub;pjChipShow(!['projects','users','backup'].includes(sub));
+  sub=sub||curSetSub;if(sub==='backup')bkPhotoInfo();pjChipShow(!['projects','users','backup'].includes(sub));
   $('#v-projects').classList.toggle('single',sub==='pjstatus');ldTabsSync(sub);
   if(typeof SX!=='undefined'&&SX.on){const st={lokasi:'data',photo:'data',inventory:'data',templates:'template',team:'team',projects:'projects',users:'users'}[sub];
     if(st&&st!==SX.step){SX.step=st;sxNav();}setTimeout(sxFoot,0);}
@@ -6201,6 +6207,17 @@ $('#galAdd').addEventListener('click',()=>pickFiles(true,async files=>{
 
 /* Backup & restore */
 $('#bk-download').addEventListener('click',()=>{location.href='/api/backup';});
+/* Kompres foto lama (sekali jalan, bertahap) */
+function fmtMB(b){return b>=1073741824?(b/1073741824).toFixed(1)+' GB':(b/1048576).toFixed(b<10485760?1:0)+' MB';}
+async function bkPhotoInfo(){try{const r=await api('/api/photos/storage');
+  $('#bkPhotoInfo').innerHTML=`<b>${r.photos}</b> photos · <b>${fmtMB(r.bytes)}</b> in total. New photos are compressed automatically on upload (max 2000 px · JPEG 85%; screenshots stay PNG; camera date &amp; GPS kept).`;}catch(e){}}
+$('#bk-compress').addEventListener('click',()=>confirmDo('Compress existing photos?',
+  'Large photos in <b>all projects</b> are resized to max 2000 px and saved as JPEG 85% — originals are replaced. Download a backup first if you want to keep the originals.<br><br>BAA exports look the same.',
+  async()=>{const b=$('#bk-compress');b.toggleAttribute('disabled',true);let cur='',n=0,ch=0,sv=0;const pg=$('#bkCmpProg');
+    try{for(;;){const r=await api('/api/photos/compress-all',{method:'POST',body:JSON.stringify({cursor:cur,limit:30})});
+        cur=r.cursor;n+=r.checked;ch+=r.changed;sv+=r.saved;pg.textContent=`Checked ${n} photos · compressed ${ch} · saved ${fmtMB(sv)}…`;if(r.done)break;}
+      pg.textContent=`Done — compressed ${ch} of ${n} photos · saved ${fmtMB(sv)}`;toast('Photos compressed · saved '+fmtMB(sv));bkPhotoInfo();}
+    catch(e){pg.textContent='';toast('Failed: '+e.message);}finally{b.toggleAttribute('disabled',false);}},{okLabel:'Compress'}));
 $('#bk-restore').addEventListener('click',()=>$('#bk-file').click());
 $('#bk-file').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;const fd=new FormData();fd.append('file',f);
   toast('Restoring…');try{const r=await fetch('/api/restore',{method:'POST',credentials:'same-origin',body:fd});if(!r.ok)throw new Error((await r.json()).detail);const d=await r.json();toast(d.msg||'Restored');}catch(err){toast('Failed: '+err.message);}e.target.value='';});
