@@ -54,3 +54,15 @@ Status: **Selesai diimplementasi** · 2026-10-05
 - Berlaku di semua tempat: layar Create your first project, editor project (label + teks terkunci), link `Change project code…`, dialog ganti kode ("Change project code" / "New project code"), pesan error server, checklist Setup.
 - Panduan (HTML + PDF) ikut diperbarui: teks & screenshot yang memuat label lama.
 - Kolom database tetap `prefix` (hanya tampilan).
+
+## 5. Field tanggal target pakai date picker aplikasi — dicatat (2026-10-06)
+**Masalah:** field "Target date" masih input tanggal bawaan browser: tanpa dropdown kalender ala aplikasi, format `mm/dd/yyyy` (gaya AS), tampilan beda dengan field tanggal lain.
+
+**Lokasi (3):**
+| Tempat | Elemen |
+|---|---|
+| Mode Setup › Target | `#sxDate` |
+| Settings › Project & status / All projects (editor project) | `#pjm-date` |
+| Progress › ubah target (edit cepat tanggal) | `pgInline(..., 'date')` |
+
+**Usul:** pakai date picker yang sama dengan *Tanggal Aktivasi* di BAA Entry dan filter *Date created* (`DP`): klik → kalender dropdown (animasi MDMenu), format tampil `31 Dec 2026`, tombol Today/Clear, tersimpan tetap `YYYY-MM-DD`. Penjaga "Unsaved" tetap jalan. Uji tema terang & gelap.
