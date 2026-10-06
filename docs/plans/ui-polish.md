@@ -108,3 +108,6 @@ Setelah ada lokasi nyata, preview kembali memakai 2 lokasi terbaru.
 Uji: 1366, 1600, 1920 px; tema terang & gelap; mode Setup (Location data, Template, Team, Target) ikut aturan yang sama.
 
 **Hasil (9):** semua halaman Settings & mode Setup rata kiri di x=338 px (sejajar judul) dengan lebar maks 1200 px (diukur di 1366/1600/1920). Jarak atas kini sama (201 px; Location data 253 px karena baris tab). Penyebab selisih 6 px: bar atas lebih tinggi saat chip project tampil → bar atas diberi tinggi tetap. Banner Frozen di halaman Settings ikut 1200 px. Judul besar Template dihapus; status "All changes saved / Unsaved changes" pindah ke kolom Steps di atas tombol Save mapping.
+
+## 10. Sub menu awal Settings — selesai (2026-10-06)
+Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Project & status** (sebelumnya Location data). Setelah itu tetap membuka sub menu terakhir yang dipakai.

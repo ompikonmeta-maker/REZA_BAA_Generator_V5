@@ -3990,7 +3990,7 @@ $$('.navitem[data-view]').forEach(n=>n.addEventListener('click',()=>{
 /* Sub-menu Pengaturan (accordion) */
 const SET_SUBS={lokasi:{id:'set-lokasi',title:'Location data'},inventory:{id:'set-inventory',title:'Location data'},
   photo:{id:'set-photo',title:'Location data'},backup:{id:'set-backup',title:'Backup & Restore'}};
-let curSetSub='lokasi';
+let curSetSub='pjstatus';   /* klik Settings pertama kali -> item teratas (Project & status); setelahnya ingat pilihan terakhir */
 function showSetSub(key){curSetSub=key;const cfg=SET_SUBS[key];
   $$('.subnav').forEach(s=>s.classList.toggle('active',subOn(s,key)));
   Object.values(SET_SUBS).forEach(c=>{const el=$('#'+c.id);if(el)el.classList.toggle('hidden',c.id!==cfg.id);});
