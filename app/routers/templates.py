@@ -302,7 +302,8 @@ class TrialIn(BaseModel):
     limit: int = 2
 
 
-def _trial_build(tpl_id: int, body: TrialIn, conn: sqlite3.Connection) -> tuple[Path, dict, dict]:
+def _trial_build(tpl_id: int, body: TrialIn, conn: sqlite3.Connection,
+                 log_only: bool = False) -> tuple[Path, dict, dict]:
     """Bangun workbook uji dari mapping (belum disimpan) + lokasi terbaru."""
     from ..routers.export import _gather_locations
     from ..services import excel as excel_svc
@@ -328,7 +329,8 @@ def _trial_build(tpl_id: int, body: TrialIn, conn: sqlite3.Connection) -> tuple[
     cats = db.get_setting(conn, "photo_categories", [])
     out = config.OUTPUT_DIR / f"_trial_{uuid.uuid4().hex}.xlsx"
     try:
-        res = excel_svc.build_workbook(str(db.fpath(conn, row["path"])), tcfg, locs, str(out), cats)
+        res = excel_svc.build_workbook(str(db.fpath(conn, row["path"])), tcfg, locs, str(out), cats,
+                                       log_only=log_only)
     finally:
         for t in tmp:
             t.unlink(missing_ok=True)
@@ -347,7 +349,14 @@ def _sample_locations(conn) -> tuple[list[dict], list[Path]]:
     cats = db.get_setting(conn, "photo_categories", []) or []
     items = db.get_setting(conn, "default_inventory_items", []) or []
     wil = bool(pj.get("wilayah_on", 1))
-    tmp: list[Path] = []
+    ph = config.OUTPUT_DIR / f"_sample_{uuid.uuid4().hex}.jpg"     # satu gambar contoh dipakai semua kategori
+    im = Image.new("RGB", (800, 600), (214, 226, 226))
+    d = ImageDraw.Draw(im)
+    d.rectangle((8, 8, 791, 591), outline=(120, 150, 150), width=6)
+    d.text((300, 290), "CONTOH FOTO", fill=(40, 70, 70))
+    ph.parent.mkdir(parents=True, exist_ok=True)
+    im.save(ph, "JPEG", quality=80)
+    tmp: list[Path] = [ph]
     out = []
     for n in (1, 2):
         data = {}
@@ -368,14 +377,7 @@ def _sample_locations(conn) -> tuple[list[dict], list[Path]]:
         for i, c in enumerate(cats):
             if n == 2 and i % 3 == 2:       # contoh ke-2 sengaja belum lengkap fotonya
                 continue
-            fp = config.OUTPUT_DIR / f"_sample_{uuid.uuid4().hex}.jpg"
-            im = Image.new("RGB", (800, 600), (214, 226, 226))
-            d = ImageDraw.Draw(im)
-            d.rectangle((8, 8, 791, 591), outline=(120, 150, 150), width=6)
-            d.text((40, 280), f"CONTOH FOTO · {c.get('label') or c.get('key')}", fill=(40, 70, 70))
-            im.save(fp, "JPEG", quality=80)
-            tmp.append(fp)
-            photos.append({"category": c.get("key"), "path": str(fp), "ocr_serial": ""})
+            photos.append({"category": c.get("key"), "path": str(ph), "ocr_serial": ""})
         out.append({"id": -n, "code": f"{prefix}_{n:05d}", "name": data.get("nama_lokasi", ""), "data": data,
                     "inventory": inv, "photos": photos, "scan": None})
     return out, tmp
@@ -387,7 +389,7 @@ def template_preview(tpl_id: int, body: TrialIn, conn: sqlite3.Connection = Depe
     """Sheet LOG hasil mapping yang sedang diedit (tanpa menyimpan), digambar
     seperti Excel: header asli template + baris data lokasi terbaru."""
     import openpyxl
-    out, res, cfg = _trial_build(tpl_id, body, conn)
+    out, res, cfg = _trial_build(tpl_id, body, conn, log_only=True)   # pratinjau cukup sheet LOG (cepat)
     try:
         wb = openpyxl.load_workbook(str(out))
         ws = wb[body.sheet_log]

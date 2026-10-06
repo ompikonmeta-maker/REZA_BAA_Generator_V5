@@ -91,3 +91,4 @@ Setelah ada lokasi nyata, preview kembali memakai 2 lokasi terbaru.
 - 5: `dateBox()` + `dpOpenBox()` dipakai di Setup › Target dan editor project; edit cepat tanggal di Progress membuka kalender yang sama. Penjaga "Unsaved" tetap jalan. Ikut diperbaiki: toast yang tersembunyi tidak lagi menghalangi klik di bawah layar.
 - 6: tanpa lokasi, preview & Test .xlsx memakai 2 lokasi contoh (`_sample_locations`), label "Sample data — no locations yet", file uji `Test_BAA_sample.xlsx`. Foto contoh = placeholder sementara, langsung dihapus.
 - 8: `mapGo()` membereskan semua panel selain tujuan; uji klik cepat 1↔2↔3 berulang → tidak ada panel tertinggal.
+- 6 (lanjutan): preview terasa lambat → preview kini hanya membangun sheet LOG (`build_workbook(log_only=True)`) dan memakai satu gambar contoh untuk semua kategori. Waktu server: data contoh ±1,1 dtk → ±0,1 dtk; data nyata ±0,65 dtk → ±0,05 dtk. Isi LOG identik; Test .xlsx tetap lengkap (LOG + Detail).

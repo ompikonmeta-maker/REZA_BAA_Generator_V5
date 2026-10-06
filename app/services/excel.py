@@ -322,10 +322,12 @@ def _has_photo(plist: list) -> bool:
 
 
 def build_workbook(template_path: str, template_config: dict, locations: list[dict],
-                   out_path: str, categories: list[dict] | None = None, progress=None) -> dict:
+                   out_path: str, categories: list[dict] | None = None, progress=None,
+                   log_only: bool = False) -> dict:
     """locations: list of dict {code,name,data,inventory:[...],photos:[{category,path,...}]}
     categories: kategori foto dari Pengaturan (untuk kolom "Foto Lengkap?").
-    progress: opsional, dipanggil progress(i, n) sebelum tiap lokasi diisi (boleh raise untuk batal)."""
+    progress: opsional, dipanggil progress(i, n) sebelum tiap lokasi diisi (boleh raise untuk batal).
+    log_only: hanya isi sheet LOG (untuk pratinjau mapping) — lewati salinan sheet detail & foto."""
     import openpyxl
     from openpyxl.drawing.image import Image as XLImage
 
@@ -400,6 +402,8 @@ def build_workbook(template_path: str, template_config: dict, locations: list[di
             log_row += 1
 
         # --- sheet detail per lokasi (duplikasi template) ---
+        if log_only:
+            continue
         ws = wb.copy_worksheet(detail_tpl)
         nama_only = data.get("nama_lokasi") or loc.get("name") or ""   # tanpa fallback kode
         ws.title = _safe_sheet_title(loc.get("code", f"Lokasi_{i:04d}"), nama_only, used_titles)
@@ -449,7 +453,7 @@ def build_workbook(template_path: str, template_config: dict, locations: list[di
                 warnings.append(f"{ws.title}: gagal sisip foto '{cat}': {e}")
 
     # Hapus sheet template detail (yang sudah diganti nama) bila sudah ada salinan
-    if locations and _tpl_title in wb.sheetnames and len(wb.sheetnames) > 1:
+    if locations and not log_only and _tpl_title in wb.sheetnames and len(wb.sheetnames) > 1:
         try:
             del wb[_tpl_title]
         except Exception:
