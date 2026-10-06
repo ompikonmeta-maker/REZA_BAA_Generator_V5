@@ -1639,6 +1639,8 @@
   .pg-edin{display:inline-flex;align-items:center;gap:4px}.pg-edin input{width:120px;font:600 18px inherit;padding:3px 8px;border:1.5px solid var(--md-sys-color-primary);border-radius:9px;background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface)}
   .pg-edin button{border:0;border-radius:8px;width:30px;height:30px;cursor:pointer;display:grid;place-items:center}.pg-edin .ok{background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary)}.pg-edin .no{background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface-variant)}
   .pg-edin .mi{font-size:18px}
+  .pv-sample{color:var(--md-sys-color-tertiary);font-weight:700}
+  .pg-edin .pg-dval{min-width:120px;font:600 18px inherit;padding:3px 10px;border:1.5px solid var(--md-sys-color-primary);border-radius:9px;background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface);cursor:pointer}
   .pg-bar{height:8px;border-radius:6px;background:var(--md-sys-color-surface-container-highest);position:relative;margin-top:12px}
   .pg-bar i{position:absolute;inset:0 auto 0 0;border-radius:6px;background:var(--md-sys-color-primary);transition:width .8s cubic-bezier(.05,.7,.1,1)}
   .pg-bar b{position:absolute;top:-4px;width:2px;height:16px;background:var(--md-sys-color-on-surface)}
@@ -1780,7 +1782,7 @@
   .tip.show{opacity:1;transform:translateX(-50%) scale(1)}
   .tip.below{transform-origin:top center}
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--md-sys-color-inverse-surface);color:var(--md-sys-color-inverse-on-surface);padding:12px 18px;border-radius:12px;z-index:9999;opacity:0;transition:opacity .2s;box-shadow:var(--md-sys-elevation-level3)}
-  .toast.show{opacity:1}
+  .toast{pointer-events:none}.toast.show{opacity:1;pointer-events:auto}
   .rowflex{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   /* Pengaturan editor rows */
   .er{display:grid;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
@@ -3703,7 +3705,7 @@ function sxTarget(){const s=(SX.st&&SX.st.target)||{};
   $('#v-setup').innerHTML=`<div class="sx-main"><div class="card"><div class="sec"><span class="mi acc">event</span><h3>Target</h3></div>
     <p class="muted" style="margin:0 0 16px">How many BAA this project must deliver, and by when. Drives the pace & projection in Dashboard and Progress. Optional now — it can change any time.</p>
     <div class="pjm-f"><div><md-text-field id="sxTot" variant="outlined" type="number" label="Target (BAA)" value="${s.total??''}"></md-text-field></div>
-      <div><md-text-field id="sxDate" variant="outlined" type="date" label="Target date" value="${esc(s.target_date||'')}"></md-text-field></div></div>
+      <div>${dateBox('sxDate','Target date',s.target_date)}</div></div>
     <div class="pjm-act"><md-button variant="filled" icon="check" id="sxTSave">Save target</md-button></div></div></div>`;
   SX.tsnap=fgSnap($('#v-setup'));$('#sxTSave').addEventListener('click',()=>sxTSave());fgTick();}
 async function sxTSave(){const t=$('#sxTot').value;try{
@@ -3865,7 +3867,7 @@ function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
         <div class="pjm-hint" id="pjm-next">${q.prefix_locked?`Next code: <b>${esc(q.next_code)}</b> · `+(q.status==='frozen'?`<a class="lnk" id="pjmRecode">Change project code…</a> (${q.locations} location${q.locations===1?'':'s'} will be re-coded)`:'locked · freeze the project to change the project code'):`Next code: <b>${esc((q.prefix||'???').toUpperCase())}_${String(isNew?1:+(q.next_code||'_1').split('_').pop()).padStart(5,'0')}</b> · 2–4 letters, unique · used as prefix for location codes`}</div></div>
       <div><div class="pjm-lab">Color</div><div class="pjm-sw">${PJM.colors.map(c=>`<button type="button" style="--c:${c}" data-c="${c}" class="${c===q.color?'on':''}" aria-label="${c}"></button>`).join('')}</div></div>
       <div><md-text-field id="pjm-total" variant="outlined" type="number" label="Target (BAA)" value="${q.total??''}"></md-text-field></div>
-      <div><md-text-field id="pjm-date" variant="outlined" type="date" label="Target date" value="${esc(q.target_date||'')}"></md-text-field></div>
+      <div>${dateBox('pjm-date','Target date',q.target_date)}</div>
       <div class="full"><div class="pjm-lab">Template</div><div class="pjm-tpl"><span class="mi">description</span><span class="pj-tx">
         <span class="pj-nm">${isNew?'Upload after the project is created':q.template?esc(q.template):'No template yet'}</span>
         <span class="pj-sb">${isNew?'Each project has its own BAA Excel template':'Managed in Settings · Template of this project'}</span></span>
@@ -4252,8 +4254,13 @@ function renderProgress(){const d=PG,t=d.team,ed=d.can_edit,el=$('#pgBody');
     $('#pgAgOk').onclick=async()=>{const b={fresh:+$('#pgAgF').value,warm:+$('#pgAgW').value,stale:+$('#pgAgS').value};
       try{await api('/api/progress/aging',{method:'PUT',body:JSON.stringify(b)});toast('Aging durations saved');loadProgress(true);}catch(e){toast('Failed: '+e.message);}};}}
 function pgInline(btn,type,val,body){const w=document.createElement('span');w.className='pg-edin';w.id='pgEditing';
-  w.innerHTML=`<input type="${type}" ${type==='number'?'min="1"':''} value="${esc(String(val))}"><button class="ok" aria-label="Save"><span class="mi">check</span></button><button class="no" aria-label="Cancel"><span class="mi">close</span></button>`;
-  btn.replaceWith(w);const i=w.querySelector('input');i.focus();if(i.select)i.select();
+  const dt=type==='date';
+  w.innerHTML=(dt?`<input type="hidden" value="${esc(String(val))}"><span class="pg-dval" tabindex="0" role="button">${esc(dpFmt(String(val))||'Pick a date')}</span>`
+    :`<input type="${type}" ${type==='number'?'min="1"':''} value="${esc(String(val))}">`)+`<button class="ok" aria-label="Save"><span class="mi">check</span></button><button class="no" aria-label="Cancel"><span class="mi">close</span></button>`;
+  btn.replaceWith(w);const i=w.querySelector('input');
+  if(dt){const d=w.querySelector('.pg-dval');const op=()=>DP.open(d,i.value||'',iso=>{i.value=iso;d.textContent=iso?dpFmt(iso):'Pick a date';fgTick();});
+    d.onclick=op;d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();op();}};setTimeout(op,0);}
+  else{i.focus();if(i.select)i.select();}
   const save=async()=>{const v=i.value.trim();if(!v){toast('Enter a value');return false;}
     try{await api('/api/progress/goal',{method:'PUT',body:JSON.stringify(body(v))});toast('Saved');loadProgress(true);return true;}catch(e){toast('Failed: '+e.message);return false;}};
   const v0=i.value;FG.pgedit={label:'Save target',active:()=>!!w.isConnected&&_visible('v-progress'),dirty:()=>i.value!==v0,save,discard:()=>{delete FG.pgedit;}};fgTick();
@@ -4688,6 +4695,13 @@ document.addEventListener('mousedown',e=>{if(DP.anchor&&!e.target.closest('#dpPo
 window.addEventListener('resize',()=>DP.anchor&&DP.pos());
 window.dpOpenFor=el=>{if(S.user&&S.user.role==='viewer')return;if(roActive())return;const hid=el.parentElement.querySelector('input[data-lf]');
   DP.open(el,hid.value||'',iso=>{hid.value=iso;const v=el.querySelector('.dfv');v.textContent=iso?dpFmt(iso):'';el.classList.toggle('filled',!!iso);});};
+/* Field tanggal umum (Target date, dll.) memakai date picker aplikasi; nilai di input tersembunyi #id (YYYY-MM-DD) */
+window.dpOpenBox=el=>{const hid=el.parentElement.querySelector('input[type=hidden]');
+  DP.open(el,hid.value||'',iso=>{hid.value=iso;el.querySelector('.dfv').textContent=iso?dpFmt(iso):'';el.classList.toggle('filled',!!iso);
+    hid.dispatchEvent(new Event('input',{bubbles:true}));hid.dispatchEvent(new Event('change',{bubbles:true}));});};
+function dateBox(id,label,iso){return `<div style="position:relative"><input type="hidden" id="${id}" value="${esc(iso||'')}">
+  <div class="datefield${iso?' filled':''}" tabindex="0" role="button" aria-label="${esc(label)}" onclick="dpOpenBox(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();dpOpenBox(this);}"><span class="mi">calendar_month</span>
+  <span class="dfv">${iso?esc(dpFmt(iso)):''}</span><label class="dflab">${esc(label)}</label><span class="mi df-trail">expand_more</span></div></div>`;}
 function dateField(f){const iso=S.loc.data[f.key]||'';
   return `<div style="position:relative"><input type="hidden" data-lf="${f.key}" value="${esc(iso)}">
     <div class="datefield${iso?' filled':''}" tabindex="0" onclick="dpOpenFor(this)"><span class="mi">calendar_month</span>
@@ -5847,7 +5861,8 @@ function mapGo(i,instant){const stage=$('#map-stage'),from=$(`.mpane[data-p="${M
   from.classList.remove('enter');from.classList.add('leave');
   to.hidden=false;to.classList.remove('leave');void to.offsetWidth;to.classList.add('enter');
   requestAnimationFrame(()=>{stage.style.height=to.offsetHeight+'px';});
-  clearTimeout(M.goT);M.goT=setTimeout(()=>{from.hidden=true;from.classList.remove('leave');stage.style.height='';},460);
+  $$('.mpane').forEach(p=>{if(p!==from&&p!==to){p.hidden=true;p.classList.remove('enter','leave');}});   // klik cepat: panel lain langsung dibereskan
+  clearTimeout(M.goT);M.goT=setTimeout(()=>{$$('.mpane').forEach(p=>{if(p.dataset.p!==String(M.step)){p.hidden=true;p.classList.remove('leave','enter');}});stage.style.height='';},460);
   M.step=i;mapPaneShown(i);}
 function mapPaneShown(i){if(i===1)mapPreview();if(i===2){if(!M.userZoom)requestAnimationFrame(mapFit);}}
 $$('.msteps .mstep').forEach(s=>s.addEventListener('click',()=>mapGo(+s.dataset.p)));
@@ -5953,7 +5968,7 @@ function trialBody(){return JSON.stringify({config:buildMapCfg(),sheet_log:mapLo
 async function mapPreview(){if(!S.mapTplId)return;const el=$('#map-pvsheet');
   try{const d=await api('/api/templates/'+S.mapTplId+'/preview',{method:'POST',body:trialBody()});M.pv=d;
     const g=drawSheet(el,d.sheet,{hiliteX:true});M.pvG=g;M.pvW=g.W;M.pvH=g.H;mapPvFit();
-    $('#map-pvsub').textContent=`latest 2 locations · rows ${d.start_row}–${d.last_row} · unsaved mapping`;
+    $('#map-pvsub').innerHTML=(d.sample?'<b class="pv-sample">Sample data — no locations yet</b> · ':'latest 2 locations · ')+`rows ${d.start_row}–${d.last_row} · unsaved mapping`;
     $('#map-pvwarn').textContent=(d.warnings||[]).length?'⚠ '+d.warnings.join(' · '):'';}
   catch(e){el.style.width='';el.style.height='';el.style.transform='';el.innerHTML=`<div class="muted" style="padding:16px">${esc(e.message)}</div>`;$('#map-pvwarn').textContent='';}}
 function mapPvFit(){const vp=$('#map-pvvp'),el=$('#map-pvsheet');if(!M.pvW||!vp.clientWidth)return;const z=Math.max(.75,Math.min(1,(vp.clientWidth-4)/M.pvW));
@@ -5965,7 +5980,7 @@ $('#map-pvbtn').addEventListener('click',mapPreview);
 $('#map-testx').addEventListener('click',async()=>{toast('Preparing test file…');
   try{const r=await fetch('/api/templates/'+S.mapTplId+'/test-export',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:trialBody()});
     if(!r.ok){let m='Failed';try{m=(await r.json()).detail||m;}catch(e){}throw new Error(m);}
-    const blob=await r.blob(),a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download='Test_BAA.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Downloaded ✓');}
+    const blob=await r.blob(),a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=((r.headers.get('Content-Disposition')||'').match(/filename="?([^";]+)/)||[,'Test_BAA.xlsx'])[1];document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Downloaded ✓');}
   catch(e){toast('Failed: '+e.message);}});
 
 /* ---- 3. Detail sheet: field -> sel ---- */

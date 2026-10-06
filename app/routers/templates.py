@@ -314,19 +314,71 @@ def _trial_build(tpl_id: int, body: TrialIn, conn: sqlite3.Connection) -> tuple[
     ids = [r["id"] for r in conn.execute(
         "SELECT id FROM locations WHERE deleted_at IS NULL ORDER BY id DESC LIMIT ?",
         (max(1, min(body.limit, 10)),)).fetchall()]
-    if not ids:
-        raise HTTPException(400, "No locations yet to preview")
-    locs = []
-    for i in reversed(ids):
-        locs += _gather_locations(conn, "one", i)
+    tmp: list[Path] = []
+    if ids:
+        locs = []
+        for i in reversed(ids):
+            locs += _gather_locations(conn, "one", i)
+    else:                                   # project baru: pratinjau memakai 2 lokasi contoh (tidak disimpan)
+        locs, tmp = _sample_locations(conn)
     tcfg = dict(body.config or {})
     tcfg["mapped"] = True
     tcfg["sheet_log"] = body.sheet_log
     tcfg["sheet_detail"] = body.sheet_detail
     cats = db.get_setting(conn, "photo_categories", [])
     out = config.OUTPUT_DIR / f"_trial_{uuid.uuid4().hex}.xlsx"
-    res = excel_svc.build_workbook(str(db.fpath(conn, row["path"])), tcfg, locs, str(out), cats)
+    try:
+        res = excel_svc.build_workbook(str(db.fpath(conn, row["path"])), tcfg, locs, str(out), cats)
+    finally:
+        for t in tmp:
+            t.unlink(missing_ok=True)
+    res = {**(res or {}), "sample": not ids}
     return out, res, excel_svc.resolve_config(tcfg)
+
+
+def _sample_locations(conn) -> tuple[list[dict], list[Path]]:
+    """Dua lokasi contoh dari pengaturan project (field, wilayah, inventory, foto) agar mapping
+    bisa dicek sebelum ada lokasi nyata. Foto = gambar placeholder sementara berlabel kategori."""
+    from datetime import date
+    from PIL import Image, ImageDraw
+    pj = getattr(conn, "project", None) or {}
+    prefix = (pj.get("prefix") or "LOK").upper()
+    fields = db.get_setting(conn, "location_fields", []) or []
+    cats = db.get_setting(conn, "photo_categories", []) or []
+    items = db.get_setting(conn, "default_inventory_items", []) or []
+    wil = bool(pj.get("wilayah_on", 1))
+    tmp: list[Path] = []
+    out = []
+    for n in (1, 2):
+        data = {}
+        for f in fields:
+            k = f.get("key")
+            if k == "nama_lokasi":
+                data[k] = f"Contoh Lokasi {n}"
+            elif f.get("type") == "date":
+                data[k] = date.today().isoformat()
+            else:
+                data[k] = f"Contoh {f.get('label') or k}"
+        data.update({"wil_desa": "Cibodas" if wil else "", "wil_kec": "Lembang" if wil else "",
+                     "wil_kab": "Kab. Bandung Barat" if wil else "", "wil_prov": "Jawa Barat" if wil else "",
+                     "wil_kode": "32.17.01.2009" if wil else ""})
+        inv = [{"nama_barang": it, "merk_type": "Contoh Merk", "jumlah": "1", "sn_tagging": f"SN{n}{i + 1:03d}",
+                "keterangan": "OK"} for i, it in enumerate(items)]
+        photos = []
+        for i, c in enumerate(cats):
+            if n == 2 and i % 3 == 2:       # contoh ke-2 sengaja belum lengkap fotonya
+                continue
+            fp = config.OUTPUT_DIR / f"_sample_{uuid.uuid4().hex}.jpg"
+            im = Image.new("RGB", (800, 600), (214, 226, 226))
+            d = ImageDraw.Draw(im)
+            d.rectangle((8, 8, 791, 591), outline=(120, 150, 150), width=6)
+            d.text((40, 280), f"CONTOH FOTO · {c.get('label') or c.get('key')}", fill=(40, 70, 70))
+            im.save(fp, "JPEG", quality=80)
+            tmp.append(fp)
+            photos.append({"category": c.get("key"), "path": str(fp), "ocr_serial": ""})
+        out.append({"id": -n, "code": f"{prefix}_{n:05d}", "name": data.get("nama_lokasi", ""), "data": data,
+                    "inventory": inv, "photos": photos, "scan": None})
+    return out, tmp
 
 
 @router.post("/{tpl_id}/preview")
@@ -350,7 +402,7 @@ def template_preview(tpl_id: int, body: TrialIn, conn: sqlite3.Connection = Depe
     finally:
         out.unlink(missing_ok=True)
     return {"sheet": render, "header_row": hr, "start_row": sr, "last_row": last,
-            "warnings": res.get("warnings", [])}
+            "warnings": res.get("warnings", []), "sample": bool(res.get("sample"))}
 
 
 @router.post("/{tpl_id}/test-export")
@@ -359,7 +411,7 @@ def template_test_export(tpl_id: int, body: TrialIn, conn: sqlite3.Connection = 
     """Unduh .xlsx uji dari mapping yang sedang diedit (tanpa menyimpan)."""
     from fastapi.responses import FileResponse
     from starlette.background import BackgroundTask
-    out, _res, _cfg = _trial_build(tpl_id, body, conn)
-    return FileResponse(str(out), filename="Test_BAA.xlsx",
+    out, res, _cfg = _trial_build(tpl_id, body, conn)
+    return FileResponse(str(out), filename="Test_BAA_sample.xlsx" if res.get("sample") else "Test_BAA.xlsx",
                         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         background=BackgroundTask(lambda: out.unlink(missing_ok=True)))
