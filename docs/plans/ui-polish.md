@@ -81,3 +81,8 @@ Setelah ada lokasi nyata, preview kembali memakai 2 lokasi terbaru.
 **Penyebab (bukan disengaja):** baris inventory bawaan sudah terisi otomatis *Qty = 1* dan *Notes = OK*. Rumus kelengkapan menganggap baris yang punya isi apa pun sebagai "inventory mulai diisi" → dapat nilai setengah (0,5 dari 18 bagian: 4 field + wilayah + inventory + 11 foto + scan) = 2,8% → dibulatkan **3%**. Server memakai rumus yang sama, jadi Location Log/Progress juga 3% setelah auto-save.
 
 **Usul:** isian bawaan (nama item bawaan, Qty 1, Notes OK) tidak dihitung. Inventory baru dapat nilai setengah setelah operator mengisi **Brand/Type** atau **SN**; penuh bila semua kolom lengkap. Lokasi baru = **0%**. Berlaku di BAA Entry, Location Log, panel detail, Progress/Dashboard (server).
+
+## 8. Template BAA: Detail Sheet "nyangkut" & blur saat pindah langkah cepat — dicatat (2026-10-06)
+**Cara memicu:** di Template BAA klik cepat Detail Sheet → Log Sheet → Template (sebelum animasi ±0,5 dtk selesai).
+**Penyebab:** `mapGo()` menjadwalkan "bersih-bersih" panel lama (sembunyikan + hapus efek keluar) dengan satu timer. Klik berikutnya membatalkan timer itu (`clearTimeout`) dan hanya membersihkan panel terakhir, sehingga panel Detail Sheet tertinggal dalam keadaan animasi keluar (transparan/blur, tidak bisa diklik) di atas panel aktif.
+**Usul:** setiap pindah langkah, panel selain tujuan langsung dibereskan (panel yang sedang keluar tetap animasi, sisanya disembunyikan), dan timer membersihkan **semua** panel selain langkah aktif. Uji: klik cepat bolak-balik 1↔2↔3 berkali-kali → tidak ada panel tertinggal; animasi normal tetap sama.
