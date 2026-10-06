@@ -66,3 +66,13 @@ Status: **Selesai diimplementasi** · 2026-10-05
 | Progress › ubah target (edit cepat tanggal) | `pgInline(..., 'date')` |
 
 **Usul:** pakai date picker yang sama dengan *Tanggal Aktivasi* di BAA Entry dan filter *Date created* (`DP`): klik → kalender dropdown (animasi MDMenu), format tampil `31 Dec 2026`, tombol Today/Clear, tersimpan tetap `YYYY-MM-DD`. Penjaga "Unsaved" tetap jalan. Uji tema terang & gelap.
+
+## 6. Preview Log Sheet kosong di project baru — dicatat (2026-10-06)
+**Masalah:** Template BAA › Log Sheet › *Preview* menampilkan "No locations yet to preview". Preview & **Test .xlsx** butuh minimal 1 lokasi (`_trial_build` di `app/routers/templates.py` menolak bila belum ada lokasi). Di mode Setup project baru selalu belum ada lokasi → admin tidak bisa mengecek hasil mapping sebelum project aktif.
+
+**Usul:** bila belum ada lokasi, preview & Test .xlsx memakai **2 lokasi contoh** yang dibuat dari pengaturan project (tidak disimpan):
+- kode `KODE_00001`, `KODE_00002` sesuai Project code;
+- field lokasi diisi contoh (mis. *Nama Lokasi* → "Contoh Lokasi 1", tanggal hari ini, teknisi/PIC contoh);
+- wilayah contoh (bila Wilayah aktif), inventory bawaan dengan SN contoh, status foto per kategori;
+- label jelas di atas preview: **"Sample data — no locations yet"**.
+Setelah ada lokasi nyata, preview kembali memakai 2 lokasi terbaru.
