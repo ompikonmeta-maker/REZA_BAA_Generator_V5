@@ -92,3 +92,17 @@ Setelah ada lokasi nyata, preview kembali memakai 2 lokasi terbaru.
 - 6: tanpa lokasi, preview & Test .xlsx memakai 2 lokasi contoh (`_sample_locations`), label "Sample data — no locations yet", file uji `Test_BAA_sample.xlsx`. Foto contoh = placeholder sementara, langsung dihapus.
 - 8: `mapGo()` membereskan semua panel selain tujuan; uji klik cepat 1↔2↔3 berulang → tidak ada panel tertinggal.
 - 6 (lanjutan): preview terasa lambat → preview kini hanya membangun sheet LOG (`build_workbook(log_only=True)`) dan memakai satu gambar contoh untuk semua kategori. Waktu server: data contoh ±1,1 dtk → ±0,1 dtk; data nyata ±0,65 dtk → ±0,05 dtk. Isi LOG identik; Test .xlsx tetap lengkap (LOG + Detail).
+
+## 9. Lebar & posisi kartu di Settings seragam — dicatat (2026-10-06)
+**Temuan (ukur 1366 & 1920 px):** lebar kartu ada 4 macam (880 · 990–1200 · lebar penuh · 2 kolom); Location data, Users, Backup ditengahkan (maks 1200) sementara halaman lain rata kiri → di layar lebar kartu "meloncat" saat pindah menu; jarak atas 196 / 202 / 254 px; hanya Template BAA yang punya judul besar sendiri.
+
+**Keputusan:**
+| Aturan | Nilai |
+|---|---|
+| Posisi | **Rata kiri**, sejajar judul di bar atas — tidak ada yang ditengahkan |
+| Lebar maksimal | **1200 px** untuk semua halaman Settings (Project & status, Team, All projects, Template BAA, Location data, Users, Backup) |
+| Halaman 2 kolom | All projects & Template BAA dibagi di dalam lebar 1200 px yang sama |
+| Judul | Judul besar "BAA Template / Manage Excel templates…" di Template **dihapus**; cukup judul di bar atas |
+| Jarak atas | Disamakan untuk semua halaman (banner Frozen / tab Location data tetap di atas kartu) |
+
+Uji: 1366, 1600, 1920 px; tema terang & gelap; mode Setup (Location data, Template, Team, Target) ikut aturan yang sama.
