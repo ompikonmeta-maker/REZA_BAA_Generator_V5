@@ -44,3 +44,9 @@ Location Log → panel detail → **Edit in BAA Entry** → bar atas memuat pick
 - Export Excel/PDF satu lokasi langsung terunduh; *Ask where to save* default OFF (pilihan ON tetap diingat).
 - Setelah Finish: baris **Next draft** (draft milik user, terlama diubah dulu) atau "No drafts left".
 - Panduan operator (teks + screenshot) diperbarui.
+
+## Cek alur admin (2026-10-06) — selesai
+Uji end-to-end instalasi baru (14 langkah) lulus. Perbaikan:
+1. Chip Dashboard: "No locations yet" (belum ada lokasi), "No open drafts" (draft 0 tapi target belum tercapai), bukan "All locations done".
+2. Pill jumlah di menu Location Log disembunyikan bila 0.
+3. Template: bila deteksi otomatis 100% tanpa konflik, mapping langsung tersimpan saat upload (langkah Template langsung ✓); bila belum, muncul petunjuk untuk melengkapi lalu Save mapping.

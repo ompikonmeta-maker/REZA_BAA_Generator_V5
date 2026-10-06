@@ -397,6 +397,7 @@
   .shell.rail .navitem{flex-direction:column;width:56px;height:auto;min-height:50px;padding:7px 0 5px;margin:0 auto;gap:3px;justify-content:center;border-radius:16px}
   .shell.rail .navitem .lbl{opacity:0;max-width:0;margin:0;height:0}
   .shell.rail .navitem .pill{display:none}
+  .navitem .pill:empty{display:none}
   /* Label mikro di bawah ikon saat rail (#20) */
   .shell.rail .navitem[data-short]::after{content:attr(data-short);font-size:9.5px;font-weight:600;letter-spacing:.3px;line-height:1;
     color:inherit;opacity:.85;text-align:center;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
@@ -4159,6 +4160,11 @@ function buildDashHeat(heat){heat=heat||[];
   if(!buildDashHeat._rz){buildDashHeat._rz=true;let t;                // recompute ukuran sel bila lebar berubah
     window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(()=>{if($('#dHeatCols'))buildDashHeat(buildDashHeat._last||[]);},160);});}
 }
+/* Teks chip Dashboard: jangan bilang "semua selesai" bila belum ada lokasi / target belum tercapai */
+function dChipText(locs,done,draft){const goal=+(PJ.cur&&PJ.cur.total)||0;
+  if(draft)return `${draft} location${draft===1?'':'s'} waiting to finish`;
+  if(!locs)return 'No locations yet';
+  return goal&&done<goal?'No open drafts':'All locations done';}
 function actionLabel(f){const m={create:'created location',update:'updated',delete:'deleted',upload_photos:'uploaded photos',save_inventory:'saved inventory',login:'signed in',set_serial:'set SN',reassign_photo:'moved photo'};
   const a=m[f.action]||f.action;const ref=f.detail||f.entity_id||'';return a+(ref?' '+esc(ref):'');}
 function timeAgo(iso){try{const s=(Date.now()-new Date(iso))/1000;if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+' min ago';if(s<86400)return Math.floor(s/3600)+' hr ago';return Math.floor(s/86400)+' days ago';}catch(e){return '';}}
@@ -4166,7 +4172,7 @@ async function loadDashboard(){const role=S.user&&S.user.role;
   if(role==='viewer'){navTo('progress');return;}
   const isA=role==='admin';$('#dashSup').classList.toggle('hidden',!isA);$('#dashMe').classList.toggle('hidden',isA);$('#dHero').classList.toggle('hidden',!isA);
   if(isA){paintDashSky();$('#dHello').textContent=`${greetWord()}, ${S.user.full_name||S.user.username}`;
-    try{const s=await api('/api/stats');$('#dChipTxt').textContent=s.totals.draft?`${s.totals.draft} locations waiting to finish`:'All locations done';}catch(e){}
+    try{const s=await api('/api/stats');$('#dChipTxt').textContent=dChipText(s.totals.locations,s.totals.done,s.totals.draft);}catch(e){}
     loadSupervisor2();loadWilTeam();wbSync();}
   else loadMyDash().then(()=>wbSync());}
 /* ===== Progress · Supervisor Console · My dashboard ===== */
@@ -4450,7 +4456,7 @@ async function loadViewer(){
   let d;try{d=await api('/api/stats/supervisor');}catch(e){return;}
   VW_D=d;const m=d.summary;const total=m.total||0,done=m.done||0,remain=Math.max(0,total-done);
   $('#vwSub').textContent=`progress · ${done} of ${total} locations done`;
-  $('#dChipTxt').textContent=remain?`${remain} locations waiting to finish`:'All locations done';
+  $('#dChipTxt').textContent=dChipText(total,done,remain);
   // ring
   const C=2*Math.PI*63;const fg=$('#vwRingFg');fg.style.strokeDasharray=C.toFixed(1);fg.style.strokeDashoffset=C.toFixed(1);
   requestAnimationFrame(()=>{fg.style.strokeDashoffset=(C*(1-(total?done/total:0))).toFixed(1);});
@@ -5791,7 +5797,12 @@ function tplVerify(){const a=tplLogSel.getValue(),b=tplDetailSel.getValue(),ok=a
 $('#tpl-do-register')&&$('#tpl-do-register').addEventListener('click',async()=>{const d=S.pending;if(!d)return;if(!tplVerify())return toast('Log and Detail must be different sheets');
   try{const res=await api('/api/templates/register',{method:'POST',body:JSON.stringify({pending_file:d.pending_file,name:tplNameGet()||d.orig_name.replace(/\.(xlsx|xlsm)$/i,''),orig_name:d.orig_name,sheet_log:tplLogSel.getValue(),sheet_detail:tplDetailSel.getValue(),activate:false})});
     $('#tpl-register').classList.add('hidden');$('#tpl-up').classList.add('hidden');$('#tpl-file').value='';$('#tpl-file-name').textContent='No file yet';tplNameSet('');S.pending=null;
-    toast(res.active?'Saved & activated — set up the mapping':'Saved — set up the mapping');M.dirty=false;await loadTemplates(res.id);}catch(e){toast('Failed: '+e.message);}});
+    toast(res.active?'Saved & activated — set up the mapping':'Saved — set up the mapping');M.dirty=false;await loadTemplates(res.id);await mapAutoSave(res.id);}catch(e){toast('Failed: '+e.message);}});
+/* Template baru: bila deteksi otomatis sudah 100% tanpa masalah, mapping langsung disimpan (tanpa klik Save mapping) */
+async function mapAutoSave(id){for(let i=0;i<30&&!(S.mapTplId===id&&MAP_LOGH.length);i++)await new Promise(r=>setTimeout(r,150));
+  if(S.mapTplId!==id)return;const s=mapSteps();
+  if(s.wsOk&&!s.bad&&!s.imErr&&s.total>0&&s.filled===s.total){if(await mapSaveNow()){toast('Template saved — mapping detected automatically ✓');if(typeof sxRefresh==='function')sxRefresh();}}
+  else toast(`Mapping ${Math.round(s.filled/(s.total||1)*100)}% detected — finish the steps, then click Save mapping`);}
 $('#tpl-up-btn').addEventListener('click',()=>{const u=$('#tpl-up');u.classList.toggle('hidden');if(!u.classList.contains('hidden'))u.animate&&!reduced&&u.animate([{opacity:0,transform:'translateY(-6px)'},{opacity:1,transform:'none'}],{duration:320,easing:'cubic-bezier(.05,.7,.1,1)'});});
 async function loadTemplates(openId){const rows=await api('/api/templates');S.tplRows=rows;
   const cur=openId||(rows.some(t=>t.id===S.mapTplId)?S.mapTplId:((rows.find(t=>t.active)||rows[0]||{}).id));
@@ -6109,7 +6120,7 @@ function mapSteps(){const wsOk=mapWsCheck();
   $('#map-pct').textContent=Math.round(filled/total*100)+'% filled';
   $('#map-ring').style.strokeDasharray=C;$('#map-ring').style.strokeDashoffset=C*(1-filled/total);
   requestAnimationFrame(()=>mapHl(M.step));
-  return{wsOk,bad,imErr};}
+  return{wsOk,bad,imErr,filled,total:logT+txtT+imT};}
 
 function buildMapCfg(){const n=(s,d)=>parseInt($(s).value)||d;
   const cfg={mapped:true,log:{header_row:n('#map-headerrow',2),start_row:n('#map-logstart',3),columns:{},sources:{},value:{},photo_status:{},identity:M.identity||'first'},
