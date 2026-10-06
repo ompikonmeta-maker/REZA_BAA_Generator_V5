@@ -76,3 +76,8 @@ Status: **Selesai diimplementasi** · 2026-10-05
 - wilayah contoh (bila Wilayah aktif), inventory bawaan dengan SN contoh, status foto per kategori;
 - label jelas di atas preview: **"Sample data — no locations yet"**.
 Setelah ada lokasi nyata, preview kembali memakai 2 lokasi terbaru.
+
+## 7. Lokasi baru sudah 3% padahal belum diisi — dicatat (2026-10-06)
+**Penyebab (bukan disengaja):** baris inventory bawaan sudah terisi otomatis *Qty = 1* dan *Notes = OK*. Rumus kelengkapan menganggap baris yang punya isi apa pun sebagai "inventory mulai diisi" → dapat nilai setengah (0,5 dari 18 bagian: 4 field + wilayah + inventory + 11 foto + scan) = 2,8% → dibulatkan **3%**. Server memakai rumus yang sama, jadi Location Log/Progress juga 3% setelah auto-save.
+
+**Usul:** isian bawaan (nama item bawaan, Qty 1, Notes OK) tidak dihitung. Inventory baru dapat nilai setengah setelah operator mengisi **Brand/Type** atau **SN**; penuh bila semua kolom lengkap. Lokasi baru = **0%**. Berlaku di BAA Entry, Location Log, panel detail, Progress/Dashboard (server).
