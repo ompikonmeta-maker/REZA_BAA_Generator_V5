@@ -93,7 +93,7 @@ Setelah ada lokasi nyata, preview kembali memakai 2 lokasi terbaru.
 - 8: `mapGo()` membereskan semua panel selain tujuan; uji klik cepat 1↔2↔3 berulang → tidak ada panel tertinggal.
 - 6 (lanjutan): preview terasa lambat → preview kini hanya membangun sheet LOG (`build_workbook(log_only=True)`) dan memakai satu gambar contoh untuk semua kategori. Waktu server: data contoh ±1,1 dtk → ±0,1 dtk; data nyata ±0,65 dtk → ±0,05 dtk. Isi LOG identik; Test .xlsx tetap lengkap (LOG + Detail).
 
-## 9. Lebar & posisi kartu di Settings seragam — dicatat (2026-10-06)
+## 9. Lebar & posisi kartu di Settings seragam — selesai (2026-10-06)
 **Temuan (ukur 1366 & 1920 px):** lebar kartu ada 4 macam (880 · 990–1200 · lebar penuh · 2 kolom); Location data, Users, Backup ditengahkan (maks 1200) sementara halaman lain rata kiri → di layar lebar kartu "meloncat" saat pindah menu; jarak atas 196 / 202 / 254 px; hanya Template BAA yang punya judul besar sendiri.
 
 **Keputusan:**
@@ -106,3 +106,5 @@ Setelah ada lokasi nyata, preview kembali memakai 2 lokasi terbaru.
 | Jarak atas | Disamakan untuk semua halaman (banner Frozen / tab Location data tetap di atas kartu) |
 
 Uji: 1366, 1600, 1920 px; tema terang & gelap; mode Setup (Location data, Template, Team, Target) ikut aturan yang sama.
+
+**Hasil (9):** semua halaman Settings & mode Setup rata kiri di x=338 px (sejajar judul) dengan lebar maks 1200 px (diukur di 1366/1600/1920). Jarak atas kini sama (201 px; Location data 253 px karena baris tab). Penyebab selisih 6 px: bar atas lebih tinggi saat chip project tampil → bar atas diberi tinggi tetap. Banner Frozen di halaman Settings ikut 1200 px. Judul besar Template dihapus; status "All changes saved / Unsaved changes" pindah ke kolom Steps di atas tombol Save mapping.

@@ -675,7 +675,7 @@
 
   .canvas{flex:1 1 auto;min-width:0;background:transparent;display:flex;flex-direction:column;overflow:hidden;position:relative;--topbar-h:64px}
   /* judul melayang di atas konten; konten yang lewat di bawahnya meluruh + blur */
-  .topbar{position:absolute;left:0;right:0;top:0;z-index:6;display:flex;align-items:center;gap:12px;padding:12px 20px}
+  .topbar{position:absolute;left:0;right:0;top:0;z-index:6;display:flex;align-items:center;gap:12px;padding:12px 20px;min-height:62px}   /* tinggi tetap: chip project tak menggeser konten */
   .topbar::before{content:"";position:absolute;inset:0 0 -18px 0;z-index:-1;pointer-events:none;
     background:linear-gradient(var(--md-sys-color-surface-container-high) 0,color-mix(in srgb,var(--md-sys-color-surface-container-high) 88%,transparent) 30%,color-mix(in srgb,var(--md-sys-color-surface-container-high) 62%,transparent) 100%);
     -webkit-backdrop-filter:blur(3px) saturate(1.3);backdrop-filter:blur(3px) saturate(1.3);
@@ -683,7 +683,9 @@
   .topbar .page-title{font:var(--md-sys-typescale-headline-small);margin:0}
   .canvas-body{flex:1 1 auto;padding:calc(var(--topbar-h) + 22px) 22px 22px;overflow-y:auto;scroll-padding-top:var(--topbar-h)}   /* sticky & scrollIntoView ikut offset ini */
   /* Batasi lebar konten submenu (Pengaturan/Users/Template) di layar besar */
-  #v-settings,#v-users{max-width:1200px;margin-inline:auto}
+  /* Settings: semua halaman rata kiri (sejajar judul bar atas) & lebar maks seragam 1200px */
+  #v-settings,#v-users,#v-projects,#v-team,#v-templates,#v-setup{max-width:1200px;margin-inline:0}
+  .canvas-body:has(>#v-settings:not(.hidden),>#v-users:not(.hidden),>#v-projects:not(.hidden),>#v-team:not(.hidden),>#v-templates:not(.hidden),>#v-setup:not(.hidden))>#fzBan{max-width:1200px}
   .code-chip{display:inline-flex;align-items:center;gap:6px;background:var(--md-sys-color-surface-container-highest);color:var(--md-sys-color-on-surface-variant);border-radius:9px;padding:4px 10px;font:var(--md-sys-typescale-label-medium)}
   .code-chip .mi{font-size:16px}
 
@@ -1430,7 +1432,7 @@
   /* ===== Template Mapping (redesign) ===== */
   .tpl-hero{display:flex;align-items:center;gap:12px;margin-bottom:6px}
   .tpl-hero h2{font:var(--md-sys-typescale-headline-small);font-weight:600;margin:0}
-  .tpl-savestate{margin-left:auto;display:inline-flex;align-items:center;gap:7px;font:var(--md-sys-typescale-label-medium);font-weight:600;color:var(--good)}
+  .tpl-savestate{display:inline-flex;align-items:center;gap:7px;font:var(--md-sys-typescale-label-medium);font-weight:600;color:var(--good)}
   .tpl-savestate .dot{width:8px;height:8px;border-radius:50%;background:var(--good)}
   .tpl-savestate.dirty{color:var(--warn)}.tpl-savestate.dirty .dot{background:var(--warn)}
   .map-ws{display:grid;grid-template-columns:250px minmax(0,1fr);gap:20px;align-items:start;padding-bottom:20px}
@@ -1989,7 +1991,7 @@
   .sx-line{display:block;width:2px;height:6px;margin:-1px 0 -1px 23px;background:var(--md-sys-color-outline-variant)}
   .shell.rail .sx-h,.shell.rail .sx-step .lbl,.shell.rail .sx-step .tag,.shell.rail .sx-line{display:none}
   .shell.rail .sx-step{justify-content:center;padding:0;width:56px;margin:0 auto}
-  .sx-main{max-width:880px}
+  .sx-main{max-width:none}
   .sx-hero{display:flex;align-items:center;gap:20px;padding:22px 24px;border-radius:var(--md-sys-shape-corner-extra-large);background:var(--md-sys-color-surface-container);margin-bottom:16px}
   .sx-hero h2{margin:0;font:var(--md-sys-typescale-headline-small)}.sx-hero p{margin:4px 0 0;color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-body-medium)}
   .sx-ring{position:relative;width:72px;height:72px;flex:none;display:grid;place-items:center}
@@ -2036,7 +2038,7 @@
   .lg-seg>button.on{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}
   .lg-seg>button .mi{font-size:17px}.lg-seg i{font-style:normal;opacity:.75}
   /* Project & status: tunggal (tanpa daftar) */
-  #v-projects.single .pjm{grid-template-columns:minmax(0,880px)}#v-projects.single .pjm>.card:first-child{display:none}
+  #v-projects.single .pjm{grid-template-columns:minmax(0,1fr)}#v-projects.single .pjm>.card:first-child{display:none}
   .pjm-hint .lnk,.st-strip a{color:var(--md-sys-color-primary);font-weight:600;cursor:pointer}
   .pst{font-weight:700}.pst.setup{color:var(--md-sys-color-on-surface-variant)}.pst.frozen{color:var(--fz)}
   .st-strip{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:var(--md-sys-shape-corner-large);margin-bottom:16px;background:var(--md-sys-color-surface-container)}
@@ -2049,7 +2051,7 @@
   .st-strip .tx{flex:1;min-width:200px;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
   .st-strip .tx b{display:block;font:var(--md-sys-typescale-title-small);color:var(--md-sys-color-on-surface)}
   /* Team */
-  .tm-main{max-width:880px;display:flex;flex-direction:column;gap:16px}
+  .tm-main{display:flex;flex-direction:column;gap:16px}
   .tm-new{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto auto;gap:10px;align-items:center}
   @media(max-width:760px){.tm-new{grid-template-columns:minmax(0,1fr)}}
   .tm-note{margin-top:10px;font:var(--md-sys-typescale-body-small)}
@@ -2389,8 +2391,6 @@
       </section>
 
       <section id="v-templates" class="hidden">
-        <div class="tpl-hero"><div><h2>BAA Template</h2><p class="muted" style="margin:2px 0 0">Manage Excel templates &amp; data mapping in one place.</p></div>
-          <span class="tpl-savestate" id="tpl-save"><span class="dot"></span><span id="tpl-saveTxt">All changes saved</span></span></div>
         <div id="tpl-tab-map">
           <div class="map-ws">
             <nav class="map-steps card">
@@ -2408,6 +2408,7 @@
                 <div class="pt"><b id="map-pct">0% filled</b><small>mapping completeness</small></div>
               </div>
               <div class="railbtns">
+                <span class="tpl-savestate" id="tpl-save"><span class="dot"></span><span id="tpl-saveTxt">All changes saved</span></span>
                 <md-button id="map-save" variant="filled" icon="save">Save mapping</md-button>
                 <md-button id="map-discard" variant="text">Discard changes</md-button>
               </div>
