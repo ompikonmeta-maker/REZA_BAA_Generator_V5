@@ -295,6 +295,9 @@ def _migrate_legacy(conn: sqlite3.Connection) -> None:
 def _migrate_hub(conn: sqlite3.Connection) -> None:
     if not _has_column(conn, "users", "last_seen_at"):
         conn.execute("ALTER TABLE users ADD COLUMN last_seen_at TEXT")
+    # Intro animasi: tampil sekali per user (diisi saat intro selesai / dilewati)
+    if not _has_column(conn, "users", "intro_seen_at"):
+        conn.execute("ALTER TABLE users ADD COLUMN intro_seen_at TEXT")
     # Fitur per project: data wilayah (on/off) + dihitung dalam progres lokasi
     for col in ("wilayah_on", "wilayah_progress"):
         if not _has_column(conn, "projects", col):

@@ -6,7 +6,7 @@ import sqlite3
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel
 
-from .. import auth, config
+from .. import auth, config, db
 from ..deps import audit, current_user, get_hub
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -43,6 +43,7 @@ def _public(user) -> dict:
         "role": user["role"],
         "full_name": user["full_name"],
         "must_change": bool(user["must_change"]),
+        "intro_seen": bool(user["intro_seen_at"]) if "intro_seen_at" in user.keys() else True,
     }
 
 
@@ -76,6 +77,14 @@ def logout(response: Response, conn: sqlite3.Connection = Depends(get_hub),
 @router.get("/me")
 def me(user=Depends(current_user)):
     return _public(user)
+
+
+@router.post("/intro-seen")
+def intro_seen(conn: sqlite3.Connection = Depends(get_hub), user=Depends(current_user)):
+    """Tandai intro sudah dilihat (selesai atau dilewati) agar tidak muncul lagi."""
+    conn.execute("UPDATE users SET intro_seen_at=? WHERE id=?", (db.now_iso(), user["id"]))
+    conn.commit()
+    return {"ok": True}
 
 
 @router.post("/change-password")

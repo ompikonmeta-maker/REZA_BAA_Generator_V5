@@ -9,6 +9,8 @@ const W=1366,H=820;
 const CSS=`#ocr-note{display:none!important}#toast{display:none!important}.wb-pop{display:none!important}*{caret-color:transparent!important}`;
 (async()=>{const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
 const mk=async()=>{const c=await b.newContext({viewport:{width:W,height:H},deviceScaleFactor:1.5,colorScheme:'light'});
+  // intro animasi tidak ikut difoto: anggap semua akun sudah melihatnya
+  await c.route(/\/api\/auth\/(me|login)$/,async r=>{const res=await r.fetch();let j;try{j=await res.json();}catch(e){return r.fulfill({response:res});}if(j&&typeof j==='object')j.intro_seen=true;r.fulfill({response:res,json:j});});
   await c.addInitScript(()=>{try{localStorage.setItem('md3-theme','light');}catch(e){}});
   const p=await c.newPage();p.on('pageerror',e=>console.log('ERR',e.message));return p;};
 const light=async p=>{await p.evaluate(()=>{try{MD3.setTheme('light');}catch(e){}});await p.addStyleTag({content:CSS});await p.waitForTimeout(500);};

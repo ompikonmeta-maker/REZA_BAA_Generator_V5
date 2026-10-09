@@ -13,6 +13,7 @@
 <script defer src="/assets/md3-dynamic-color.js"></script>
 <script defer src="/assets/md3-components.js"></script>
 <script defer src="/assets/mdmenu.js"></script>
+<script defer src="/assets/intro.js"></script>
 <script>try{var c=sessionStorage.getItem('pjVeil');if(c){document.documentElement.classList.add('pj-sw');document.documentElement.style.setProperty('--pj-veil',c);}}catch(e){}</script>
 <style>
   :root{ --nav-w:284px; --rail-w:80px; --warn:#9a5b00; --warn-bg:#fff3e0; --good:#1c7d46; --good-bg:#dcf0e2; --bad:#a3312a; --bad-bg:#fbe4e2; --brand-accent:#ec5a73;
@@ -2212,7 +2213,7 @@
         <span class="wb-lbl"><span id="wbTime">0h 00m</span><small id="wbSub">active</small></span>
       </button>
       <span class="bell admin-only" id="bellWrap"><md-icon-button id="bellBtn" data-tip="Notifications · edit requests"><span>notifications</span></md-icon-button><b id="bellCount"></b></span>
-      <md-icon-button id="helpBtn" data-tip="Help · user guide"><span>help</span></md-icon-button>
+      <md-icon-button id="helpBtn" data-tip="Help · user guide &amp; intro"><span>help</span></md-icon-button>
       <md-icon-button id="pwBtn" data-tip="Change password"><span>password</span></md-icon-button>
       <md-icon-button id="themeBtn" data-tip="Toggle theme"><span>dark_mode</span></md-icon-button>
       <md-icon-button id="logoutBtn" data-tip="Sign out"><span>logout</span></md-icon-button>
@@ -3211,11 +3212,12 @@ $('#themeBtn').addEventListener('click',()=>{if(_themeBusy)return;const cur=MD3.
 $('#railBtn').addEventListener('click',()=>{$('#app').classList.toggle('rail');if(typeof flyHide==='function')flyHide(true);});
 
 async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remove('hidden');
+  if(fromLogin&&introWanted()&&!S.user.must_change)BFIntro.veil();   /* intro pertama: layar gelap dulu, Dashboard tidak sempat berkedip */
   if(fromLogin&&!reduced){lg.classList.add('leaving');$('#app').classList.add('app-enter');
     setTimeout(()=>{lg.classList.add('hidden');lg.classList.remove('leaving');$('#lgGreet').classList.remove('on','out');$('#lgIris').classList.remove('on');$('#lgCard').classList.remove('gone');$('#app').classList.remove('app-enter');},800);}
   else{lg.classList.add('hidden');$('#lgGreet').classList.remove('on','out');$('#lgIris').classList.remove('on');$('#lgCard').classList.remove('gone');}
   if(S.user.must_change)await onbPassword();
-  if(!await pjInit())return;
+  if(!await pjInit()){if(window.BFIntro)BFIntro.unveil();return;}
   S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.keterangan=s.inventory_keterangan||[];S.appTitle=s.app_title||'BAA Generator';});
   await S.settingsReady;
   if(S.user.role!=='admin')$$('.admin-only').forEach(x=>x.classList.add('hidden'));
@@ -3225,7 +3227,7 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
   $('#app').classList.toggle('is-viewer',S.user.role==='viewer');
   fzApply();scanApply();
   refreshPicker();loadLocations();loadCreators();pjLand();if(S.user.role==='admin'){loadTemplates();loadUsers();loadNotifCount();}bindTips();
-  wbInit();expAskSync();}
+  wbInit();expAskSync();introMaybe();}
 /* ===== Wilayah (Desa/Kelurahan → Provinsi), per project bisa on/off =====
    Pencarian di server (data Kemendagri offline): beberapa kata urutan bebas, singkatan provinsi,
    toleran salah ketik, kode wilayah, tombol penyempit provinsi → kab/kota.
@@ -6212,7 +6214,65 @@ function openPw(force){$('#pwForce').classList.toggle('hidden',!force);$('#pwCan
   pwStr();$('#pwDlg').show();setTimeout(()=>$('#pw-old').focus(),80);}
 $('#pwBtn').addEventListener('click',()=>openPw(false));
 /* Panduan Admin & Operator (tab baru, langsung ke bagian sesuai peran) */
-$('#helpBtn').addEventListener('click',()=>window.open('/guide/#'+(S.user&&S.user.role==='admin'?'admin':'operator'),'_blank','noopener'));
+const openGuide=()=>window.open('/guide/#'+(S.user&&S.user.role==='admin'?'admin':'operator'),'_blank','noopener');
+$('#helpBtn').addEventListener('click',()=>{const b=$('#helpBtn');if(!S.user||S.user.role==='viewer'||!window.BFIntro){openGuide();return;}
+  openMenu(b,[{label:'User guide',icon:'menu_book',fn:openGuide},{label:'Replay intro',icon:'play_circle',fn:()=>guardLeave(()=>introStart(),'the intro')}]);});
+
+/* ===== Intro (logo 3D + tur spotlight), sekali per user; putar ulang dari tombol ? =====
+   Mesin di /assets/intro.js. Di sini: bab per peran (target = elemen hidup), lalu tampilan dikembalikan seperti semula. */
+const INTRO={opened:false};
+function introWanted(){return !!(window.BFIntro&&S.user&&!S.user.intro_seen&&S.user.role!=='viewer');}
+function introMaybe(){if(!introWanted())return;
+  if(S.user.role!=='admin'&&isSetup()){BFIntro.unveil();return;}   /* project belum aktif: tidak ada yang bisa dikenalkan */
+  setTimeout(introStart,350);}
+function introSeen(){if(!S.user||S.user.intro_seen)return;S.user.intro_seen=true;api('/api/auth/intro-seen',{method:'POST'}).catch(()=>{});}
+const _iVis=s=>{const e=typeof s==='string'?$(s):s;if(!e)return null;const r=e.getBoundingClientRect();return r.width&&r.height?e:null;};
+const _iCard=(scope,title)=>$$(scope+' .card').find(c=>{const h=c.querySelector('.ct');return h&&h.textContent.trim()===title;});
+function introNav(v){const n=$('.navitem[data-view="'+v+'"]');if(n&&!(n.classList.contains('active')&&_visible('v-'+v)))navTo(v);}
+function introSx(k){if(!SX.on||SX.step!==k)sxGo(k);}
+function introSet(sub){if(!$('#setToggle').classList.contains('active')||curSetSub!==sub)openSettings(sub);}
+/* buka BAA Entry: draf milik user (atau lokasi pertama); tanpa lokasi -> form baru (belum tersimpan, tidak dibuat di server) */
+async function introEntry(){if(_visible('v-entry')&&!$('#entry-form').classList.contains('hidden'))return;
+  gotoEntry();INTRO.opened=true;const rows=LOC_ROWS||[];
+  const pick=rows.find(l=>l.owner_id===S.user.id&&l.status!=='done')||rows.find(l=>l.owner_id===S.user.id)||rows[0];
+  if(pick)await openLoc(pick.id);else newDraft();
+  if(document.activeElement)document.activeElement.blur();}
+const canEnter=()=>!frozenRO();   /* project Frozen: operator hanya melihat, bab isian dilewati */
+function introOp(){return [
+  {label:'Dashboard',title:'Mulai BAA baru',text:'Klik New location, kode lokasi dibuat otomatis. Continue membuka draf yang paling hampir selesai.',when:canEnter,go:()=>introNav('dashboard'),target:()=>$('#meNew')},
+  {label:'Dashboard',title:'Draf saya',text:'Persentase, bagian yang masih kurang, dan umur tiap draf.',go:()=>introNav('dashboard'),target:()=>_iCard('#v-dashboard','My drafts')},
+  {label:'BAA Entry',title:'Isi data & wilayah',text:'Field bertanda * wajib. Wilayah: ketik desa + kecamatan, lalu pilih hasilnya.',when:canEnter,go:introEntry,target:()=>[$('#loc-fields'),$('#wil-field')]},
+  {label:'BAA Entry',title:'Tersimpan otomatis',text:'Tidak perlu tombol simpan. Tunggu tanda Saved di bar atas.',when:canEnter,go:introEntry,target:()=>_iVis('#asStat')||$('#picker'),pad:6},
+  {label:'BAA Entry',title:'Upload foto sekaligus',text:'Nama file menentukan kotak, mis. sn_router.jpg. Klik kotak kosong untuk upload satu foto.',when:canEnter,go:introEntry,target:()=>{const d=$('#photoDock');return d&&d.closest('.card');}},
+  {label:'BAA Entry',title:'Scan PDF bertanda tangan',text:'Seret file .pdf ke sini. Otomatis jadi halaman pertama saat export PDF.',when:()=>canEnter()&&SCAN.on(),go:introEntry,target:()=>$('#scanCard')},
+  {label:'BAA Entry',title:'Lihat yang masih kurang',text:'BAA Summary menunjukkan persentase dan bagian yang belum lengkap.',when:canEnter,go:introEntry,target:()=>[$('aside.summary .card .sum-top'),$('#sum-scan-row')]},
+  {label:'BAA Entry',title:'Finish di 100%',text:'Finish BAA menandai lokasi Done. “2 left” berarti dua bagian lagi.',when:canEnter,go:introEntry,target:()=>[$('#finHint'),$('#save-btn')]},
+  {label:'BAA Entry',title:'Export 1 klik',text:'Excel atau PDF lokasi ini langsung terunduh.',when:canEnter,go:introEntry,target:()=>[$('#exp-xlsx'),$('#exp-pdf')]},
+  {label:'Location Log',title:'Semua lokasi',text:'Cari, saring Draft/Done, klik baris untuk melihat detail.',go:()=>introNav('locations'),target:()=>[$('#loc-search'),...$$('#loc-table tr.lrow').slice(0,3)]},
+  {label:'Bantuan',title:'Butuh bantuan?',text:'Tombol ? membuka panduan lengkap dan bisa memutar intro ini lagi. Saat project Frozen, data hanya bisa dilihat.',go:()=>introNav('dashboard'),target:()=>$('#helpBtn'),pad:6}];}
+function introAd(){const su=isSetup();return [
+  {label:'Mode Setup',title:'Siapkan project di mode Setup',text:'Ikuti langkah di kiri: Location data, Template BAA, Team, Target.',when:()=>su,go:()=>introSx('overview'),target:()=>$('#sxNav')},
+  {label:'Mode Setup',title:'Activate project',text:'Aktif setelah semua langkah wajib ✓. Sebelum itu belum ada yang bisa mengisi BAA.',when:()=>su,go:()=>introSx('overview'),target:()=>$('#sxActivate')},
+  {label:'Team',title:'Buat akun tim',text:'Akun baru mendapat password sementara yang wajib diganti saat login pertama.',go:()=>su?introSx('team'):introSet('team'),target:()=>{const e=$('.tm-new');return e&&e.closest('.card');}},
+  {label:'Template BAA',title:'Template BAA',text:'Upload file Excel BAA. Bila terdeteksi 100%, mapping langsung tersimpan.',go:()=>su?introSx('template'):introSet('templates'),target:()=>_iVis('.map-steps')||_iVis('#tpl-up')||_iVis('#v-templates .card')},
+  {label:'Project & status',title:'Freeze bila perlu',text:'Hentikan semua input sementara, lengkap dengan pesan untuk tim.',when:()=>!su,go:()=>introSet('pjstatus'),target:()=>[$('.st-strip'),$('#pjmFreeze'),$('#pjmUnfreeze')]},
+  {label:'Progress',title:'Pantau progres',text:'Capaian tim dibanding target dan kecepatan yang dibutuhkan.',when:()=>!su&&!$('.navitem[data-view="progress"]').classList.contains('hidden'),go:()=>introNav('progress'),target:()=>$('#v-progress .card')},
+  {label:'Bantuan',title:'Butuh bantuan?',text:'Tombol ? membuka panduan admin & operator dan bisa memutar intro ini lagi.',go:()=>su?introSx('overview'):introNav('dashboard'),target:()=>$('#helpBtn'),pad:6}];}
+/* kembalikan tampilan sebelum intro (view, sub menu Settings, lokasi yang terbuka) */
+async function introRestore(st){
+  if(INTRO.opened){INTRO.opened=false;
+    if(st.loc){try{await openLoc(st.loc);}catch(e){}}
+    else{S.loc=null;$('#entry-form').classList.add('hidden');$('#entry-empty').classList.remove('hidden');asReset();try{await refreshPicker();pickerSel.setValue('');}catch(e){}}}
+  if(SX.on&&st.sx)sxGo(st.sx);
+  else if(st.view.startsWith('set:'))openSettings(st.view.slice(4));
+  else{const n=$('.navitem[data-view="'+st.view+'"]');if(n&&!n.classList.contains('hidden')){if(st.view==='entry')gotoEntry();else navTo(st.view);}else loadDashboard();}
+  curSetSub=st.sub;const cb=$('.canvas-body');if(cb)cb.scrollTop=0;}
+async function introStart(){if(!window.BFIntro||BFIntro.active||!S.user)return;
+  const st={view:pjCurView(),sub:curSetSub,sx:SX.on?SX.step:null,loc:S.loc&&S.loc.id&&!$('#entry-form').classList.contains('hidden')?S.loc.id:null};
+  const ch=(S.user.role==='admin'?introAd():introOp()).filter(c=>!c.when||c.when());
+  const nm=((S.user.full_name||S.user.username||'').trim().split(/\s+/)[0])||'Teman';
+  INTRO.opened=false;
+  await BFIntro.run({logo:()=>$('.nav-brand .mark'),chapters:ch,name:nm,restore:()=>introRestore(st),onEnd:introSeen});}
 $('#pwCancel').addEventListener('click',()=>$('#pwDlg').close());
 $('#pwSave').addEventListener('click',async()=>{try{
   await api('/api/auth/change-password',{method:'POST',body:JSON.stringify({old_password:$('#pw-old').value,new_password:$('#pw-new').value})});
