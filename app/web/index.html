@@ -5005,7 +5005,7 @@ $('#ed-zoom').addEventListener('input',e=>{const mult=parseFloat(e.target.value)
   view.addEventListener('pointermove',e=>{if(!drag)return;ed.tx+=e.clientX-px;ed.ty+=e.clientY-py;px=e.clientX;py=e.clientY;edApply();});
   view.addEventListener('pointerup',()=>{drag=false;view.style.cursor='grab';});})();
 $('#ed-cancel').addEventListener('click',()=>$('#edDlg').close());
-$('#ed-save').addEventListener('click',()=>{
+$('#ed-save').addEventListener('click',()=>{if(ed.busy)return;ed.busy=true;   // klik ganda tidak mengunggah dua kali
   const sx=(0-ed.tx)/ed.z,sy=(0-ed.ty)/ed.z,sw=ed.VW/ed.z,sh=ed.VH/ed.z;
   const cv=document.createElement('canvas');cv.width=Math.round(sw);cv.height=Math.round(sh);
   cv.getContext('2d').drawImage($('#ed-img'),sx,sy,sw,sh,0,0,cv.width,cv.height);
@@ -5045,9 +5045,13 @@ function upCount(total,pct){const s=$('#upSub');if(s)s.textContent=Math.min(tota
 function upDone(n,ok){const p=$('#upProg');if(!p)return;p.classList.add('done');$('#upIcon').textContent=ok?'check_circle':'error';
   $('#upTxt').textContent=ok?'Done':'Failed';$('#upSub').textContent=ok?(n+' photos uploaded'):'';upSet(100);
   setTimeout(()=>{p.classList.remove('on','done');dzBusy=false;dzScheduleMini(1200);},950);}   // beri jeda lalu collapse
-function doUpload(files,category,relpaths){return new Promise(async resolve=>{
-  let arr=files?[...files]:[];if(!arr.length)return resolve();
-  if(roActive()){toast('Viewer mode — cannot upload');return resolve();}
+const UP_RUN=new Set();   // kunci batch yang sedang diunggah (lokasi + kategori + nama/ukuran/waktu file)
+function doUpload(files,category,relpaths){return new Promise(async res=>{
+  let arr=files?[...files]:[];if(!arr.length)return res();
+  if(roActive()){toast('Viewer mode — cannot upload');return res();}
+  const key=((S.loc&&S.loc.id)||'new')+'|'+(category||'')+'|'+arr.map(f=>f.name+':'+f.size+':'+f.lastModified).sort().join(',');
+  if(UP_RUN.has(key)){toast('These photos are already uploading');return res();}
+  UP_RUN.add(key);const resolve=()=>{UP_RUN.delete(key);res();};
   const pdf=arr.find(isPdf);                       // file .pdf ikut terpilih -> slot Scan PDF
   if(pdf){const ix=arr.map((f,i)=>isPdf(f)?-1:i).filter(i=>i>=0);
     if(relpaths&&relpaths.length)relpaths=ix.map(i=>relpaths[i]);arr=ix.map(i=>arr[i]);
@@ -5190,8 +5194,13 @@ $('#sn-save').addEventListener('click',async()=>{const val=$('#sn-serial').value
 
 /* save + export (selalu lokasi aktif) */
 /* Simpan entry. finish=true (tombol Finish BAA): tandai Done bila 100%. Lokasi Done: simpan manual, kembali draft bila tidak lengkap lagi. */
-async function saveEntry(finish){try{
-  clearTimeout(AS.t);AS.t=0;if(AS.busy)await AS.busy;
+/* Satu simpan sekaligus: klik ganda / Enter berulang ikut menunggu proses yang sama.
+   Selama simpan berjalan auto-save ditahan, supaya PUT status 'draft' tidak menimpa status Done. */
+let SV=null;
+function saveEntry(finish){if(SV)return SV;const b=$('#save-btn');if(b)b.setAttribute('disabled','');
+  SV=_saveEntry(finish).finally(()=>{SV=null;if(b)b.removeAttribute('disabled');});return SV;}
+async function _saveEntry(finish){try{
+  clearTimeout(AS.t);AS.t=0;while(AS.busy)await AS.busy;
   if(isDraft())await ensureLoc();                     // draft -> buat kode dulu sebelum simpan
   if(!S.loc||!S.loc.id){toast('Fill in the location data first');return false;}
   const st=computeState(),ec=entryCalc(st),was=S.loc.status==='selesai';
@@ -5211,6 +5220,7 @@ function markEntry(){if(!S.loc)return;entryDirty=true;$('#nextDraft').classList.
   if(asOn()){clearTimeout(AS.t);AS.t=setTimeout(asRun,1000);}asPaint();}
 function asReset(){clearTimeout(AS.t);AS.t=0;AS.at=0;AS.err='';$('#nextDraft').classList.add('hidden');asPaint();}
 async function asRun(){clearTimeout(AS.t);AS.t=0;
+  if(SV)return;                                        // Finish/Save sedang berjalan: simpanan itu sudah membawa data terbaru
   if(AS.busy){AS.again=true;return AS.busy;}
   if(!asOn()||!entryDirty)return;
   AS.busy=(async()=>{try{
