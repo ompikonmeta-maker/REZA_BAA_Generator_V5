@@ -6262,10 +6262,10 @@ function introAd(){const su=isSetup();return [
 async function introRestore(st){
   if(INTRO.opened){INTRO.opened=false;
     if(st.loc){try{await openLoc(st.loc);}catch(e){}}
-    else{S.loc=null;$('#entry-form').classList.add('hidden');$('#entry-empty').classList.remove('hidden');asReset();try{await refreshPicker();pickerSel.setValue('');}catch(e){}}}
+    else{S.loc=null;$('#entry-form').classList.add('hidden');$('#entry-empty').classList.remove('hidden');asReset();try{pickerSel.setValue('');}catch(e){}}}
   if(SX.on&&st.sx)sxGo(st.sx);
   else if(st.view.startsWith('set:'))openSettings(st.view.slice(4));
-  else{const n=$('.navitem[data-view="'+st.view+'"]');if(n&&!n.classList.contains('hidden')){if(st.view==='entry')gotoEntry();else navTo(st.view);}else loadDashboard();}
+  else{const n=$('.navitem[data-view="'+st.view+'"]');if(n&&!n.classList.contains('hidden')){if(st.view==='entry')gotoEntry();else introNav(st.view);}else loadDashboard();}   /* introNav: tidak memuat ulang view yang sudah tampil */
   curSetSub=st.sub;const cb=$('.canvas-body');if(cb)cb.scrollTop=0;}
 async function introStart(){if(!window.BFIntro||BFIntro.active||!S.user)return;
   const st={view:pjCurView(),sub:curSetSub,sx:SX.on?SX.step:null,loc:S.loc&&S.loc.id&&!$('#entry-form').classList.contains('hidden')?S.loc.id:null};
