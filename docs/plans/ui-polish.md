@@ -128,3 +128,24 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - Perpindahan antar langkah: lebar berubah halus, sorotan sel (highlight) ikut posisi baru; klik cepat antar langkah (no. 8) tetap aman.
 
 **Uji:** 1366, 1600, 1920 px; tema terang & gelap; mode Setup › Template.
+
+## 12. Tombol Save: status Unsaved/Saved & tombol ganda — catat (2026-10-12)
+**Laporan (video):** Setup › Target — klik **Save target** di kartu: data tersimpan, tetapi status di bar atas tetap **Unsaved** (tombol merah) sampai user mengklik lagi di halaman (klik kedua = simpan kedua).
+**Penyebab:** status bar atas dihitung ulang hanya saat ada klik/ketik di halaman. Tombol Save di kartu menyimpan lalu tidak menghitung ulang status. Tombol Save di bar atas sudah benar (menghitung ulang setelah simpan).
+
+**Hasil cek semua tombol Save (uji di browser, data salinan):**
+| Halaman | Tombol | Hasil |
+|---|---|---|
+| Setup › Target | kartu "Save target" + bar "Save target" | ❌ Save di kartu: status tetap Unsaved |
+| Progress › edit target cepat (✓) | ✓ inline + bar "Save target" | ❌ setelah ✓, bar tetap "Unsaved / Save target" walau isian sudah tertutup; klik bar = simpan nilai lama lagi |
+| Location data › Fields / Inventory / Photo categories | hanya bar (tombol kartu sudah disembunyikan) | ✅ normal · ⚠️ bila simpan **gagal**, status tetap jadi **Saved** |
+| Team (Setup & Settings) | kartu "Add" + bar "Add account" | ✅ status benar · bar berlabel "Add account / Unsaved" terasa janggal (ini aksi buat akun, bukan simpan form) |
+| Settings › Project & status | kartu "Save project" + bar "Save project" | ✅ status benar |
+| BAA Entry | Finish BAA + simpan otomatis | ✅ tidak memakai bar (sudah diperbaiki di sesi duplikat request) |
+
+**Apakah tombol ganda perlu?** Tidak. Location data sudah memakai satu tombol (di bar atas); halaman lain belum seragam.
+**Usul (menunggu keputusan):**
+- A. **Satu tombol per form, di bar atas** (seperti Location data): sembunyikan Save di kartu Target & Project & status. Bar atas selalu terlihat + status Unsaved/Saved.
+- B. **Satu tombol per form, di kartu**: bar atas hanya status (tanpa tombol).
+- Pengecualian yang diusulkan: Team "Add" tetap di kartu (aksi), bar tidak menampilkan "Add account"; Progress ✓ tetap inline, bar tidak muncul untuk edit cepat. Penjaga "perubahan belum disimpan" saat pindah halaman tetap jalan.
+- Semua jalur simpan: status dihitung ulang **setelah** server menjawab; bila gagal tetap **Unsaved** + pesan gagal.
