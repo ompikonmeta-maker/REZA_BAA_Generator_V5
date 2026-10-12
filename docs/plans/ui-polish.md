@@ -112,12 +112,19 @@ Uji: 1366, 1600, 1920 px; tema terang & gelap; mode Setup (Location data, Templa
 ## 10. Sub menu awal Settings — selesai (2026-10-06)
 Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Project & status** (sebelumnya Location data). Setelah itu tetap membuka sub menu terakhir yang dipakai.
 
-## 11. Template BAA › Detail Sheet: kartu mengikuti ukuran window — catat (2026-10-12)
-**Permintaan:** khusus langkah **Detail Sheet**, ukuran kartu mengikuti ukuran window supaya render template bisa lebih besar.
-**Sekarang:** semua halaman Settings dibatasi lebar **1200 px** (aturan no. 9); area render sheet tingginya tetap `min(72vh, 780px)`. Di layar lebar, sisi kanan kosong dan render template kecil.
-**Usul:**
-- Hanya saat langkah Detail Sheet aktif: batas 1200 px dilepas → kartu memakai **lebar penuh** area kerja (tetap rata kiri, jarak tepi sama).
-- Tinggi area render **mengisi sampai bawah window** (bukan 72vh/780 px), ikut berubah saat window diubah ukurannya.
-- Langkah lain (Template, Log Sheet) dan halaman Settings lain **tetap 1200 px** (aturan no. 9 tidak berubah).
-- Perpindahan Detail ↔ langkah lain: lebar berubah halus, tanpa loncatan; sorotan sel (highlight) ikut posisi baru.
-**Uji:** 1366, 1600, 1920 px; tema terang & gelap; mode Setup › Template; klik cepat antar langkah (no. 8) tetap aman.
+## 11. Template BAA › Detail Sheet & Log Sheet: render mengikuti lebar window — catat (2026-10-12)
+**Permintaan:** render template lebih besar dengan memanfaatkan **lebar** window (tinggi tidak diubah).
+**Sekarang:** semua halaman Settings dibatasi lebar **1200 px** (aturan no. 9), jadi di layar lebar sisi kanan kosong. Tinggi area render `min(72vh, 780px)`. Preview Log Sheet diperkecil agar muat (skala 75–100%).
+**Keputusan:**
+| Langkah | Yang melebar mengikuti window | Yang tetap |
+|---|---|---|
+| **Detail Sheet** | Kartu Detail Sheet (area render sel) memakai lebar penuh area kerja | Tinggi area render tetap |
+| **Log Sheet** | **Hanya bagian Preview** (render sheet LOG) | Tabel mapping "template header → field" tetap selebar sekarang; tinggi tetap |
+| Template & Worksheet, halaman Settings lain | — | Tetap maks 1200 px (aturan no. 9) |
+
+**Catatan:**
+- Tetap rata kiri, jarak tepi kanan sama dengan halaman lain.
+- Preview Log Sheet makin jarang diperkecil/menggulung ke samping di layar lebar (skala maks tetap 100%).
+- Perpindahan antar langkah: lebar berubah halus, sorotan sel (highlight) ikut posisi baru; klik cepat antar langkah (no. 8) tetap aman.
+
+**Uji:** 1366, 1600, 1920 px; tema terang & gelap; mode Setup › Template.
