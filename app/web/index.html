@@ -442,7 +442,12 @@
   @keyframes setenter{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
   /* Tombol Simpan + status di bar judul (submenu Pengaturan) */
   :root{--save-active:#ec5a73}
-  #lf-save,#di-save,#pc-save{display:none}   /* tombol simpan lama disembunyikan, diganti tombol di bar judul */
+  /* spinner angka bawaan browser tidak ikut tema: disembunyikan di semua isian angka (ketik & panah keyboard tetap jalan) */
+  input[type=number]{appearance:textfield;-moz-appearance:textfield}
+  input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  #lf-save,#di-save,#pc-save{display:none}
+  #sxTSave,#pjm-save{display:none}   /* Target & editor project: simpan lewat tombol di bar atas (satu tombol per form) */
+  .pjm-act:not(:has(md-button:not(#sxTSave):not(#pjm-save))){display:none}   /* tombol simpan lama disembunyikan, diganti tombol di bar judul */
   #setSaveWrap{display:inline-flex;align-items:center;gap:12px}
   #setSaveWrap.hidden{display:none}
   .set-status{display:inline-flex;align-items:center;gap:7px;font:var(--md-sys-typescale-label-medium);font-weight:600;transition:color .3s ease}
@@ -1437,6 +1442,12 @@
   .tpl-savestate .dot{width:8px;height:8px;border-radius:50%;background:var(--good)}
   .tpl-savestate.dirty{color:var(--warn)}.tpl-savestate.dirty .dot{background:var(--warn)}
   .map-ws{display:grid;grid-template-columns:250px minmax(0,1fr);gap:20px;align-items:start;padding-bottom:20px}
+  /* Log Sheet & Detail Sheet: render memakai lebar window (batas 1200 px dilepas). Log Sheet: hanya Preview yang melebar,
+     tabel mapping tetap selebar semula (1200 - rail 250 - jarak 20 = 930 px). */
+  #v-templates{transition:max-width .45s var(--md-sys-motion-easing-emphasized-decelerate,cubic-bezier(.05,.7,.1,1))}
+  #v-templates.map-wide{max-width:100%}
+  #v-templates.map-wide .mpane[data-p="1"] .mpin>:is(.mph:first-child,.mbar,#map-logrows,#map-lognote){max-width:930px}
+  @media (prefers-reduced-motion:reduce){#v-templates{transition:none}}
   @media(max-width:860px){.map-ws{grid-template-columns:1fr}.map-steps{position:static!important}}
   /* rail kiri: step + progress + tombol menyatu */
   .map-steps{padding:8px;position:sticky;top:-8px;align-self:start}
@@ -3713,7 +3724,7 @@ function sxTarget(){const s=(SX.st&&SX.st.target)||{};
   SX.tsnap=fgSnap($('#v-setup'));$('#sxTSave').addEventListener('click',()=>sxTSave());fgTick();}
 async function sxTSave(){const t=$('#sxTot').value;try{
     const r=await api('/api/projects/'+PJ.id+'/target',{method:'PUT',body:JSON.stringify({total:t?+t:null,target_date:$('#sxDate').value||null})});
-    SX.st=r.setup;SX.tsnap=fgSnap($('#v-setup'));sxNav();toast('Target saved');return true;}catch(e){toast('Failed: '+e.message);return false;}}
+    SX.st=r.setup;SX.tsnap=fgSnap($('#v-setup'));sxNav();toast('Target saved');fgTick();return true;}catch(e){toast('Failed: '+e.message);fgTick();return false;}}
 FG.target={label:'Save target',active:()=>SX.on&&SX.step==='target'&&_visible('v-setup')&&!!$('#sxTSave'),dirty:()=>SX.tsnap!=null&&fgSnap($('#v-setup'))!==SX.tsnap,
   save:()=>sxTSave(),discard:()=>{SX.tsnap=null;}};
 
@@ -3738,7 +3749,7 @@ function renderTeam(){const n=TM.members.length,ops=TM.users.filter(u=>u.role===
   $$('#v-team md-switch[data-u]').forEach(sw=>sw.addEventListener('change',async()=>{const ids=$$('#v-team md-switch[data-u]').filter(x=>x.selected).map(x=>+x.dataset.u);
     try{const r=await api('/api/projects/'+PJ.id+'/members',{method:'PUT',body:JSON.stringify({members:ids})});TM.members=r.members;renderTeam();}catch(e){toast('Failed: '+e.message);sw.selected=!sw.selected;}}));
   $('#tmAdd').addEventListener('click',()=>tmAdd());bindTips();fgTick();}
-FG.team={label:'Add account',active:()=>_visible('v-team')&&!!$('#tmAdd'),dirty:()=>!!(($('#tmName').value||'').trim()||($('#tmUser').value||'').trim()),
+FG.team={label:'Add account',bar:false,active:()=>_visible('v-team')&&!!$('#tmAdd'),dirty:()=>!!(($('#tmName').value||'').trim()||($('#tmUser').value||'').trim()),
   save:()=>tmAdd(),discard:()=>{['#tmName','#tmUser'].forEach(s=>{const i=tfInput($(s));if(i)i.value='';});}};
 async function tmAdd(){{const name=($('#tmName').value||'').trim(),un=($('#tmUser').value||'').trim().toLowerCase();
     const role=$('#v-team .tm-role button.on').dataset.r;if(!un){toast('Username is required');return false;}
@@ -3916,9 +3927,9 @@ async function pjmSave(archived){const q=PJM.sel,isNew=!q.id;const tot=$('#pjm-t
   try{const r=await api(isNew?'/api/projects':'/api/projects/'+q.id,{method:isNew?'POST':'PUT',body:JSON.stringify(body)});
     toast(isNew?'Project created':'Project saved');PJM.sel=r;PJM.snap=null;await loadProjects(true);await pjRefresh();
     const multi=PJ.list.filter(p=>!p.archived).length>1;$$('.multi-only').forEach(x=>x.classList.toggle('hidden',!multi||S.user.role==='operator'));
-    if(String(r.id)===PJ.id){PJ.cur={...PJ.cur,...r};paint();pjPaint();wilApply();scanApply();}return true;}catch(e){toast('Failed: '+e.message);return false;}}
+    if(String(r.id)===PJ.id){PJ.cur={...PJ.cur,...r};paint();pjPaint();wilApply();scanApply();}fgTick();return true;}catch(e){toast('Failed: '+e.message);fgTick();return false;}}
 $('#pjm-new').addEventListener('click',()=>guardLeave(()=>pjmEdit(null),'New project'));
-FG.pjm={label:'Save project',active:()=>_visible('v-projects')&&!!$('#pjm-save'),dirty:()=>PJM.snap!=null&&fgSnap($('#pjmEd'))!==PJM.snap,
+FG.pjm={get label(){return PJM.sel&&!PJM.sel.id?'Create project':'Save project';},active:()=>_visible('v-projects')&&!!$('#pjm-save'),dirty:()=>PJM.snap!=null&&fgSnap($('#pjmEd'))!==PJM.snap,
   save:()=>pjmSave(),discard:()=>{PJM.snap=null;}};
 
 /* ===== Guard: perubahan belum disimpan ===== */
@@ -3935,7 +3946,7 @@ function fgSnap(root){if(!root)return '';return [...root.querySelectorAll('input
 function fgActive(){return Object.values(FG).find(f=>f.active())||null;}
 function fgDirty(){const f=fgActive();return f&&f.dirty()?f:null;}
 function fgTick(){if(SETFS_SAVE[curSetSub]&&_visible('v-settings'))return;const f=fgActive(),w=$('#setSaveWrap');if(!w)return;
-  if(!f){w.classList.add('hidden');return;}w.classList.remove('hidden');$('#setSaveLbl').textContent=f.label;setSaveDirty(!!f.dirty());}
+  if(!f||f.bar===false){w.classList.add('hidden');return;}w.classList.remove('hidden');$('#setSaveLbl').textContent=f.label;setSaveDirty(!!f.dirty());}
 let _fgT=0;const fgSoon=()=>{cancelAnimationFrame(_fgT);_fgT=requestAnimationFrame(fgTick);};
 ['input','change','click'].forEach(ev=>document.addEventListener(ev,e=>{if(e.target.closest&&e.target.closest('.canvas'))fgSoon();},true));
 /* Dialog md-dialog dengan isian: tutup (Cancel / Esc / klik luar) saat ada perubahan -> konfirmasi buang. Simpan memanggil close(true). */
@@ -3972,7 +3983,8 @@ $('#unsSave').addEventListener('click',async()=>{
   if(_unsCtx==='drawer'){if(!await ldSaveAll())return;}
   else if(_unsCtx==='tpl'){if(!await mapSaveNow()){_unsStay();return;}}
   else if(_unsCtx==='fg'){if(!_unsFg||!await _unsFg.save()){_unsStay();return;}}
-  else if(_unsCtx==='entry'){if(!await saveEntry(false)){_unsStay();return;}}else{$('#setSaveBtn').click();}
+  else if(_unsCtx==='entry'){if(!await saveEntry(false)){_unsStay();return;}}
+  else{const c=SETFS_SAVE[curSetSub];if(c&&!await c.fn()){_unsStay();return;}}   // Location data: tunggu server; gagal = tetap di halaman
   const go=_unsGo;_unsGo=null;_unsCancel=null;_unsClose();if(go)go();});
 $('#unsOv').addEventListener('click',e=>{if(e.target.id==='unsOv')_unsStay();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#unsOv').classList.contains('on'))_unsStay();});
@@ -3999,7 +4011,9 @@ function showSetSub(key){curSetSub=key;const cfg=SET_SUBS[key];
   const active=$('#'+cfg.id);if(active){active.classList.remove('setview');void active.offsetWidth;active.classList.add('setview');}
   $('#pageTitle').textContent=(typeof SX!=='undefined'&&SX.on?'Set up · ':'Settings · ')+cfg.title;$('#pageTitle').classList.remove('hidden');$('#topGrow').classList.remove('hidden');setSaveShow(key);}
 /* Save button + status in the title bar for field submenus (lokasi/inventory/photo) */
-const SETFS_SAVE={lokasi:{sel:'#lf-save',lbl:'Save fields'},inventory:{sel:'#di-save',lbl:'Save defaults'},photo:{sel:'#pc-save',lbl:'Save categories'}};
+const SETFS_SAVE={lokasi:{sel:'#lf-save',lbl:'Save fields',fn:()=>lfSave()},inventory:{sel:'#di-save',lbl:'Save defaults',fn:()=>diSave()},photo:{sel:'#pc-save',lbl:'Save categories',fn:()=>pcSave()}};
+/* status bar atas setelah server menjawab: Saved hanya bila berhasil, dan hanya bila halaman itu masih tampil */
+function sfDone(key,ok){if(curSetSub===key&&_visible('v-settings'))setSaveDirty(!ok);}
 function setSaveShow(key){const w=$('#setSaveWrap');if(!w)return;
   if(SETFS_SAVE[key]){w.classList.remove('hidden');$('#setSaveLbl').textContent=SETFS_SAVE[key].lbl;setSaveDirty(false);}
   else w.classList.add('hidden');}
@@ -4011,7 +4025,7 @@ function setSaveDirty(d){$('#setStatus').className='set-status '+(d?'dirty':'ok'
   v.addEventListener('input',mark);v.addEventListener('change',mark);
   v.addEventListener('click',e=>{if(SETFS_SAVE[curSetSub]&&e.target.closest('.segt button,.ecard-del,#lf-add,#di-add,#pc-add'))mark();});
   $('#setSaveBtn').addEventListener('click',()=>{if($('#setSaveBtn').disabled)return;
-    const c=SETFS_SAVE[curSetSub];if(c&&_visible('v-settings')){$(c.sel).click();setSaveDirty(false);return;}
+    const c=SETFS_SAVE[curSetSub];if(c&&_visible('v-settings')){c.fn();return;}   // Saved disetel setelah server berhasil (sfDone)
     const f=fgActive();if(f)f.save().then(()=>fgTick());});})();
 /* sub yang mengarah ke view tersendiri (bukan kartu di v-settings) */
 const SET_VIEWS={projects:{view:'projects',title:'All projects',load:()=>loadProjects()},pjstatus:{view:'projects',title:'Project & status',load:()=>loadProjects()},
@@ -4265,9 +4279,9 @@ function pgInline(btn,type,val,body){const w=document.createElement('span');w.cl
     d.onclick=op;d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();op();}};setTimeout(op,0);}
   else{i.focus();if(i.select)i.select();}
   const save=async()=>{const v=i.value.trim();if(!v){toast('Enter a value');return false;}
-    try{await api('/api/progress/goal',{method:'PUT',body:JSON.stringify(body(v))});toast('Saved');loadProgress(true);return true;}catch(e){toast('Failed: '+e.message);return false;}};
-  const v0=i.value;FG.pgedit={label:'Save target',active:()=>!!w.isConnected&&_visible('v-progress'),dirty:()=>i.value!==v0,save,discard:()=>{delete FG.pgedit;}};fgTick();
-  w.querySelector('.ok').onclick=save;w.querySelector('.no').onclick=()=>renderProgress();
+    try{await api('/api/progress/goal',{method:'PUT',body:JSON.stringify(body(v))});toast('Saved');delete FG.pgedit;fgTick();loadProgress(true);return true;}catch(e){toast('Failed: '+e.message);return false;}};
+  const v0=i.value;FG.pgedit={label:'Save target',bar:false,active:()=>!!w.isConnected&&_visible('v-progress'),dirty:()=>i.value!==v0,save,discard:()=>{delete FG.pgedit;}};fgTick();
+  w.querySelector('.ok').onclick=save;w.querySelector('.no').onclick=()=>{delete FG.pgedit;fgTick();renderProgress();};
   i.onkeydown=e=>{if(e.key==='Enter')save();if(e.key==='Escape')renderProgress();};}
 function pgPopClose(force){const p=$('#pgPop');if(!p||!p.classList.contains('on')||!ddShown(p))return;
   if(force!==true&&p._snap!=null&&fgSnap(p)!==p._snap){confirmDo('Discard changes?','The aging durations you changed are not saved yet.',()=>pgPopClose(true),{okLabel:'Discard'});return;}
@@ -5867,7 +5881,8 @@ function mapSaved(){M.dirty=false;$('#tpl-save').classList.remove('dirty');$('#t
 
 /* langkah: hanya 1 pane aktif + transisi halus */
 function mapHl(i){const st=$$('.msteps .mstep')[i];if(!st||!st.offsetHeight)return;const hl=$('#map-hl');hl.style.transform=`translateY(${st.offsetTop}px)`;hl.style.height=st.offsetHeight+'px';}
-function mapGo(i,instant){const stage=$('#map-stage'),from=$(`.mpane[data-p="${M.step}"]`),to=$(`.mpane[data-p="${i}"]`);
+function mapWide(i){$('#v-templates').classList.toggle('map-wide',i===1||i===2);}   // Log & Detail Sheet: lebar penuh
+function mapGo(i,instant){const stage=$('#map-stage'),from=$(`.mpane[data-p="${M.step}"]`),to=$(`.mpane[data-p="${i}"]`);mapWide(i);
   $$('.msteps .mstep').forEach((s,k)=>s.classList.toggle('on',k===i));mapHl(i);
   if(i===M.step||instant||reduced){$$('.mpane').forEach(p=>{p.hidden=p!==to;p.classList.remove('enter','leave');});M.step=i;mapPaneShown(i);return;}
   const dir=i>M.step?1:-1;stage.style.setProperty('--mdir',dir);stage.style.height=stage.offsetHeight+'px';
@@ -6343,10 +6358,11 @@ function lfSug(){const host=$('#lf-sug');if(!host)return;const have=new Set($$('
   const L=LF_SUG.filter(f=>!have.has(f.key));host.innerHTML=L.length?`<span class="muted">Quick add:</span>${L.map(f=>`<button type="button" data-key="${f.key}">+ ${esc(f.label)}</button>`).join('')}`:'';
   host.querySelectorAll('button').forEach(b=>b.onclick=()=>{const f=LF_SUG.find(x=>x.key===b.dataset.key);$('#lf-list').insertAdjacentHTML('beforeend',lfRow({...f,required:false}));
     $('#lf-list').lastElementChild.dispatchEvent(new Event('input',{bubbles:true}));lfSug();bindTips();});}
-$('#lf-save').addEventListener('click',async()=>{const fields=$$('#lf-list .ecard').map(r=>{const g=k=>r.querySelector(`[data-k="${k}"]`);
+async function lfSave(){const fields=$$('#lf-list .ecard').map(r=>{const g=k=>r.querySelector(`[data-k="${k}"]`);
   const seg=r.querySelector('.segt button.on');
   return {key:(g('key').value||'').trim(),label:(g('label').value||'').trim(),type:seg?seg.dataset.v:'text',required:g('required').checked};}).filter(f=>f.key&&f.label);
-  try{await api('/api/settings/location-fields',{method:'PUT',body:JSON.stringify({fields})});S.locFields=fields;toast('Location fields saved');}catch(e){toast('Failed: '+e.message);}});
+  try{await api('/api/settings/location-fields',{method:'PUT',body:JSON.stringify({fields})});S.locFields=fields;toast('Location fields saved');sfDone('lokasi',true);return true;}catch(e){toast('Failed: '+e.message);sfDone('lokasi',false);return false;}}
+$('#lf-save').addEventListener('click',()=>lfSave());
 
 /* Field Photo & Capture — tabel terpadu (Opsi A) */
 function pcSlug(s){let b=(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,24);return 'img_'+(b||'new');}
@@ -6407,7 +6423,7 @@ window.pcOcr=chk=>{const tr=chk.closest('.pctr');tr.querySelectorAll('.pcocrlink
 window.pcDel=btn=>{const tr=btn.closest('.pctr');tr.classList.add('removing');setTimeout(()=>{tr.remove();pcRenumber();},300);};
 $('#pc-add').addEventListener('click',()=>{$('#pc-rows').insertAdjacentHTML('beforeend',pcRowT());pcRenumber();bindTips();
   const rows=$$('#pc-rows .pctr');const last=rows[rows.length-1];const w=last.querySelector('.pckw');if(w)pcKwRender(w);last.querySelector('.pclbl').focus();});
-$('#pc-save').addEventListener('click',async()=>{const categories=$$('#pc-rows .pctr').map(r=>{const g=k=>r.querySelector(`[data-k="${k}"]`);
+async function pcSave(){const categories=$$('#pc-rows .pctr').map(r=>{const g=k=>r.querySelector(`[data-k="${k}"]`);
   const label=(g('label').value||'').trim();let key=(g('key').value||'').trim();if(!key)key=pcSlug(label);
   return {key,label,ocr:g('ocr').checked,required:true,
     keywords:(g('keywords').value||'').split(',').map(s=>s.trim()).filter(Boolean),
@@ -6416,7 +6432,8 @@ $('#pc-save').addEventListener('click',async()=>{const categories=$$('#pc-rows .
   try{await api('/api/settings/photo-categories',{method:'PUT',body:JSON.stringify({categories})});S.cats=categories;
     // Sinkronkan badge OCR/label di mapping yang sedang terbuka (tanpa perlu buka ulang)
     if(typeof MAP_IMG!=='undefined'&&MAP_IMG.length){MAP_IMG.forEach(p=>{const c=S.cats.find(x=>x.key===p.key);if(c){p.ocr=c.ocr;p.label=c.label;}});if(typeof renderImgRows==='function')renderImgRows();}
-    toast('Photo categories saved');}catch(e){toast('Failed: '+e.message);}});
+    toast('Photo categories saved');sfDone('photo',true);return true;}catch(e){toast('Failed: '+e.message);sfDone('photo',false);return false;}}
+$('#pc-save').addEventListener('click',()=>pcSave());
 
 /* ===== Field Inventory: keterangan global + merk per item, chip editor + drag-reorder ===== */
 const _uid=()=>Math.random().toString(36).slice(2,9);
@@ -6506,7 +6523,7 @@ function _bindDrag(root){
     const cont=d.parentElement;d.classList.remove('dragging');if(cont)_commitOrder(cont);_fiMark();});}
 _bindDrag($('#ket-chips'));_bindDrag($('#di-list'));
 
-$('#di-save').addEventListener('click',async()=>{
+async function diSave(){
   const items=[],merks={},seen=new Set();
   _diItems.forEach(it=>{const name=(it.name||'').trim();if(!name||seen.has(name.toLowerCase()))return;
     seen.add(name.toLowerCase());items.push(name);
@@ -6516,8 +6533,9 @@ $('#di-save').addEventListener('click',async()=>{
     await api('/api/settings/default-inventory-items',{method:'PUT',body:JSON.stringify({items})});
     await api('/api/settings/item-merks',{method:'PUT',body:JSON.stringify({merks})});
     await api('/api/settings/inventory-keterangan',{method:'PUT',body:JSON.stringify({keterangan})});
-    S.invItems=items;S.itemMerks=merks;S.keterangan=keterangan;toast('Default inventory saved');
-  }catch(e){toast('Failed: '+e.message);}});
+    S.invItems=items;S.itemMerks=merks;S.keterangan=keterangan;toast('Default inventory saved');sfDone('inventory',true);return true;
+  }catch(e){toast('Failed: '+e.message);sfDone('inventory',false);return false;}}
+$('#di-save').addEventListener('click',()=>diSave());
 function deepMerge(b,o){for(const k in(o||{})){if(o[k]&&typeof o[k]==='object'&&!Array.isArray(o[k]))b[k]=deepMerge(b[k]||{},o[k]);else b[k]=o[k];}return b;}
 window.addEventListener('DOMContentLoaded',boot);
 </script>

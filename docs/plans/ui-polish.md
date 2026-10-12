@@ -112,7 +112,7 @@ Uji: 1366, 1600, 1920 px; tema terang & gelap; mode Setup (Location data, Templa
 ## 10. Sub menu awal Settings — selesai (2026-10-06)
 Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Project & status** (sebelumnya Location data). Setelah itu tetap membuka sub menu terakhir yang dipakai.
 
-## 11. Template BAA › Detail Sheet & Log Sheet: render mengikuti lebar window — catat (2026-10-12)
+## 11. Template BAA › Detail Sheet & Log Sheet: render mengikuti lebar window — selesai (2026-10-12)
 **Permintaan:** render template lebih besar dengan memanfaatkan **lebar** window (tinggi tidak diubah).
 **Sekarang:** semua halaman Settings dibatasi lebar **1200 px** (aturan no. 9), jadi di layar lebar sisi kanan kosong. Tinggi area render `min(72vh, 780px)`. Preview Log Sheet diperkecil agar muat (skala 75–100%).
 **Keputusan:**
@@ -129,7 +129,7 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 
 **Uji:** 1366, 1600, 1920 px; tema terang & gelap; mode Setup › Template.
 
-## 12. Tombol Save: status Unsaved/Saved & tombol ganda — catat, pilih A (2026-10-12)
+## 12. Tombol Save: status Unsaved/Saved & tombol ganda — selesai, A (2026-10-12)
 **Laporan (video):** Setup › Target — klik **Save target** di kartu: data tersimpan, tetapi status di bar atas tetap **Unsaved** (tombol merah) sampai user mengklik lagi di halaman (klik kedua = simpan kedua).
 **Penyebab:** status bar atas dihitung ulang hanya saat ada klik/ketik di halaman. Tombol Save di kartu menyimpan lalu tidak menghitung ulang status. Tombol Save di bar atas sudah benar (menghitung ulang setelah simpan).
 
@@ -151,9 +151,14 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - Pengecualian yang diusulkan: Team "Add" tetap di kartu (aksi), bar tidak menampilkan "Add account"; Progress ✓ tetap inline, bar tidak muncul untuk edit cepat. Penjaga "perubahan belum disimpan" saat pindah halaman tetap jalan.
 - Semua jalur simpan: status dihitung ulang **setelah** server menjawab; bila gagal tetap **Unsaved** + pesan gagal.
 
-## 13. Isian angka: tombol panah atas/bawah tidak senada tema — catat (2026-10-12)
+## 13. Isian angka: tombol panah atas/bawah tidak senada tema — selesai (2026-10-12)
 **Laporan (gambar):** Setup › Target, isian **Target (BAA)** menampilkan tombol panah atas/bawah bawaan browser (kotak putih abu-abu) yang tidak senada dengan tema gelap/terang.
 **Penyebab:** isian bertipe angka (`type=number`) memakai spinner bawaan browser (Chromium/Edge), tidak ikut warna tema.
 **Isian angka lain yang sama:** Settings › Project & status (Target BAA), Progress (edit target cepat; batas umur draf Fresh/Warm), Template BAA (Header row, Data starts, Inventory row, max, Photo size).
 **Usul:** sembunyikan spinner bawaan di **semua** isian angka (tetap bisa ketik angka, panah ↑/↓ keyboard & scroll tetap bekerja seperti biasa); keyboard angka di layar sentuh tetap muncul. Bila perlu tombol +/−, pakai tombol kecil yang mengikuti warna tema — **default: tanpa tombol** (lebih bersih, angka target biasanya diketik).
 **Uji:** tema terang & gelap; ketik, panah keyboard, nilai minimum tetap dijaga.
+
+**Hasil (11–13):**
+- 11: di langkah Log Sheet & Detail Sheet halaman Template melepas batas 1200 px (transisi halus). Diukur di 1920 px: halaman 1544 px; Log Sheet — tabel mapping tetap 930 px, Preview 1232 px (tampil 100%); Detail Sheet — area render ikut melebar. Langkah Template & halaman Settings lain tetap 1200 px. Di 1366 px tidak berubah (window sudah jadi batas). Klik cepat antar langkah tetap aman.
+- 12: Save di kartu Target & editor project disembunyikan → simpan lewat bar atas (label "Create project" untuk project baru). Status dihitung ulang setelah server menjawab: berhasil = Saved, gagal = tetap Unsaved. Location data: Saved hanya bila server berhasil; dialog "Unsaved changes" › Save menunggu server (gagal = tetap di halaman). Team: bar tidak muncul, tombol Add tetap di kartu, penjaga pindah halaman tetap jalan. Progress: edit cepat tanpa bar, ✓ menyimpan & membersihkan penjaga.
+- 13: spinner bawaan disembunyikan di semua isian angka (komponen md-text-field & input biasa); ketik & panah keyboard tetap jalan.

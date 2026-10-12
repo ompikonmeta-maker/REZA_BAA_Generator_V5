@@ -544,6 +544,9 @@
             ${outlined ? 'background:var(--md-field-notch, var(--md-sys-color-surface));' : ''} }
           input,textarea{ flex:1; border:none; outline:none; background:transparent; color:var(--md-sys-color-on-surface);
             font:var(--md-sys-typescale-body-large); padding:16px 0 8px; min-width:0; resize:vertical; font-family:inherit; }
+          /* spinner angka bawaan browser tidak ikut tema: disembunyikan (ketik & panah keyboard tetap jalan) */
+          input[type=number]{ appearance:textfield; -moz-appearance:textfield; }
+          input::-webkit-outer-spin-button, input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
           .md-ic{ font-family:'Material Symbols Outlined'; font-size:24px; color:var(--md-sys-color-on-surface-variant); }
           .support{ font:var(--md-sys-typescale-body-small); color:${error ? 'var(--md-sys-color-error)' : 'var(--md-sys-color-on-surface-variant)'};
             padding:4px 16px 0; }
