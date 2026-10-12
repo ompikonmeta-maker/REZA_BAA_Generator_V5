@@ -129,7 +129,7 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 
 **Uji:** 1366, 1600, 1920 px; tema terang & gelap; mode Setup › Template.
 
-## 12. Tombol Save: status Unsaved/Saved & tombol ganda — catat (2026-10-12)
+## 12. Tombol Save: status Unsaved/Saved & tombol ganda — catat, pilih A (2026-10-12)
 **Laporan (video):** Setup › Target — klik **Save target** di kartu: data tersimpan, tetapi status di bar atas tetap **Unsaved** (tombol merah) sampai user mengklik lagi di halaman (klik kedua = simpan kedua).
 **Penyebab:** status bar atas dihitung ulang hanya saat ada klik/ketik di halaman. Tombol Save di kartu menyimpan lalu tidak menghitung ulang status. Tombol Save di bar atas sudah benar (menghitung ulang setelah simpan).
 
@@ -144,8 +144,16 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 | BAA Entry | Finish BAA + simpan otomatis | ✅ tidak memakai bar (sudah diperbaiki di sesi duplikat request) |
 
 **Apakah tombol ganda perlu?** Tidak. Location data sudah memakai satu tombol (di bar atas); halaman lain belum seragam.
-**Usul (menunggu keputusan):**
+**Keputusan (2026-10-12): A** — satu tombol per form di bar atas; pengecualian Team & Progress ✓ seperti di bawah.
+**Usul:**
 - A. **Satu tombol per form, di bar atas** (seperti Location data): sembunyikan Save di kartu Target & Project & status. Bar atas selalu terlihat + status Unsaved/Saved.
 - B. **Satu tombol per form, di kartu**: bar atas hanya status (tanpa tombol).
 - Pengecualian yang diusulkan: Team "Add" tetap di kartu (aksi), bar tidak menampilkan "Add account"; Progress ✓ tetap inline, bar tidak muncul untuk edit cepat. Penjaga "perubahan belum disimpan" saat pindah halaman tetap jalan.
 - Semua jalur simpan: status dihitung ulang **setelah** server menjawab; bila gagal tetap **Unsaved** + pesan gagal.
+
+## 13. Isian angka: tombol panah atas/bawah tidak senada tema — catat (2026-10-12)
+**Laporan (gambar):** Setup › Target, isian **Target (BAA)** menampilkan tombol panah atas/bawah bawaan browser (kotak putih abu-abu) yang tidak senada dengan tema gelap/terang.
+**Penyebab:** isian bertipe angka (`type=number`) memakai spinner bawaan browser (Chromium/Edge), tidak ikut warna tema.
+**Isian angka lain yang sama:** Settings › Project & status (Target BAA), Progress (edit target cepat; batas umur draf Fresh/Warm), Template BAA (Header row, Data starts, Inventory row, max, Photo size).
+**Usul:** sembunyikan spinner bawaan di **semua** isian angka (tetap bisa ketik angka, panah ↑/↓ keyboard & scroll tetap bekerja seperti biasa); keyboard angka di layar sentuh tetap muncul. Bila perlu tombol +/−, pakai tombol kecil yang mengikuti warna tema — **default: tanpa tombol** (lebih bersih, angka target biasanya diketik).
+**Uji:** tema terang & gelap; ketik, panah keyboard, nilai minimum tetap dijaga.
