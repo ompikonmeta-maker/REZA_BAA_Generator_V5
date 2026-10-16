@@ -163,14 +163,14 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - 12: Save di kartu Target & editor project disembunyikan → simpan lewat bar atas (label "Create project" untuk project baru). Status dihitung ulang setelah server menjawab: berhasil = Saved, gagal = tetap Unsaved. Location data: Saved hanya bila server berhasil; dialog "Unsaved changes" › Save menunggu server (gagal = tetap di halaman). Team: bar tidak muncul, tombol Add tetap di kartu, penjaga pindah halaman tetap jalan. Progress: edit cepat tanpa bar, ✓ menyimpan & membersihkan penjaga.
 - 13: spinner bawaan disembunyikan di semua isian angka (komponen md-text-field & input biasa); ketik & panah keyboard tetap jalan.
 
-## 14. Peta wilayah: pin per provinsi dengan angka — catat + mockup (2026-10-16)
+## 14. Peta wilayah: pin per provinsi dengan angka — selesai, warna B (2026-10-16)
 **Permintaan:** peta lebih informatif dengan **pin per provinsi** dan angka di ujung pin.
 **Mockup (peta asli, data demo):** pin jatuh di titik dalam wilayah (bukan sekadar tengah kotak), kepala pin berisi angka sesuai mode: **% Done** → persen selesai, **Drafts** → jumlah draf, **Stale** → jumlah draf basi (provinsi bernilai 0 tidak diberi pin di mode Drafts/Stale). Saat zoom ke provinsi, pin per kab/kota. Ukuran pin tetap di layar (tidak ikut membesar saat zoom). Tooltip & klik tetap seperti sekarang.
 **Perlu diputuskan:**
 - Warna pin: (A) warna mode (seperti mockup), atau (B) status terhadap target hari ini — hijau on-track / kuning tertinggal / merah jauh tertinggal (sama dengan bar "Furthest behind").
 - Pin berdekatan (mis. Jawa/Kota & Kab. Bandung) saling menimpa → usul: label digeser ke atas otomatis dengan garis penunjuk, ujung pin tetap di lokasi.
 
-## 15. PDF: foto & capture buram — catat (2026-10-16)
+## 15. PDF: foto & capture buram — selesai (2026-10-16)
 **Laporan:** tulisan pada capture di PDF (tombol PDF) buram/tidak terbaca; Excel terlihat baik.
 **Penyebab (dibuktikan):** setiap foto disisipkan ke workbook sebagai gambar **600×450 px** (setelan "Photo size"), apa pun resolusi aslinya — capture HP tegak bahkan hanya ±200 px lebarnya. Di Excel zoom 100% gambar tampil 1:1 sehingga terlihat tajam; di PDF halaman diperbesar oleh viewer → piksel terlihat → buram. PDF dibuat dari workbook yang sama (Excel/LibreOffice).
 **Usul:**
@@ -179,6 +179,11 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - Ekspor PDF via Excel: kualitas "Standard" (bukan "Minimum size") ditetapkan eksplisit dan kompresi gambar otomatis workbook dimatikan.
 - Dampak: file Excel/PDF lebih besar (perkiraan ±2–4× dari sekarang per lokasi). Uji: bandingkan resolusi gambar di dalam PDF sebelum/sesudah; konversi Excel (Windows) diuji di build.
 
-## 16. Nama file download Excel & PDF mengikuti nama lokasi — catat (2026-10-16)
+## 16. Nama file download Excel & PDF mengikuti nama lokasi — selesai, A (2026-10-16)
 **Sekarang:** `LOK_00003_20261016_170354.xlsx` (kode + jam). PDF di ZIP sudah `LOK_00003 Natlan.pdf`.
 **Usul (pilih):** (A) `Natlan - LOK_00003.xlsx` (nama dulu, kode menjamin unik), (B) `LOK_00003 Natlan.xlsx` (sama dengan isi ZIP). Karakter terlarang di nama file dibersihkan; nama kosong → kode saja. Berlaku untuk tombol Excel & PDF (per lokasi) dan saran nama di dialog "Save as". Ekspor banyak lokasi tetap `Log_BAA_…` / ZIP.
+
+**Hasil (14–16):**
+- 14: pin per provinsi (nasional) / kab-kota (saat zoom), angka sesuai mode, **warna = status terhadap target hari ini** (on track / behind / far behind, sama dengan bar "Furthest behind"; tanpa target = warna utama). Label bertumpuk dinaikkan otomatis dengan garis penunjuk; pin disembunyikan selama animasi zoom lalu muncul lagi; ikut menyesuaikan saat ukuran window berubah. Hover/klik label = hover/klik wilayahnya. Legenda "Pin: on track · behind · far behind".
+- 15: foto disisipkan hingga 3× ukuran tampil (mis. 1800×1350 px, sebelumnya 600×450; capture HP tegak ±620 px lebar, sebelumnya ±200), PNG tetap PNG, foto JPEG q92; workbook `autoCompressPictures="0"`; ekspor via Excel dengan kualitas Standard. Ukuran tampil di template tidak berubah. Contoh 2 foto: Excel 260 KB → 1,5 MB. Konversi PDF via Excel (Windows) diverifikasi lewat build (LibreOffice di lingkungan uji tidak berfungsi).
+- 16: unduhan per lokasi bernama `Nama Lokasi - KODE.xlsx` / `.pdf` (karakter terlarang dibersihkan, nama kosong → kode); saran nama di dialog Save as sama; nama berspasi/non-ASCII terbaca benar oleh aplikasi.

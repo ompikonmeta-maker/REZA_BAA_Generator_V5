@@ -129,6 +129,20 @@
   .wm-tip{position:absolute;z-index:3;min-width:190px;max-width:260px;padding:10px 12px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-inverse-surface);color:var(--md-sys-color-inverse-on-surface);
     box-shadow:var(--md-sys-elevation-level3);font:var(--md-sys-typescale-body-small);pointer-events:none;transform:translate(-50%,calc(-100% - 12px))}
   .wm-tip.hidden{display:none}
+  /* pin per wilayah: angka sesuai mode, warna = status vs target hari ini; ukuran tetap di layar */
+  .wm-pins{position:absolute;inset:0;z-index:2;pointer-events:none;transition:opacity .2s}
+  .wm-pins.off{opacity:0}
+  .wm-pin{position:absolute;width:0;height:0}
+  .wm-pin.ok{--pc:var(--md-sys-color-primary);--pt:var(--md-sys-color-on-primary)}
+  .wm-pin.warn{--pc:#e6a52e;--pt:#2b1d00}
+  .wm-pin.bad{--pc:var(--bad);--pt:var(--md-sys-color-surface)}
+  .wm-pin .st{position:absolute;left:-1px;width:2px;background:var(--pc)}
+  .wm-pin .dot{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 1.5px var(--md-sys-color-surface-container-lowest)}
+  .wm-pin .lb{position:absolute;transform:translate(-50%,-100%);padding:1px 8px;border-radius:99px;background:var(--pc);color:var(--pt);
+    font:var(--md-sys-typescale-label-medium);font-weight:700;line-height:18px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:auto;cursor:pointer}
+  .wm-pl{display:inline-flex;align-items:center;gap:6px}
+  .wm-pl b{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:4px}
+  .wm-pl b.ok{background:var(--md-sys-color-primary)}.wm-pl b.warn{background:#e6a52e}.wm-pl b.bad{background:var(--bad)}
   .wm-tip b{display:block;font:var(--md-sys-typescale-title-small);margin-bottom:2px}
   .wm-tip .big{font:var(--md-sys-typescale-title-large);font-weight:600}
   .wm-tip .go{display:block;margin-top:6px;opacity:.75}
@@ -3422,9 +3436,11 @@ function renderWm(){const host=$('#wmHost'),st=WM.st,P=PETA;if(!host||!st||!P)re
     <div class="wm-top"><span class="mi acc">map</span><span class="wm-bc">${bc}</span>
       <div class="wm-seg">${Object.entries(WM_MODES).map(([k,m])=>`<button data-m="${k}" class="${WM.mode===k?'on':''}">${m.lbl}</button>`).join('')}</div></div>
     <div class="wm-map"><svg viewBox="${(WM.vb||vb).join(' ')}" preserveAspectRatio="xMidYMid meet">${pathsProv}${pathsKab}</svg><div class="wm-tip hidden"></div></div>
-    <div class="wm-leg" style="--wm-c:${WM_MODES[WM.mode].c}">${legend}<span class="sep"></span><u></u><span>no locations</span>${notes?`<span class="sep"></span><span>${notes}</span>`:''}<span style="margin-left:auto;opacity:.7">Map: geoBoundaries (CC BY 4.0)</span></div></div>
+    <div class="wm-leg" style="--wm-c:${WM_MODES[WM.mode].c}">${legend}<span class="sep"></span><u></u><span>no locations</span>${st.ideal_pct!=null?'<span class="sep"></span><span class="wm-pl">Pin:<b class="ok"></b>on track<b class="warn"></b>behind<b class="bad"></b>far behind</span>':''}${notes?`<span class="sep"></span><span>${notes}</span>`:''}<span style="margin-left:auto;opacity:.7">Map: geoBoundaries (CC BY 4.0)</span></div></div>
     <div class="wm-side">${wmSide()}</div></div></div>`;
-  const svg=host.querySelector('svg');if(WM.vb&&WM.vb.join()!==vb.join())wmZoom(svg,WM.vb,vb);WM.vb=vb;
+  const svg=host.querySelector('svg');WM.anim=false;if(WM.vb&&WM.vb.join()!==vb.join())wmZoom(svg,WM.vb,vb);WM.vb=vb;
+  const lay=document.createElement('div');lay.className='wm-pins off';host.querySelector('.wm-map').appendChild(lay);
+  if(window.ResizeObserver)new ResizeObserver(()=>wmPins()).observe(host.querySelector('.wm-map'));else wmPins();
   host.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{WM.mode=b.dataset.m;renderWm();});
   host.querySelectorAll('[data-go]').forEach(a=>a.onclick=()=>{if(a.dataset.go==='nat'){WM.prov=null;WM.kab=null;}else WM.kab=null;renderWm();});
   const tip=host.querySelector('.wm-tip'),map=host.querySelector('.wm-map');
@@ -3452,9 +3468,36 @@ function wmSide(){const st=WM.st,id=st.ideal_pct;
     ${id!=null&&kabs.length?'<div class="wm-note">Marker = where the project should be today · click a row to zoom in</div>':''}`;}
 function wmRow(nm,sub,d,n,ideal,k){const p=n?Math.round(d/n*100):0,cls=ideal==null?'':p>=ideal?'':p>=ideal*.6?'warn':'bad';
   return `<div class="wm-rk ${cls}"><span class="nm">${esc(nm)}${sub?` <small>· ${esc(sub)}</small>`:''}</span><span class="v">${d} / ${n}</span><div class="bar"><i style="width:${p}%"></i>${ideal!=null?`<b style="left:${Math.min(99,ideal)}%"></b>`:''}</div></div>`;}
-function wmZoom(svg,a,b){if(reduced){svg.setAttribute('viewBox',b.join(' '));return;}const t0=performance.now(),D=480,ease=t=>1-Math.pow(1-t,3);
-  const step=now=>{const t=Math.min(1,(now-t0)/D),e=ease(t);svg.setAttribute('viewBox',a.map((v,i)=>v+(b[i]-v)*e).join(' '));if(t<1)requestAnimationFrame(step);};
+function wmZoom(svg,a,b){if(reduced){svg.setAttribute('viewBox',b.join(' '));return;}const t0=performance.now(),D=480,ease=t=>1-Math.pow(1-t,3);WM.anim=true;
+  const step=now=>{if(!svg.isConnected){WM.anim=false;return;}const t=Math.min(1,(now-t0)/D),e=ease(t);svg.setAttribute('viewBox',a.map((v,i)=>v+(b[i]-v)*e).join(' '));
+    if(t<1)requestAnimationFrame(step);else{WM.anim=false;wmPins();}};   // pin dipasang setelah zoom selesai
   svg.setAttribute('viewBox',a.join(' '));requestAnimationFrame(step);}
+/* Pin per provinsi / kab-kota: ujung pin di titik dalam wilayah, angka sesuai mode (% / jumlah draf / basi),
+   warna = status terhadap target hari ini (sama dengan bar "Furthest behind"). Label yang bertumpuk dinaikkan
+   (garis penunjuk memanjang) — ujung pin tetap di lokasinya. Klik/hover label = klik/hover wilayahnya. */
+const WM_LP={};
+function wmLabelPt(path,k){if(WM_LP[k])return WM_LP[k];const svg=path.ownerSVGElement,bb=path.getBBox(),pt=svg.createSVGPoint(),cx=bb.x+bb.width/2,cy=bb.y+bb.height/2;
+  for(let r=0;r<=1.0001;r+=.04)for(let a=0;a<6.283;a+=.2618){pt.x=cx+Math.cos(a)*r*bb.width/2;pt.y=cy+Math.sin(a)*r*bb.height/2;
+    if(path.isPointInFill(pt))return WM_LP[k]={x:pt.x,y:pt.y};if(!r)break;}
+  return WM_LP[k]={x:cx,y:cy};}
+function wmPins(){const host=$('#wmHost'),st=WM.st;if(!host||!st)return;const map=host.querySelector('.wm-map'),lay=map&&map.querySelector('.wm-pins'),svg=map&&map.querySelector('svg');
+  if(!lay||!svg)return;if(WM.anim){lay.classList.add('off');return;}
+  const m=svg.getScreenCTM(),mr=map.getBoundingClientRect();if(!m||!mr.width)return;
+  const lvl=WM.prov?st.kab:st.prov,ideal=st.ideal_pct,items=[];
+  svg.querySelectorAll('path.has[data-k]').forEach(p=>{const k=p.dataset.k,x=lvl[k];if(!x||!x.n)return;
+    const v=WM.mode==='pct'?Math.round(x.done/x.n*100)+'%':(x[WM.mode]||0);if(WM.mode!=='pct'&&!v)return;
+    const lp=wmLabelPt(p,k),sp=new DOMPoint(lp.x,lp.y).matrixTransform(m),pct=x.done/x.n*100;
+    items.push({p,x:sp.x-mr.left,y:sp.y-mr.top,v:String(v),cls:ideal==null||pct>=ideal?'ok':pct>=ideal*.6?'warn':'bad'});});
+  const H=20,placed=[];items.sort((a,b)=>a.y-b.y);
+  items.forEach(it=>{const w=it.v.length*7.5+18;let dx=0;const minX=w/2+2,maxX=mr.width-w/2-2;if(it.x<minX)dx=minX-it.x;else if(it.x>maxX)dx=maxX-it.x;
+    let stem=10;const box=s=>({l:it.x+dx-w/2-2,r:it.x+dx+w/2+2,t:it.y-s-H-2,b:it.y-s+2});
+    const hit=b=>placed.some(q=>b.l<q.r&&b.r>q.l&&b.t<q.b&&b.b>q.t);
+    while(hit(box(stem))&&stem<130&&it.y-stem-H>4)stem+=12;
+    it.stem=stem;it.dx=dx;placed.push(box(stem));});
+  lay.innerHTML=items.map((it,i)=>`<div class="wm-pin ${it.cls}" style="left:${it.x.toFixed(1)}px;top:${it.y.toFixed(1)}px"><i class="st" style="top:${-it.stem}px;height:${it.stem}px"></i><i class="dot"></i><span class="lb" data-i="${i}" style="top:${-it.stem}px;left:${it.dx.toFixed(1)}px">${esc(it.v)}</span></div>`).join('');
+  const fw=(it,type,e)=>it.p.dispatchEvent(new MouseEvent(type,{bubbles:true,clientX:e?e.clientX:0,clientY:e?e.clientY:0}));
+  lay.querySelectorAll('.lb').forEach(b=>{const it=items[+b.dataset.i];b.onclick=e=>fw(it,'click',e);b.onmousemove=e=>fw(it,'mousemove',e);b.onmouseleave=e=>fw(it,'mouseleave',e);});
+  lay.classList.remove('off');}
 function wilOpenLog(code){WIL_PENDING=code;navTo('locations');}
 /* Supervisor (admin): sebaran tim per kab/kota */
 async function loadWilTeam(){const host=$('#tmHost');if(!host)return;const show=WIL.on()&&S.user&&S.user.role==='admin';host.classList.toggle('hidden',!show);if(!show)return;
@@ -5733,6 +5776,8 @@ $$('.exp-ask').forEach(l=>l.addEventListener('click',e=>{if(e.target===l){const 
 function expSuggest(kind,q){const ts=(d=>`${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`)(new Date());
   const id=+q.get('loc_id'),one=q.get('scope')==='one';
   const l=one?((S.loc&&S.loc.id===id&&S.loc)||LOC_ROWS.find(x=>x.id===id)):null,code=(l&&l.code)||'BAA';
+  if(one&&l){const nm=String(l.name||(l.data&&l.data.nama_lokasi)||'').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,100).replace(/[ .]+$/,'');   // sama dengan nama dari server
+    const base=nm?`${nm} - ${code}`:code;if(kind==='excel')return base+'.xlsx';if(kind==='pdf')return base+'.pdf';}
   return kind==='excel'?`${one?code:'Log_BAA'}_${ts}.xlsx`:kind==='pdf'?`${one?code:'BAA'}_${ts}.pdf`:`PDF_BAA_${ts}.zip`;}
 const EXP_TYPES={excel:{description:'Excel workbook',accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx']}},
   pdf:{description:'PDF document',accept:{'application/pdf':['.pdf']}},pdfzip:{description:'ZIP archive',accept:{'application/zip':['.zip']}}};
@@ -5779,7 +5824,7 @@ async function expPoll(j){if(j.state!=='run'||j.busy)return;j.busy=true;
   }catch(e){clearInterval(j.poll);expEnd(j,'err',e.message);}finally{j.busy=false;}}
 async function expFetch(j){try{const r=await fetch('/api/export/jobs/'+j.id+'/file',{credentials:'same-origin'});if(!r.ok)throw new Error('Download failed ('+r.status+')');
     const blob=await r.blob(),cd=r.headers.get('Content-Disposition')||'';
-    const fn=decodeURIComponent((cd.match(/filename\*?=(?:UTF-8''|")?([^";]+)/)||[])[1]||'export');
+    const fn=decodeURIComponent((cd.match(/filename\*=(?:UTF-8'')?([^";]+)/i)||cd.match(/filename="?([^";]+)/i)||[])[1]||'export');   // filename* (nama dengan spasi/huruf non-ASCII) didahulukan
     let where='Saved to Downloads ✓';
     if(j.handle){try{const ws=await j.handle.createWritable();await ws.write(blob);await ws.close();where='Saved ✓';}catch(e){j.handle=null;}}
     if(!j.handle){const a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);}

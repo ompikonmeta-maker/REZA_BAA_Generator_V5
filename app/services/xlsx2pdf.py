@@ -123,7 +123,8 @@ def _excel_com(xlsx: str, pdf: str, anchor_cells=None) -> bool:
         except Exception:
             pass
         # 0 = xlTypePDF ; export seluruh sheet yang ada (LOG sudah dibuang pemanggil)
-        wb.ExportAsFixedFormat(0, str(Path(pdf).resolve()))
+        # Quality 0 = xlQualityStandard (cetak), bukan "Minimum size" yang menurunkan resolusi foto
+        wb.ExportAsFixedFormat(0, str(Path(pdf).resolve()), 0)
         return Path(pdf).exists()
     except Exception:
         return False

@@ -100,6 +100,17 @@ def _safe_name(s: str) -> str:
     return re.sub(r"\s+", " ", s) or "lokasi"
 
 
+def _dl_name(locs: list[dict], scope: str, ext: str) -> str | None:
+    """Nama file unduhan per lokasi: 'Nama Lokasi - KODE.ext' (kode menjamin unik).
+    Tanpa nama -> 'KODE.ext'. Banyak lokasi -> None (pakai nama bawaan)."""
+    if scope != "one" or not locs:
+        return None
+    loc = locs[0]
+    nm = (loc.get("name") or (loc.get("data") or {}).get("nama_lokasi") or "").strip()
+    nm = _safe_name(nm)[:100].rstrip(" .") if nm else ""
+    return f"{nm} - {loc['code']}.{ext}" if nm else f"{loc['code']}.{ext}"
+
+
 def _tpl_row(conn: sqlite3.Connection) -> dict | None:
     """Template aktif (path sudah absolut), atau None."""
     t = conn.execute("SELECT * FROM templates WHERE active=1 ORDER BY id DESC LIMIT 1").fetchone()
@@ -264,7 +275,7 @@ def export_excel(scope: str = Query("one"), loc_id: int | None = None,
         pass
     _log_export(conn, locs, "excel", user)
     audit(conn, user, "export_excel", "export", scope, out.name)
-    resp = FileResponse(str(out), filename=out.name,
+    resp = FileResponse(str(out), filename=_dl_name(locs, scope, "xlsx") or out.name,
                         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     if res.get("warnings"):
         resp.headers["X-Export-Warnings"] = str(len(res["warnings"]))
@@ -283,7 +294,7 @@ def export_pdf(scope: str = Query("one"), loc_id: int | None = None,
     mode, warn = _render_pdf(conn, locs, out, cats, title)
     _log_export(conn, locs, "pdf", user)
     audit(conn, user, "export_pdf", "export", scope, out.name)
-    resp = FileResponse(str(out), filename=out.name, media_type="application/pdf")
+    resp = FileResponse(str(out), filename=_dl_name(locs, scope, "pdf") or out.name, media_type="application/pdf")
     resp.headers["X-PDF-Mode"] = mode
     if warn:
         resp.headers["X-Paper-Warning"] = warn
@@ -370,14 +381,14 @@ def _run_job(j: dict, locs: list, tpl, tcfg, cats, title) -> None:
             except Exception:
                 pass
             j["img_warn"] = len(res.get("warnings") or [])
-            j.update(path=str(out), filename=out.name,
+            j.update(path=str(out), filename=_dl_name(locs, j["scope"], "xlsx") or out.name,
                      media="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         elif kind == "pdf":
             out = _stamp(locs[0]["code"] if j["scope"] == "one" else "BAA", "pdf")
             stage("fill")
             _, warn = _render_pdf_with(tpl, tcfg, locs, out, cats, title, prog, stage)
             j["warn"] = warn
-            j.update(path=str(out), filename=out.name, media="application/pdf")
+            j.update(path=str(out), filename=_dl_name(locs, j["scope"], "pdf") or out.name, media="application/pdf")
         else:                                            # pdfzip
             zpath = _stamp("PDF_BAA", "zip")
             stage("conv")

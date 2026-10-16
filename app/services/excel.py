@@ -123,16 +123,24 @@ def _safe_sheet_title(code: str, name: str, used: set) -> str:
     return title
 
 
+HIRES_MAX = 3          # gambar disisipkan hingga 3x ukuran tampil -> tetap tajam di PDF / saat diperbesar
+
+
 def _letterbox(path: str, box_w: int, box_h: int):
-    """Kembalikan BytesIO PNG berukuran persis box_w x box_h: foto di-fit
+    """Kembalikan BytesIO berasio persis box_w : box_h: foto di-fit
     (tanpa distorsi & tanpa dipotong) lalu ditaruh di tengah kanvas putih.
     Membuat semua foto hasil export punya ukuran yang seragam.
+    - ukuran TAMPIL tetap box_w x box_h (diatur pemanggil); resolusi kanvas hingga
+      HIRES_MAX kali lipat, tetapi tidak melebihi resolusi foto asli (tidak diperbesar
+      percuma) -> tulisan pada capture tetap terbaca di PDF
+    - capture/screenshot PNG tetap PNG (tulisan tajam); foto kamera JPEG kualitas tinggi
     - orientasi EXIF diterapkan dulu (foto HP tegak tidak tampil miring)
     - foto kecil ikut diperbesar sampai pas kotak (frame putih seminimal mungkin)
     - area transparan (PNG) diisi putih, bukan hitam"""
     import io
     from PIL import Image as PILImage, ImageOps
     im = PILImage.open(path)
+    is_png = (im.format or "").upper() == "PNG"
     try:
         im = ImageOps.exif_transpose(im)
     except Exception:
@@ -144,16 +152,50 @@ def _letterbox(path: str, box_w: int, box_h: int):
         im = bg
     elif im.mode != "RGB":
         im = im.convert("RGB")
-    scale = min(box_w / im.width, box_h / im.height)          # fit: perkecil atau perbesar, jaga rasio
+    fit = min(box_w / im.width, box_h / im.height)            # skala agar pas di kotak tampil
+    k = max(1.0, min(float(HIRES_MAX), 1.0 / fit))            # kelipatan resolusi: <= HIRES_MAX & <= resolusi asli
+    cw, ch = round(box_w * k), round(box_h * k)
+    scale = min(cw / im.width, ch / im.height)                # fit: perkecil atau perbesar, jaga rasio
     nw, nh = max(1, round(im.width * scale)), max(1, round(im.height * scale))
     if (nw, nh) != im.size:
         im = im.resize((nw, nh), PILImage.LANCZOS)
-    canvas = PILImage.new("RGB", (box_w, box_h), (255, 255, 255))
-    canvas.paste(im, ((box_w - nw) // 2, (box_h - nh) // 2))
+    canvas = PILImage.new("RGB", (cw, ch), (255, 255, 255))
+    canvas.paste(im, ((cw - nw) // 2, (ch - nh) // 2))
     bio = io.BytesIO()
-    canvas.save(bio, format="PNG")
+    if is_png:
+        canvas.save(bio, format="PNG", optimize=True)
+    else:
+        canvas.save(bio, format="JPEG", quality=92, optimize=True)
     bio.seek(0)
     return bio
+
+
+def _no_autocompress(xlsx_path: str) -> None:
+    """Matikan kompresi gambar otomatis workbook (workbookPr autoCompressPictures="0") agar
+    Excel tidak menurunkan resolusi foto saat menyimpan / ekspor PDF. Gagal = diam (file tetap valid)."""
+    import os
+    import re
+    import zipfile
+    tmp = xlsx_path + ".tmp"
+    try:
+        with zipfile.ZipFile(xlsx_path) as zin:
+            xml = zin.read("xl/workbook.xml").decode("utf-8")
+            if "autoCompressPictures" in xml:
+                return
+            if re.search(r"<workbookPr\b", xml):
+                xml = re.sub(r"<workbookPr\b", '<workbookPr autoCompressPictures="0"', xml, count=1)
+            else:
+                xml = re.sub(r"(<workbook\b[^>]*>)", r'\1<workbookPr autoCompressPictures="0"/>', xml, count=1)
+            with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zout:
+                for it in zin.infolist():
+                    data = xml.encode("utf-8") if it.filename == "xl/workbook.xml" else zin.read(it.filename)
+                    zout.writestr(it, data)
+        os.replace(tmp, xlsx_path)
+    except Exception:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
 
 
 def _copy_print_settings(src, dst) -> None:
@@ -464,4 +506,6 @@ def build_workbook(template_path: str, template_config: dict, locations: list[di
 
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     wb.save(out_path)
+    if not log_only:
+        _no_autocompress(out_path)
     return {"path": out_path, "warnings": warnings}
