@@ -162,3 +162,23 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - 11: di langkah Log Sheet & Detail Sheet halaman Template melepas batas 1200 px (transisi halus). Diukur di 1920 px: halaman 1544 px; Log Sheet — tabel mapping tetap 930 px, Preview 1232 px (tampil 100%); Detail Sheet — area render ikut melebar. Langkah Template & halaman Settings lain tetap 1200 px. Di 1366 px tidak berubah (window sudah jadi batas). Klik cepat antar langkah tetap aman.
 - 12: Save di kartu Target & editor project disembunyikan → simpan lewat bar atas (label "Create project" untuk project baru). Status dihitung ulang setelah server menjawab: berhasil = Saved, gagal = tetap Unsaved. Location data: Saved hanya bila server berhasil; dialog "Unsaved changes" › Save menunggu server (gagal = tetap di halaman). Team: bar tidak muncul, tombol Add tetap di kartu, penjaga pindah halaman tetap jalan. Progress: edit cepat tanpa bar, ✓ menyimpan & membersihkan penjaga.
 - 13: spinner bawaan disembunyikan di semua isian angka (komponen md-text-field & input biasa); ketik & panah keyboard tetap jalan.
+
+## 14. Peta wilayah: pin per provinsi dengan angka — catat + mockup (2026-10-16)
+**Permintaan:** peta lebih informatif dengan **pin per provinsi** dan angka di ujung pin.
+**Mockup (peta asli, data demo):** pin jatuh di titik dalam wilayah (bukan sekadar tengah kotak), kepala pin berisi angka sesuai mode: **% Done** → persen selesai, **Drafts** → jumlah draf, **Stale** → jumlah draf basi (provinsi bernilai 0 tidak diberi pin di mode Drafts/Stale). Saat zoom ke provinsi, pin per kab/kota. Ukuran pin tetap di layar (tidak ikut membesar saat zoom). Tooltip & klik tetap seperti sekarang.
+**Perlu diputuskan:**
+- Warna pin: (A) warna mode (seperti mockup), atau (B) status terhadap target hari ini — hijau on-track / kuning tertinggal / merah jauh tertinggal (sama dengan bar "Furthest behind").
+- Pin berdekatan (mis. Jawa/Kota & Kab. Bandung) saling menimpa → usul: label digeser ke atas otomatis dengan garis penunjuk, ujung pin tetap di lokasi.
+
+## 15. PDF: foto & capture buram — catat (2026-10-16)
+**Laporan:** tulisan pada capture di PDF (tombol PDF) buram/tidak terbaca; Excel terlihat baik.
+**Penyebab (dibuktikan):** setiap foto disisipkan ke workbook sebagai gambar **600×450 px** (setelan "Photo size"), apa pun resolusi aslinya — capture HP tegak bahkan hanya ±200 px lebarnya. Di Excel zoom 100% gambar tampil 1:1 sehingga terlihat tajam; di PDF halaman diperbesar oleh viewer → piksel terlihat → buram. PDF dibuat dari workbook yang sama (Excel/LibreOffice).
+**Usul:**
+- Ukuran **tampil** di sel tetap (layout template tidak berubah), tetapi gambar yang disisipkan memakai resolusi **hingga 3×** (maks 1800×1350 px; tidak diperbesar melebihi foto asli).
+- Capture/screenshot (PNG) tetap PNG agar tulisan tajam; foto kamera JPEG kualitas tinggi (≈92) agar ukuran file wajar.
+- Ekspor PDF via Excel: kualitas "Standard" (bukan "Minimum size") ditetapkan eksplisit dan kompresi gambar otomatis workbook dimatikan.
+- Dampak: file Excel/PDF lebih besar (perkiraan ±2–4× dari sekarang per lokasi). Uji: bandingkan resolusi gambar di dalam PDF sebelum/sesudah; konversi Excel (Windows) diuji di build.
+
+## 16. Nama file download Excel & PDF mengikuti nama lokasi — catat (2026-10-16)
+**Sekarang:** `LOK_00003_20261016_170354.xlsx` (kode + jam). PDF di ZIP sudah `LOK_00003 Natlan.pdf`.
+**Usul (pilih):** (A) `Natlan - LOK_00003.xlsx` (nama dulu, kode menjamin unik), (B) `LOK_00003 Natlan.xlsx` (sama dengan isi ZIP). Karakter terlarang di nama file dibersihkan; nama kosong → kode saja. Berlaku untuk tombol Excel & PDF (per lokasi) dan saran nama di dialog "Save as". Ekspor banyak lokasi tetap `Log_BAA_…` / ZIP.
