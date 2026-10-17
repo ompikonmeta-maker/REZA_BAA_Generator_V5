@@ -256,4 +256,27 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 
 **Belum diketahui:** nama terpanjang di data asli pengguna (contoh di gambar: "SMPN 9 KALUM…").
 
-**Mockup dropdown (a+b):** https://claude.ai/artifact/YLReJjpxKZxFFVJ8ag4bx3 — Sekarang vs **A** (panel 560 px sendiri, nama 2 baris, kode + status di baris kedua, teks cocok disorot, tombol melebar s/d 640 px mengisi bar) vs **B** (panel 640 px satu baris, nama ±440 px, disorot). Pencarian tetap kode/nama seperti sekarang (data picker hanya kode, nama, status). Menunggu pilihan.
+**Mockup dropdown (a+b):** https://claude.ai/artifact/YLReJjpxKZxFFVJ8ag4bx3 — Sekarang vs **A** (panel 560 px sendiri, nama 2 baris, kode + status di baris kedua, teks cocok disorot, tombol melebar s/d 640 px mengisi bar) vs **B** (panel 640 px satu baris, nama ±440 px, disorot). Pencarian tetap kode/nama seperti sekarang (data picker hanya kode, nama, status). **Dipilih: A** (2026-10-17). Menunggu "gas"; bagian c–f belum diputuskan.
+
+## 19. Transfer lokasi antar user — cek & verifikasi (catatan, 2026-10-17)
+**Laporan:** transfer antar user masih belum jalan.
+
+**Cara cek:** aplikasi dijalankan dengan salinan data demo; Playwright (UI) + panggilan API sebagai admin, Sari, Budi.
+
+| Jalur | Hasil | Bukti |
+|---|---|---|
+| **Location Log › ⋮ › "Transfer to…"** (admin, per lokasi) | ❌ **Tidak jalan.** Klik "Transfer to…" → daftar user tidak pernah muncul, tanpa pesan. | `MDMenu.open` dipanggil dengan 7 target (Administrator, Sari · owner, Budi, Rina, Andi, Dewi Lestari, Tes Intro), tapi 300 ms kemudian 0 panel menu. |
+| **Dashboard › saran "Move them to Budi" › Transfer…** | ❌ **Alur tidak ada.** Tombol membuka Location Log + pesan "Filter by owner, select the drafts, then Transfer", tetapi: filter yang ada hanya *Created by* (bukan pemilik), dan bar pilihan massal hanya punya *Set wilayah* — tidak ada tombol Transfer massal. | Bar massal: "1 selected · Set wilayah"; filter: search, Created by, Wilayah, Date created. |
+| Backend `POST /api/locations/transfer` | ✅ Benar. Pemilik berganti; pemilik lama `can_edit=false` dan simpan ditolak 403 "Not your location"; pemilik baru bisa simpan (200). Ke viewer → 400, ke user di luar project → 404, operator memanggil → 403. | Uji API LOK_00077 Sari → Budi. |
+| **Request edit** (operator) → **Approve** (admin, Notifications) | ✅ Jalan. Pemilik berganti ke peminta, peminta langsung bisa edit di BAA Entry. | LOK_00077 Budi → Sari lewat UI. |
+
+**Akar masalah jalur 1:** `transferMenu()` membuka menu kedua dari dalam item menu pertama. Di `assets/mdmenu.js`, setelah `onSelect` item dijalankan, `closeAll()` dipanggil → menu kedua yang baru dibuka ikut tertutup. Selain itu `openRoot` menganggap tombol pembuka yang sama sebagai "toggle off". Regresi sejak menu diseragamkan ke MDMenu.
+**Ikut kena pola yang sama:** foto tanpa kategori › ⋮ › **"Move category"** (`uncatMenu` → `reassignMenu`) — diuji: menu kedua 0 panel.
+
+**Temuan terkait:**
+- Location Log hanya menampilkan kolom *Created by*; pemilik (owner) tidak terlihat di tabel, jadi hasil transfer tidak tampak (contoh: LOK_00077 creator Sari, owner Budi). Pemilik hanya terlihat di drawer.
+
+**Usulan perbaikan (menunggu keputusan):**
+1. Menu kedua dibuka setelah menu pertama selesai menutup (atau `MDMenu` mendukung submenu), berlaku untuk "Transfer to…" dan "Move category".
+2. Transfer massal: tombol **Transfer…** di bar pilihan massal Location Log + filter **Owner** (pakai endpoint yang sudah ada, `ids` bisa banyak); tombol saran Dashboard langsung memfilter pemilik draf Cold tersebut.
+3. Kolom **Owner** di Location Log (atau tampil di bawah Created by bila berbeda).
