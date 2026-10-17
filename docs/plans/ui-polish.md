@@ -256,7 +256,7 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 
 **Before/after 18d–f (screenshot aplikasi asli + perubahan dicoba sementara di browser):** https://claude.ai/artifact/3Dj1h4gAScBxMAss3Ldi7p
 - 18d rencana: nama di baris sendiri (2 baris, tooltip), baris kedua kode · bar · pemilik · % · label umur.
-- 18e rencana: "Last seen" di bawah nama user; judul kolom dipendekkan ("Done (wk)", "Drafts", "Share of pace"); "Last change" 2 baris (waktu · kode / nama); peringatan jadi ikon ⚠ + tooltip → tabel muat 948 px tanpa geser.
+- 18e rencana (revisi): kolom **Next step** setelah nama user, label aksi + alasan singkat dari data yang ada — "Move N Cold → X" (user sumber di saran transfer), "Follow up · idle N workdays" (draf terbuka, tanpa perubahan ≥ 3 hari kerja), "Check pace · N% of needed" (< 60%), "Can take drafts" (0 draf), "On track"; admin "—". "Last seen" di bawah nama; judul kolom pendek ("Done (wk)", "Drafts", "Pace"); "Last change" 2 baris (waktu · kode / nama); kolom peringatan lama dihapus → tabel muat 948 px tanpa geser. Label Move bisa diklik setelah 19-1/19-2.
 - 18f rencana: teks strip "Read SN" + tooltip "SN not read yet — click to read".
 
 **Belum diketahui:** nama terpanjang di data asli pengguna (contoh di gambar: "SMPN 9 KALUM…").
