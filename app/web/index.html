@@ -812,6 +812,22 @@
   .lp-empty{padding:24px 14px;text-align:center;color:var(--md-sys-color-on-surface-variant)}
   .lp-foot{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--md-sys-color-outline-variant)}
   .lp-cnt{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small)}
+  /* lokasi kembar (nama + wilayah sama) */
+  .dup-warn{display:flex;gap:10px;align-items:flex-start;margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--warn-bg);color:var(--warn);font:var(--md-sys-typescale-body-medium)}
+  .dup-warn .mi{font-size:20px;flex:0 0 auto;margin-top:1px}.dup-warn b{color:var(--md-sys-color-on-surface)}
+  .dup-warn .l2{display:block;color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-body-small);margin-top:3px}
+  .dup-warn .mono{font-family:ui-monospace,Consolas,monospace;font-size:12px;font-weight:600}
+  .dup-warn a{color:var(--md-sys-color-primary);font-weight:700;cursor:pointer;margin-left:4px;white-space:nowrap}
+  .dup-kb{display:inline-flex;align-items:center;gap:3px;margin-left:8px;font:var(--md-sys-typescale-label-small);font-weight:700;padding:1px 8px;border-radius:99px;background:var(--warn-bg);color:var(--warn);vertical-align:1px;white-space:nowrap}
+  .dup-kb .mi{font-size:13px}
+  .dup-chip{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:99px;border:1px solid var(--md-sys-color-outline);background:none;color:var(--warn);font:var(--md-sys-typescale-label-large);font-weight:700;cursor:pointer}
+  .dup-chip .mi{font-size:18px}.dup-chip b{background:var(--warn);color:var(--md-sys-color-surface);border-radius:99px;padding:0 7px;font-size:12px}
+  .dup-chip.on{background:var(--warn-bg);border-color:var(--warn)}
+  .imp-own{display:inline-flex;align-items:center;gap:4px;font:var(--md-sys-typescale-label-medium);font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
+  .imp-own .mi{font-size:15px}.imp-own.ok{background:color-mix(in srgb,var(--md-sys-color-primary) 14%,transparent);color:var(--md-sys-color-primary)}
+  .imp-own.me{background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface-variant)}.imp-own.bad{background:var(--bad-bg);color:var(--bad)}
+  .imp-sub{display:block;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant);margin-top:2px}.imp-sub.bad{color:var(--bad)}
+  .imp-ownsel{display:block;width:170px;margin-top:4px;font:var(--md-sys-typescale-body-small);background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface);border:1px solid var(--md-sys-color-outline);border-radius:8px;padding:4px 6px}
   .lc-own{display:flex;align-items:center;gap:3px;font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-primary);white-space:nowrap}.lc-own .mi{font-size:14px}
   .lp-keys{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small);display:inline-flex;gap:5px;align-items:center}
   .lp-keys kbd{font:600 10.5px ui-monospace,Consolas,monospace;border:1px solid var(--md-sys-color-outline-variant);border-radius:5px;padding:0 4px}
@@ -2340,6 +2356,7 @@
             <div class="card">
               <div class="sec"><span class="mi acc">location_on</span><h3>Location Data</h3></div>
               <div class="fgrid" id="loc-fields"></div>
+              <div class="dup-warn hidden" id="dupWarn"></div>
               <div id="wil-field" class="wl-f hidden"></div>
             </div>
             <div class="card">
@@ -2448,6 +2465,7 @@
               <span class="dfv ph">All</span><label class="dflab">Date created</label><span class="mi df-trail">expand_more</span></div></div>
             <md-button variant="text" id="loc-clear" icon="filter_alt_off">Reset</md-button>
             <span class="grow"></span>
+            <button type="button" class="dup-chip hidden" id="loc-dupf" data-tip="Same name and wilayah as another location"><span class="mi">content_copy</span>Possible duplicates <b id="loc-dupn">0</b></button>
             <md-segmented-button id="loc-filter"><button data-value="all" selected>All</button><button data-value="draft">Draft</button><button data-value="selesai">Done</button></md-segmented-button>
           </div>
           <div class="loc-tw"><table><thead><tr><th class="bk-col"><span class="bk-ck" id="bkAll" data-tip="Select all shown"></span></th><th>Code</th><th>Location</th><th>Created by</th><th>Created</th><th>Last modified</th><th>Modified by</th><th>INV</th><th>Photos</th><th>Status</th><th>Completeness</th><th></th></tr></thead><tbody id="loc-table"></tbody></table></div>
@@ -2594,7 +2612,7 @@
               <p class="muted" style="margin:0 0 12px">Upload a list of locations + inventory from Excel. Unique codes are generated automatically on import.</p>
               <div class="rowflex" style="gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px">
                 <md-button id="imp-tpl" variant="tonal" icon="download">Download Template</md-button>
-                <span class="muted" style="margin:0">2 sheets: <b>Locations</b> &amp; <b>Inventory</b> (linked by the <span class="mono">ref</span> column).</span>
+                <span class="muted" style="margin:0">2 sheets: <b>Locations</b> &amp; <b>Inventory</b> (linked by the <span class="mono">ref</span> column). Optional <b>Owner</b> column: username or full name — empty = you.</span>
               </div>
               <input type="file" id="imp-file" accept=".xlsx" class="hidden">
               <div class="drop" id="imp-drop" style="cursor:pointer"><span class="mi">cloud_upload</span>
@@ -2603,7 +2621,7 @@
             </div>
             <div class="card hidden" id="imp-preview-card" style="margin-top:16px">
               <div class="sec"><span class="mi acc">fact_check</span><h3 style="font-size:16px">Preview <span style="font-weight:500;color:var(--md-sys-color-on-surface-variant);font-size:13px">· not saved yet</span></h3></div>
-              <table><thead><tr><th>#</th><th>Location</th><th>Items</th><th class="imp-wcol">Wilayah</th><th>Status</th></tr></thead><tbody id="imp-ptable"></tbody></table>
+              <table><thead><tr><th>#</th><th>Location</th><th class="imp-ocol">Owner</th><th>Items</th><th class="imp-wcol">Wilayah</th><th>Status</th></tr></thead><tbody id="imp-ptable"></tbody></table>
             </div>
           </div>
         </div>
@@ -4835,8 +4853,24 @@ async function openLoc(id){S.loc=await api('/api/locations/'+id);
   $('#entry-empty').classList.add('hidden');$('#entry-form').classList.remove('hidden');
   updateLocNav();
   renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();renderScan();renderWil();
-  entryDirty=false;asReset();
+  entryDirty=false;asReset();S.dupHits=[];S.dupOk=false;dupCheck();
   requestAnimationFrame(()=>revealCards($('#v-entry')));}
+/* Lokasi kembar: nama + wilayah sama dengan lokasi lain → peringatan (tidak memblokir simpan) */
+let _dupT=0,_dupSeq=0;
+function dupSoon(){clearTimeout(_dupT);_dupT=setTimeout(dupCheck,600);}
+async function dupCheck(){const el=$('#dupWarn');if(!el||!S.loc)return;const seq=++_dupSeq;
+  const nmEl=$('[data-lf="nama_lokasi"]'),name=((nmEl&&nmEl.value)||(S.loc.data&&S.loc.data.nama_lokasi)||S.loc.name||'').trim();
+  const w=(WIL.on()&&S.loc.wilayah)||{};
+  if(!name){S.dupHits=[];el.classList.add('hidden');return;}
+  let r;try{r=await api(`/api/locations/dups?name=${encodeURIComponent(name)}&desa=${encodeURIComponent(w.desa||'')}&kec=${encodeURIComponent(w.kec||'')}&kab=${encodeURIComponent(w.kab||'')}&exclude=${S.loc.id||0}`);}catch(e){return;}
+  if(seq!==_dupSeq)return;S.dupHits=r.rows||[];
+  if(!S.dupHits.length){el.classList.add('hidden');el.innerHTML='';return;}
+  const h0=S.dupHits[0],place=w.desa?` in <b>${esc(w.desa)}</b>${w.kec||w.kab?` (${esc([w.kec,w.kab].filter(Boolean).join(', '))})`:''}`:'';
+  el.innerHTML=`<span class="mi">content_copy</span><div>This looks like a location that already exists: <b>${esc(h0.name)}</b>${place}
+    <span class="l2">${S.dupHits.map(x=>`<span class="mono">${esc(x.code)}</span> · owner ${esc(x.owner_name)} · ${esc(x.status)} <a data-open="${x.id}">Open</a>`).join(' &nbsp;·&nbsp; ')}</span>
+    <span class="l2">Different place with the same name? You can keep saving; Finish BAA will ask once.</span></div>`;
+  el.classList.remove('hidden');
+  el.querySelectorAll('[data-open]').forEach(a=>a.onclick=async()=>{if(entryDirty&&!roActive()){await saveEntry(false);}openLoc(+a.dataset.open);});}
 /* Read-only bila viewer, atau operator membuka lokasi milik user lain (boleh lihat,
    tak boleh edit). Field dikunci + tombol tulis disembunyikan (class .ro). */
 function lockEntry(){
@@ -5425,11 +5459,17 @@ async function _saveEntry(finish){try{
   const id=S.loc.id;await openLoc(id);refreshPicker();loadLocations();
   if(status==='selesai'&&!was)nextDraft(id);
   return true;}catch(e){toast('Failed: '+e.message);return false;}}
-$('#save-btn').addEventListener('click',()=>saveEntry(true));
+$('#save-btn').addEventListener('click',()=>{
+  const hits=S.dupHits||[],ec=S.loc?entryCalc(computeState()):null;
+  if(hits.length&&!S.dupOk&&S.loc&&S.loc.status!=='selesai'&&ec&&ec.pct>=100){
+    const w=(S.loc.wilayah)||{},nm=(collectData().nama_lokasi||'').trim();
+    confirmDo('Possible duplicate location',`<b>${esc(nm)}</b>${w.desa?` in <b>${esc(w.desa)}</b>`:''} already exists as ${hits.map(x=>`<span class="mono">${esc(x.code)}</span> (owner ${esc(x.owner_name)}, ${esc(x.status)})`).join(' and ')}.<br><br>Finish this BAA anyway? If it's the same place, open the existing one instead and delete this draft.`,
+      ()=>{S.dupOk=true;saveEntry(true);},{okLabel:'Finish anyway'});return;}
+  saveEntry(true);});
 /* ===== Auto-save draft: data lokasi, wilayah, inventory tersimpan ±1 dtk setelah berhenti mengetik ===== */
 const AS={t:0,busy:null,again:false,at:0,err:''};
 function asOn(){return !!(S.loc&&S.loc.status!=='selesai'&&S.loc.can_edit!==false&&!roActive()&&!frozenRO()&&S.user&&S.user.role!=='viewer');}
-function markEntry(){if(!S.loc)return;entryDirty=true;$('#nextDraft').classList.add('hidden');
+function markEntry(){if(!S.loc)return;entryDirty=true;$('#nextDraft').classList.add('hidden');dupSoon();
   if(asOn()){clearTimeout(AS.t);AS.t=setTimeout(asRun,1000);}asPaint();}
 function asReset(){clearTimeout(AS.t);AS.t=0;AS.at=0;AS.err='';$('#nextDraft').classList.add('hidden');asPaint();}
 async function asRun(){clearTimeout(AS.t);AS.t=0;
@@ -5503,10 +5543,14 @@ function fetchLocPage(page){
   const cr=(locCreatorSel&&locCreatorSel.getValue())||'';const ow=(locOwnerSel&&locOwnerSel.getValue())||'';
   const dt=($('#loc-date').value||'').trim();
   const wl=WIL.on()&&locWilSel?locWilSel.getValue()||'':'';
-  return api(`/api/locations?page=${page}&size=${LOC_SIZE}&q=${q}&status=${st}&creator=${cr||0}&owner=${ow||0}&date=${encodeURIComponent(dt)}&wil=${encodeURIComponent(wl)}`);
+  return api(`/api/locations?page=${page}&size=${LOC_SIZE}&q=${q}&status=${st}&creator=${cr||0}&owner=${ow||0}&dup=${S.locDup?1:0}&date=${encodeURIComponent(dt)}&wil=${encodeURIComponent(wl)}`);
 }
 async function loadLocations(){LOC_PAGE=1;wilRegions();const r=await fetchLocPage(1);
-  LOC_ROWS=r.rows||[];LOC_TOTAL=r.total||0;renderLocTable();}
+  LOC_ROWS=r.rows||[];LOC_TOTAL=r.total||0;renderLocTable();dupChip(r.dup_total||0);}
+/* Location Log (admin): tombol "Possible duplicates" = filter lokasi dengan nama + wilayah sama */
+function dupChip(n){const c=$('#loc-dupf');if(!c)return;const adm=S.user&&S.user.role==='admin';
+  c.classList.toggle('hidden',!adm||(!n&&!S.locDup));c.classList.toggle('on',!!S.locDup);$('#loc-dupn').textContent=n;}
+$('#loc-dupf')&&$('#loc-dupf').addEventListener('click',()=>{S.locDup=!S.locDup;BK.clear();loadLocations();});
 async function loadMoreLoc(){LOC_PAGE++;const r=await fetchLocPage(LOC_PAGE);
   LOC_ROWS=LOC_ROWS.concat(r.rows||[]);LOC_TOTAL=r.total||0;renderLocTable();}
 function renderLocTable(){
@@ -5515,7 +5559,7 @@ function renderLocTable(){
     const stCls=l.status==='selesai'?'ok':'warn';
     const wl=wilCell(l);
     return `<tr class="lrow" data-i="${l.id}" onclick='openLocDrawer(${l.id})'><td class="bk-col" onclick="bkTog(event,${l.id})"><span class="bk-ck${BK.has(l.id)?' on':''}" data-id="${l.id}"></span></td><td><a class="loc-link mono">${esc(l.code)}</a></td>
-    <td>${esc(l.data.nama_lokasi||l.name||'')}${wl}</td>
+    <td>${esc(l.data.nama_lokasi||l.name||'')}${l.dup_n>1?`<span class="dup-kb" data-tip="Same name and wilayah as ${l.dup_n-1} other location${l.dup_n>2?'s':''}"><span class="mi">content_copy</span>×${l.dup_n}</span>`:''}${wl}</td>
     <td>${esc(l.creator_name||'—')}${l.owner_id&&l.owner_id!==l.created_by?`<div class="lc-own" data-tip="Current owner (can edit)"><span class="mi">swap_horiz</span>${esc(l.owner_name||'—')}</div>`:''}</td>
     <td class="lc-date">${lcWhen(l.created_at)}</td>
     <td class="lc-date">${lcWhen(l.modified_at)}</td>
@@ -5801,7 +5845,7 @@ function locDateSet(iso){const hid=$('#loc-date');hid.value=iso||'';const v=$('#
   $('#loc-date-field').classList.toggle('filled',!!iso);$('#loc-date-field').classList.toggle('active',!!iso);}
 window.dpOpenFilter=el=>{DP.open(el,$('#loc-date').value||'',iso=>{locDateSet(iso);loadLocations();});};
 $('#loc-clear').addEventListener('click',()=>{$('#loc-search').value='';locDateSet('');
-  locCreatorSel&&locCreatorSel.setValue('');locOwnerSel&&locOwnerSel.setValue('');locWilSel&&locWilSel.setValue('');S.locFilter='all';
+  locCreatorSel&&locCreatorSel.setValue('');locOwnerSel&&locOwnerSel.setValue('');locWilSel&&locWilSel.setValue('');S.locFilter='all';S.locDup=false;
   const seg=$('#loc-filter');seg&&seg.querySelectorAll('button').forEach(b=>b.toggleAttribute('selected',b.dataset.value==='all'));
   loadLocations();});
 $('#loc-more-btn').addEventListener('click',loadMoreLoc);
@@ -5862,8 +5906,8 @@ window.purgeLoc=async(id,code)=>{if(!confirm('Delete '+code+' permanently?\nData
   try{await api('/api/locations/'+id+'/purge',{method:'DELETE'});toast(code+' permanently deleted');loadTrash();}catch(e){toast('Failed: '+e.message);}};
 
 /* ===== Import Lokasi (Excel) — admin ===== */
-let IMP={file:null,res:null,ch:{}};
-function loadImport(){IMP={file:null,res:null,ch:{}};
+let IMP={file:null,res:null,ch:{},own:{}};
+function loadImport(){IMP={file:null,res:null,ch:{},own:{}};
   const f=$('#imp-file');if(f)f.value='';$('#imp-fname').textContent='No file selected';
   $('#imp-preview-card').classList.add('hidden');$('#imp-commit').setAttribute('disabled','');
   ['imp-s1','imp-s2','imp-s3','imp-s4'].forEach(id=>$('#'+id).classList.remove('on','done'));
@@ -5875,7 +5919,7 @@ $('#imp-file')&&$('#imp-file').addEventListener('change',async e=>{const f=e.tar
   $('#imp-fname').innerHTML='<b>'+esc(f.name)+'</b>';$('#imp-s2').classList.add('done');$('#imp-s2sub').textContent=f.name;await impPreview();});
 async function impPreview(){const fd=new FormData();fd.append('file',IMP.file);
   try{const r=await fetch('/api/locations/import/preview',{method:'POST',credentials:'same-origin',body:fd});
-    if(!r.ok)throw new Error((await r.json()).detail||'Failed to read file');IMP.res=await r.json();IMP.ch={};renderImp();}
+    if(!r.ok)throw new Error((await r.json()).detail||'Failed to read file');IMP.res=await r.json();IMP.ch={};IMP.own={};renderImp();}
   catch(e){toast('Failed: '+e.message);}}
 function renderImp(){const res=IMP.res;if(!res)return;const s=res.summary;
   $('#imp-preview-card').classList.remove('hidden');
@@ -5883,15 +5927,32 @@ function renderImp(){const res=IMP.res;if(!res)return;const s=res.summary;
   const pct=s.total?Math.round(s.ready/s.total*100):0;$('#imp-pct').textContent=pct+'% ('+s.ready+'/'+s.total+')';
   $('#imp-ring').style.strokeDashoffset=(100.5*(1-pct/100)).toFixed(1);
   const wc=!!s.wil_cols;$$('.imp-wcol').forEach(x=>x.style.display=wc?'':'none');
+  const oc=!!s.own_col;$$('.imp-ocol').forEach(x=>x.style.display=oc?'':'none');
+  const own=Object.entries(s.owners||{}).map(([n,c])=>esc(n)+' '+c).join(' · ');
   $('#imp-mini').innerHTML=[['location_on',s.ready+' locations'],['inventory_2',s.items+' items'],['error',s.errors+' errors'],['content_copy',s.dup+' duplicates']]
     .concat(wc?[['task_alt',s.wil_ok+' wilayah ✓'],['edit_location_alt',s.wil_manual+' desa manual'],['help',s.wil_check+' to check']]:[])
+    .concat(oc?[['group',own||'no owners matched'],['admin_panel_settings','you '+s.own_me]].concat(s.own_check?[['person_off',s.own_check+' check owner']]:[]):[])
     .map(([i,t])=>`<div style="display:flex;align-items:center;gap:6px"><span class="mi" style="font-size:15px;color:var(--md-sys-color-primary)">${i}</span>${t}</div>`).join('');
-  $('#imp-ptable').innerHTML=res.locations.map(l=>{const st=l.errors.length?`<span class="loc-st warn">${esc(l.errors[0])}</span>`:(l.dup?'<span class="loc-st warn">Duplicate</span>':'<span class="loc-st ok">OK</span>');
-    return `<tr${l.errors.length?' style="background:color-mix(in srgb,var(--md-sys-color-error) 7%,transparent)"':''}><td>${l.row}</td><td>${esc(l.nama||'(empty)')}</td><td>${l.inventory.length}</td>${wc?`<td>${impWil(l)}</td>`:''}<td>${st}</td></tr>`;}).join('')
-    ||'<tr><td colspan="4" class="muted">No rows</td></tr>';
+  // status: kembar dihitung dari nama + wilayah (ke project & ke baris sebelumnya di file)
+  const stOf=l=>l.errors.length?`<span class="loc-st warn">${esc(l.errors[0])}</span>`
+    :l.dup_of?`<span class="loc-st warn">Already in project</span><span class="imp-sub">${esc(l.dup_of.code)}${l.dup_of.desa?' · '+esc(l.dup_of.desa):''} · owner ${esc(l.dup_of.owner)}</span>`
+    :l.dup_file?`<span class="loc-st warn">Duplicate in file</span><span class="imp-sub">same name &amp; wilayah as row ${l.dup_file}</span>`
+    :(oc&&['unknown','viewer','inactive'].includes(l.owner.status))?'<span class="loc-st warn">Check owner</span>'
+    :`<span class="loc-st ok">OK</span>${l.same_name?`<span class="imp-sub">same name as ${esc(l.same_name.code)}, other wilayah</span>`:''}`;
+  $('#imp-ptable').innerHTML=res.locations.map(l=>`<tr${l.errors.length?' style="background:color-mix(in srgb,var(--md-sys-color-error) 7%,transparent)"':''}><td>${l.row}</td><td>${esc(l.nama||'(empty)')}</td>${oc?`<td>${impOwn(l)}</td>`:''}<td>${l.inventory.length}</td>${wc?`<td>${impWil(l)}</td>`:''}<td>${stOf(l)}</td></tr>`).join('')
+    ||'<tr><td colspan="6" class="muted">No rows</td></tr>';
+  $$('#imp-ptable select[data-own]').forEach(sel=>sel.addEventListener('change',()=>{IMP.own[sel.dataset.own]=sel.value;}));
   $('#imp-commit').toggleAttribute('disabled', s.ready<=0);
   $$('#imp-ptable select[data-row]').forEach(sel=>sel.addEventListener('change',()=>{const v=sel.value;
     IMP.ch[sel.dataset.row]=v==='manual'?{manual:1}:v?{kode:v}:{empty:1};}));}
+/* Pemilik per baris import: ✓ user cocok · kosong = admin pengimport · ✗ perlu dipilih (tidak dikenal / viewer / nonaktif) */
+function impOwn(l){const o=l.owner||{status:'empty'};
+  if(o.status==='ok')return `<span class="imp-own ok"><span class="mi">person</span>${esc(o.name)}</span>`;
+  if(o.status==='empty')return `<span class="imp-own me"><span class="mi">admin_panel_settings</span>${esc((S.user&&(S.user.full_name||S.user.username))||'You')}</span><span class="imp-sub">empty → you</span>`;
+  const why={unknown:'Unknown user',viewer:"Viewer can't own locations",inactive:'Inactive user'}[o.status]||'';
+  const cur=IMP.own[l.row]||'';
+  const opts=`<option value="">Make it mine</option>`+trTargets().filter(u=>u.id!==(S.user&&S.user.id)).map(u=>`<option value="${u.id}" ${cur===String(u.id)?'selected':''}>${esc(u.full_name||u.username)}</option>`).join('');
+  return `<span class="imp-own bad"><span class="mi">person_off</span>${esc(o.raw)}</span><span class="imp-sub bad">${why}</span><select class="imp-ownsel" data-own="${l.row}">${opts}</select>`;}
 /* Wilayah per baris import: ✓ cocok · Desa manual · perlu dipilih (ambigu / tidak ditemukan) */
 function impWil(l){const w=l.wil;if(!w||w.status==='empty')return '<span class="muted">—</span>';
   const raw=w.raw||{},txt=[raw.desa,raw.kec,raw.kab,raw.prov].filter(Boolean).map(esc).join(' · ');
@@ -5902,7 +5963,7 @@ function impWil(l){const w=l.wil;if(!w||w.status==='empty')return '<span class="
     +(raw.desa&&raw.kec&&raw.kab&&raw.prov?`<option value="manual" ${cur==='manual'?'selected':''}>Save as written (manual · unverified)</option>`:'');
   return `<div class="imp-wil"><span class="wchip chk">${w.status==='ambiguous'?'? Pick one':'✗ Not found'}</span><span class="w">${txt} — ${esc(w.msg||'')}</span><select data-row="${l.row}">${opts}</select></div>`;}
 $('#imp-commit')&&$('#imp-commit').addEventListener('click',async()=>{if(!IMP.file)return;
-  const fd=new FormData();fd.append('file',IMP.file);fd.append('skip_dup',$('#imp-skipdup').checked?'true':'false');fd.append('wil_choices',JSON.stringify(IMP.ch||{}));
+  const fd=new FormData();fd.append('file',IMP.file);fd.append('skip_dup',$('#imp-skipdup').checked?'true':'false');fd.append('wil_choices',JSON.stringify(IMP.ch||{}));fd.append('owner_choices',JSON.stringify(IMP.own||{}));
   $('#imp-commit').setAttribute('disabled','');
   try{const r=await fetch('/api/locations/import/commit',{method:'POST',credentials:'same-origin',body:fd});
     if(!r.ok)throw new Error((await r.json()).detail||'Failed');const res=await r.json();

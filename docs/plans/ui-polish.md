@@ -297,8 +297,8 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 | 19-1 | Perbaiki menu kedua yang langsung tertutup ("Transfer to…", "Move category") | ✅ dipasang |
 | 19-2 | Transfer massal + filter Owner + tombol saran Dashboard | ✅ dipasang |
 | 19-3 | Kolom Owner di Location Log | ✅ dipasang |
-| 20 | Import: kolom Owner di template + tandai nama dobel di file (20b) | menunggu "gas" |
-| 21 | Peringatan lokasi kembar (nama + wilayah) di Entry, Log, Import | menunggu keputusan |
+| 20 | Import: kolom Owner di template + tandai nama dobel di file (20b) | ✅ dipasang |
+| 21 | Peringatan lokasi kembar (nama + wilayah) di Entry, Log, Import | ✅ dipasang |
 | — | Build Windows: perubahan sejak build #24 (foto tajam & nama file download, peta Gabungan) belum di-build; ketajaman PDF perlu dicek dari build | menunggu "build" |
 | — | Request ganda `dash/today` di Dashboard admin (pra-ada) | ditawarkan, belum dijawab |
 
@@ -339,3 +339,10 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - **Import:** cek duplikat (ke data project dan di dalam file, 20b) memakai kunci yang sama; nama sama di desa berbeda tidak lagi dianggap duplikat.
 
 **Mockup 20 / 20b / 21 (2026-10-17):** https://claude.ai/artifact/VWV3bCZkUnspewihuGr2zy — screenshot aplikasi asli + perubahan dicoba sementara di browser: template dengan kolom Owner; preview import dengan kolom Owner (✓ user · kosong = admin · ✗ tidak dikenal / viewer + pilihan "Make it mine"), status "Duplicate in file" / "Already in project" / OK untuk nama sama di wilayah lain, ringkasan per pemilik; BAA Entry peringatan kembar + tautan Open; dialog Finish "Possible duplicate location"; Location Log tombol "Possible duplicates N" + label per baris. Menunggu "gas".
+
+## 20 & 21 dipasang ("gas", 2026-10-17)
+- Kunci kembar bersama (`dup_key` di `app/routers/locations.py`): nama dinormalisasi (huruf kecil, tanda baca/spasi) + desa|kecamatan|kab/kota tanpa awalan "Kab./Kec./Desa". Nama sama di wilayah lain bukan kembar; tanpa wilayah = dibandingkan dengan yang juga tanpa wilayah.
+- **Import (20/20b):** template punya kolom **Owner**; preview: kolom Owner (✓ user · kosong = admin pengimport · ✗ unknown/viewer/inactive + dropdown "Make it mine" / user lain), status "Already in project" (kode · desa · pemilik), "Duplicate in file" (baris N), "OK · same name as X, other wilayah", "Check owner"; ringkasan per pemilik. Commit: pemilik = pilihan admin > Owner yang cocok > admin; Created by tetap admin. "Skip duplicates" juga melewati dobel di file.
+- **BAA Entry (21):** `GET /api/locations/dups` → kotak peringatan di bawah field lokasi (kode · pemilik · status · Open), dicek ulang 0,6 dtk setelah nama/wilayah berubah; admin & operator. Finish BAA: dialog "Possible duplicate location" sekali per lokasi ("Finish anyway").
+- **Location Log (21):** tombol **Possible duplicates N** (admin) = filter `dup=1`; label ×N di baris kembar (semua user); Reset mematikan filter.
+- Diuji Playwright (salinan data demo, terang & gelap, admin & operator): preview 7 baris sesuai mockup; import membuat 5 lokasi (2 dobel dilewati) dengan pemilik Sari/Budi/Rina/Dewi (dipilih)/Administrator; peringatan Entry muncul, hilang saat nama diubah, muncul lagi saat dikembalikan; dialog Finish muncul; filter Log 8 lokasi (termasuk 3 kelompok kembar yang memang ada di data demo: LOK_00011/79/80, LOK_00071–73, LOK_00030/32); tanpa error JS.

@@ -18,7 +18,7 @@ import re
 from .. import db
 from ..deps import audit, get_db, require_admin
 from ..services import wilayah
-from .locations import _format_code, _wil_values, _WIL_SET
+from .locations import _format_code, _row_name, _wil_values, _WIL_SET, dup_key
 
 router = APIRouter(prefix="/api/locations/import", tags=["locations-import"])
 
@@ -26,6 +26,10 @@ INV_COLS = ["nama_barang", "merk_type", "jumlah", "sn_tagging", "keterangan"]
 # Kolom wilayah (bila fitur wilayah aktif di project): judul template + pengenal judul
 WIL_COLS = [("kode", "Kode Wilayah", r"kode\s*wilayah|kode\s*desa"), ("desa", "Desa/Kelurahan", r"desa|kelurahan"), ("kec", "Kecamatan", r"kecamatan|\bkec\b"),
             ("kab", "Kab/Kota", r"kabupaten|\bkab\b|kota"), ("prov", "Provinsi", r"provinsi|propinsi|\bprov\b")]
+
+
+# Kolom pemilik (opsional): username atau nama lengkap user project; kosong = admin pengimport
+OWNER_RX = r"owner|pemilik|operator"
 
 
 def _wil_on(conn) -> bool:
@@ -65,7 +69,7 @@ def template(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_ad
     ws = wb.active
     ws.title = "Lokasi"
     wcols = [w[1] for w in WIL_COLS[1:]] + [WIL_COLS[0][1]] if _wil_on(conn) else []
-    ws.append(["ref"] + [(_norm(f.get("label")) or f.get("key")) for f in fields] + wcols)
+    ws.append(["ref"] + [(_norm(f.get("label")) or f.get("key")) for f in fields] + wcols + ["Owner"])
     ex = ["L1"]
     for f in fields:
         if f.get("key") == "nama_lokasi":
@@ -76,6 +80,7 @@ def template(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_ad
             ex.append("")
     if wcols:
         ex += ["Cibodas", "Lembang", "Kab. Bandung Barat", "Jawa Barat", ""]
+    ex.append("")                         # Owner: username / nama lengkap, kosong = admin pengimport
     ws.append(ex)
     wi = wb.create_sheet("Inventory")
     wi.append(["ref"] + INV_COLS)
@@ -110,13 +115,15 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
     if not rows:
         return {"locations": [], "summary": {"total": 0, "ready": 0, "items": 0, "errors": 0, "dup": 0}}
     header = [_norm(h) for h in rows[0]]
-    col_field, ref_idx, wil_idx = {}, None, {}
+    col_field, ref_idx, wil_idx, own_idx = {}, None, {}, None
     for idx, h in enumerate(header):
         hl = h.lower()
         if hl == "ref":
             ref_idx = idx
         elif hl in label_to_field:
             col_field[idx] = label_to_field[hl]
+        elif own_idx is None and re.search(OWNER_RX, hl):
+            own_idx = idx
         elif _wil_on(conn):
             for key, _lab, rx in WIL_COLS:
                 if key not in wil_idx.values() and re.search(rx, hl) and not (key == "kab" and "kode" in hl):
@@ -151,19 +158,38 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
                 return o
         return val
 
-    # Nama lokasi yang sudah ada (untuk deteksi duplikat)
-    existing = set()
-    for r in conn.execute("SELECT name, data_json FROM locations WHERE deleted_at IS NULL"):
-        nm = _norm(r["name"])
-        if not nm:
-            try:
-                nm = _norm((json.loads(r["data_json"]) or {}).get("nama_lokasi"))
-            except Exception:
-                nm = ""
-        if nm:
-            existing.add(nm.lower())
+    # Lokasi yang sudah ada: kunci kembar = nama + wilayah (nama sama di desa lain bukan duplikat)
+    existing, by_name = {}, {}
+    for r in conn.execute(
+            """SELECT l.code, l.name, l.data_json, l.wil_desa, l.wil_kec, l.wil_kab,
+                      COALESCE(NULLIF(TRIM(o.full_name),''), o.username, '—') AS owner_name
+               FROM locations l LEFT JOIN users o ON o.id = l.owner_id WHERE l.deleted_at IS NULL ORDER BY l.id"""):
+        nm = _row_name(r)
+        info = {"code": r["code"], "desa": r["wil_desa"] or "", "owner": r["owner_name"]}
+        k = dup_key(nm, r["wil_desa"], r["wil_kec"], r["wil_kab"])
+        if k:
+            existing.setdefault(k, info)
+            by_name.setdefault(k.split("#")[0], info)
+    # User project untuk kolom Owner (username / nama lengkap, tidak peka huruf besar/kecil)
+    users = {}
+    for u in conn.execute("SELECT id, username, full_name, role, active FROM pm_users"):
+        for key in {(u["username"] or "").strip().lower(), (u["full_name"] or "").strip().lower()} - {""}:
+            users.setdefault(key, u)
 
-    out, seen_ref = [], {}
+    def owner_of(raw: str) -> dict:
+        if not raw:
+            return {"status": "empty", "raw": ""}
+        u = users.get(raw.lower())
+        if not u:
+            return {"status": "unknown", "raw": raw}
+        name = (u["full_name"] or u["username"]).strip()
+        if not u["active"]:
+            return {"status": "inactive", "raw": raw, "name": name}
+        if u["role"] == "viewer":
+            return {"status": "viewer", "raw": raw, "name": name}
+        return {"status": "ok", "raw": raw, "id": u["id"], "name": name}
+
+    out, seen_ref, seen_key = [], {}, {}
     for ri, r in enumerate(rows[1:], start=2):
         if r is None or all(_norm(c) == "" for c in r):
             continue
@@ -197,10 +223,26 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
             wil = wilayah.match(wv.get("desa", ""), wv.get("kec", ""), wv.get("kab", ""), wv.get("prov", ""),
                                 wv.get("kode", ""))
             wil["raw"] = {k: wv.get(k, "") for k in ("desa", "kec", "kab", "prov")}
+        # kembar: ke lokasi project & ke baris sebelumnya di file yang sama (nama + wilayah)
+        ww = (wil.get("wil") if wil and wil.get("status") in ("ok", "desa_manual") else None) or (wil or {}).get("raw") or {}
+        k = dup_key(nama, ww.get("desa", ""), ww.get("kec", ""), ww.get("kab", ""))
+        dup_of = existing.get(k) if k else None
+        dup_file = seen_key.get(k) if (k and not dup_of) else None
+        if k and not errors:
+            seen_key.setdefault(k, ri)
+        same_name = None
+        if k and not dup_of and not dup_file:
+            same_name = by_name.get(k.split("#")[0])
+        own = owner_of(_norm(r[own_idx]) if (own_idx is not None and own_idx < len(r)) else "")
         out.append({"row": ri, "nama": nama, "data": data, "inventory": inv,
-                    "errors": errors, "dup": nama.lower() in existing, "wil": wil})
+                    "errors": errors, "dup": bool(dup_of or dup_file), "dup_of": dup_of, "dup_file": dup_file,
+                    "same_name": same_name, "wil": wil, "owner": own})
 
     ok_rows = [x for x in out if not x["errors"]]
+    owners: dict[str, int] = {}
+    for x in ok_rows:
+        if x["owner"]["status"] == "ok":
+            owners[x["owner"]["name"]] = owners.get(x["owner"]["name"], 0) + 1
     return {"locations": out, "summary": {
         "total": len(out),
         "ready": len(ok_rows),
@@ -211,6 +253,9 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
         "wil_ok": sum(1 for x in ok_rows if x["wil"] and x["wil"]["status"] == "ok"),
         "wil_manual": sum(1 for x in ok_rows if x["wil"] and x["wil"]["status"] == "desa_manual"),
         "wil_check": sum(1 for x in ok_rows if x["wil"] and x["wil"]["status"] in ("ambiguous", "notfound")),
+        "own_col": own_idx is not None, "owners": owners,
+        "own_me": sum(1 for x in ok_rows if x["owner"]["status"] == "empty"),
+        "own_check": sum(1 for x in ok_rows if x["owner"]["status"] in ("unknown", "viewer", "inactive")),
     }}
 
 
@@ -222,6 +267,7 @@ async def preview(file: UploadFile = File(...), conn: sqlite3.Connection = Depen
 
 @router.post("/commit")
 async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True), wil_choices: str = Form("{}"),
+                 owner_choices: str = Form("{}"),
                  conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
     """wil_choices: {baris: {"kode": desa resmi} | {"manual": 1} | {}}. Baris wilayah yang perlu dicek
     tanpa pilihan disimpan TANPA wilayah (tidak ada penyimpanan diam-diam)."""
@@ -230,17 +276,27 @@ async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True), wil_
         choices = {str(k): v for k, v in (json.loads(wil_choices or "{}") or {}).items()}
     except Exception:
         choices = {}
+    try:
+        own_ch = {str(k): v for k, v in (json.loads(owner_choices or "{}") or {}).items()}
+    except Exception:
+        own_ch = {}
+    # pemilik yang boleh dipilih: user project aktif, bukan viewer
+    can_own = {r["id"] for r in conn.execute("SELECT id FROM pm_users WHERE active=1 AND role<>'viewer'")}
     created = skipped = 0
     now = db.now_iso()
     for loc in res["locations"]:
         if loc["errors"] or (loc["dup"] and skip_dup):
             skipped += 1
             continue
+        # pemilik: pilihan admin di preview > kolom Owner yang cocok > admin pengimport; created_by tetap admin
+        ch = own_ch.get(str(loc["row"]))
+        owner = int(ch) if str(ch or "").isdigit() and int(ch) in can_own else (
+            loc["owner"]["id"] if loc["owner"]["status"] == "ok" and ch is None else user["id"])
         cur = conn.execute(
             "INSERT INTO locations(code,name,data_json,status,created_by,owner_id,created_at,updated_at) "
             "VALUES(?,?,?,?,?,?,?,?)",
             ("", loc["nama"], json.dumps(loc["data"], ensure_ascii=False), "draft",
-             user["id"], user["id"], now, now),
+             user["id"], owner, now, now),
         )
         lid = cur.lastrowid
         conn.execute("UPDATE locations SET code=?, modified_at=?, modified_by=? WHERE id=?",

@@ -1,6 +1,7 @@
 """Lokasi (BAA per lokasi) + item inventory."""
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import sqlite3
@@ -80,6 +81,53 @@ def _wil_values(w: dict | None, kode: str | None = None):
             t["prov"] or off["prov"], mode)
 
 
+_WIL_PREFIX = re.compile(r"^(kabupaten|kab|kota|kecamatan|kec|desa|kelurahan|kel)\b\s*")
+
+
+def _norm_txt(s: str, prefix: bool = False) -> str:
+    """Huruf kecil, tanda baca jadi spasi, spasi dirapatkan (opsional buang 'Kab.'/'Kec.'/'Desa')."""
+    s = re.sub(r"[^\w]+", " ", str(s or "").lower()).strip()
+    s = re.sub(r"\s+", " ", s)
+    return _WIL_PREFIX.sub("", s).strip() if prefix else s
+
+
+def dup_key(name: str, desa: str = "", kec: str = "", kab: str = "") -> str | None:
+    """Kunci lokasi kembar = nama + wilayah (desa|kec|kab, tanpa awalan). Tanpa nama = tidak dicek.
+    Nama sama di desa lain bukan kembar (mis. 'SD NEGERI 1' wajar ada di banyak desa)."""
+    n = _norm_txt(name)
+    if not n:
+        return None
+    return n + "#" + "|".join(_norm_txt(x, True) for x in (desa, kec, kab))
+
+
+def _row_name(r) -> str:
+    nm = (r["name"] or "").strip()
+    if not nm:
+        try:
+            nm = ((json.loads(r["data_json"]) or {}).get("nama_lokasi") or "").strip()
+        except Exception:
+            nm = ""
+    return nm
+
+
+def dup_groups(conn) -> dict[str, list]:
+    """{kunci: [baris lokasi aktif]} — hanya kunci yang dipakai ≥ 2 lokasi."""
+    g: dict[str, list] = {}
+    for r in conn.execute(
+            """SELECT l.id, l.code, l.name, l.data_json, l.status, l.wil_desa, l.wil_kec, l.wil_kab,
+                      COALESCE(NULLIF(TRIM(o.full_name),''), o.username, '—') AS owner_name
+               FROM locations l LEFT JOIN users o ON o.id = l.owner_id WHERE l.deleted_at IS NULL"""):
+        k = dup_key(_row_name(r), r["wil_desa"], r["wil_kec"], r["wil_kab"])
+        if k:
+            g.setdefault(k, []).append(r)
+    return {k: v for k, v in g.items() if len(v) > 1}
+
+
+def _dup_brief(r) -> dict:
+    return {"id": r["id"], "code": r["code"], "name": _row_name(r), "status": r["status"],
+            "desa": r["wil_desa"] or "", "kab": r["wil_kab"] or "", "owner_name": r["owner_name"]}
+
+
 def _wil_dict(row) -> dict | None:
     if "wil_desa" not in row.keys() or not row["wil_desa"]:
         return None
@@ -155,6 +203,7 @@ def list_locations(
     owner: int = Query(0),            # filter berdasarkan pemilik saat ini (user id); 0 = semua
     date: str = Query(""),            # filter tanggal dibuat (YYYY-MM-DD, waktu lokal)
     wil: str = Query(""),             # filter wilayah: kode provinsi/kab/kec, atau "none" = belum diisi
+    dup: int = Query(0),              # 1 = hanya lokasi yang kemungkinan kembar (nama + wilayah sama)
     conn: sqlite3.Connection = Depends(get_db),
     user=Depends(current_user),
 ):
@@ -186,6 +235,10 @@ def list_locations(
     if wil.strip():
         w, p = wil_where(wil, "l.")
         where.append(w); params += p
+    groups = dup_groups(conn)
+    dup_n = {r["id"]: len(v) for v in groups.values() for r in v}
+    if dup:
+        where.append(f"l.id IN ({','.join(str(i) for i in dup_n) or '0'})")
     wsql = ("WHERE " + " AND ".join(where)) if where else ""
 
     total = conn.execute(
@@ -232,10 +285,11 @@ def list_locations(
             "wil_kode": r["wil_kode"], "wil_desa": r["wil_desa"], "wil_kab": r["wil_kab"] or "",
             "wil_mode": (r["wil_mode"] or ("official" if r["wil_kode"] else None)) if r["wil_desa"] else None,
             "can_delete": is_admin or r["owner_id"] == user["id"],
+            "dup_n": dup_n.get(r["id"], 0),
         }
         for r in rows
     ]
-    return {"rows": result, "total": total, "page": page, "size": size}
+    return {"rows": result, "total": total, "page": page, "size": size, "dup_total": len(dup_n)}
 
 
 @router.get("/creators")
@@ -398,6 +452,24 @@ def transfer_locations(body: TransferIn, conn: sqlite3.Connection = Depends(get_
     audit(conn, user, "transfer", "location", ",".join(map(str, body.ids)),
           f"{n} lokasi -> {name}")
     return {"ok": True, "count": n, "to": {"id": tgt["id"], "name": name}}
+
+
+@router.get("/dups")
+def location_dups(name: str = Query(""), desa: str = Query(""), kec: str = Query(""), kab: str = Query(""),
+                  exclude: int = Query(0), conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
+    """Lokasi lain dengan nama + wilayah yang sama (peringatan di BAA Entry; tidak memblokir simpan)."""
+    k = dup_key(name, desa, kec, kab)
+    if not k:
+        return {"rows": []}
+    out = []
+    for r in conn.execute(
+            """SELECT l.id, l.code, l.name, l.data_json, l.status, l.wil_desa, l.wil_kec, l.wil_kab,
+                      COALESCE(NULLIF(TRIM(o.full_name),''), o.username, '—') AS owner_name
+               FROM locations l LEFT JOIN users o ON o.id = l.owner_id
+               WHERE l.deleted_at IS NULL AND l.id <> ?""", (exclude,)):
+        if dup_key(_row_name(r), r["wil_desa"], r["wil_kec"], r["wil_kab"]) == k:
+            out.append(_dup_brief(r))
+    return {"rows": out}
 
 
 @router.get("/{loc_id}")
