@@ -373,3 +373,125 @@ def _import_wil(w: dict | None, ch: dict):
     except HTTPException:
         return None
     return None
+
+
+# ================= Update SID massal (lokasi yang sudah ada) =================
+# Excel: Kode lokasi -> SID. Hanya MENGISI SID yang masih kosong; SID yang sudah terisi tidak ditimpa
+# (perubahan tetap lewat admin per lokasi / permintaan revisi). Aturan sama dengan isian manual.
+CODE_RX = r"^(kode|code|kode lokasi|location code|kode baa)$"
+
+
+@router.get("/sid-template")
+def sid_template(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    """Daftar semua lokasi aktif (kode, nama, desa, SID saat ini) — admin tinggal mengisi kolom SID."""
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill
+    lab = db.sid_config(conn).get("label") or "SID"
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "SID"
+    ws.append(["Kode", "Nama Lokasi", "Desa/Kelurahan", lab])
+    for c in ws[1]:
+        c.font = Font(bold=True)
+    grey = PatternFill("solid", fgColor="EEEEEE")
+    for r in conn.execute("SELECT code, name, data_json, wil_desa, sid FROM locations WHERE deleted_at IS NULL ORDER BY id"):
+        ws.append([r["code"], _row_name(r), r["wil_desa"] or "", r["sid"] or ""])
+        if r["sid"]:
+            ws.cell(ws.max_row, 4).fill = grey            # sudah terisi: tidak akan ditimpa
+    for col, w in zip("ABCD", (14, 44, 22, 22)):
+        ws.column_dimensions[col].width = w
+    ws.freeze_panes = "A2"
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    pre = (getattr(conn, "project", None) or {}).get("prefix") or "Lokasi"
+    return StreamingResponse(buf, media_type=XLSX_MIME,
+                             headers={"Content-Disposition": f"attachment; filename=Update_{lab}_{pre}.xlsx"})
+
+
+def _sid_parse(conn, data: bytes) -> dict:
+    import openpyxl
+    lab = db.sid_config(conn).get("label") or "SID"
+    try:
+        wb = openpyxl.load_workbook(io.BytesIO(data), data_only=True)
+    except Exception:
+        raise HTTPException(400, "Can't read the file — make sure it's .xlsx")
+    ws = wb["SID"] if "SID" in wb.sheetnames else wb.active
+    rows = list(ws.iter_rows(values_only=True))
+    header = [_norm(h).lower() for h in (rows[0] if rows else [])]
+    ci = next((i for i, h in enumerate(header) if re.search(CODE_RX, h)), None)
+    si = next((i for i, h in enumerate(header) if h == lab.lower() or re.search(SID_RX, h)), None)
+    if ci is None or si is None:
+        raise HTTPException(400, f"The file needs a 'Kode' column and a '{lab}' column — download the list first")
+    locs, by_old = {}, {}
+    for r in conn.execute("SELECT id, code, old_codes, name, data_json, sid FROM locations WHERE deleted_at IS NULL"):
+        locs[r["code"].upper()] = r
+        for o in (r["old_codes"] or "").split():
+            by_old.setdefault(o.upper(), r)
+    out, seen_code, seen_sid = [], {}, {}
+    for ri, r in enumerate(rows[1:], start=2):
+        if r is None or all(_norm(c) == "" for c in r):
+            continue
+        code = _norm(r[ci]) if ci < len(r) else ""
+        sid_in = _sid_raw(r[si]) if si < len(r) else ""
+        loc = locs.get(code.upper()) or by_old.get(code.upper())
+        row = {"row": ri, "code": code, "loc_code": loc["code"] if loc else "", "nama": _row_name(loc) if loc else "",
+               "sid_in": sid_in, "sid": "", "cur": (loc["sid"] or "") if loc else "", "status": "ok", "note": ""}
+        out.append(row)
+        if not sid_in:
+            row["status"] = "empty"
+            continue
+        try:
+            row["sid"] = norm_sid(conn, sid_in)
+        except HTTPException as e:
+            row["status"], row["note"] = "invalid", str(e.detail)
+            continue
+        if not loc:
+            row["status"] = "notfound"
+        elif loc["id"] in seen_code:
+            row["status"], row["note"] = "dup_file", f"same location as row {seen_code[loc['id']]}"
+        elif row["cur"] and row["cur"].upper() == row["sid"].upper():
+            row["status"] = "same"
+        elif row["cur"]:
+            row["status"] = "filled"
+        elif row["sid"].upper() in seen_sid:
+            row["status"], row["note"] = "dup_file", f"same {lab} as row {seen_sid[row['sid'].upper()]}"
+        elif (o := sid_owner(conn, row["sid"], loc["id"])):
+            row["status"], row["note"] = "used", o["code"]
+        if loc:
+            seen_code.setdefault(loc["id"], ri)
+        if row["status"] == "ok":
+            seen_sid[row["sid"].upper()] = ri
+            row["id"] = loc["id"]
+    cnt = {}
+    for x in out:
+        cnt[x["status"]] = cnt.get(x["status"], 0) + 1
+    return {"rows": out, "summary": {"total": len(out), **cnt, "ok": cnt.get("ok", 0)}}
+
+
+@router.post("/sid-preview")
+async def sid_preview(file: UploadFile = File(...), conn: sqlite3.Connection = Depends(get_db),
+                      user=Depends(require_admin)):
+    res = _sid_parse(conn, await file.read())
+    for x in res["rows"]:
+        x.pop("id", None)
+    return res
+
+
+@router.post("/sid-commit")
+async def sid_commit(file: UploadFile = File(...), conn: sqlite3.Connection = Depends(get_db),
+                     user=Depends(require_admin)):
+    res = _sid_parse(conn, await file.read())
+    now, n = db.now_iso(), 0
+    for x in res["rows"]:
+        if x["status"] != "ok":
+            continue
+        # tetap hanya mengisi yang kosong (jaga-jaga diisi orang lain sejak preview)
+        cur = conn.execute("UPDATE locations SET sid=?, updated_at=? WHERE id=? AND (sid IS NULL OR sid='')",
+                           (x["sid"], now, x["id"]))
+        if cur.rowcount:
+            db.log_activity(conn, x["id"], user["id"], "sid", f"— -> {x['sid']} (import)", now)
+            n += 1
+    conn.commit()
+    audit(conn, user, "import_sid", "location", "", f"{n} SID diisi")
+    return {"ok": True, "updated": n, "skipped": res["summary"]["total"] - n}

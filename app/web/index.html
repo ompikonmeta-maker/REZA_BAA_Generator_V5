@@ -303,6 +303,11 @@
   /* SID (identitas lokasi dari klien) */
   .nf-kind{margin-top:6px;font:var(--md-sys-typescale-label-medium)}.nf-kind .mono{font-size:12px;margin-top:2px}.nf-kind s{opacity:.6}
   .nf-why{margin-top:2px;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant);max-width:280px}
+  .sb-sum{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+  .sb-sum>span{display:inline-flex;align-items:center;gap:5px;font:var(--md-sys-typescale-label-medium);font-weight:600;padding:4px 10px;border-radius:99px;background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface-variant)}
+  .sb-sum>span.ok{background:var(--good-bg);color:var(--good)}.sb-sum>span.bad{background:var(--bad-bg);color:var(--bad)}.sb-sum>span .mi{font-size:16px}
+  .sb-tbl{max-height:420px;overflow:auto}
+  .sb-tbl td.mono,.sb-tbl .mono{font-family:ui-monospace,Consolas,monospace}
   .sid-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:start;margin-top:16px}
   .sid-row md-text-field{width:100%}
   .sid-row .sid-acts{display:flex;gap:8px;align-items:center;min-height:56px;flex-wrap:wrap}
@@ -2686,6 +2691,22 @@
                 <div style="margin-top:6px;font-weight:600;color:var(--md-sys-color-on-surface)">Click to pick an .xlsx file</div>
                 <div class="muted" id="imp-fname" style="margin-top:2px">No file selected</div></div>
             </div>
+            <div class="card hidden" id="sidBulk" style="margin-top:16px">
+              <div class="sec"><span class="mi acc">badge</span><h3 id="sbTitle">Update SID in bulk</h3><span class="grow"></span>
+                <span class="code-chip"><span class="mi" style="font-size:15px">admin_panel_settings</span>Admin only</span></div>
+              <p class="muted" id="sbNote" style="margin:0 0 12px"></p>
+              <div class="rowflex" style="gap:12px;flex-wrap:wrap;align-items:center">
+                <md-button id="sb-dl" variant="tonal" icon="download">Download location list</md-button>
+                <md-button id="sb-up" variant="outlined" icon="upload_file">Upload filled list</md-button>
+                <span class="muted" id="sb-fname"></span>
+              </div>
+              <input type="file" id="sb-file" accept=".xlsx" class="hidden">
+              <div id="sbRes" class="hidden" style="margin-top:14px">
+                <div class="sb-sum" id="sbSum"></div>
+                <div class="sb-tbl"><table><thead><tr><th>Row</th><th>Code</th><th>Location</th><th id="sbSidH">SID</th><th>Result</th></tr></thead><tbody id="sbTable"></tbody></table></div>
+                <div class="rowflex" style="margin-top:12px;gap:10px;align-items:center"><md-button id="sb-apply" variant="filled" icon="check">Fill SID</md-button><span class="muted" id="sbApplyNote"></span></div>
+              </div>
+            </div>
             <div class="card hidden" id="imp-preview-card" style="margin-top:16px">
               <div class="sec"><span class="mi acc">fact_check</span><h3 style="font-size:16px">Preview <span style="font-weight:500;color:var(--md-sys-color-on-surface-variant);font-size:13px">· not saved yet</span></h3></div>
               <table><thead><tr><th>#</th><th>Location</th><th class="imp-ocol">Owner</th><th>Items</th><th class="imp-wcol">Wilayah</th><th>Status</th></tr></thead><tbody id="imp-ptable"></tbody></table>
@@ -3868,8 +3889,7 @@ async function sidSave(){const tf=$('#sidInp');if(!tf||!S.loc)return;const v=sid
       const r=await api('/api/locations/'+S.loc.id+'/sid',{method:'PUT',body:JSON.stringify({sid:v})});
       S.loc.sid=r.sid;S.loc.sid_request=r.sid_request;renderSid();updateSummary();renderAtt();refreshPicker();loadLocations();
       toast(v?`${sidLabel()} saved: ${v}`:`${sidLabel()} cleared`);}catch(e){toast('Failed: '+e.message);}};
-  if(!adm&&v)confirmDo(`Save ${sidLabel()}`,`Save <b class="mono">${esc(v)}</b> for this location?<br><br>After saving, changing it needs admin approval.`,go,{okLabel:'Save'});
-  else go();}
+  go();}
 function openSidReq(){const L=S.loc;if(!L)return;const lab=sidLabel();
   $('#sidReqTitle').textContent=`Request ${lab} change`;$('#sidReqCurL').textContent=`Current ${lab}`;
   $('#sidReqLoc').textContent=(L.name||(L.data||{}).nama_lokasi||'')+' · '+L.code;$('#sidReqCur').textContent=L.sid||'';
@@ -6144,7 +6164,42 @@ window.purgeLoc=async(id,code)=>{if(!confirm('Delete '+code+' permanently?\nData
 
 /* ===== Import Lokasi (Excel) — admin ===== */
 let IMP={file:null,res:null,ch:{},own:{}};
-function loadImport(){IMP={file:null,res:null,ch:{},own:{}};
+/* ===== Update SID massal: Excel Kode -> SID untuk lokasi yang sudah ada. Hanya mengisi SID kosong. ===== */
+const SBU={file:null,res:null};
+const SBU_ST={ok:['ok','check_circle','Will be filled'],same:['','check','Already the same'],filled:['','lock','Already has another ID — kept'],
+  empty:['','remove','Empty — skipped'],notfound:['bad','help','Code not found'],invalid:['bad','error','Invalid'],used:['bad','error','Used by'],dup_file:['bad','content_copy','Duplicate in file']};
+function sbuReset(){SBU.file=null;SBU.res=null;const c=$('#sidBulk');if(!c)return;c.classList.toggle('hidden',!sidOn());
+  const lab=esc(sidLabel());$('#sbTitle').textContent=`Update ${sidLabel()} in bulk`;$('#sbSidH').textContent=sidLabel();
+  $('#sbNote').innerHTML=`For locations that already exist: download the list, fill the <b>${lab}</b> column, upload it back. Only empty ${lab}s are filled — ones already filled are never overwritten (change those per location). Same rules: letters &amp; numbers, unique in this project${S.sidCfg.uppercase!==false?', capitals':''}.`;
+  $('#sb-fname').textContent='';$('#sbRes').classList.add('hidden');$('#sb-file').value='';}
+async function sbuPreview(){const fd=new FormData();fd.append('file',SBU.file);
+  try{const r=await fetch('/api/locations/import/sid-preview',{method:'POST',credentials:'same-origin',body:fd});
+    const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.detail||'Failed to read file');SBU.res=d;sbuRender();}
+  catch(e){toast('Failed: '+e.message);$('#sbRes').classList.add('hidden');}}
+function sbuRender(){const res=SBU.res,sm=res.summary,lab=esc(sidLabel());
+  const chip=(k,t)=>sm[k]?`<span class="${SBU_ST[k][0]}"><span class="mi">${SBU_ST[k][1]}</span>${sm[k]} ${t}</span>`:'';
+  $('#sbSum').innerHTML=chip('ok','to fill')+chip('same','already same')+chip('filled','already filled — kept')+chip('empty','empty')
+    +chip('notfound','code not found')+chip('invalid','invalid')+chip('used','used elsewhere')+chip('dup_file','duplicate in file');
+  const rows=res.rows.filter(x=>x.status!=='empty');
+  $('#sbTable').innerHTML=rows.map(x=>{const st=SBU_ST[x.status]||['','',x.status];
+    const up=x.sid&&x.sid_in&&x.sid_in.replace(/\s+/g,'')!==x.sid;
+    const res2=x.status==='used'?`Used by <span class="mono">${esc(x.note)}</span>`:x.status==='filled'?`Has <span class="mono">${esc(x.cur)}</span> — kept`:x.note?esc(x.note):st[2];
+    return `<tr${['notfound','invalid','used','dup_file'].includes(x.status)?' style="background:color-mix(in srgb,var(--md-sys-color-error) 7%,transparent)"':''}><td>${x.row}</td><td class="mono">${esc(x.loc_code||x.code||'—')}</td><td>${esc(x.nama||'')}</td>
+      <td><span class="mono">${esc(x.sid||x.sid_in)}</span>${up?`<span class="imp-sub">typed "${esc(x.sid_in)}" → capitals</span>`:''}</td>
+      <td><span class="loc-st ${x.status==='ok'?'ok':st[0]?'warn':''}">${res2}</span></td></tr>`;}).join('')||`<tr><td colspan="5" class="muted">No ${lab} filled in this file</td></tr>`;
+  $('#sb-apply').toggleAttribute('disabled',!sm.ok);$('#sb-apply').textContent=`Fill ${sm.ok||0} ${sidLabel()}`;
+  $('#sbApplyNote').textContent=sm.ok?'Other rows are skipped.':'Nothing to fill.';
+  $('#sbRes').classList.remove('hidden');}
+$('#sb-dl').addEventListener('click',()=>{location.href='/api/locations/import/sid-template';});
+$('#sb-up').addEventListener('click',()=>$('#sb-file').click());
+$('#sb-file').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;SBU.file=f;$('#sb-fname').innerHTML='<b>'+esc(f.name)+'</b>';e.target.value='';sbuPreview();});
+$('#sb-apply').addEventListener('click',async()=>{if(!SBU.file||$('#sb-apply').hasAttribute('disabled'))return;const n=SBU.res.summary.ok;
+  confirmDo(`Fill ${sidLabel()}`,`Fill <b>${n}</b> empty ${esc(sidLabel())}${n>1?'s':''} from <b>${esc(SBU.file.name)}</b>? Locations that already have one are not changed.`,async()=>{
+    const fd=new FormData();fd.append('file',SBU.file);
+    try{const r=await fetch('/api/locations/import/sid-commit',{method:'POST',credentials:'same-origin',body:fd});const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.detail||'Failed');toast(`${d.updated} ${sidLabel()} filled`);sbuPreview();refreshPicker();loadLocations();}
+    catch(e){toast('Failed: '+e.message);}},{okLabel:'Fill'});});
+function loadImport(){IMP={file:null,res:null,ch:{},own:{}};sbuReset();
   const f=$('#imp-file');if(f)f.value='';$('#imp-fname').textContent='No file selected';
   $('#imp-preview-card').classList.add('hidden');$('#imp-commit').setAttribute('disabled','');
   ['imp-s1','imp-s2','imp-s3','imp-s4'].forEach(id=>$('#'+id).classList.remove('on','done'));
