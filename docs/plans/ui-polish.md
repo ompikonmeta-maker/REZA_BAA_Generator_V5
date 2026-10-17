@@ -297,7 +297,8 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 | 19-1 | Perbaiki menu kedua yang langsung tertutup ("Transfer to…", "Move category") | ✅ dipasang |
 | 19-2 | Transfer massal + filter Owner + tombol saran Dashboard | ✅ dipasang |
 | 19-3 | Kolom Owner di Location Log | ✅ dipasang |
-| 20 | Import: kolom Owner di template | menunggu "gas" |
+| 20 | Import: kolom Owner di template + tandai nama dobel di file (20b) | menunggu "gas" |
+| 21 | Peringatan lokasi kembar (nama + wilayah) di Entry, Log, Import | menunggu keputusan |
 | — | Build Windows: perubahan sejak build #24 (foto tajam & nama file download, peta Gabungan) belum di-build; ketajaman PDF perlu dicek dari build | menunggu "build" |
 | — | Request ganda `dash/today` di Dashboard admin (pra-ada) | ditawarkan, belum dijawab |
 
@@ -322,4 +323,17 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - Commit: `owner_id` = user yang cocok; `created_by` tetap admin pengimport (riwayat jelas). Aktivitas tercatat "import → owner X".
 - Kolom dikenali dari judul ("owner", "pemilik", "operator") seperti kolom wilayah, jadi file lama tanpa kolom ini tetap bisa diimport.
 
-**Temuan terkait (belum diusulkan perbaikan):** nama lokasi yang sama dua kali di dalam satu file tidak ditandai duplikat; pengecekan hanya terhadap lokasi yang sudah ada di project.
+**20b. Tandai nama yang muncul 2× di file yang sama:** preview menandai baris kedua dst. "Duplikat di file (baris N)"; ikut aturan "Skip duplicates". Kunci duplikat = nama + wilayah (lihat 21), bukan nama saja.
+
+## 21. Lokasi kembar saat isi manual (catatan, 2026-10-17)
+**Pertanyaan:** bila user mengisi nama lokasi yang sama dengan desa/kecamatan/kabupaten yang sama, apakah sudah ada fiturnya (admin & operator)?
+
+**Jawaban (dicek kode + diuji):** **belum ada.** `POST /api/locations` dan `PUT /api/locations/{id}` tidak memeriksa nama maupun wilayah. Uji pada salinan data: admin lalu Sari membuat lokasi "PUSKESMAS KALUMPANG" desa Banjaratma yang sama dengan LOK_00011 → keduanya diterima (LOK_00079, LOK_00080), tanpa peringatan. Satu-satunya cek duplikat ada di Import, dan hanya berdasarkan **nama** (tanpa wilayah).
+
+**Catatan penting:** nama seperti "SD NEGERI 1" atau "SMPN 2" wajar terulang di desa berbeda, jadi cek nama saja menghasilkan "duplikat palsu" (Import sekarang akan melewatkan lokasi yang sah bila "Skip duplicates" aktif).
+
+**Usulan:**
+- Kunci kembar = nama (dinormalisasi: huruf besar/kecil, spasi ganda, titik) **+ wilayah** (kode desa resmi; bila manual: desa + kecamatan + kab/kota).
+- **BAA Entry (admin & operator):** saat nama/wilayah diisi dan cocok dengan lokasi lain → peringatan di bawah field Nama: "Sudah ada: LOK_00011 PUSKESMAS KALUMPANG · Banjaratma (pemilik Sari)" + tautan buka. Tidak memblokir simpan (bisa memang 2 titik berbeda), tapi Finish BAA minta konfirmasi sekali.
+- **Location Log (admin):** filter / badge "Kemungkinan kembar" untuk meninjau dan menghapus yang dobel.
+- **Import:** cek duplikat (ke data project dan di dalam file, 20b) memakai kunci yang sama; nama sama di desa berbeda tidak lagi dianggap duplikat.
