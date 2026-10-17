@@ -255,3 +255,5 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - f. Teks strip SN dipendekkan atau strip boleh 2 baris.
 
 **Belum diketahui:** nama terpanjang di data asli pengguna (contoh di gambar: "SMPN 9 KALUM…").
+
+**Mockup dropdown (a+b):** https://claude.ai/artifact/YLReJjpxKZxFFVJ8ag4bx3 — Sekarang vs **A** (panel 560 px sendiri, nama 2 baris, kode + status di baris kedua, teks cocok disorot, tombol melebar s/d 640 px mengisi bar) vs **B** (panel 640 px satu baris, nama ±440 px, disorot). Pencarian tetap kode/nama seperti sekarang (data picker hanya kode, nama, status). Menunggu pilihan.
