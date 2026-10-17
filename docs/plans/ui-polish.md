@@ -280,3 +280,17 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 1. Menu kedua dibuka setelah menu pertama selesai menutup (atau `MDMenu` mendukung submenu), berlaku untuk "Transfer to…" dan "Move category".
 2. Transfer massal: tombol **Transfer…** di bar pilihan massal Location Log + filter **Owner** (pakai endpoint yang sudah ada, `ids` bisa banyak); tombol saran Dashboard langsung memfilter pemilik draf Cold tersebut.
 3. Kolom **Owner** di Location Log (atau tampil di bawah Created by bila berbeda).
+
+## Ringkasan: belum dijalankan (2026-10-17)
+| # | Catatan | Status |
+|---|---|---|
+| 18a–b | Dropdown pilih lokasi untuk nama panjang | **Dipilih A**, menunggu "gas" |
+| 18c | BAA Summary: nama 2 baris + tooltip | menunggu keputusan |
+| 18d | Progress "Almost there, gone quiet": nama terpotong (144 px) | menunggu keputusan |
+| 18e | Dashboard Team "Last change": kode lokasi hilang | menunggu keputusan |
+| 18f | Strip SN foto terlalu sempit | menunggu keputusan |
+| 19-1 | Perbaiki menu kedua yang langsung tertutup ("Transfer to…", "Move category") | menunggu keputusan |
+| 19-2 | Transfer massal + filter Owner + tombol saran Dashboard | menunggu keputusan |
+| 19-3 | Kolom Owner di Location Log | menunggu keputusan |
+| — | Build Windows: perubahan sejak build #24 (foto tajam & nama file download, peta Gabungan) belum di-build; ketajaman PDF perlu dicek dari build | menunggu "build" |
+| — | Request ganda `dash/today` di Dashboard admin (pra-ada) | ditawarkan, belum dijawab |
