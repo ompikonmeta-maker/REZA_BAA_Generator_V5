@@ -297,6 +297,7 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 | 19-1 | Perbaiki menu kedua yang langsung tertutup ("Transfer to…", "Move category") | ✅ dipasang |
 | 19-2 | Transfer massal + filter Owner + tombol saran Dashboard | ✅ dipasang |
 | 19-3 | Kolom Owner di Location Log | ✅ dipasang |
+| 20 | Import: kolom Owner di template | menunggu "gas" |
 | — | Build Windows: perubahan sejak build #24 (foto tajam & nama file download, peta Gabungan) belum di-build; ketajaman PDF perlu dicek dari build | menunggu "build" |
 | — | Request ganda `dash/today` di Dashboard admin (pra-ada) | ditawarkan, belum dijawab |
 
@@ -310,3 +311,15 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - **19-2** bar pilihan massal: **Transfer…** (admin) → pilih user → konfirmasi; filter **Owner** di Location Log (ikut ke ekspor massal); tombol saran Dashboard = Move.
 - **19-3** Location Log: pemilik tampil di bawah "Created by" bila berbeda.
 - Diuji Playwright (data uji nama panjang, 1100/1366/1920, terang & gelap, admin & operator): semua jalur transfer berhasil (menu baris, massal, Move dari Dashboard), Follow up membuka Log terfilter, ekspor Excel filter Owner hanya berisi lokasi pemilik itu, tabel Team 948/948 px, tanpa error JS. Operator tidak melihat Transfer.
+
+## 20. Import lokasi: kolom Owner di template (catatan, 2026-10-17)
+**Masalah:** semua lokasi hasil import dimiliki admin yang mengimport (`created_by` = `owner_id` = admin di `app/routers/import_loc.py` › `commit`). Operator belum bisa mengedit sampai admin mentransfernya satu per satu / massal.
+
+**Usulan:**
+- Template sheet "Lokasi" dapat kolom opsional **Owner** (username atau nama lengkap operator/admin di project ini).
+- Preview: kolom Owner dicocokkan ke user project (tidak peka huruf besar/kecil). Hasil per baris: ✓ nama user · kosong = admin pengimport · ✗ tidak dikenal / viewer / nonaktif / bukan anggota project → baris ditandai, admin pilih: jadikan milik admin atau perbaiki file.
+- Ringkasan preview menambah hitungan per pemilik (mis. "Sari 12 · Budi 8 · admin 3").
+- Commit: `owner_id` = user yang cocok; `created_by` tetap admin pengimport (riwayat jelas). Aktivitas tercatat "import → owner X".
+- Kolom dikenali dari judul ("owner", "pemilik", "operator") seperti kolom wilayah, jadi file lama tanpa kolom ini tetap bisa diimport.
+
+**Temuan terkait (belum diusulkan perbaikan):** nama lokasi yang sama dua kali di dalam satu file tidak ditandai duplikat; pengecekan hanya terhadap lokasi yang sudah ada di project.
