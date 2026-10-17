@@ -200,4 +200,11 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 | D Klik untuk zoom | Nasional hanya warna + titik; klik → zoom halus + pin per kab/kota |
 | E Label di tepi | Angka berjajar di atas & bawah peta, garis tipis ke provinsinya |
 | F Gelembung | Lingkaran sebesar jumlah lokasi, warna status, angka di gelembung besar |
-Menunggu pilihan.
+**Pilihan (2026-10-17):** sisakan ★ Gabungan, Rekomendasi, Fokus perhatian (opsi lain dihapus dari mockup). **★ Gabungan** = Rekomendasi + Fokus perhatian:
+1. Pin jatuh barat → timur, **2× lebih cepat** (jeda 40 ms/pin, animasi 0,28 dtk), angka terlihat ±3 dtk.
+2. Pin mengecil jadi titik warna status.
+3. Lalu pin angka muncul hanya untuk **4 provinsi paling tertinggal**.
+4. Provinsi lain titik warna; hover provinsi → provinsi lain meredup, pin detail terbuka (angka, nama, selesai/total); label dekat tepi otomatis bergeser / pindah ke bawah.
+5. Tombol **Semua angka** ↔ **Hanya 4 tertinggal**; **Putar ulang**.
+6. Klik → zoom ke provinsi, pin per kab/kota lengkap dengan nama dan selesai/total; "← Indonesia" kembali ke tampilan 4 tertinggal.
+Menunggu "gas" untuk dipasang di aplikasi.
