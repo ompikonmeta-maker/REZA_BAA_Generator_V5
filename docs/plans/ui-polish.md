@@ -254,6 +254,11 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - e. Kode ditulis lebih dulu (selalu terlihat), nama menyusul dengan "…"; kolom boleh melebar.
 - f. Teks strip SN dipendekkan atau strip boleh 2 baris.
 
+**Before/after 18d–f (screenshot aplikasi asli + perubahan dicoba sementara di browser):** https://claude.ai/artifact/3Dj1h4gAScBxMAss3Ldi7p
+- 18d rencana: nama di baris sendiri (2 baris, tooltip), baris kedua kode · bar · pemilik · % · label umur.
+- 18e rencana: "Last seen" di bawah nama user; judul kolom dipendekkan ("Done (wk)", "Drafts", "Share of pace"); "Last change" 2 baris (waktu · kode / nama); peringatan jadi ikon ⚠ + tooltip → tabel muat 948 px tanpa geser.
+- 18f rencana: teks strip "Read SN" + tooltip "SN not read yet — click to read".
+
 **Belum diketahui:** nama terpanjang di data asli pengguna (contoh di gambar: "SMPN 9 KALUM…").
 
 **Mockup dropdown (a+b):** https://claude.ai/artifact/YLReJjpxKZxFFVJ8ag4bx3 — Sekarang vs **A** (panel 560 px sendiri, nama 2 baris, kode + status di baris kedua, teks cocok disorot, tombol melebar s/d 640 px mengisi bar) vs **B** (panel 640 px satu baris, nama ±440 px, disorot). Pencarian tetap kode/nama seperti sekarang (data picker hanya kode, nama, status). **Dipilih: A** (2026-10-17). Menunggu "gas"; bagian c–f belum diputuskan.
@@ -287,7 +292,7 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 | 18a–b | Dropdown pilih lokasi untuk nama panjang | **Dipilih A**, menunggu "gas" |
 | 18c | BAA Summary: nama 2 baris + tooltip | menunggu keputusan |
 | 18d | Progress "Almost there, gone quiet": nama terpotong (144 px) | menunggu keputusan |
-| 18e | Dashboard Team "Last change": kode lokasi hilang | menunggu keputusan |
+| 18e | Dashboard Team: di 1366 tabel 1336 px > kartu 948 px → "Last change" terpotong (kode hilang), kolom "Share of needed pace" & peringatan tersembunyi (harus geser) | menunggu keputusan |
 | 18f | Strip SN foto terlalu sempit | menunggu keputusan |
 | 19-1 | Perbaiki menu kedua yang langsung tertutup ("Transfer to…", "Move category") | menunggu keputusan |
 | 19-2 | Transfer massal + filter Owner + tombol saran Dashboard | menunggu keputusan |
