@@ -187,3 +187,17 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - 14: pin per provinsi (nasional) / kab-kota (saat zoom), angka sesuai mode, **warna = status terhadap target hari ini** (on track / behind / far behind, sama dengan bar "Furthest behind"; tanpa target = warna utama). Label bertumpuk dinaikkan otomatis dengan garis penunjuk; pin disembunyikan selama animasi zoom lalu muncul lagi; ikut menyesuaikan saat ukuran window berubah. Hover/klik label = hover/klik wilayahnya. Legenda "Pin: on track · behind · far behind".
 - 15: foto disisipkan hingga 3× ukuran tampil (mis. 1800×1350 px, sebelumnya 600×450; capture HP tegak ±620 px lebar, sebelumnya ±200), PNG tetap PNG, foto JPEG q92; workbook `autoCompressPictures="0"`; ekspor via Excel dengan kualitas Standard. Ukuran tampil di template tidak berubah. Contoh 2 foto: Excel 260 KB → 1,5 MB. Konversi PDF via Excel (Windows) diverifikasi lewat build (LibreOffice di lingkungan uji tidak berfungsi).
 - 16: unduhan per lokasi bernama `Nama Lokasi - KODE.xlsx` / `.pdf` (karakter terlarang dibersihkan, nama kosong → kode); saran nama di dialog Save as sama; nama berspasi/non-ASCII terbaca benar oleh aplikasi.
+
+## 17. Peta: pin terlalu ramai — opsi desain (mockup, 2026-10-17)
+**Masalah:** dengan 25 provinsi, pin di semua provinsi membuat peta ramai.
+**Mockup interaktif:** https://claude.ai/artifact/7Ay7hRj3X73iZawMVZFM19 (batas wilayah asli, data contoh 25 provinsi)
+| Opsi | Ide |
+|---|---|
+| ★ Rekomendasi | B + A + D: sapaan awal ±3 dtk → jadi titik; hover = sorot + pin; klik = zoom ke kab/kota |
+| A Sorot saat hover | Tanpa pin; hover meredupkan provinsi lain dan memunculkan satu pin + nama |
+| B Sapa lalu titik | Pin jatuh berurutan barat → timur, tampil ±3 dtk, lalu mengecil jadi titik status |
+| C Fokus perhatian | Pin angka hanya 4 paling tertinggal + 1 terbaik; sisanya titik; tombol "Semua angka" |
+| D Klik untuk zoom | Nasional hanya warna + titik; klik → zoom halus + pin per kab/kota |
+| E Label di tepi | Angka berjajar di atas & bawah peta, garis tipis ke provinsinya |
+| F Gelembung | Lingkaran sebesar jumlah lokasi, warna status, angka di gelembung besar |
+Menunggu pilihan.
