@@ -207,4 +207,14 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 4. Provinsi lain titik warna; hover provinsi **dan kab/kota** → wilayah lain meredup, pin berwarna status (bukan tooltip gelap) terbuka dengan detail lengkap: angka mode, nama, selesai/total · %, draf · basi; label dekat tepi otomatis bergeser / pindah ke bawah. Ganti mode tidak memutar ulang animasi awal.
 5. Tombol **Semua angka** ↔ **Hanya 4 tertinggal**; **Putar ulang**.
 6. Klik → zoom ke provinsi, pin per kab/kota lengkap dengan nama dan selesai/total; "← Indonesia" kembali ke tampilan 4 tertinggal.
+**Final (2026-10-17):** hanya ★ Gabungan yang dipertahankan (Rekomendasi & Fokus perhatian dihapus dari mockup).
+
+**Perbaikan label kab/kota terpotong & bertumpuk saat zoom** (contoh NTT):
+- Ukuran label diukur langsung (bukan ditebak dari jumlah huruf).
+- Tiap label mencoba posisi di sekitar titik: atas, diagonal atas, samping, bawah, diagonal bawah, dengan garis penunjuk makin panjang (12–116 px). Diterima bila utuh di dalam peta, tidak menabrak label lain, titik lain, garis penunjuk lain, maupun tombol "← Indonesia".
+- Prioritas: paling tertinggal ditempatkan dulu. Gagal → garis boleh lewat di belakang label lain → label ringkas (angka saja) → titik (hover untuk detail).
+- Label selalu di atas garis penunjuk; detail hover juga dicarikan posisi yang utuh di dalam peta.
+- Kab/kota tanpa geometri (mis. Kepulauan Seribu di data contoh) tidak diberi pin.
+- Diuji Playwright di 25 provinsi, lebar 1400 & 900: 0 label keluar peta, 0 tumpang tindih, 0 jatuh ke titik; detail hover tiap kab/kota utuh di dalam peta.
+
 Menunggu "gas" untuk dipasang di aplikasi.
