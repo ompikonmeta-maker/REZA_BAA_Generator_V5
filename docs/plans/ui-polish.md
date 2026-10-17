@@ -368,3 +368,11 @@ Mengikuti `docs/plans/PRINSIP.md` (configurable & futureproof):
 - Maks 5 MB per file (bisa diatur). Tipe file tidak dibatasi kebutuhan tertentu (daftar tipe diizinkan bisa diatur).
 
 **Pertanyaan lanjutan sebelum mockup:** lihat chat 2026-10-17 (huruf besar/kecil SID, SID kosong boleh diisi operator langsung?, re-import SID yang sudah ada, tipe non-PDF di dokumen gabungan, lampiran saat export Excel, urutan relatif terhadap scan BAA).
+
+### 22 — jawaban lanjutan (2026-10-17)
+- **Revisi SID:** operator mengajukan SID baru (nilai baru + alasan) → admin melihat "lama → baru" di Notifications → Approve = sistem mengganti SID, Reject = tetap. Keunikan dicek saat mengajukan dan saat approve.
+- **Huruf besar/kecil:** dianggap sama; huruf yang diketik langsung jadi KAPITAL (juga saat import). Pengaturan "auto kapital" aktif secara bawaan.
+- **SID kosong:** operator boleh mengisi langsung. Setelah terisi, perubahan lewat permintaan revisi (admin tetap bisa langsung).
+- **Re-import:** baris dengan SID yang sudah ada di project → dilewati (tidak menimpa data yang sudah diisi manual).
+- **Lampiran:** default tipe PDF saja (daftar tipe bisa diatur). Tidak ikut export Excel.
+- **Urutan PDF gabungan:** "Dokumen BAA" = scan BAA bertandatangan + BAA hasil generate. Lampiran tambahan diletakkan **sebelum** atau **sesudah** Dokumen BAA — ditanyakan saat upload (bisa diubah).
