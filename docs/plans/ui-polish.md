@@ -261,7 +261,7 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 
 **Belum diketahui:** nama terpanjang di data asli pengguna (contoh di gambar: "SMPN 9 KALUM…").
 
-**Mockup dropdown (a+b):** https://claude.ai/artifact/YLReJjpxKZxFFVJ8ag4bx3 — Sekarang vs **A** (panel 560 px sendiri, nama 2 baris, kode + status di baris kedua, teks cocok disorot, tombol melebar s/d 640 px mengisi bar) vs **B** (panel 640 px satu baris, nama ±440 px, disorot). Pencarian tetap kode/nama seperti sekarang (data picker hanya kode, nama, status). **Dipilih: A** (2026-10-17). Menunggu "gas"; bagian c–f belum diputuskan.
+**Mockup dropdown (a+b):** https://claude.ai/artifact/YLReJjpxKZxFFVJ8ag4bx3 — Sekarang vs **A** (panel 560 px sendiri, nama 2 baris, kode + status di baris kedua, teks cocok disorot, tombol melebar s/d 640 px mengisi bar) vs **B** (panel 640 px satu baris, nama ±440 px, disorot). Pencarian tetap kode/nama seperti sekarang (data picker hanya kode, nama, status). **Dipilih: A** (2026-10-17).
 
 ## 19. Transfer lokasi antar user — cek & verifikasi (catatan, 2026-10-17)
 **Laporan:** transfer antar user masih belum jalan.
@@ -289,13 +289,24 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 ## Ringkasan: belum dijalankan (2026-10-17)
 | # | Catatan | Status |
 |---|---|---|
-| 18a–b | Dropdown pilih lokasi untuk nama panjang | **Dipilih A**, menunggu "gas" |
-| 18c | BAA Summary: nama 2 baris + tooltip | menunggu keputusan |
-| 18d | Progress "Almost there, gone quiet": nama terpotong (144 px) | menunggu keputusan |
-| 18e | Dashboard Team: di 1366 tabel 1336 px > kartu 948 px → "Last change" terpotong (kode hilang), kolom "Share of needed pace" & peringatan tersembunyi (harus geser) | menunggu keputusan |
-| 18f | Strip SN foto terlalu sempit | menunggu keputusan |
-| 19-1 | Perbaiki menu kedua yang langsung tertutup ("Transfer to…", "Move category") | menunggu keputusan |
-| 19-2 | Transfer massal + filter Owner + tombol saran Dashboard | menunggu keputusan |
-| 19-3 | Kolom Owner di Location Log | menunggu keputusan |
+| 18a–b | Dropdown pilih lokasi untuk nama panjang | ✅ dipasang |
+| 18c | BAA Summary: nama 2 baris + tooltip | ✅ dipasang |
+| 18d | Progress "Almost there, gone quiet": nama terpotong (144 px) | ✅ dipasang |
+| 18e | Dashboard Team: di 1366 tabel 1336 px > kartu 948 px → "Last change" terpotong (kode hilang), kolom "Share of needed pace" & peringatan tersembunyi (harus geser) | ✅ dipasang |
+| 18f | Strip SN foto terlalu sempit | ✅ dipasang |
+| 19-1 | Perbaiki menu kedua yang langsung tertutup ("Transfer to…", "Move category") | ✅ dipasang |
+| 19-2 | Transfer massal + filter Owner + tombol saran Dashboard | ✅ dipasang |
+| 19-3 | Kolom Owner di Location Log | ✅ dipasang |
 | — | Build Windows: perubahan sejak build #24 (foto tajam & nama file download, peta Gabungan) belum di-build; ketajaman PDF perlu dicek dari build | menunggu "build" |
 | — | Request ganda `dash/today` di Dashboard admin (pra-ada) | ditawarkan, belum dijawab |
+
+## 18 & 19 dipasang ("gas", 2026-10-17)
+- **18a–b** dropdown pilih lokasi: panel 560 px sendiri (dibatasi lebar layar), nama maks 2 baris + tooltip, kode + status di baris kedua, teks cocok disorot (nama & kode), tombol ✕ hapus pencarian, petunjuk ↑ ↓ Enter; tombol pemilih mengisi bar s/d 640 px (min 280), bar Entry tidak lagi pindah baris.
+- **18c** BAA Summary: nama maks 2 baris + tooltip.
+- **18d** Progress "Almost there": nama di baris sendiri (maks 2 baris), baris kedua kode · bar · pemilik · % · umur.
+- **18e** Dashboard Team: kolom **Next step** (Move N Cold → X · Follow up · Check pace · Can take drafts · On track); Follow up/Check pace membuka Location Log berisi draf user itu (filter Owner + Draft); Move = konfirmasi lalu transfer draf Cold (backend `tip.ids`). Last seen di bawah nama, Last change 2 baris, kolom peringatan dihapus → muat 948 px di 1366.
+- **18f** strip SN: "Read SN" + tooltip.
+- **19-1** menu kedua ("Transfer to…", "Move category") dibuka di tick berikutnya (`subMenu`).
+- **19-2** bar pilihan massal: **Transfer…** (admin) → pilih user → konfirmasi; filter **Owner** di Location Log (ikut ke ekspor massal); tombol saran Dashboard = Move.
+- **19-3** Location Log: pemilik tampil di bawah "Created by" bila berbeda.
+- Diuji Playwright (data uji nama panjang, 1100/1366/1920, terang & gelap, admin & operator): semua jalur transfer berhasil (menu baris, massal, Move dari Dashboard), Follow up membuka Log terfilter, ekspor Excel filter Owner hanya berisi lokasi pemilik itu, tabel Team 948/948 px, tanpa error JS. Operator tidak melihat Transfer.

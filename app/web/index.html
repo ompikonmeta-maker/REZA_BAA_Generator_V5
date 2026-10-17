@@ -769,7 +769,7 @@
   .md-select[data-menu-open] .arrow{transform:translateY(-50%) rotate(180deg)}
 
   /* Searchable location picker */
-  .locpick{position:relative;display:inline-flex;flex-direction:column;justify-content:center;min-width:280px;max-width:460px;height:52px;
+  .locpick{position:relative;display:inline-flex;flex-direction:column;justify-content:center;flex:0 1 640px;min-width:280px;max-width:640px;height:52px;
     padding:6px 40px 6px 14px;border:1px solid var(--md-sys-color-outline);border-radius:11px;background:var(--md-sys-color-surface);
     color:var(--md-sys-color-on-surface);cursor:pointer;text-align:left;font:inherit;transition:border-color .15s}
   .locpick:hover{background:color-mix(in srgb,var(--md-sys-color-on-surface) 4%,transparent)}
@@ -795,12 +795,15 @@
   .lp-search{display:flex;align-items:center;gap:9px;padding:12px 14px;border-bottom:1px solid var(--md-sys-color-outline-variant)}
   .lp-search .mi{color:var(--md-sys-color-on-surface-variant)}
   .lp-search input{flex:1;border:none;background:transparent;outline:none;font:var(--md-sys-typescale-body-large);color:var(--md-sys-color-on-surface)}
-  .lp-list{max-height:320px;overflow-y:auto;padding:6px;scrollbar-gutter:stable}
-  .lp-opt{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;cursor:pointer}
+  .lp-list{max-height:360px;overflow-y:auto;padding:6px;scrollbar-gutter:stable}
+  /* baris = nama penuh (maks 2 baris) di atas, kode + status di bawah — nama lokasi bisa sangat panjang */
+  .lp-opt{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px 12px;border-radius:12px;cursor:pointer}
+  .lp-opt .lp-meta{display:flex;align-items:center;gap:8px}
+  .lp-opt mark{background:color-mix(in srgb,var(--md-sys-color-tertiary) 30%,transparent);color:inherit;border-radius:3px;padding:0 1px}
   .lp-opt:hover,.lp-opt.act{background:var(--md-sys-color-surface-container-high)}
   .lp-opt .lp-code{font-family:ui-monospace,Consolas,monospace;font-size:11px;font-weight:600;color:var(--md-sys-color-on-surface-variant);
     background:var(--md-sys-color-surface-container-high);padding:2px 8px;border-radius:6px;flex:0 0 auto}
-  .lp-opt .lp-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:var(--md-sys-typescale-body-large);font-weight:600;color:var(--md-sys-color-on-surface)}
+  .lp-opt .lp-nm{max-width:100%;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.35;font:var(--md-sys-typescale-body-large);font-weight:600;color:var(--md-sys-color-on-surface)}
   .lp-opt .lp-nm.empty{font-style:italic;font-weight:500;color:var(--md-sys-color-on-surface-variant)}
   .lp-opt.sel{background:var(--md-sys-color-secondary-container)}
   .lp-badge{font:var(--md-sys-typescale-label-small);font-weight:600;padding:2px 9px;border-radius:20px}
@@ -809,6 +812,12 @@
   .lp-empty{padding:24px 14px;text-align:center;color:var(--md-sys-color-on-surface-variant)}
   .lp-foot{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--md-sys-color-outline-variant)}
   .lp-cnt{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small)}
+  .lc-own{display:flex;align-items:center;gap:3px;font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-primary);white-space:nowrap}.lc-own .mi{font-size:14px}
+  .lp-keys{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small);display:inline-flex;gap:5px;align-items:center}
+  .lp-keys kbd{font:600 10.5px ui-monospace,Consolas,monospace;border:1px solid var(--md-sys-color-outline-variant);border-radius:5px;padding:0 4px}
+  @media(max-width:700px){.lp-keys{display:none}}
+  .lp-clr{border:0;background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface-variant);border-radius:99px;width:26px;height:26px;display:grid;place-items:center;cursor:pointer;flex:0 0 auto}
+  .lp-clr .mi{font-size:16px}
   .lp-new{margin-left:auto;display:inline-flex;align-items:center;gap:7px;background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary);border:none;border-radius:20px;padding:8px 14px;font-weight:600;cursor:pointer;font:var(--md-sys-typescale-label-large)}
 
   /* inventory */
@@ -1037,7 +1046,7 @@
   .sum-locid>.mi{font-size:18px;color:var(--md-sys-color-primary)}
   .sli-txt{display:flex;flex-direction:column;min-width:0;line-height:1.25}
   .sli-name{font:var(--md-sys-typescale-title-small);font-weight:600;color:var(--md-sys-color-on-surface);
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
   .sli-name:empty::after{content:'(location name empty)';font-weight:500;font-style:italic;opacity:.7}
   .sli-code{font-family:ui-monospace,Consolas,monospace;font-weight:600;font-size:11px;color:var(--md-sys-color-on-surface-variant);
     letter-spacing:.3px;margin-top:1px}
@@ -1712,6 +1721,10 @@
   .pg-pop label{display:flex;align-items:center;gap:8px;font:var(--md-sys-typescale-body-medium)}.pg-pop input{width:60px;margin-left:auto;padding:5px 6px;border:1px solid var(--md-sys-color-outline-variant);border-radius:8px;text-align:center;background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface)}
   .pg-pop .pa{display:flex;justify-content:flex-end;gap:6px;margin-top:4px}
   .pg-li{display:grid;grid-template-columns:minmax(0,1fr) 64px 40px auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--md-sys-color-outline-variant);cursor:pointer}
+  /* "Almost there": nama penuh di baris sendiri (maks 2 baris), baris kedua kode · bar · pemilik · % · umur */
+  .pg-li.pg-qt{grid-template-columns:auto minmax(0,1fr) 64px 40px auto;row-gap:5px}
+  .pg-qt .pg-qn{grid-column:1/-1;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;line-height:1.3}
+  .pg-qt .lcode{margin:0}
   .pg-li:last-child{border:0}.pg-li:hover{background:var(--md-sys-color-surface-container-low)}
   .pg-mini{height:6px;border-radius:4px;background:var(--md-sys-color-surface-container-highest);overflow:hidden}.pg-mini i{display:block;height:100%;background:var(--md-sys-color-primary)}
   .lnm{font-weight:600}.lcode{font:500 11.5px ui-monospace,Consolas,monospace;color:var(--md-sys-color-on-surface-variant);margin-left:6px;white-space:nowrap}
@@ -1724,12 +1737,22 @@
   .pg-miss{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.pg-m{font:var(--md-sys-typescale-label-small);font-weight:600;padding:2px 8px;border-radius:999px;background:var(--warn-bg);color:var(--warn)}
   /* supervisor */
   .sv-strip{display:flex;align-items:center;gap:22px;flex-wrap:wrap}.sv-strip .it{display:flex;flex-direction:column}.sv-strip .sep{width:1px;align-self:stretch;background:var(--md-sys-color-outline-variant)}
-  .sv-tw{overflow-x:auto}.sv-tw table{min-width:960px}.sv-last{max-width:300px;overflow:hidden;text-overflow:ellipsis}.sv-tw td,.sv-tw th{white-space:nowrap}
+  .sv-tw{overflow-x:auto}.sv-tw table{min-width:860px}.sv-tw td,.sv-tw th{white-space:nowrap}
+  /* Team ringkas: last seen di bawah nama, last change 2 baris (waktu · kode / nama), kolom Next step = aksi admin */
+  .sv-who .sub{display:block;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .sv-last{line-height:1.25}.sv-last .l1{display:block;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .sv-last .l1 .lcode{margin:0}.sv-last .lnm{display:block;max-width:170px;overflow:hidden;text-overflow:ellipsis}
+  .sv-nx{display:inline-flex;flex-direction:column;padding:4px 10px;border-radius:9px;line-height:1.25;font:var(--md-sys-typescale-label-large);font-weight:700;white-space:nowrap;border:0;text-align:left}
+  .sv-nx small{font:var(--md-sys-typescale-label-small);opacity:.85}
+  .sv-nx.bad{background:var(--bad-bg);color:var(--bad)}.sv-nx.warn{background:var(--warn-bg);color:var(--warn)}
+  .sv-nx.free{background:color-mix(in srgb,var(--md-sys-color-primary) 14%,transparent);color:var(--md-sys-color-primary)}
+  .sv-nx.ok{background:none;color:var(--md-sys-color-on-surface-variant);font-weight:500;padding-left:0}
+  button.sv-nx{cursor:pointer;font-family:inherit}button.sv-nx:hover{filter:brightness(1.12)}button.sv-nx:focus-visible{outline:2px solid var(--md-sys-color-primary);outline-offset:2px}
   .sv-who{display:flex;align-items:center;gap:10px}.sv-av{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:13px;background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-primary);position:relative;flex:0 0 auto}
   .sv-av i{position:absolute;right:-1px;bottom:-1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--md-sys-color-surface)}
   .st-online{background:var(--good)}.st-idle{background:var(--ag3)}.st-offline{background:var(--md-sys-color-outline)}
   .sv-ag{display:flex;gap:2px;height:10px}.sv-ag span{border-radius:3px}
-  .sv-share{display:flex;align-items:center;gap:8px}.sv-sb{width:110px;height:8px;border-radius:5px;background:var(--md-sys-color-surface-container-highest);position:relative}
+  .sv-share{display:flex;align-items:center;gap:8px}.sv-sb{width:60px;height:8px;border-radius:5px;background:var(--md-sys-color-surface-container-highest);position:relative}
   .sv-sb i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}.sv-sb b{position:absolute;top:-3px;width:2px;height:14px;background:var(--md-sys-color-on-surface);left:66%}
   .sv-hm{display:grid;gap:3px;align-items:center}.sv-hm .c{height:34px;border-radius:6px}.sv-hm .n{font:var(--md-sys-typescale-body-small);padding-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sv-hm .d{font-size:10.5px;color:var(--md-sys-color-on-surface-variant);text-align:center}
   .sv-fi{display:grid;grid-template-columns:46px minmax(0,1fr);gap:10px;padding:9px 0;border-bottom:1px solid var(--md-sys-color-outline-variant);font:var(--md-sys-typescale-body-medium)}
@@ -1829,6 +1852,8 @@
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--md-sys-color-inverse-surface);color:var(--md-sys-color-inverse-on-surface);padding:12px 18px;border-radius:12px;z-index:9999;opacity:0;transition:opacity .2s;box-shadow:var(--md-sys-elevation-level3)}
   .toast{pointer-events:none}.toast.show{opacity:1;pointer-events:auto}
   .rowflex{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  #entryTools{flex-wrap:nowrap}   /* pemilih lokasi menyusut dulu (min 280 px), tombol Add tetap di baris yang sama */
+  #entryTools .addloc,#entryTools .set-status{flex:0 0 auto;white-space:nowrap}
   /* Pengaturan editor rows */
   .er{display:grid;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--md-sys-color-outline-variant)}
   .er.lf{grid-template-columns:1fr 1.4fr 110px 90px 40px}
@@ -2416,6 +2441,7 @@
           <div class="rowflex" style="margin-bottom:14px;flex-wrap:wrap;gap:10px">
             <md-text-field id="loc-search" variant="outlined" label="Search code / name" leading-icon="search" style="min-width:220px"></md-text-field>
             <div class="md-select" id="loc-creator"></div>
+            <div class="md-select" id="loc-owner"></div>
             <div class="md-select wil-only" id="loc-wil"></div>
             <div style="position:relative;min-width:200px"><input type="hidden" id="loc-date" value="">
               <div class="datefield dffilter" id="loc-date-field" onclick="dpOpenFilter(this)"><span class="mi">calendar_month</span>
@@ -2995,6 +3021,8 @@ function bindTips(){$$('[data-tip]').forEach(el=>{if(el._tip)return;el._tip=1;
 
 /* MD3 dropdown for row/photo actions */
 function openMenu(anchor,items){if(window.MDMenu)MDMenu.open(anchor,items.map(it=>({label:it.label,icon:it.icon,onSelect:it.fn})),{openerEl:anchor});}
+/* menu lanjutan dari item menu lain: MDMenu menutup semua panel setelah onSelect, jadi buka pada tick berikutnya */
+function subMenu(anchor,items){setTimeout(()=>openMenu(anchor,items),0);}
 
 /* MD3 select (single-select via MDMenu) */
 class MDSelect{
@@ -3043,14 +3071,15 @@ class LocationPicker{
     el.className='locpick';el.tabIndex=0;
     el.innerHTML=`<div class="lp-lab">Location</div><div class="lp-val ph">— select location —</div><span class="mi lp-arrow">expand_more</span>`;
     this.panel=document.createElement('div');this.panel.className='lp-panel';
-    this.panel.innerHTML=`<div class="lp-search"><span class="mi">search</span><input type="text" placeholder="Search code / location name…" autocomplete="off"></div>
+    this.panel.innerHTML=`<div class="lp-search"><span class="mi">search</span><input type="text" placeholder="Search code / location name…" autocomplete="off"><button type="button" class="lp-clr hidden" aria-label="Clear search"><span class="mi">close</span></button></div>
       <div class="lp-list"></div>
-      <div class="lp-foot"><span class="lp-cnt"></span><button type="button" class="lp-new"><span class="mi">add</span>New location</button></div>`;
+      <div class="lp-foot"><span class="lp-cnt"></span><span class="lp-keys"><kbd>↑</kbd><kbd>↓</kbd> select · <kbd>Enter</kbd> open</span><button type="button" class="lp-new"><span class="mi">add</span>New location</button></div>`;
     document.body.appendChild(this.panel);
     this.q=this.panel.querySelector('input');this.list=this.panel.querySelector('.lp-list');
     el.addEventListener('click',()=>this.toggle());
     el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '||e.key==='ArrowDown'){e.preventDefault();this.openPanel();}});
     this.q.addEventListener('input',()=>{this.act=0;this._renderList();});
+    this.clr=this.panel.querySelector('.lp-clr');this.clr.addEventListener('click',()=>{this.q.value='';this.act=0;this._renderList();this.q.focus();});
     this.q.addEventListener('keydown',e=>this._key(e));
     this.panel.querySelector('.lp-new').addEventListener('click',()=>{this.close();this.onNew&&this.onNew();});
     this._out=e=>{if(this.open&&!e.target.closest('.lp-panel')&&e.target!==this.el&&!this.el.contains(e.target))this.close();};
@@ -3063,8 +3092,10 @@ class LocationPicker{
   setValue(v){this.value=v==null?'':String(v);this._renderTrigger();return this;}
   getValue(){return this.value;}
   _renderTrigger(){const o=this.items.find(x=>x.value===this.value);const v=this.el.querySelector('.lp-val');
-    v.innerHTML=o?(`<span class="lp-nm-main">${esc(o.nama||'(no name)')}</span><span class="lp-code">${esc(o.code)}</span>`):'— select location —';v.classList.toggle('ph',!o);}
-  _position(){const r=this.el.getBoundingClientRect();const w=Math.max(300,r.width);
+    v.innerHTML=o?(`<span class="lp-nm-main">${esc(o.nama||'(no name)')}</span><span class="lp-code">${esc(o.code)}</span>`):'— select location —';v.classList.toggle('ph',!o);
+    this.el.title=o?(o.nama||'')+' · '+o.code:'';}
+  // panel punya lebar sendiri (560 px), tidak ikut lebar tombol; dibatasi lebar layar
+  _position(){const r=this.el.getBoundingClientRect();const w=Math.min(560,window.innerWidth-16);
     const left=Math.min(r.left,window.innerWidth-w-8);
     this.panel.style.width=w+'px';this.panel.style.left=Math.max(8,left)+'px';this.panel.style.top=(r.bottom+6)+'px';}
   toggle(){this.open?this.close():this.openPanel();}
@@ -3075,9 +3106,11 @@ class LocationPicker{
   _renderList(){const rows=this._filtered();
     this.panel.querySelector('.lp-cnt').textContent=rows.length+' / '+this.items.length+' locations';
     if(this.act>=rows.length)this.act=Math.max(0,rows.length-1);
-    this.list.innerHTML=rows.length?rows.map((o,i)=>`<div class="lp-opt${i===this.act?' act':''}${o.value===this.value?' sel':''}" data-v="${o.value}">
-        <span class="lp-nm${o.nama?'':' empty'}">${esc(o.nama||'(no name)')}</span><span class="lp-code">${esc(o.code)}</span>
-        <span class="lp-badge ${o.status==='selesai'?'b-s':'b-d'}">${esc(o.status||'')}</span></div>`).join(''):'<div class="lp-empty">No matching location.</div>';
+    const q=(this.q.value||'').trim().toLowerCase();this.clr.classList.toggle('hidden',!q);
+    const hl=t=>{const i=q?t.toLowerCase().indexOf(q):-1;return i<0?esc(t):esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+q.length))+'</mark>'+esc(t.slice(i+q.length));};
+    this.list.innerHTML=rows.length?rows.map((o,i)=>`<div class="lp-opt${i===this.act?' act':''}${o.value===this.value?' sel':''}" data-v="${o.value}" title="${esc((o.nama||'(no name)')+' · '+o.code)}">
+        <span class="lp-nm${o.nama?'':' empty'}">${o.nama?hl(o.nama):'(no name)'}</span>
+        <span class="lp-meta"><span class="lp-code">${hl(o.code)}</span><span class="lp-badge ${o.status==='selesai'?'b-s':'b-d'}">${esc(o.status||'')}</span></span></div>`).join(''):'<div class="lp-empty">No matching location.</div>';
     [...this.list.querySelectorAll('.lp-opt')].forEach(el=>el.addEventListener('click',()=>this._choose(el.dataset.v)));
   }
   _choose(v){this.value=v;this._renderTrigger();this.close();this.onChange&&this.onChange(v);}
@@ -3104,6 +3137,7 @@ async function boot(){paint();themeIcon(false);
   mapDetailSel=new MDSelect($('#map-detail'),{label:'Detail sheet',onChange:()=>onMapDetailSheet()});
   // role user kini via kartu (uRoles), bukan dropdown
   locCreatorSel=new MDSelect($('#loc-creator'),{label:'Created by',placeholder:'All creators',onChange:()=>loadLocations()});locCreatorSel.setOptions([{value:'',label:'All creators'}]).setValue('');
+  locOwnerSel=new MDSelect($('#loc-owner'),{label:'Owner',placeholder:'All owners',onChange:()=>{BK.clear();loadLocations();}});locOwnerSel.setOptions([{value:'',label:'All owners'}]).setValue('');
   locWilSel=new MDSelect($('#loc-wil'),{label:'Wilayah',placeholder:'All wilayah',onChange:()=>{BK.clear();loadLocations();}});locWilSel.setOptions([{value:'',label:'All wilayah'}]).setValue('');
   $('#bkAll').addEventListener('click',e=>{e.stopPropagation();const all=LOC_ROWS.length&&LOC_ROWS.every(l=>BK.has(l.id));LOC_ROWS.forEach(l=>all?BK.delete(l.id):BK.add(l.id));bkSync();});
   try{S.user=await api('/api/auth/me');showApp();}catch{$('#login').classList.remove('hidden');bindTips();}}
@@ -3390,8 +3424,8 @@ function wilCell(l){if(!WIL.on())return '';if(!l.wil_desa)return '<span class="l
   return `<span class="lc-wil">${esc(l.wil_desa)}${l.wil_kab?' · '+esc(l.wil_kab):''}${b?`<span class="badge-m${adm?' lk':''}"${adm?` onclick="event.stopPropagation();wilLink(${l.id})" data-tip="Link to official wilayah"`:''}>${b}</span>`:''}</span>`;}
 function bkSync(){const n=BK.size;let bar=$('#bkBar');
   if(!bar){bar=document.createElement('div');bar.id='bkBar';bar.className='bk-bar';
-    bar.innerHTML='<span id="bkN"></span><button class="pri" id="bkSet"><span class="mi">location_on</span>Set wilayah</button><button id="bkClr" data-tip="Clear selection"><span class="mi">close</span></button>';
-    document.body.appendChild(bar);$('#bkSet').onclick=bkDialog;$('#bkClr').onclick=()=>{BK.clear();bkSync();};bindTips();}
+    bar.innerHTML='<span id="bkN"></span><button class="pri" id="bkSet"><span class="mi">location_on</span>Set wilayah</button>'+(S.user&&S.user.role==='admin'?'<button class="pri" id="bkTr"><span class="mi">swap_horiz</span>Transfer…</button>':'')+'<button id="bkClr" data-tip="Clear selection"><span class="mi">close</span></button>';
+    document.body.appendChild(bar);$('#bkSet').onclick=bkDialog;const bt=$('#bkTr');if(bt)bt.onclick=()=>bkTransfer(bt);$('#bkClr').onclick=()=>{BK.clear();bkSync();};bindTips();}
   $('#bkN').textContent=n+' selected';bar.classList.toggle('on',n>0&&_visible('v-locations'));
   $$('#loc-table .bk-ck').forEach(c=>c.classList.toggle('on',BK.has(+c.dataset.id)));
   const all=$('#bkAll');if(all){const vis=LOC_ROWS.length,sel=LOC_ROWS.filter(l=>BK.has(l.id)).length;all.className='bk-ck'+(sel&&sel===vis?' on':sel?' some':'');}}
@@ -4407,7 +4441,7 @@ function renderProgress(){const d=PG,t=d.team,ed=d.can_edit,el=$('#pgBody');
     <div class="pg-ramp">Completeness <i style="background:var(--ag1)"></i>0–24% <i style="background:var(--ag2)"></i>25–74% <i style="background:var(--ag3)"></i>75–99% <i style="background:var(--ag4)"></i>100%</div></div>`;
   const quiet=drafts.filter(x=>x.pct>=75&&x.idle>d.aging.fresh).sort((a,b)=>b.idle-a.idle).slice(0,8);
   const stuck=`<div class="card s5"><div class="ct">Almost there, gone quiet</div><div class="cd">≥ 75% complete, idle more than ${d.aging.fresh} working days — the fastest wins.</div>
-    ${quiet.length?quiet.map(x=>`<div class="pg-li" onclick="openLocFromDash(${x.id})"><div style="min-width:0"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${locLbl(x)}</div><div class="pg-mini"><i style="width:${x.pct}%"></i></div></div><span class="mut" style="overflow:hidden;text-overflow:ellipsis">${esc(x.owner)}</span><span class="mut">${x.pct}%</span>${ageChip(x)}</div>`).join(''):'<div class="pg-empty">Nothing waiting here.</div>'}</div>`;
+    ${quiet.length?quiet.map(x=>`<div class="pg-li pg-qt" onclick="openLocFromDash(${x.id})" title="${esc(locTxt(x))}"><div class="pg-qn">${esc((x.name||'').trim()||x.code)}</div><span class="lcode">${esc(x.code)}</span><div class="pg-mini"><i style="width:${x.pct}%"></i></div><span class="mut" style="overflow:hidden;text-overflow:ellipsis">${esc(x.owner)}</span><span class="mut">${x.pct}%</span>${ageChip(x)}</div>`).join(''):'<div class="pg-empty">Nothing waiting here.</div>'}</div>`;
   const wk=t.streak||[0,0];
   const mom=`<div class="card s12 pg-mom"><div class="ct">Team momentum</div><div><span class="n">${wk[0]}</span> <span class="mut" data-tip="Weekends count when a BAA is done; an empty weekend doesn't break it">day${wk[0]===1?'':'s'} in a row with a BAA done · best ${wk[1]}</span></div>
     <span class="mut" style="margin-left:auto">This week <b style="color:var(--md-sys-color-on-surface)">${t.done_this_week} done</b> · last week ${t.done_last_week}</span></div>`;
@@ -4501,15 +4535,15 @@ async function loadSupervisor2(){let d;try{d=await api('/api/dash/supervisor');}
   const shareCol=v=>v>=1?'var(--good)':v>=.6?'var(--md-sys-color-primary)':'var(--warn)';
   const rows=d.users.map(u=>{const tot=AGE_KEYS.reduce((s,k)=>s+u.aging[k],0);
     const seen=u.state==='online'?'<span class="pg-chip good">● Online</span>':u.last_seen?esc(timeAgo(u.last_seen)):'<span class="mut">Never</span>';
-    const flag=u.inactive_wd!=null&&u.inactive_wd>=3&&u.open?`<span class="sv-flag">⚠ No changes for ${u.inactive_wd} working days</span>`:'';
-    return `<tr><td><div class="sv-who"><span class="sv-av">${esc((u.name[0]||'?').toUpperCase())}<i class="st-${u.state}"></i></span><div>${esc(u.name)}${u.role==='admin'?' <span class="mut">admin</span>':''}</div></div></td>
-      <td>${seen}</td><td class="num">${u.done_week}</td><td class="num">${u.open}</td>
-      <td>${tot?`<div class="sv-ag" style="width:${Math.min(160,tot*12)}px">${AGE_KEYS.map(k=>u.aging[k]?`<span style="flex:${u.aging[k]};background:${A(k)}" data-h="${u.aging[k]} ${AGE_LBL[k]}"></span>`:'').join('')}</div>`:'<span class="mut">—</span>'}</td>
-      <td class="sv-last">${u.last?`<span class="mut">${esc(timeAgo(u.last.at))} · </span>${locLbl(u.last)}`:'<span class="mut">—</span>'}</td>
-      <td>${u.share!=null?`<div class="sv-share"><div class="sv-sb"><i style="width:${Math.min(100,u.share*66)}%;background:${shareCol(u.share)}"></i><b></b></div><span class="mut">${Math.round(u.share*100)}%</span></div>`:'<span class="mut">no target</span>'}</td>
-      <td>${flag}</td></tr>`;}).join('');
+    const nx=svNext(u,d.tip);
+    const lastNm=u.last?((u.last.name||'').trim()||u.last.code):'';
+    return `<tr><td><div class="sv-who"><span class="sv-av">${esc((u.name[0]||'?').toUpperCase())}<i class="st-${u.state}"></i></span><div>${esc(u.name)}${u.role==='admin'?' <span class="mut">admin</span>':''}<span class="sub">${seen}</span></div></div></td>
+      <td>${nx}</td><td class="num">${u.done_week}</td><td class="num">${u.open}</td>
+      <td>${tot?`<div class="sv-ag" style="width:${Math.min(110,tot*10)}px">${AGE_KEYS.map(k=>u.aging[k]?`<span style="flex:${u.aging[k]};background:${A(k)}" data-h="${u.aging[k]} ${AGE_LBL[k]}"></span>`:'').join('')}</div>`:'<span class="mut">—</span>'}</td>
+      <td class="sv-last">${u.last?`<span class="l1">${esc(timeAgo(u.last.at))} · <span class="lcode">${esc(u.last.code||'')}</span></span><span class="lnm" title="${esc(lastNm)}">${esc(lastNm)}</span>`:'<span class="mut">—</span>'}</td>
+      <td>${u.share!=null?`<div class="sv-share"><div class="sv-sb"><i style="width:${Math.min(100,u.share*66)}%;background:${shareCol(u.share)}"></i><b></b></div><span class="mut">${Math.round(u.share*100)}%</span></div>`:'<span class="mut">no target</span>'}</td></tr>`;}).join('');
   const team=`<div class="card s12"><div class="ct">Team</div><div class="cd">Share = done in the last 10 working days vs each person's part of the needed pace (marker = 100%).</div>
-    <div class="sv-tw"><table><thead><tr><th>User</th><th>Last seen</th><th class="num">Done this week</th><th class="num">Open drafts</th><th>Draft aging</th><th>Last change</th><th>Share of needed pace</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="sv-tw"><table><thead><tr><th>User</th><th>Next step</th><th class="num" data-tip="Done this week">Done (wk)</th><th class="num" data-tip="Open drafts">Drafts</th><th>Draft aging</th><th>Last change</th><th data-tip="Share of needed pace">Pace</th></tr></thead><tbody>${rows}</tbody></table></div>
     <div class="pg-ramp"><i style="background:var(--good);border-radius:50%;width:10px"></i>Online (5 min) <i style="background:var(--ag3);border-radius:50%;width:10px"></i>Idle <i style="background:var(--md-sys-color-outline);border-radius:50%;width:10px"></i>Offline
       <span style="margin-left:10px"></span>${AGE_KEYS.map(k=>`<i style="background:${A(k)}"></i>${AGE_LBL[k]}`).join(' ')}</div></div>`;
   const lv=v=>v===0?'var(--md-sys-color-surface-container-high)':v<3?'color-mix(in srgb,var(--md-sys-color-primary) 25%,var(--md-sys-color-surface))':v<6?'color-mix(in srgb,var(--md-sys-color-primary) 50%,var(--md-sys-color-surface))':v<10?'color-mix(in srgb,var(--md-sys-color-primary) 75%,var(--md-sys-color-surface))':'var(--md-sys-color-primary)';
@@ -4527,7 +4561,22 @@ async function loadSupervisor2(){let d;try{d=await api('/api/dash/supervisor');}
       <md-button variant="filled" size="xs" style="margin-left:auto" id="svTransfer">Transfer…</md-button></div>`:''}</div>`;
   el.innerHTML=`<div class="pg">${strip}${team}${rhythm}${feed}${wl}</div>`;bindHover(el);bindTips();revealCards(el);
   $('#svToProg').onclick=()=>navTo('progress');
-  const tb=$('#svTransfer');if(tb)tb.onclick=()=>{navTo('locations');toast('Filter by owner, select the drafts, then Transfer');};}
+  const tb=$('#svTransfer');if(tb)tb.onclick=()=>svMove(d.tip);
+  el.querySelectorAll('[data-nx]').forEach(b=>b.onclick=()=>{const k=b.dataset.nx;if(k==='move')svMove(d.tip);else logByOwner(+b.dataset.uid);});}
+/* Team › Next step: satu aksi per user, dari data yang sudah ada (urut prioritas) */
+function svNext(u,tip){
+  if(u.role!=='operator')return '<span class="sv-nx ok">—</span>';
+  if(u.open&&u.inactive_wd!=null&&u.inactive_wd>=3){
+    if(tip&&tip.from_id===u.id&&(tip.ids||[]).length)return `<button class="sv-nx bad" data-nx="move" data-tip="Move ${tip.ids.length} Cold draft${tip.ids.length>1?'s':''} from ${esc(u.name)} to ${esc(tip.to)}">Move ${tip.ids.length} Cold → ${esc(tip.to)}<small>idle ${u.inactive_wd} workdays</small></button>`;
+    return `<button class="sv-nx bad" data-nx="follow" data-uid="${u.id}" data-tip="No changes for ${u.inactive_wd} working days · open ${esc(u.name)}'s drafts">Follow up<small>idle ${u.inactive_wd} workdays</small></button>`;}
+  if(u.open&&u.share!=null&&u.share<.6)return `<button class="sv-nx warn" data-nx="pace" data-uid="${u.id}" data-tip="Done in the last 10 working days vs their part of the needed pace · open ${esc(u.name)}'s drafts">Check pace<small>${Math.round(u.share*100)}% of needed</small></button>`;
+  if(!u.open)return '<span class="sv-nx free">Can take drafts</span>';
+  return '<span class="sv-nx ok">On track</span>';}
+/* pindahkan draf Cold milik user sumber ke user yang disarankan (konfirmasi dulu) */
+function svMove(tip){if(!tip||!(tip.ids||[]).length)return;const n=tip.ids.length;
+  confirmDo('Move Cold drafts',`Move <b>${n} Cold draft${n>1?'s':''}</b> from <b>${esc(tip.from)}</b> to <b>${esc(tip.to)}</b>? ${esc(tip.to)} becomes the owner and can edit them; ${esc(tip.from)} can still view them.`,
+    async()=>{try{const r=await api('/api/locations/transfer',{method:'POST',body:JSON.stringify({ids:tip.ids,to_user_id:tip.to_id})});
+      toast(`${r.count} draft${r.count>1?'s':''} moved to ${r.to.name}`);loadDashboard();loadLocations();}catch(e){toast('Failed: '+e.message);}},{okLabel:'Move'});}
 
 /* ---------- MY DASHBOARD (operator) ---------- */
 async function loadMyDash(){let d;try{d=await api('/api/dash/me');}catch(e){return;}
@@ -5018,7 +5067,7 @@ function updateSummary(){
   $('#sum-status').textContent='Status: '+(S.loc.status||'draft');
   $('#sum-locid-code').textContent=S.loc.code||(isDraft()?'not saved yet':'—');
   const nmEl=$('[data-lf="nama_lokasi"]');const liveName=nmEl?(nmEl.value||'').trim():'';
-  $('#sum-locid-name').textContent=liveName||((S.loc.data&&S.loc.data.nama_lokasi)||S.loc.name||'').trim();
+  const sumNm=liveName||((S.loc.data&&S.loc.data.nama_lokasi)||S.loc.name||'').trim();$('#sum-locid-name').textContent=sumNm;$('#sum-locid-name').title=sumNm;
   const setRow=(rowId,icId,valEl,done,valText)=>{
     $(rowId).classList.toggle('ok-row',done);
     $(icId).textContent=done?'check_circle':'error';
@@ -5068,7 +5117,7 @@ function renderPhotos(){
     if(c.ocr){
       strip=sn
         ? `<div class="snstrip" data-sn="${esc(sn)}" onclick="tileEditSn(this,${ph.id},'${c.key}')"><span class="mi">tag</span><span class="v" title="${esc(sn)}">${esc(sn)}</span><span class="mi sgo" title="Fill into Inventory" onclick="event.stopPropagation();applySnToInventory('${c.key}','${esc(sn)}')">arrow_forward</span></div>`
-        : `<div class="snstrip warn" onclick="openSnReader(${ph.id},'${c.key}')"><span class="mi">document_scanner</span><span class="v">SN not read yet — Read SN</span></div>`;
+        : `<div class="snstrip warn" title="SN not read yet — click to read" onclick="openSnReader(${ph.id},'${c.key}')"><span class="mi">document_scanner</span><span class="v">Read SN</span></div>`;
     }
     return `<div class="ptile has" data-i="${ph.id}">
       <div class="thumb" onclick="editExisting(${ph.id},'${c.key}')"><img src="/api/photos/${ph.id}/file" loading="lazy"><span class="mi ok">check_circle</span></div>
@@ -5181,7 +5230,7 @@ window.replacePhoto=(oldId,cat)=>{if(roActive())return;pickFiles(false,files=>{c
     const fd=new FormData();fd.append('files',nf);fd.append('category',cat);fd.append('relpaths',JSON.stringify([f.name]));
     try{const r=await fetch('/api/locations/'+S.loc.id+'/photos',{method:'POST',credentials:'same-origin',body:fd});if(!r.ok)throw new Error((await r.json()).detail);
       await reloadLoc();renderPhotos();updateSummary();toast('Photo replaced');}catch(e){toast('Failed: '+e.message);}});});};
-window.reassignMenu=(btn,pid)=>openMenu(btn,S.cats.map(c=>({icon:c.ocr?'tag':'image',label:c.label,fn:async()=>{await api('/api/photos/'+pid,{method:'PATCH',body:JSON.stringify({category:c.key})});await reloadLoc();renderPhotos();updateSummary();toast('Dipindah');}})));
+window.reassignMenu=(btn,pid)=>subMenu(btn,S.cats.map(c=>({icon:c.ocr?'tag':'image',label:c.label,fn:async()=>{await api('/api/photos/'+pid,{method:'PATCH',body:JSON.stringify({category:c.key})});await reloadLoc();renderPhotos();updateSummary();toast('Dipindah');}})));
 function roActive(){const f=$('#entry-form');return !!(f&&f.classList.contains('ro'));}
 /* ---- Dropzone dinamis: dock kecil (collapsed) <-> dropzone penuh (#21) ---- */
 let dzMiniTimer=null,dzBusy=false;
@@ -5451,10 +5500,10 @@ function lcWhen(iso){const d=new Date(iso||'');if(!iso||isNaN(d))return '—';
 function fetchLocPage(page){
   const q=encodeURIComponent(($('#loc-search').value||'').trim());
   const st=S.locFilter||'all';
-  const cr=(locCreatorSel&&locCreatorSel.getValue())||'';
+  const cr=(locCreatorSel&&locCreatorSel.getValue())||'';const ow=(locOwnerSel&&locOwnerSel.getValue())||'';
   const dt=($('#loc-date').value||'').trim();
   const wl=WIL.on()&&locWilSel?locWilSel.getValue()||'':'';
-  return api(`/api/locations?page=${page}&size=${LOC_SIZE}&q=${q}&status=${st}&creator=${cr||0}&date=${encodeURIComponent(dt)}&wil=${encodeURIComponent(wl)}`);
+  return api(`/api/locations?page=${page}&size=${LOC_SIZE}&q=${q}&status=${st}&creator=${cr||0}&owner=${ow||0}&date=${encodeURIComponent(dt)}&wil=${encodeURIComponent(wl)}`);
 }
 async function loadLocations(){LOC_PAGE=1;wilRegions();const r=await fetchLocPage(1);
   LOC_ROWS=r.rows||[];LOC_TOTAL=r.total||0;renderLocTable();}
@@ -5467,7 +5516,7 @@ function renderLocTable(){
     const wl=wilCell(l);
     return `<tr class="lrow" data-i="${l.id}" onclick='openLocDrawer(${l.id})'><td class="bk-col" onclick="bkTog(event,${l.id})"><span class="bk-ck${BK.has(l.id)?' on':''}" data-id="${l.id}"></span></td><td><a class="loc-link mono">${esc(l.code)}</a></td>
     <td>${esc(l.data.nama_lokasi||l.name||'')}${wl}</td>
-    <td>${esc(l.creator_name||'—')}</td>
+    <td>${esc(l.creator_name||'—')}${l.owner_id&&l.owner_id!==l.created_by?`<div class="lc-own" data-tip="Current owner (can edit)"><span class="mi">swap_horiz</span>${esc(l.owner_name||'—')}</div>`:''}</td>
     <td class="lc-date">${lcWhen(l.created_at)}</td>
     <td class="lc-date">${lcWhen(l.modified_at)}</td>
     <td>${l.modifier_name?esc(l.modifier_name):'<span class="lc-none" data-tip="No record yet — shows after the next edit">—</span>'}</td>
@@ -5482,10 +5531,10 @@ function renderLocTable(){
 function locFilterParams(){
   const q=($('#loc-search').value||'').trim();
   const st=S.locFilter||'all';
-  const cr=(locCreatorSel&&locCreatorSel.getValue())||'';
+  const cr=(locCreatorSel&&locCreatorSel.getValue())||'';const ow=(locOwnerSel&&locOwnerSel.getValue())||'';
   const dt=($('#loc-date').value||'').trim();
   const wl=WIL.on()&&locWilSel?locWilSel.getValue()||'':'';
-  return `q=${encodeURIComponent(q)}&status=${st}&creator=${cr||0}&date=${encodeURIComponent(dt)}&wil=${encodeURIComponent(wl)}`;
+  return `q=${encodeURIComponent(q)}&status=${st}&creator=${cr||0}&owner=${ow||0}&date=${encodeURIComponent(dt)}&wil=${encodeURIComponent(wl)}`;
 }
 function locFilterLabel(){
   const st=S.locFilter||'all';const bits=[];
@@ -5493,6 +5542,7 @@ function locFilterLabel(){
   const q=($('#loc-search').value||'').trim();if(q)bits.push('search: "'+q+'"');
   const dt=($('#loc-date').value||'').trim();if(dt)bits.push('date: '+dpFmt(dt));
   const cr=(locCreatorSel&&locCreatorSel.getValue())||'';if(cr)bits.push('creator selected');
+  const ow=(locOwnerSel&&locOwnerSel.getValue())||'';if(ow)bits.push('owner selected');
   return bits.join(' · ');
 }
 let _expKind='excel';
@@ -5751,31 +5801,45 @@ function locDateSet(iso){const hid=$('#loc-date');hid.value=iso||'';const v=$('#
   $('#loc-date-field').classList.toggle('filled',!!iso);$('#loc-date-field').classList.toggle('active',!!iso);}
 window.dpOpenFilter=el=>{DP.open(el,$('#loc-date').value||'',iso=>{locDateSet(iso);loadLocations();});};
 $('#loc-clear').addEventListener('click',()=>{$('#loc-search').value='';locDateSet('');
-  locCreatorSel&&locCreatorSel.setValue('');locWilSel&&locWilSel.setValue('');S.locFilter='all';
+  locCreatorSel&&locCreatorSel.setValue('');locOwnerSel&&locOwnerSel.setValue('');locWilSel&&locWilSel.setValue('');S.locFilter='all';
   const seg=$('#loc-filter');seg&&seg.querySelectorAll('button').forEach(b=>b.toggleAttribute('selected',b.dataset.value==='all'));
   loadLocations();});
 $('#loc-more-btn').addEventListener('click',loadMoreLoc);
-let locCreatorSel=null;
+let locCreatorSel=null,locOwnerSel=null;
 async function loadCreators(){if(!locCreatorSel)return;
   try{const d=await api('/api/locations/creators');
     const ids=(d.creators||[]).map(c=>String(c.id));
     locCreatorSel.setOptions([{value:'',label:'All creators'}].concat((d.creators||[]).map(c=>({value:String(c.id),label:c.name+' ('+c.n+')'}))));
-    const cur=locCreatorSel.getValue();if(cur&&!ids.includes(cur))locCreatorSel.setValue('');else locCreatorSel.setValue(cur||'');}catch(e){}}
+    const cur=locCreatorSel.getValue();if(cur&&!ids.includes(cur))locCreatorSel.setValue('');else locCreatorSel.setValue(cur||'');
+    if(locOwnerSel){const oids=(d.owners||[]).map(c=>String(c.id));
+      locOwnerSel.setOptions([{value:'',label:'All owners'}].concat((d.owners||[]).map(c=>({value:String(c.id),label:c.name+' ('+c.n+')'}))));
+      const oc=locOwnerSel.getValue();locOwnerSel.setValue(oc&&!oids.includes(oc)?'':oc||'');}}catch(e){}}
+/* Dashboard › Next step: buka Location Log berisi draf milik user tsb */
+function logByOwner(uid){if(!locOwnerSel)return;locOwnerSel.setValue(String(uid));locCreatorSel&&locCreatorSel.setValue('');S.locFilter='draft';
+  const seg=$('#loc-filter');seg&&seg.querySelectorAll('button').forEach(b=>b.toggleAttribute('selected',b.dataset.value==='draft'));
+  BK.clear();navTo('locations');loadLocations();}
 window.locMenu=(btn,l)=>{const items=[
   {icon:'edit',label:'Open / Edit',fn:()=>{gotoEntry();openLoc(l.id);}},
   {icon:'grid_on',label:'Export Excel',fn:()=>downloadExport('/api/export/excel?scope=one&loc_id='+l.id)},
   {icon:'picture_as_pdf',label:'Export PDF',fn:()=>downloadExport('/api/export/pdf?scope=one&loc_id='+l.id)}];
   if(S.user&&S.user.role==='admin')items.push({icon:'swap_horiz',label:'Transfer to…',fn:()=>transferMenu(btn,l)});
   if(l.cd)items.push({icon:'delete',label:'Delete',fn:()=>confirmDelete(l.id,l.code,false)});openMenu(btn,items);};
-function transferMenu(btn,l){const targets=(USR_ROWS||[]).filter(u=>u.active&&u.role!=='viewer'&&(u.role==='admin'||(u.projects||[]).includes(+PJ.id)));
+const trTargets=()=>(USR_ROWS||[]).filter(u=>u.active&&u.role!=='viewer'&&(u.role==='admin'||(u.projects||[]).includes(+PJ.id)));
+function transferMenu(btn,l){const targets=trTargets();
   if(!targets.length){toast('No target users (active operator/admin)');return;}
-  openMenu(btn,targets.map(u=>({icon:u.id===l.owner_id?'person_check':'person',
+  subMenu(btn,targets.map(u=>({icon:u.id===l.owner_id?'person_check':'person',
     label:(u.full_name||u.username)+(u.id===l.owner_id?' · owner':''),
-    fn:()=>{if(u.id===l.owner_id){toast('Already owned by this user');return;}doTransfer(l,u);}})));}
-async function doTransfer(l,u){try{const r=await api('/api/locations/transfer',{method:'POST',
-    body:JSON.stringify({ids:[l.id],to_user_id:u.id})});
-    toast(l.code+' moved to '+r.to.name);loadLocations();if(typeof loadDashboard==='function')loadDashboard();}
+    fn:()=>{if(u.id===l.owner_id){toast('Already owned by this user');return;}doTransfer([l.id],u,l.code);}})));}
+/* ids: satu atau banyak lokasi (Transfer di bar pilihan massal) */
+async function doTransfer(ids,u,label){try{const r=await api('/api/locations/transfer',{method:'POST',
+    body:JSON.stringify({ids,to_user_id:u.id})});
+    toast((label||(r.count+' location'+(r.count>1?'s':'')))+' moved to '+r.to.name);BK.clear();loadLocations();loadCreators();if(typeof loadDashboard==='function')loadDashboard();}
   catch(e){toast('Failed: '+e.message);}}
+function bkTransfer(btn){const ids=[...BK],targets=trTargets();if(!ids.length)return;
+  if(!targets.length){toast('No target users (active operator/admin)');return;}
+  openMenu(btn,targets.map(u=>({icon:'person',label:u.full_name||u.username,
+    fn:()=>confirmDo('Transfer locations',`Move <b>${ids.length} location${ids.length>1?'s':''}</b> to <b>${esc(u.full_name||u.username)}</b>? They become the owner and can edit them.`,
+      ()=>doTransfer(ids,u),{okLabel:'Transfer'})})));}
 
 /* ===== Lokasi Terhapus (soft-delete) — admin ===== */
 let TRASH=[];

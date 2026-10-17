@@ -152,6 +152,7 @@ def list_locations(
     q: str = Query(""),
     status: str = Query("all"),
     creator: int = Query(0),          # filter berdasarkan pembuat (user id); 0 = semua
+    owner: int = Query(0),            # filter berdasarkan pemilik saat ini (user id); 0 = semua
     date: str = Query(""),            # filter tanggal dibuat (YYYY-MM-DD, waktu lokal)
     wil: str = Query(""),             # filter wilayah: kode provinsi/kab/kec, atau "none" = belum diisi
     conn: sqlite3.Connection = Depends(get_db),
@@ -176,6 +177,9 @@ def list_locations(
     if creator:
         where.append("l.created_by = ?")
         params.append(creator)
+    if owner:
+        where.append("l.owner_id = ?")
+        params.append(owner)
     if date.strip():
         where.append("date(l.created_at,'localtime') = ?")
         params.append(date.strip())
@@ -236,17 +240,17 @@ def list_locations(
 
 @router.get("/creators")
 def location_creators(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
-    """Daftar pembuat entry (untuk filter Log Lokasi)."""
+    """Daftar pembuat & pemilik entry (untuk filter Log Lokasi)."""
     sc, scp = _scope(user)
     extra = (" AND " + sc) if sc else ""
-    rows = conn.execute(
-        f"""SELECT u.id, COALESCE(NULLIF(TRIM(u.full_name),''), u.username) AS name,
-                  COUNT(l.id) AS n
-           FROM users u JOIN locations l ON l.owner_id = u.id
-           WHERE l.deleted_at IS NULL{extra}
-           GROUP BY u.id ORDER BY name COLLATE NOCASE""", scp
-    ).fetchall()
-    return {"creators": [dict(r) for r in rows]}
+    def by(col):
+        return [dict(r) for r in conn.execute(
+            f"""SELECT u.id, COALESCE(NULLIF(TRIM(u.full_name),''), u.username) AS name,
+                      COUNT(l.id) AS n
+               FROM users u JOIN locations l ON l.{col} = u.id
+               WHERE l.deleted_at IS NULL{extra}
+               GROUP BY u.id ORDER BY name COLLATE NOCASE""", scp).fetchall()]
+    return {"creators": by("created_by"), "owners": by("owner_id")}
 
 
 @router.get("/options")

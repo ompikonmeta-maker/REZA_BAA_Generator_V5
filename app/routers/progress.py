@@ -425,7 +425,9 @@ def supervisor(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_
     dst = sorted([r for r in rows if r["state"] != "offline" and r["role"] == "operator"], key=lambda r: r["open"])
     if src and dst and src[0]["id"] != dst[0]["id"]:
         tip = {"from": src[0]["name"], "from_id": src[0]["id"], "cold": src[0]["aging"]["cold"],
-               "inactive_wd": src[0]["inactive_wd"], "to": dst[0]["name"], "to_id": dst[0]["id"], "to_open": dst[0]["open"]}
+               "inactive_wd": src[0]["inactive_wd"], "to": dst[0]["name"], "to_id": dst[0]["id"], "to_open": dst[0]["open"],
+               # draf Cold milik sumber -> dipindah sekaligus lewat /api/locations/transfer
+               "ids": [d["id"] for d in drafts if d["owner_id"] == src[0]["id"] and d["aging"] == "cold"]}
     t0 = datetime.combine(today, datetime.min.time()).astimezone().astimezone(timezone.utc).isoformat()
     return {"team": team, "users": rows, "days": [d.isoformat() for d in last10],
             "feed": _feed(conn, "AND a.created_at >= ?", (t0,), 40), "tip": tip, "aging": _aging(conn)}
