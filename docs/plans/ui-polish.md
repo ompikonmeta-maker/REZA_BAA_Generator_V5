@@ -352,3 +352,19 @@ Mengikuti `docs/plans/PRINSIP.md` (configurable & futureproof):
 - **SID → "field identitas" yang bisa diatur**, bukan kolom khusus SID: admin menentukan label (SID / Site ID / ...), format (pola + contoh), keunikan (per project / semua project), wajib untuk Finish atau tidak, siapa yang boleh isi/ubah, dipakai sebagai kunci import (update, bukan buat baru) dan kunci kembar, tampil di dropdown/Log/template/nama file lewat placeholder. Kode LOK tetap ada sebagai cadangan; `id` internal tidak berubah.
 - **Lampiran → "jenis lampiran" yang bisa diatur** (seperti kategori foto): label, tipe file diizinkan, ukuran maks, satu/banyak file, wajib (masuk kelengkapan) atau tidak, perilaku export (gabung ke PDF di posisi tertentu / masuk ZIP / tidak diekspor), peran yang boleh upload/hapus. Scan PDF yang sekarang menjadi salah satu jenis bawaan (migrasi tanpa mengubah perilaku).
 - Pertanyaan terbuka: lihat jawaban chat 2026-10-17 (format & keunikan SID, kapan SID diketahui, jenis file lampiran, perilaku export, batas ukuran).
+
+### 22 — keputusan pengguna (2026-10-17)
+**SID (kolom tambahan, label & aturan bisa diatur per project):**
+- Format: huruf dan/atau angka, huruf besar/kecil, panjang ±12–15 (aturan bawaan: hanya huruf+angka, 1–20 karakter; bisa diubah admin).
+- Unik per lokasi per project. Tidak wajib; berfungsi sebagai identitas lokasi.
+- Diisi lewat import di awal project (kolom SID di template import).
+- Revisi: operator mengajukan permintaan revisi SID → admin menyetujui (pola sama seperti Request edit). Admin bisa langsung mengubah.
+- Bila SID ada: **wajib tampil di Excel/PDF BAA** (placeholder SID di mapping template; admin diberi peringatan bila template belum memetakan SID) dan **nama file = "Nama Lokasi - SID"** (kode LOK tidak dicantumkan). Tanpa SID: tetap "Nama Lokasi - KODE".
+- SID ikut dicari di dropdown lokasi & Location Log, tampil di samping kode.
+
+**Lampiran tambahan (opsional per lokasi):**
+- Bukan wajib; dokumen wajib tetap scan BAA bertandatangan (fitur scan PDF yang sudah ada).
+- Saat dilampirkan → wajib ikut dokumen gabungan export PDF; saat upload user memilih letak **di depan** atau **di belakang** BAA (bisa diubah).
+- Maks 5 MB per file (bisa diatur). Tipe file tidak dibatasi kebutuhan tertentu (daftar tipe diizinkan bisa diatur).
+
+**Pertanyaan lanjutan sebelum mockup:** lihat chat 2026-10-17 (huruf besar/kecil SID, SID kosong boleh diisi operator langsung?, re-import SID yang sudah ada, tipe non-PDF di dokumen gabungan, lampiran saat export Excel, urutan relatif terhadap scan BAA).
