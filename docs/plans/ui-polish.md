@@ -219,4 +219,7 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - **Hover wilayah** (provinsi & kab/kota): pin dan angka wilayah lain memudar (0,25 dtk, tidak menangkap kursor), muncul lagi saat kursor lepas; hanya pin wilayah yang di-hover yang tampil.
 - Diuji Playwright di 25 provinsi, lebar 1400 & 900: 0 label keluar peta, 0 tumpang tindih, 0 jatuh ke titik; detail hover tiap kab/kota utuh di dalam peta.
 
+- **Legenda per pill** (% Done / Drafts / Stale): tiap pill diberi titik warna modenya; baris legenda pertama berganti mengikuti pill aktif: "Wilayah · % selesai 0% → 100%", "Wilayah · jumlah draf 0 → maks draf", "Wilayah · jumlah basi 0 → maks basi" (maks dihitung per level nasional / kab-kota) + "tanpa lokasi". Baris kedua: "Pin · status % Done" (warna pin tetap status target di semua mode).
+- Warna Stale diganti dari merah (error) ke magenta (`--stale`) supaya tidak tertukar dengan pin "jauh tertinggal"; Drafts tetap biru-ungu (`--drafts`). Di aplikasi nanti: Drafts = tertiary, Stale perlu token baru (bukan error).
+
 Menunggu "gas" untuk dipasang di aplikasi.
