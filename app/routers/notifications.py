@@ -3,6 +3,9 @@
 Alur: operator yang BUKAN pemilik sebuah lokasi menekan "Request edit" di drawer
 Log Lokasi -> baris pending masuk ke sini. Admin melihatnya di menu Notifikasi dan
 bisa MENYETUJUI (kepemilikan lokasi dialihkan ke peminta) atau MENOLAK.
+
+kind='sid': pemilik lokasi mengajukan perubahan SID yang sudah terisi (value_new +
+alasan di message). Disetujui = SID lokasi diganti (unik dicek lagi saat approve).
 """
 from __future__ import annotations
 
@@ -20,6 +23,8 @@ router = APIRouter(prefix="/api/edit-requests", tags=["edit-requests"])
 class RequestIn(BaseModel):
     location_id: int
     message: str = ""
+    kind: str = "edit"          # edit (alih kepemilikan) | sid (ubah SID)
+    value: str = ""             # kind=sid: SID baru
 
 
 def _row(conn: sqlite3.Connection, rid: int):
@@ -50,21 +55,52 @@ def _serialize(r) -> dict:
         "loc_name": nama, "requester_id": r["requester_id"], "requester_name": r["requester_name"],
         "owner_name": r["owner_name"], "message": r["message"] or "", "status": r["status"],
         "created_at": r["created_at"], "resolved_at": r["resolved_at"],
+        "kind": r["kind"] or "edit", "value_old": r["value_old"] or "", "value_new": r["value_new"] or "",
     }
+
+
+def _create_sid_request(conn, body: RequestIn, user, loc):
+    from .locations import _can_write, check_sid_free, norm_sid
+    if not _can_write(user, loc):
+        raise HTTPException(403, "Not your location")
+    lab = db.sid_config(conn).get("label") or "SID"
+    if not loc["sid"]:
+        raise HTTPException(400, f"{lab} is still empty — fill it in directly")
+    new = norm_sid(conn, body.value)
+    if not new:
+        raise HTTPException(400, f"Enter the new {lab}")
+    if new == loc["sid"]:
+        raise HTTPException(400, f"The new {lab} is the same as the current one")
+    if not (body.message or "").strip():
+        raise HTTPException(400, "Write the reason for the change")
+    check_sid_free(conn, new, loc["id"])
+    now = db.now_iso()
+    # satu permintaan SID pending per lokasi: yang baru menggantikan yang lama
+    conn.execute("UPDATE edit_requests SET status='rejected', resolved_at=?, resolved_by=? "
+                 "WHERE location_id=? AND kind='sid' AND status='pending'", (now, user["id"], loc["id"]))
+    cur = conn.execute(
+        "INSERT INTO edit_requests(location_id,requester_id,owner_id,message,status,created_at,kind,value_old,value_new) "
+        "VALUES(?,?,?,?,'pending',?,'sid',?,?)",
+        (loc["id"], user["id"], loc["owner_id"], body.message.strip(), now, loc["sid"], new))
+    conn.commit()
+    audit(conn, user, "sid_request", "location", loc["id"], f"{loc['code']}: {loc['sid']} -> {new}")
+    return {"ok": True, "id": cur.lastrowid, "status": "pending"}
 
 
 @router.post("")
 def create_request(body: RequestIn, conn: sqlite3.Connection = Depends(get_db),
                    user=Depends(require_editor)):
-    loc = conn.execute("SELECT id, code, owner_id FROM locations WHERE id=? AND deleted_at IS NULL",
+    loc = conn.execute("SELECT id, code, owner_id, sid FROM locations WHERE id=? AND deleted_at IS NULL",
                        (body.location_id,)).fetchone()
     if not loc:
         raise HTTPException(404, "Location not found")
+    if body.kind == "sid":
+        return _create_sid_request(conn, body, user, loc)
     if loc["owner_id"] == user["id"]:
         raise HTTPException(400, "You already own this location")
     # Dedupe: satu permintaan pending per (lokasi, peminta)
     dup = conn.execute(
-        "SELECT id FROM edit_requests WHERE location_id=? AND requester_id=? AND status='pending'",
+        "SELECT id FROM edit_requests WHERE location_id=? AND requester_id=? AND status='pending' AND kind='edit'",
         (body.location_id, user["id"]),
     ).fetchone()
     if dup:
@@ -103,7 +139,7 @@ def pending_count(conn: sqlite3.Connection = Depends(get_db), user=Depends(requi
 def my_requests(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     """Status permintaan milik user aktif (untuk menandai drawer)."""
     rows = conn.execute(
-        "SELECT location_id, status FROM edit_requests WHERE requester_id=? AND status='pending'",
+        "SELECT location_id, status FROM edit_requests WHERE requester_id=? AND status='pending' AND kind='edit'",
         (user["id"],),
     ).fetchall()
     return {"pending": [r["location_id"] for r in rows]}
@@ -119,6 +155,8 @@ def approve_request(rid: int, conn: sqlite3.Connection = Depends(get_db),
         raise HTTPException(400, "Request already handled")
     if r["loc_deleted"] is not None:
         raise HTTPException(400, "Location was deleted")
+    if r["kind"] == "sid":
+        return _approve_sid(conn, r, user)
     tgt = conn.execute("SELECT id, active, role FROM pm_users WHERE id=?", (r["requester_id"],)).fetchone()
     if not tgt or not tgt["active"]:
         raise HTTPException(400, "Requester is inactive")
@@ -130,7 +168,7 @@ def approve_request(rid: int, conn: sqlite3.Connection = Depends(get_db),
                  (now, user["id"], rid))
     # Batalkan permintaan pending lain untuk lokasi yang sama (sudah tak relevan)
     conn.execute("UPDATE edit_requests SET status='rejected', resolved_at=?, resolved_by=? "
-                 "WHERE location_id=? AND status='pending' AND id<>?",
+                 "WHERE location_id=? AND status='pending' AND kind='edit' AND id<>?",
                  (now, user["id"], r["location_id"], rid))
     conn.commit()
     audit(conn, user, "edit_request_approve", "location", r["location_id"],
@@ -151,3 +189,18 @@ def reject_request(rid: int, conn: sqlite3.Connection = Depends(get_db),
     conn.commit()
     audit(conn, user, "edit_request_reject", "location", r["location_id"], r["loc_code"])
     return {"ok": True}
+
+
+def _approve_sid(conn, r, user):
+    from .locations import check_sid_free, norm_sid
+    new = norm_sid(conn, r["value_new"])
+    check_sid_free(conn, new, r["location_id"])   # bisa saja sudah dipakai lokasi lain sejak diajukan
+    now = db.now_iso()
+    old = conn.execute("SELECT sid FROM locations WHERE id=?", (r["location_id"],)).fetchone()["sid"] or ""
+    conn.execute("UPDATE locations SET sid=?, updated_at=? WHERE id=?", (new, now, r["location_id"]))
+    conn.execute("UPDATE edit_requests SET status='approved', resolved_at=?, resolved_by=? WHERE id=?",
+                 (now, user["id"], r["id"]))
+    db.log_activity(conn, r["location_id"], user["id"], "sid", f"{old or '—'} -> {new}", now)
+    conn.commit()
+    audit(conn, user, "sid_request_approve", "location", r["location_id"], f"{r['loc_code']}: {old} -> {new}")
+    return {"ok": True, "sid": new}

@@ -212,7 +212,8 @@ def create_project(body: ProjectIn, hub: sqlite3.Connection = Depends(get_hub), 
         sp = hub.execute("SELECT * FROM projects WHERE id=?", (int(src[5:] or 0),)).fetchone()
         if not sp:
             raise HTTPException(400, "Project to copy from was not found")
-        keep = ("photo_categories", "location_fields", "default_inventory_items", "item_merks", "inventory_keterangan", "aging_days")
+        keep = ("photo_categories", "location_fields", "default_inventory_items", "item_merks", "inventory_keterangan", "aging_days",
+                "sid_config", "attach_config")
         base, label = {k: v for k, v in db.project_settings(sp).items() if k in keep}, f"Copied from {sp['name']}"
     else:
         base, label = None, "Default BAA settings"
@@ -420,6 +421,8 @@ def recode_apply(pid: int, body: RecodeIn, hub: sqlite3.Connection = Depends(get
             pc.execute("UPDATE photos SET path = 'images/' || ? || substr(path, ?) WHERE location_id=? AND path LIKE ?",
                        (n, len("images/" + o) + 1, lid, f"images/{o}/%"))
             pc.execute("UPDATE scan_docs SET path = 'docs/' || ? || substr(path, ?) WHERE location_id=? AND path LIKE ?",
+                       (n, len("docs/" + o) + 1, lid, f"docs/{o}/%"))
+            pc.execute("UPDATE attachments SET path = 'docs/' || ? || substr(path, ?) WHERE location_id=? AND path LIKE ?",
                        (n, len("docs/" + o) + 1, lid, f"docs/{o}/%"))
         hub.execute("UPDATE projects SET prefix=? WHERE id=?", (plan["new"], pid))
         pc.commit()

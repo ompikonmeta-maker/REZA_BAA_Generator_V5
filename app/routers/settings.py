@@ -47,7 +47,52 @@ def get_settings(conn: sqlite3.Connection = Depends(get_db), user=Depends(curren
         "item_merks": db.get_setting(conn, "item_merks", {}),
         "inventory_keterangan": db.get_setting(conn, "inventory_keterangan", []),
         "ocr_available": _ocr_available(),
+        "sid_config": db.sid_config(conn),
+        "attach_config": db.attach_config(conn),
     }
+
+
+class SidConfig(BaseModel):
+    enabled: bool = True
+    label: str = "SID"
+    uppercase: bool = True
+    max_len: int = 20
+
+
+class AttachConfig(BaseModel):
+    enabled: bool = True
+    label: str = "Additional attachments"
+    types: list[str] = ["pdf"]
+    max_mb: float = 5
+
+
+@router.put("/sid-config")
+def update_sid_config(body: SidConfig, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    from fastapi import HTTPException
+    cfg = body.model_dump()
+    cfg["label"] = (cfg["label"] or "").strip()[:30] or "SID"
+    if not 4 <= cfg["max_len"] <= 64:
+        raise HTTPException(400, "Max length must be 4–64")
+    db.set_setting(conn, "sid_config", cfg)
+    conn.commit()
+    audit(conn, user, "update", "settings", "sid_config")
+    return {"ok": True, "sid_config": db.sid_config(conn)}
+
+
+@router.put("/attach-config")
+def update_attach_config(body: AttachConfig, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    from fastapi import HTTPException
+
+    from .attachments import SUPPORTED
+    cfg = body.model_dump()
+    cfg["label"] = (cfg["label"] or "").strip()[:40] or "Additional attachments"
+    cfg["types"] = sorted({t.lower().lstrip(".") for t in cfg["types"]} & SUPPORTED) or ["pdf"]
+    if not 0.5 <= cfg["max_mb"] <= 50:
+        raise HTTPException(400, "Max size must be 0.5–50 MB")
+    db.set_setting(conn, "attach_config", cfg)
+    conn.commit()
+    audit(conn, user, "update", "settings", "attach_config")
+    return {"ok": True, "attach_config": db.attach_config(conn)}
 
 
 def _ocr_available() -> bool:

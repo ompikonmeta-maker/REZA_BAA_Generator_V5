@@ -167,6 +167,20 @@ CREATE TABLE IF NOT EXISTS activity (
     created_at  TEXT NOT NULL
 );
 
+-- Lampiran PDF tambahan (opsional, banyak per lokasi): ikut PDF gabungan sebelum/sesudah Dokumen BAA
+CREATE TABLE IF NOT EXISTS attachments (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    location_id INTEGER NOT NULL REFERENCES locations(id) ON DELETE CASCADE,
+    orig_name   TEXT DEFAULT '',
+    path        TEXT NOT NULL,                   -- relatif ke folder project: docs/<KODE>/att_x.pdf
+    pages       INTEGER NOT NULL DEFAULT 1,
+    size        INTEGER NOT NULL DEFAULT 0,
+    position    TEXT NOT NULL DEFAULT 'after',   -- before | after (Dokumen BAA = scan bertandatangan + BAA hasil generate)
+    sort_order  INTEGER NOT NULL DEFAULT 0,
+    uploaded_by INTEGER,
+    created_at  TEXT NOT NULL
+);
+
 -- Dokumen scan PDF (wajib, satu per lokasi): halaman pertama saat export PDF
 CREATE TABLE IF NOT EXISTS scan_docs (
     location_id INTEGER PRIMARY KEY REFERENCES locations(id) ON DELETE CASCADE,
@@ -223,6 +237,20 @@ EMPTY_PROJECT_SETTINGS = {
     "item_merks": {},
     "inventory_keterangan": ["OK"],
 }
+
+# Identitas lokasi dari klien (mis. Site ID). Label & aturan per project; nilai bawaan = keputusan 2026-10-17.
+DEFAULT_SID_CONFIG = {"enabled": True, "label": "SID", "uppercase": True, "max_len": 20}
+# Lampiran tambahan per lokasi (opsional), ikut PDF gabungan sebelum/sesudah Dokumen BAA
+DEFAULT_ATTACH_CONFIG = {"enabled": True, "label": "Additional attachments", "types": ["pdf"], "max_mb": 5}
+
+
+def sid_config(conn) -> dict:
+    return {**DEFAULT_SID_CONFIG, **(get_setting(conn, "sid_config") or {})}
+
+
+def attach_config(conn) -> dict:
+    return {**DEFAULT_ATTACH_CONFIG, **(get_setting(conn, "attach_config") or {})}
+
 
 # Field lokasi default (bisa ditambah custom field lewat Pengaturan)
 DEFAULT_LOCATION_FIELDS = [
@@ -413,6 +441,8 @@ def _seed_project(conn: sqlite3.Connection, base: dict | None = None) -> None:
         "default_inventory_items": DEFAULT_INVENTORY_ITEMS,
         "item_merks": {},
         "inventory_keterangan": ["OK"],
+        "sid_config": DEFAULT_SID_CONFIG,
+        "attach_config": DEFAULT_ATTACH_CONFIG,
     }
     for k, v in defaults.items():
         if get_setting(conn, k) is None:
@@ -431,9 +461,14 @@ def init_project_db(p, base: dict | None = None) -> None:
     try:
         conn.execute("PRAGMA journal_mode = WAL")
         conn.executescript(PROJECT_SCHEMA)
-        for col in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_mode", "old_codes"):
+        for col in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_mode", "old_codes", "sid"):
             if not _has_column(conn, "locations", col):
                 conn.execute(f"ALTER TABLE locations ADD COLUMN {col} TEXT")
+        conn.execute("CREATE INDEX IF NOT EXISTS ix_loc_sid ON locations(upper(sid))")
+        # permintaan: edit (alih kepemilikan, bawaan) | sid (ganti SID: value_old -> value_new)
+        for col, typ in (("kind", "TEXT NOT NULL DEFAULT 'edit'"), ("value_old", "TEXT"), ("value_new", "TEXT")):
+            if not _has_column(conn, "edit_requests", col):
+                conn.execute(f"ALTER TABLE edit_requests ADD COLUMN {col} {typ}")
         conn.execute("CREATE INDEX IF NOT EXISTS ix_loc_wil ON locations(wil_kode)")
         # lokasi hasil import lama: kolom name kosong -> isi dari nama lokasi (agar bisa dicari)
         conn.execute("UPDATE locations SET name = TRIM(COALESCE(json_extract(data_json,'$.nama_lokasi'),'')) "

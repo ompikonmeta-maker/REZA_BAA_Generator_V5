@@ -300,6 +300,58 @@
   .scan-card .sec .req{font:var(--md-sys-typescale-label-small);font-weight:600;padding:2px 8px;border-radius:99px;background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);margin-left:8px}
   .scan-card .sec .req.ok{background:var(--good-bg);color:var(--good)}
   .scan-card.drag .scan-empty,.scan-card.drag .scan-full{outline:2px dashed var(--md-sys-color-primary);outline-offset:4px}
+  /* SID (identitas lokasi dari klien) */
+  .nf-kind{margin-top:6px;font:var(--md-sys-typescale-label-medium)}.nf-kind .mono{font-size:12px;margin-top:2px}.nf-kind s{opacity:.6}
+  .nf-why{margin-top:2px;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant);max-width:280px}
+  .sid-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:start;margin-top:16px}
+  .sid-row md-text-field{width:100%}
+  .sid-row .sid-acts{display:flex;gap:8px;align-items:center;min-height:56px;flex-wrap:wrap}
+  .sid-lock{position:relative;display:flex;align-items:center;min-height:56px;padding:0 16px;border:1px solid var(--md-sys-color-outline-variant);border-radius:var(--md-sys-shape-corner-extra-small);
+    background:color-mix(in srgb,var(--md-sys-color-on-surface) 4%,transparent);font:600 16px ui-monospace,Consolas,monospace;letter-spacing:.06em;color:var(--md-sys-color-on-surface)}
+  .sid-lock label{position:absolute;top:0;left:12px;transform:translateY(-50%);padding:0 4px;background:var(--md-field-notch,var(--md-sys-color-surface));font:var(--md-sys-typescale-body-small);letter-spacing:0;color:var(--md-sys-color-on-surface-variant)}
+  .sid-lock .mi{margin-left:auto;font-size:20px;color:var(--md-sys-color-on-surface-variant)}
+  .sid-lock .none{font:var(--md-sys-typescale-body-large);font-style:italic;letter-spacing:0;color:var(--md-sys-color-on-surface-variant)}
+  .sid-hint{grid-column:1/-1;display:flex;align-items:center;gap:6px;padding:0 16px;min-height:18px;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .sid-hint .mi{font-size:16px}
+  .sid-hint.ok{color:var(--good)}.sid-hint.bad{color:var(--md-sys-color-error)}
+  .sid-pend{display:inline-flex;align-items:center;gap:6px;font:var(--md-sys-typescale-label-medium);font-weight:700;color:var(--warn);background:var(--warn-bg);padding:6px 12px;border-radius:99px}
+  .sid-pend .mi{font-size:16px}.sid-pend a{color:inherit;text-decoration:underline;cursor:pointer}
+  .sidreq{display:grid;gap:12px;width:min(460px,78vw)}
+  .sidreq .sr-row{display:grid;grid-template-columns:100px minmax(0,1fr);gap:8px;align-items:center}
+  .sidreq .sr-row small{color:var(--md-sys-color-on-surface-variant)}
+  .sidreq .sr-cur{font-weight:600;font-size:15px}
+  .sidreq md-text-field{width:100%}
+  .sidreq .sid-hint{padding:0 4px;margin-top:-8px}
+  /* Lampiran tambahan: ikut PDF gabungan sebelum / sesudah Dokumen BAA */
+  .att-card .sec .req{font:var(--md-sys-typescale-label-small);font-weight:600;padding:2px 8px;border-radius:99px;margin-left:8px;background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface-variant)}
+  .att-note{margin:0 0 10px}
+  .att-list{display:grid;gap:8px}
+  .att-r{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 12px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-surface-container)}
+  .att-r>.mi{color:var(--bad);font-size:24px}
+  .att-r a.fn{display:block;font:var(--md-sys-typescale-title-small);color:var(--md-sys-color-on-surface);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .att-r a.fn:hover{text-decoration:underline}
+  .att-r small{color:var(--md-sys-color-on-surface-variant)}
+  .att-pos{display:inline-flex;border:1px solid var(--md-sys-color-outline);border-radius:99px;overflow:hidden}
+  .att-pos button{border:0;background:none;padding:6px 12px;font:var(--md-sys-typescale-label-medium);font-weight:600;color:var(--md-sys-color-on-surface-variant);cursor:pointer;transition:background var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard),color var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard)}
+  .att-pos button.on{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}
+  .att-pos button:disabled{cursor:default}
+  .att-ord-h{margin-top:12px;font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant)}
+  .att-ord{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;font:var(--md-sys-typescale-label-medium)}
+  .att-ord span{padding:6px 10px;border-radius:var(--md-sys-shape-corner-small);border:1px solid var(--md-sys-color-outline-variant);color:var(--md-sys-color-on-surface-variant);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .att-ord span.baa{border-color:var(--md-sys-color-primary);color:var(--md-sys-color-primary);font-weight:700}
+  .att-ord span.att{border-color:var(--md-sys-color-tertiary);color:var(--md-sys-color-tertiary);font-weight:700}
+  .att-ord span.miss{border-style:dashed;font-weight:500;color:var(--md-sys-color-on-surface-variant)}
+  .att-fn{margin-top:10px;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .att-fn b{color:var(--md-sys-color-on-surface)}
+  .att-card.drag{outline:2px dashed var(--md-sys-color-primary);outline-offset:-6px}
+  .att-empty{padding:14px;border:1.5px dashed var(--md-sys-color-outline-variant);border-radius:var(--md-sys-shape-corner-large);text-align:center;color:var(--md-sys-color-on-surface-variant);cursor:pointer}
+  .attpos{display:grid;gap:10px;width:min(460px,78vw)}
+  .ap-opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:var(--md-sys-shape-corner-medium);border:1px solid var(--md-sys-color-outline-variant);cursor:pointer}
+  .ap-opt.on{border-color:var(--md-sys-color-primary);background:color-mix(in srgb,var(--md-sys-color-primary) 8%,transparent)}
+  .ap-opt .r{width:18px;height:18px;border-radius:50%;border:2px solid var(--md-sys-color-outline);flex:0 0 auto;margin-top:2px;box-sizing:border-box;transition:border-width var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard)}
+  .ap-opt.on .r{border:6px solid var(--md-sys-color-primary)}
+  .ap-opt small{color:var(--md-sys-color-on-surface-variant)}
+  #entry-form.ro .sid-acts md-button,#entry-form.ro .att-pos button{pointer-events:none}
   .scan-empty{display:flex;align-items:center;gap:16px;padding:18px;border:1.5px dashed var(--md-sys-color-outline);border-radius:var(--md-sys-shape-corner-large);background:var(--md-sys-color-surface-container);cursor:pointer;flex-wrap:wrap}
   .scan-empty.ro{cursor:default;border-style:solid;border-color:var(--md-sys-color-outline-variant)}
   .scan-empty .ic{width:48px;height:56px;border-radius:8px;display:grid;place-items:center;background:var(--md-sys-color-surface-container-highest);color:var(--md-sys-color-error)}
@@ -799,6 +851,7 @@
   /* baris = nama penuh (maks 2 baris) di atas, kode + status di bawah — nama lokasi bisa sangat panjang */
   .lp-opt{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:10px 12px;border-radius:12px;cursor:pointer}
   .lp-opt .lp-meta{display:flex;align-items:center;gap:8px}
+  .sid-chip{font:600 11px ui-monospace,Consolas,monospace;color:var(--md-sys-color-on-tertiary-container);background:var(--md-sys-color-tertiary-container);padding:2px 8px;border-radius:6px;white-space:nowrap;flex:0 0 auto}
   .lp-opt mark{background:color-mix(in srgb,var(--md-sys-color-tertiary) 30%,transparent);color:inherit;border-radius:3px;padding:0 1px}
   .lp-opt:hover,.lp-opt.act{background:var(--md-sys-color-surface-container-high)}
   .lp-opt .lp-code{font-family:ui-monospace,Consolas,monospace;font-size:11px;font-weight:600;color:var(--md-sys-color-on-surface-variant);
@@ -1677,6 +1730,7 @@
   .mtr .nm{display:block;font:var(--md-sys-typescale-body-large);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mtr small{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-small)}
   .mbadge{font:var(--md-sys-typescale-label-small);font-weight:600;padding:3px 9px;border-radius:999px;background:var(--good-bg);color:var(--good);white-space:nowrap}
+  .mbadge+.mbadge{margin-left:6px}
   .mbadge.warn{background:var(--warn-bg);color:var(--warn)}
   .mtr .ra{display:flex;gap:2px;align-items:center}
   .mtempty{padding:22px;text-align:center;color:var(--md-sys-color-on-surface-variant)}
@@ -1903,6 +1957,11 @@
 
   /* ===== Field Inventory (redesign): keterangan global + merk per item, drag-reorder ===== */
   .fi-sec{margin-top:22px}
+  .ids-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .ids-row .ids-f{display:flex;align-items:center;gap:6px;font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant)}
+  .ids-row .ids-f input{width:64px;border:none;border-radius:8px;padding:7px 9px;background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-body-medium);outline:none}
+  .ids-row .ids-f input:focus{box-shadow:0 0 0 2px var(--md-sys-color-primary)}
+  .ids-note{margin:8px 2px 0;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
   .fi-slabel{display:flex;align-items:center;gap:9px;margin-bottom:12px}
   .fi-slabel .mi{font-size:19px;color:var(--md-sys-color-primary)}
   .fi-slabel h4{margin:0;font:var(--md-sys-typescale-title-medium);font-weight:600}
@@ -2356,6 +2415,7 @@
             <div class="card">
               <div class="sec"><span class="mi acc">location_on</span><h3>Location Data</h3></div>
               <div class="fgrid" id="loc-fields"></div>
+              <div class="sid-row hidden" id="sidRow"></div>
               <div class="dup-warn hidden" id="dupWarn"></div>
               <div id="wil-field" class="wl-f hidden"></div>
             </div>
@@ -2371,6 +2431,13 @@
               <div class="sec"><span class="mi acc">picture_as_pdf</span><h3>Scan Document (PDF)</h3><span class="req" id="scanTag">Required</span><span class="grow"></span></div>
               <div id="scanBody"></div>
               <input id="scan-file" type="file" accept=".pdf,application/pdf" class="hidden">
+            </div>
+            <div class="card att-card hidden" id="attCard">
+              <div class="sec"><span class="mi acc">attach_file</span><h3 id="attTitle">Additional attachments</h3><span class="req opt">Optional</span><span class="grow"></span>
+                <md-button class="wr" variant="outlined" icon="upload_file" id="attAdd">Add file</md-button></div>
+              <p class="muted att-note" id="attNote"></p>
+              <div id="attBody"></div>
+              <input id="att-file" type="file" class="hidden">
             </div>
             <div class="card">
               <div class="sec"><span class="mi acc">photo_camera</span><h3>Photos &amp; Capture</h3><span class="grow"></span>
@@ -2456,7 +2523,7 @@
           <div class="lg-head admin-only"><span class="lg-seg"><button class="on" type="button">Active <i id="lgActN"></i></button><button type="button" onclick="navTo('trash')"><span class="mi">delete</span>Deleted <i id="lgDelN"></i></button></span>
             <span class="grow"></span><md-button variant="tonal" icon="upload_file" class="wr-only" onclick="navTo('import')">Import locations</md-button></div>
           <div class="rowflex" style="margin-bottom:14px;flex-wrap:wrap;gap:10px">
-            <md-text-field id="loc-search" variant="outlined" label="Search code / name" leading-icon="search" style="min-width:220px"></md-text-field>
+            <md-text-field id="loc-search" variant="outlined" label="Search SID / code / name" leading-icon="search" style="min-width:220px"></md-text-field>
             <div class="md-select" id="loc-creator"></div>
             <div class="md-select" id="loc-owner"></div>
             <div class="md-select wil-only" id="loc-wil"></div>
@@ -2642,7 +2709,7 @@
         <div class="card">
           <div class="sec"><span class="mi acc">notifications</span><h3>Notifications · Edit Requests</h3><span class="grow"></span>
             <span class="code-chip"><span class="mi" style="font-size:15px">admin_panel_settings</span>Admin only</span></div>
-          <p class="muted" style="margin:0 0 12px">Edit-access requests from other users. <b>Approve</b> = location ownership moves to the requester; <b>Reject</b> = the request is closed.</p>
+          <p class="muted" style="margin:0 0 12px">Requests from operators. <b>Approve</b> an edit request = location ownership moves to the requester; <b>Approve</b> an ID change = the location's ID is replaced. <b>Reject</b> = the request is closed.</p>
           <table><thead><tr><th>Location</th><th>Requester</th><th>Owner</th><th>Time</th><th>Status</th><th></th></tr></thead>
             <tbody id="notif-table"></tbody></table>
         </div>
@@ -2684,6 +2751,7 @@
           <div class="scan-info"><span class="mi">percent</span><span><b>Required</b> fields count toward completeness % and must be filled before Done. Optional fields can still be filled but don’t affect progress.</span></div>
           <div id="lf-list"></div>
           <div class="lf-sug" id="lf-sug"></div>
+          <div id="idSet"></div>
           <div style="margin-top:12px"><md-button id="lf-save" variant="filled" icon="save">Save fields</md-button></div>
         </div>
         <div class="card setview hidden" id="set-inventory">
@@ -2872,6 +2940,30 @@
     <div class="rowflex" style="margin-top:10px"><span class="mi">zoom_out</span><input id="ed-zoom" type="range" min="1" max="4" step="0.01" value="1" style="flex:1;accent-color:var(--md-sys-color-primary)"><span class="mi">zoom_in</span></div>
   </div>
   <div slot="actions"><md-button variant="text" id="ed-cancel">Cancel</md-button><md-button variant="filled" id="ed-save" icon="check">Save &amp; upload</md-button></div>
+</md-dialog>
+
+<md-dialog id="sidReqDlg">
+  <span slot="headline" id="sidReqTitle">Request SID change</span>
+  <div class="sidreq">
+    <div class="sr-row"><small>Location</small><b id="sidReqLoc"></b></div>
+    <div class="sr-row"><small id="sidReqCurL">Current SID</small><span class="mono sr-cur" id="sidReqCur"></span></div>
+    <md-text-field id="sidReqNew" variant="outlined" label="New SID"></md-text-field>
+    <div class="sid-hint" id="sidReqHint"></div>
+    <md-text-field id="sidReqWhy" variant="outlined" type="textarea" label="Reason *"></md-text-field>
+    <small class="muted">The admin approves the change; the SID stays the same until then.</small>
+  </div>
+  <div slot="actions"><md-button variant="text" id="sidReqCancel">Cancel</md-button><md-button variant="filled" id="sidReqSend" icon="send">Send request</md-button></div>
+</md-dialog>
+
+<md-dialog id="attPosDlg">
+  <span slot="headline">Where should this file go?</span>
+  <div class="attpos">
+    <div><b id="attPosName"></b> <small class="muted" id="attPosMeta"></small></div>
+    <label class="ap-opt" data-v="before"><span class="r"></span><span><b>Before the BAA document</b><br><small>In front of the signed BAA scan</small></span></label>
+    <label class="ap-opt on" data-v="after"><span class="r"></span><span><b>After the BAA document</b><br><small>After the generated BAA pages</small></span></label>
+    <small class="muted">BAA document = signed scan + generated BAA. You can change the position later.</small>
+  </div>
+  <div slot="actions"><md-button variant="text" id="attPosCancel">Cancel</md-button><md-button variant="filled" id="attPosOk" icon="attach_file">Attach</md-button></div>
 </md-dialog>
 
 <md-dialog id="snDlg">
@@ -3089,7 +3181,7 @@ class LocationPicker{
     el.className='locpick';el.tabIndex=0;
     el.innerHTML=`<div class="lp-lab">Location</div><div class="lp-val ph">— select location —</div><span class="mi lp-arrow">expand_more</span>`;
     this.panel=document.createElement('div');this.panel.className='lp-panel';
-    this.panel.innerHTML=`<div class="lp-search"><span class="mi">search</span><input type="text" placeholder="Search code / location name…" autocomplete="off"><button type="button" class="lp-clr hidden" aria-label="Clear search"><span class="mi">close</span></button></div>
+    this.panel.innerHTML=`<div class="lp-search"><span class="mi">search</span><input type="text" placeholder="Search SID / code / location name…" autocomplete="off"><button type="button" class="lp-clr hidden" aria-label="Clear search"><span class="mi">close</span></button></div>
       <div class="lp-list"></div>
       <div class="lp-foot"><span class="lp-cnt"></span><span class="lp-keys"><kbd>↑</kbd><kbd>↓</kbd> select · <kbd>Enter</kbd> open</span><button type="button" class="lp-new"><span class="mi">add</span>New location</button></div>`;
     document.body.appendChild(this.panel);
@@ -3120,7 +3212,7 @@ class LocationPicker{
   openPanel(){this.open=true;this.act=0;this.q.value='';this._position();this.panel.classList.add('show');this.el.classList.add('open');this._renderList();ddIn(this.panel,this.el);setTimeout(()=>this.q.focus(),20);}
   close(){if(!this.open)return;this.open=false;this.el.classList.remove('open');ddOut(this.panel,()=>{if(!this.open)this.panel.classList.remove('show');});}
   _filtered(){const q=(this.q.value||'').toLowerCase().trim();
-    return q?this.items.filter(o=>o.code.toLowerCase().includes(q)||(o.nama||'').toLowerCase().includes(q)):this.items;}
+    return q?this.items.filter(o=>o.code.toLowerCase().includes(q)||(o.nama||'').toLowerCase().includes(q)||(o.sid||'').toLowerCase().includes(q)):this.items;}
   _renderList(){const rows=this._filtered();
     this.panel.querySelector('.lp-cnt').textContent=rows.length+' / '+this.items.length+' locations';
     if(this.act>=rows.length)this.act=Math.max(0,rows.length-1);
@@ -3128,7 +3220,7 @@ class LocationPicker{
     const hl=t=>{const i=q?t.toLowerCase().indexOf(q):-1;return i<0?esc(t):esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+q.length))+'</mark>'+esc(t.slice(i+q.length));};
     this.list.innerHTML=rows.length?rows.map((o,i)=>`<div class="lp-opt${i===this.act?' act':''}${o.value===this.value?' sel':''}" data-v="${o.value}" title="${esc((o.nama||'(no name)')+' · '+o.code)}">
         <span class="lp-nm${o.nama?'':' empty'}">${o.nama?hl(o.nama):'(no name)'}</span>
-        <span class="lp-meta"><span class="lp-code">${hl(o.code)}</span><span class="lp-badge ${o.status==='selesai'?'b-s':'b-d'}">${esc(o.status||'')}</span></span></div>`).join(''):'<div class="lp-empty">No matching location.</div>';
+        <span class="lp-meta">${o.sid?`<span class="sid-chip">${esc(sidLabel())} ${hl(o.sid)}</span>`:''}<span class="lp-code">${hl(o.code)}</span><span class="lp-badge ${o.status==='selesai'?'b-s':'b-d'}">${esc(o.status||'')}</span></span></div>`).join(''):'<div class="lp-empty">No matching location.</div>';
     [...this.list.querySelectorAll('.lp-opt')].forEach(el=>el.addEventListener('click',()=>this._choose(el.dataset.v)));
   }
   _choose(v){this.value=v;this._renderTrigger();this.close();this.onChange&&this.onChange(v);}
@@ -3312,7 +3404,7 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
   else{lg.classList.add('hidden');$('#lgGreet').classList.remove('on','out');$('#lgIris').classList.remove('on');$('#lgCard').classList.remove('gone');}
   if(S.user.must_change)await onbPassword();
   if(!await pjInit()){if(window.BFIntro)BFIntro.unveil();return;}
-  S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.keterangan=s.inventory_keterangan||[];S.appTitle=s.app_title||'BAA Generator';});
+  S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.keterangan=s.inventory_keterangan||[];S.appTitle=s.app_title||'BAA Generator';S.sidCfg=s.sid_config||S.sidCfg;S.attCfg=s.attach_config||S.attCfg;});
   await S.settingsReady;
   if(S.user.role!=='admin')$$('.admin-only').forEach(x=>x.classList.add('hidden'));
   $$('.prog-nav').forEach(x=>x.classList.toggle('hidden',S.user.role==='operator'));
@@ -3329,6 +3421,9 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
    Nama yang disimpan & dicetak = sesuai tulisan teknisi (default = nama resmi). */
 /* Scan PDF per project: off = tidak wajib, tidak dihitung, tidak ditampilkan */
 const SCAN={on:()=>!(PJ.cur&&PJ.cur.scan_on===false)};
+/* SID (identitas lokasi dari klien) & lampiran tambahan: label/aturan per project (Settings) */
+S.sidCfg={enabled:true,label:'SID',uppercase:true,max_len:20};S.attCfg={enabled:true,label:'Additional attachments',types:['pdf'],max_mb:5};
+const sidOn=()=>S.sidCfg.enabled!==false,sidLabel=()=>S.sidCfg.label||'SID',attOn=()=>S.attCfg.enabled!==false;
 function scanApply(){$('#app').classList.toggle('scan-off',!SCAN.on());const i=$('#scanInfo');if(!i)return;
   i.innerHTML=SCAN.on()?'<span class="mi">picture_as_pdf</span><span><b>Scan PDF</b> — required for every location · becomes page 1 of the PDF export. Switch off in Project &amp; status › Features.</span>'
     :'<span class="mi">picture_as_pdf</span><span><b>Scan PDF</b> is off for this project — not required and not counted in completeness.</span>';}
@@ -3722,6 +3817,143 @@ $('#scan-file').addEventListener('change',e=>{e.stopPropagation();const f=e.targ
   card.addEventListener('dragleave',e=>{if(!card.contains(e.relatedTarget))card.classList.remove('drag');});
   card.addEventListener('drop',e=>{card.classList.remove('drag');if(roActive())return;e.preventDefault();e.stopPropagation();
     const f=[...(e.dataTransfer.files||[])].find(isPdf);if(f)uploadScan(f);else toast('Drop a .pdf file here');});})();
+
+/* ===== SID (identitas lokasi dari klien) =====
+   Admin: ubah langsung. Operator pemilik: boleh MENGISI bila kosong; sudah terisi -> terkunci + "Request change"
+   (admin menyetujui di Notifications). Disimpan lewat tombol sendiri (bukan autosave) agar ketikan setengah jadi
+   tidak langsung mengunci SID. Huruf diketik otomatis jadi kapital (bisa dimatikan di Settings). */
+const SIDC={t:0,seq:0,res:null};
+const sidNorm=v=>{v=String(v||'').replace(/\s+/g,'');return S.sidCfg.uppercase!==false?v.toUpperCase():v;};
+function sidUpperInput(tf){const inp=tfInput(tf);if(!inp||inp._sidUp)return inp;inp._sidUp=1;inp.setAttribute('maxlength',S.sidCfg.max_len||20);
+  inp.setAttribute('autocomplete','off');inp.setAttribute('spellcheck','false');inp.style.fontFamily='ui-monospace,Consolas,monospace';inp.style.letterSpacing='.06em';
+  inp.addEventListener('input',()=>{const a=inp.selectionStart,b=inp.selectionEnd,v=sidNorm(inp.value);if(v!==inp.value){inp.value=v;try{inp.setSelectionRange(Math.min(a,v.length),Math.min(b,v.length));}catch(e){}}});
+  return inp;}
+async function sidCheck(v,exclude){const seq=++SIDC.seq;
+  try{const r=await api(`/api/locations/sid-check?sid=${encodeURIComponent(v)}&exclude=${exclude||0}`);return seq===SIDC.seq?r:null;}catch(e){return null;}}
+function sidHintHtml(r,v){const lab=esc(sidLabel());
+  if(!v)return `<span class="mi">info</span>Letters &amp; numbers${S.sidCfg.uppercase!==false?' · typed letters become CAPITALS':''} · unique in this project`;
+  if(!r)return '<span class="mi spin">progress_activity</span>Checking…';
+  if(r.error)return `<span class="mi">error</span>${esc(r.error)}`;
+  if(r.used_by)return `<span class="mi">error</span>${lab} ${esc(r.sid)} is already used by <span class="mono">${esc(r.used_by)}</span>`;
+  return `<span class="mi">check_circle</span>Available in this project`;}
+function sidPaintHint(el,r,v){el.className='sid-hint'+(v&&r?(r.ok?' ok':' bad'):'');el.innerHTML=sidHintHtml(r,v);}
+function renderSid(){const row=$('#sidRow');if(!row)return;const L=S.loc;
+  if(!L||!sidOn()){row.classList.add('hidden');row.innerHTML='';return;}
+  row.classList.remove('hidden');
+  const adm=S.user&&S.user.role==='admin',ro=roActive()||frozenRO(),sid=L.sid||'',rq=L.sid_request,lab=esc(sidLabel());
+  const editable=!ro&&(adm||!sid);
+  const pend=rq?`<span class="sid-pend"><span class="mi">hourglass_top</span>${rq.mine?'Change to':'Change requested:'} <span class="mono">${esc(rq.value)}</span> ${rq.mine?'awaiting admin':''}${adm?' · <a id="sidPendGo">Review</a>':''}</span>`:'';
+  if(editable){
+    row.innerHTML=`<md-text-field id="sidInp" variant="outlined" label="${lab}" value="${esc(sid)}" trailing-icon="badge"></md-text-field>
+      <div class="sid-acts"><md-button variant="filled" icon="check" id="sidSave" class="hidden">Save ${lab}</md-button>${pend}</div><div class="sid-hint" id="sidHint"></div>`;
+    const tf=$('#sidInp'),hint=$('#sidHint'),btn=$('#sidSave');sidPaintHint(hint,null,'');
+    const inp=sidUpperInput(tf);
+    const upd=()=>{const v=sidNorm(inp.value),changed=v!==sid;clearTimeout(SIDC.t);SIDC.res=null;
+      btn.classList.toggle('hidden',!changed);btn.setAttribute('disabled','');
+      if(!v){sidPaintHint(hint,null,'');if(changed&&adm)btn.removeAttribute('disabled');return;}
+      sidPaintHint(hint,null,v);
+      SIDC.t=setTimeout(async()=>{const r=await sidCheck(v,L.id);if(!r||sidNorm(inp.value)!==v)return;SIDC.res=r;sidPaintHint(hint,r,v);
+        if(r.ok&&v!==sid)btn.removeAttribute('disabled');},350);};
+    inp.addEventListener('input',upd);
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!btn.hasAttribute('disabled')&&!btn.classList.contains('hidden')){e.preventDefault();sidSave();}});
+    btn.onclick=()=>{if(!btn.hasAttribute('disabled'))sidSave();};
+  }else{
+    row.innerHTML=`<div class="sid-lock"><label>${lab}</label>${sid?esc(sid):'<span class="none">Not set</span>'}<span class="mi">${sid?'lock':'remove'}</span></div>
+      <div class="sid-acts">${pend||(!ro&&sid&&L.can_edit!==false?`<md-button variant="outlined" icon="edit_note" id="sidReqBtn">Request change</md-button>`:'')}</div>
+      <div class="sid-hint">${ro?'':sid?'<span class="mi">lock</span>Filled — ask the admin to change it':''}</div>`;
+    const b=$('#sidReqBtn');if(b)b.onclick=openSidReq;}
+  const pg=$('#sidPendGo');if(pg)pg.onclick=()=>navTo('notif');}
+async function sidSave(){const tf=$('#sidInp');if(!tf||!S.loc)return;const v=sidNorm(tfInput(tf).value),adm=S.user.role==='admin';
+  const go=async()=>{try{if(isDraft())await ensureLoc();
+      const r=await api('/api/locations/'+S.loc.id+'/sid',{method:'PUT',body:JSON.stringify({sid:v})});
+      S.loc.sid=r.sid;S.loc.sid_request=r.sid_request;renderSid();updateSummary();renderAtt();refreshPicker();loadLocations();
+      toast(v?`${sidLabel()} saved: ${v}`:`${sidLabel()} cleared`);}catch(e){toast('Failed: '+e.message);}};
+  if(!adm&&v)confirmDo(`Save ${sidLabel()}`,`Save <b class="mono">${esc(v)}</b> for this location?<br><br>After saving, changing it needs admin approval.`,go,{okLabel:'Save'});
+  else go();}
+function openSidReq(){const L=S.loc;if(!L)return;const lab=sidLabel();
+  $('#sidReqTitle').textContent=`Request ${lab} change`;$('#sidReqCurL').textContent=`Current ${lab}`;
+  $('#sidReqLoc').textContent=(L.name||(L.data||{}).nama_lokasi||'')+' · '+L.code;$('#sidReqCur').textContent=L.sid||'';
+  const nf=$('#sidReqNew'),wf=$('#sidReqWhy');nf.setAttribute('label',`New ${lab}`);nf.setAttribute('value','');wf.setAttribute('value','');
+  const hint=$('#sidReqHint'),send=$('#sidReqSend');sidPaintHint(hint,null,'');send.setAttribute('disabled','');
+  setTimeout(()=>{const inp=sidUpperInput(nf),why=tfInput(wf);
+    const chk=()=>{const v=sidNorm(inp.value);const ok=SIDC.res&&SIDC.res.ok&&SIDC.res.sid===v&&v!==L.sid&&(why.value||'').trim();
+      ok?send.removeAttribute('disabled'):send.setAttribute('disabled','');};
+    inp.oninput=()=>{const v=sidNorm(inp.value);clearTimeout(SIDC.t);SIDC.res=null;chk();
+      if(!v){sidPaintHint(hint,null,'');return;}
+      if(v===L.sid){hint.className='sid-hint bad';hint.innerHTML='<span class="mi">error</span>Same as the current one';return;}
+      sidPaintHint(hint,null,v);SIDC.t=setTimeout(async()=>{const r=await sidCheck(v,L.id);if(!r||sidNorm(inp.value)!==v)return;SIDC.res=r;sidPaintHint(hint,r,v);chk();},350);};
+    why.oninput=chk;inp.focus();},60);
+  $('#sidReqDlg').show();}
+$('#sidReqCancel').addEventListener('click',()=>$('#sidReqDlg').close());
+$('#sidReqSend').addEventListener('click',async()=>{const b=$('#sidReqSend');if(b.hasAttribute('disabled')||!S.loc)return;
+  const v=sidNorm(tfInput($('#sidReqNew')).value),why=(tfInput($('#sidReqWhy')).value||'').trim(),lid=S.loc.id;
+  try{await api('/api/edit-requests',{method:'POST',body:JSON.stringify({location_id:lid,kind:'sid',value:v,message:why})});
+    $('#sidReqDlg').close();toast('Request sent to the admin');
+    if(S.loc&&S.loc.id===lid){S.loc.sid_request={value:v,mine:true};renderSid();}}catch(e){toast('Failed: '+e.message);}});
+['input','change'].forEach(ev=>$('#sidRow').addEventListener(ev,e=>e.stopPropagation()));
+
+/* ===== Lampiran tambahan (opsional): masuk PDF gabungan sebelum / sesudah Dokumen BAA ===== */
+const attTypes=()=>(S.attCfg.types||['pdf']).map(t=>String(t).toLowerCase().replace(/^\./,''));
+const attOk=f=>!!f&&attTypes().includes(((f.name||'').split('.').pop()||'').toLowerCase());
+const attUrl=a=>'/api/locations/'+S.loc.id+'/attachments/'+a.id+'/file';
+function attFileName(){const L=S.loc||{},nm=(L.name||(L.data||{}).nama_lokasi||'').trim(),id=(sidOn()&&L.sid)||L.code||'';return (nm?nm+' - ':'')+id+'.pdf';}
+function renderAtt(){const card=$('#attCard');if(!card)return;const L=S.loc;
+  if(!L||!attOn()){card.classList.add('hidden');return;}
+  card.classList.remove('hidden');
+  const ro=roActive()||frozenRO(),list=L.attachments||[],mb=S.attCfg.max_mb||5,ty=attTypes().map(t=>t.toUpperCase()).join(' / ');
+  $('#attTitle').textContent=S.attCfg.label||'Additional attachments';
+  $('#att-file').setAttribute('accept',attTypes().map(t=>'.'+t).join(','));
+  $('#attNote').textContent=`Each file is merged into the exported PDF, before or after the BAA document. ${ty} · max ${mb} MB per file. Not included in Excel.`;
+  $('#attAdd').classList.toggle('hidden',ro);
+  const when=iso=>{try{return new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){return '';}};
+  const rowH=a=>`<div class="att-r" data-id="${a.id}"><span class="mi">picture_as_pdf</span><div style="min-width:0"><a class="fn" href="${attUrl(a)}" target="_blank" rel="noopener" title="${esc(a.orig_name)}">${esc(a.orig_name||'attachment.pdf')}</a>
+      <small>${a.pages} page${a.pages>1?'s':''} · ${fmtSize(a.size)}${a.by?' · '+esc(a.by):''}${a.created_at?' · '+when(a.created_at):''}</small></div>
+    <span class="att-pos"><button type="button" data-pos="before" class="${a.position==='before'?'on':''}" ${ro?'disabled':''}>Before BAA</button><button type="button" data-pos="after" class="${a.position!=='before'?'on':''}" ${ro?'disabled':''}>After BAA</button></span>
+    ${ro?'<span></span>':`<md-icon-button data-tip="Remove" data-del="${a.id}"><span>delete</span></md-icon-button>`}</div>`;
+  const before=list.filter(a=>a.position==='before'),after=list.filter(a=>a.position!=='before'),sc=L.scan;
+  const ord=list.length?`<div class="att-ord-h">Order in the exported PDF</div><div class="att-ord">${before.map(a=>`<span class="att">${esc(a.orig_name)}</span>`).join('')}
+      ${SCAN.on()?`<span class="baa${sc?'':' miss'}">Scan BAA (signed)${sc?'':' — not uploaded'}</span>`:''}<span class="baa">BAA (generated)</span>${after.map(a=>`<span class="att">${esc(a.orig_name)}</span>`).join('')}</div>
+      <div class="att-fn">PDF file name: <b>${esc(attFileName())}</b></div>`:'';
+  $('#attBody').innerHTML=list.length?`<div class="att-list">${before.concat(after).map(rowH).join('')}</div>${ord}`
+    :ro?'<div class="muted">No attachments.</div>':`<div class="att-empty" id="attEmpty"><span class="mi" style="vertical-align:-6px">upload_file</span> Drop a ${ty} here or click — optional</div>`;
+  const e=$('#attEmpty');if(e)e.onclick=()=>$('#att-file').click();
+  $$('#attBody .att-pos button').forEach(b=>b.onclick=()=>{if(!b.classList.contains('on'))attMove(+b.closest('.att-r').dataset.id,b.dataset.pos,b);});
+  $$('#attBody [data-del]').forEach(b=>b.onclick=()=>{const a=list.find(x=>x.id===+b.dataset.del);
+    confirmDo('Remove attachment',`Remove <b>${esc(a.orig_name)}</b> from this location?`,()=>attDel(a.id),{okLabel:'Remove'});});
+  bindTips();}
+async function attMove(id,pos,btn){const lid=S.loc.id;const g=btn.parentElement;g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===btn));
+  try{const r=await api(`/api/locations/${lid}/attachments/${id}`,{method:'PATCH',body:JSON.stringify({position:pos})});if(S.loc&&S.loc.id===lid){S.loc.attachments=r.attachments;renderAtt();}}
+  catch(e){toast('Failed: '+e.message);renderAtt();}}
+async function attDel(id){const lid=S.loc.id;
+  try{const r=await api(`/api/locations/${lid}/attachments/${id}`,{method:'DELETE'});if(S.loc&&S.loc.id===lid){S.loc.attachments=r.attachments;renderAtt();}toast('Attachment removed');}
+  catch(e){toast('Failed: '+e.message);}}
+let ATT_Q=null;
+function attPick(file){if(!file||!S.loc)return;
+  if(roActive()||frozenRO()){toast('Viewer mode — cannot upload');return;}
+  if(!attOk(file)){toast('Allowed: '+attTypes().map(t=>'.'+t).join(', '));return;}
+  const mb=S.attCfg.max_mb||5;if(file.size>mb*1048576){toast(`File is larger than ${mb} MB`);return;}
+  ATT_Q=file;$('#attPosName').textContent=file.name;$('#attPosMeta').textContent='· '+fmtSize(file.size);
+  $$('#attPosDlg .ap-opt').forEach(o=>o.classList.toggle('on',o.dataset.v==='after'));$('#attPosDlg').show();}
+$$('#attPosDlg .ap-opt').forEach(o=>o.addEventListener('click',()=>$$('#attPosDlg .ap-opt').forEach(x=>x.classList.toggle('on',x===o))));
+$('#attPosCancel').addEventListener('click',()=>{ATT_Q=null;$('#attPosDlg').close();});
+$('#attPosOk').addEventListener('click',async()=>{const file=ATT_Q;ATT_Q=null;$('#attPosDlg').close();if(!file||!S.loc)return;
+  const pos=($('#attPosDlg .ap-opt.on')||{}).dataset.v||'after';
+  if(isDraft()){try{await ensureLoc();}catch(e){toast('Failed to create location: '+e.message);return;}}
+  const lid=S.loc.id,fd=new FormData();fd.append('file',file,file.name);fd.append('position',pos);
+  toast('Uploading '+file.name+'…');
+  try{const r=await fetch('/api/locations/'+lid+'/attachments',{method:'POST',body:fd,credentials:'same-origin'});
+    const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.detail||('HTTP '+r.status));
+    if(S.loc&&S.loc.id===lid){S.loc.attachments=d.attachments;renderAtt();}toast('Attached: '+file.name);}
+  catch(e){toast('Upload failed: '+e.message);}});
+$('#attAdd').addEventListener('click',()=>$('#att-file').click());
+['input','change'].forEach(ev=>$('#attCard').addEventListener(ev,e=>e.stopPropagation()));
+$('#att-file').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)attPick(f);});
+(function(){const card=$('#attCard');
+  const on=e=>{if(roActive()||!e.dataTransfer||![...e.dataTransfer.types].includes('Files'))return;e.preventDefault();e.stopPropagation();card.classList.add('drag');};
+  card.addEventListener('dragenter',on);card.addEventListener('dragover',on);
+  card.addEventListener('dragleave',e=>{if(!card.contains(e.relatedTarget))card.classList.remove('drag');});
+  card.addEventListener('drop',e=>{card.classList.remove('drag');if(roActive())return;e.preventDefault();e.stopPropagation();
+    const f=[...(e.dataTransfer.files||[])][0];if(f)attPick(f);});})();
 
 /* ===== Multi-project =====
    Pilih project: header X-Project + cookie baa_project (untuk <img>/unduhan). Pindah project = simpan pilihan
@@ -4406,7 +4638,9 @@ function agingRanges(a){return {fresh:`0–${a.fresh} d`,warm:`${a.fresh+1}–${
 function ageChip(d){return `<span class="pg-age-chip" style="background:var(${AGE_VAR[d.aging]});color:var(${AGE_INK[d.aging]})">${AGE_LBL[d.aging]} · ${d.idle} d</span>`;}
 function fmtDay(iso){if(!iso)return '—';const d=new Date(iso+(iso.length===10?'T00:00:00':''));return `${d.getDate()} ${_IDMON[d.getMonth()]} ${d.getFullYear()}`;}
 function hhmm(iso){const d=new Date(iso);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
-const ACT_TXT={create:'Created',data:'Edited location data',inventory:'Edited inventory',photo_add:d=>`Uploaded ${d||1} photo${(+d||1)>1?'s':''}`,photo_del:'Deleted a photo',photo_move:'Moved a photo',sn:'Edited an SN',done:'Marked Done',reopen:'Reopened'};
+const ACT_TXT={create:'Created',data:'Edited location data',inventory:'Edited inventory',photo_add:d=>`Uploaded ${d||1} photo${(+d||1)>1?'s':''}`,photo_del:'Deleted a photo',photo_move:'Moved a photo',sn:'Edited an SN',done:'Marked Done',reopen:'Reopened',
+  scan_add:'Uploaded the scan PDF',scan_del:'Removed the scan PDF',att_add:d=>'Attached '+(d||'a file'),att_del:d=>'Removed attachment '+(d||''),att_move:d=>'Moved attachment '+(d||''),
+  sid:d=>`${sidLabel()} ${d||'changed'}`};
 function actTxt(f){const t=ACT_TXT[f.kind];return typeof t==='function'?t(f.detail):(t||f.kind);}
 let _pgTipEl=null;function pgTip(e,h){if(!_pgTipEl){_pgTipEl=document.createElement('div');_pgTipEl.className='pg-tip';document.body.appendChild(_pgTipEl);}
   if(!h){_pgTipEl.style.opacity=0;return;}_pgTipEl.innerHTML=h;_pgTipEl.style.opacity=1;
@@ -4784,7 +5018,7 @@ function requiredCats(){return S.cats||[];} /* semua kategori wajib (konsep "req
 /* ENTRY */
 async function refreshPicker(){const r=await api('/api/locations/options');const opts=r.options||[];
   $('#loc-count').textContent=r.total||'';const an=$('#lgActN');if(an)an.textContent=r.total||'';lgTrashCount();
-  pickerSel.setOptions(opts.map(l=>({value:String(l.id),code:l.code,nama:l.nama||'',status:l.status||'draft'})));
+  pickerSel.setOptions(opts.map(l=>({value:String(l.id),code:l.code,nama:l.nama||'',status:l.status||'draft',sid:l.sid||''})));
   if(S.loc)pickerSel.setValue(String(S.loc.id));}
 /* ---- Draft-first (#23): kode dibuat hanya saat ada data pertama ---- */
 function isDraft(){return !!(S.loc&&!S.loc.id);}
@@ -4807,7 +5041,7 @@ function newDraft(){
   if(pickerSel){pickerSel.setValue('');const v=$('#picker .lp-val');
     if(v){v.innerHTML='<span class="lp-nm-main">New location</span><span class="lp-code">not saved</span>';v.classList.remove('ph');}}
   updateLocNav();
-  renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();renderScan();renderWil();
+  renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();renderScan();renderWil();renderSid();renderAtt();
   entryDirty=false;asReset();
   requestAnimationFrame(()=>revealCards($('#v-entry')));
   const f=$('#loc-fields input');if(f)setTimeout(()=>f.focus(),120);}
@@ -4852,7 +5086,7 @@ async function openLoc(id){S.loc=await api('/api/locations/'+id);
   pickerSel.setValue(String(id));
   $('#entry-empty').classList.add('hidden');$('#entry-form').classList.remove('hidden');
   updateLocNav();
-  renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();renderScan();renderWil();
+  renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();renderScan();renderWil();renderSid();renderAtt();
   entryDirty=false;asReset();S.dupHits=[];S.dupOk=false;dupCheck();
   requestAnimationFrame(()=>revealCards($('#v-entry')));}
 /* Lokasi kembar: nama + wilayah sama dengan lokasi lain → peringatan (tidak memblokir simpan) */
@@ -5099,7 +5333,7 @@ function updateSummary(){
     _sc.classList.remove('sum-lvl-low','sum-lvl-mid','sum-lvl-high','sum-lvl-done');_sc.classList.add('sum-lvl-'+lvl);}
   const C=226.19;$('#sum-ring-prg').style.strokeDashoffset=(C*(1-pct/100)).toFixed(1);
   $('#sum-status').textContent='Status: '+(S.loc.status||'draft');
-  $('#sum-locid-code').textContent=S.loc.code||(isDraft()?'not saved yet':'—');
+  $('#sum-locid-code').textContent=(S.loc.code||(isDraft()?'not saved yet':'—'))+(sidOn()&&S.loc.sid?' · '+sidLabel()+' '+S.loc.sid:'');
   const nmEl=$('[data-lf="nama_lokasi"]');const liveName=nmEl?(nmEl.value||'').trim():'';
   const sumNm=liveName||((S.loc.data&&S.loc.data.nama_lokasi)||S.loc.name||'').trim();$('#sum-locid-name').textContent=sumNm;$('#sum-locid-name').title=sumNm;
   const setRow=(rowId,icId,valEl,done,valText)=>{
@@ -5558,7 +5792,7 @@ function renderLocTable(){
     const present=(l.photo_cats||[]).filter(k=>S.cats.some(c=>c.key===k)).length;
     const stCls=l.status==='selesai'?'ok':'warn';
     const wl=wilCell(l);
-    return `<tr class="lrow" data-i="${l.id}" onclick='openLocDrawer(${l.id})'><td class="bk-col" onclick="bkTog(event,${l.id})"><span class="bk-ck${BK.has(l.id)?' on':''}" data-id="${l.id}"></span></td><td><a class="loc-link mono">${esc(l.code)}</a></td>
+    return `<tr class="lrow" data-i="${l.id}" onclick='openLocDrawer(${l.id})'><td class="bk-col" onclick="bkTog(event,${l.id})"><span class="bk-ck${BK.has(l.id)?' on':''}" data-id="${l.id}"></span></td><td><a class="loc-link mono">${esc(l.code)}</a>${l.sid&&sidOn()?`<div><span class="sid-chip" data-tip="${esc(sidLabel())}">${esc(l.sid)}</span></div>`:''}</td>
     <td>${esc(l.data.nama_lokasi||l.name||'')}${l.dup_n>1?`<span class="dup-kb" data-tip="Same name and wilayah as ${l.dup_n-1} other location${l.dup_n>2?'s':''}"><span class="mi">content_copy</span>×${l.dup_n}</span>`:''}${wl}</td>
     <td>${esc(l.creator_name||'—')}${l.owner_id&&l.owner_id!==l.created_by?`<div class="lc-own" data-tip="Current owner (can edit)"><span class="mi">swap_horiz</span>${esc(l.owner_name||'—')}</div>`:''}</td>
     <td class="lc-date">${lcWhen(l.created_at)}</td>
@@ -5720,7 +5954,7 @@ function fillLocDrawer(loc){
     return `<div class="ld-hstat ${miss?'miss':''}"><div class="l">${esc(LD_STAT_SHORT[f.key]||f.label)}</div><div class="v">${esc(v||'—')}</div></div>`;}).join('');
   // HERO
   $('#ldHero').innerHTML=`
-    <div class="ld-htop"><span>BAA</span><span>·</span><span class="cd">${esc(loc.code||'')}</span>
+    <div class="ld-htop"><span>BAA</span><span>·</span><span class="cd">${esc(loc.code||'')}</span>${loc.sid&&sidOn()?`<span class="sid-chip">${esc(sidLabel())} ${esc(loc.sid)}</span>`:''}
       <button class="ld-x" onclick="closeLocDrawer()"><span class="mi">✕</span></button></div>
     <div class="ld-hmain">
       <div class="ld-ring"><svg viewBox="0 0 84 84"><circle class="trk" cx="42" cy="42" r="36"/><circle class="prg" cx="42" cy="42" r="36" style="stroke-dashoffset:${C}"/></svg><span class="pv">${st.pct}%</span></div>
@@ -5823,18 +6057,21 @@ async function loadNotif(){if(!S.user||S.user.role!=='admin')return;
   catch(e){toast('Failed: '+e.message);}}
 function notifBadge(st){const m={pending:['warn','Pending'],approved:['ok','Approved'],rejected:['warn','Rejected']};
   const b=m[st]||['warn',st];return `<span class="loc-st ${b[0]}">${b[1]}</span>`;}
+/* kind: edit = minta alih kepemilikan; sid = ubah SID (lama → baru + alasan) */
+function notifWhat(n){if(n.kind!=='sid')return n.message?`<div class="nf-why">"${esc(n.message)}"</div>`:'';
+  return `<div class="nf-kind"><b>${esc(sidLabel())} change</b><div class="mono"><s>${esc(n.value_old||'—')}</s> → <b>${esc(n.value_new)}</b></div>${n.message?`<div class="nf-why">"${esc(n.message)}"</div>`:''}</div>`;}
 function renderNotif(){
   $('#notif-table').innerHTML=(NOTIF_ROWS.length?NOTIF_ROWS.map(n=>`<tr>
     <td><b>${esc(n.loc_name||'—')}</b><div class="mono" style="font-size:11px;color:var(--md-sys-color-on-surface-variant)">${esc(n.loc_code||'')}</div></td>
     <td>${esc(n.requester_name||'—')}</td><td>${esc(n.owner_name||'—')}</td>
     <td class="mono" style="white-space:nowrap">${fmtDateTime(n.created_at)}</td>
-    <td>${notifBadge(n.status)}</td>
+    <td>${notifBadge(n.status)}${notifWhat(n)}</td>
     <td style="text-align:right;white-space:nowrap">${n.status==='pending'?`
       <md-button variant="tonal" onclick="notifApprove(${n.id})">Approve</md-button>
       <md-icon-button data-tip="Reject" onclick="notifReject(${n.id})"><span>close</span></md-icon-button>`:'<span class="muted">—</span>'}</td>
   </tr>`).join(''):'<tr><td colspan="6" class="muted">No requests yet</td></tr>');bindTips();}
 window.notifApprove=async id=>{try{const r=await api('/api/edit-requests/'+id+'/approve',{method:'POST'});
-  toast('Approved — location transferred to '+(r.to&&r.to.name||'requester'));loadNotif();loadLocations();if(typeof loadDashboard==='function')loadDashboard();}
+  toast(r.sid?`Approved — ${sidLabel()} changed to ${r.sid}`:'Approved — location transferred to '+(r.to&&r.to.name||'requester'));if(r.sid)refreshPicker();loadNotif();loadLocations();if(typeof loadDashboard==='function')loadDashboard();}
   catch(e){toast('Failed: '+e.message);}};
 window.notifReject=async id=>{try{await api('/api/edit-requests/'+id+'/reject',{method:'POST'});
   toast('Request rejected');loadNotif();}catch(e){toast('Failed: '+e.message);}};
@@ -5931,20 +6168,26 @@ function renderImp(){const res=IMP.res;if(!res)return;const s=res.summary;
   const own=Object.entries(s.owners||{}).map(([n,c])=>esc(n)+' '+c).join(' · ');
   $('#imp-mini').innerHTML=[['location_on',s.ready+' locations'],['inventory_2',s.items+' items'],['error',s.errors+' errors'],['content_copy',s.dup+' duplicates']]
     .concat(wc?[['task_alt',s.wil_ok+' wilayah ✓'],['edit_location_alt',s.wil_manual+' desa manual'],['help',s.wil_check+' to check']]:[])
+    .concat(s.sid_col?[['badge',s.sid_n+' with '+esc(sidLabel())]].concat(s.sid_skip?[['block',s.sid_skip+' '+esc(sidLabel())+' already in project']]:[]):[])
     .concat(oc?[['group',own||'no owners matched'],['admin_panel_settings','you '+s.own_me]].concat(s.own_check?[['person_off',s.own_check+' check owner']]:[]):[])
     .map(([i,t])=>`<div style="display:flex;align-items:center;gap:6px"><span class="mi" style="font-size:15px;color:var(--md-sys-color-primary)">${i}</span>${t}</div>`).join('');
   // status: kembar dihitung dari nama + wilayah (ke project & ke baris sebelumnya di file)
   const stOf=l=>l.errors.length?`<span class="loc-st warn">${esc(l.errors[0])}</span>`
+    :l.sid_of?`<span class="loc-st warn">${esc(sidLabel())} already in project</span><span class="imp-sub">${esc(l.sid_of)} · skipped (data kept)</span>`
     :l.dup_of?`<span class="loc-st warn">Already in project</span><span class="imp-sub">${esc(l.dup_of.code)}${l.dup_of.desa?' · '+esc(l.dup_of.desa):''} · owner ${esc(l.dup_of.owner)}</span>`
     :l.dup_file?`<span class="loc-st warn">Duplicate in file</span><span class="imp-sub">same name &amp; wilayah as row ${l.dup_file}</span>`
     :(oc&&['unknown','viewer','inactive'].includes(l.owner.status))?'<span class="loc-st warn">Check owner</span>'
     :`<span class="loc-st ok">OK</span>${l.same_name?`<span class="imp-sub">same name as ${esc(l.same_name.code)}, other wilayah</span>`:''}`;
-  $('#imp-ptable').innerHTML=res.locations.map(l=>`<tr${l.errors.length?' style="background:color-mix(in srgb,var(--md-sys-color-error) 7%,transparent)"':''}><td>${l.row}</td><td>${esc(l.nama||'(empty)')}</td>${oc?`<td>${impOwn(l)}</td>`:''}<td>${l.inventory.length}</td>${wc?`<td>${impWil(l)}</td>`:''}<td>${stOf(l)}</td></tr>`).join('')
+  $('#imp-ptable').innerHTML=res.locations.map(l=>`<tr${l.errors.length?' style="background:color-mix(in srgb,var(--md-sys-color-error) 7%,transparent)"':''}><td>${l.row}</td><td>${esc(l.nama||'(empty)')}${impSid(l)}</td>${oc?`<td>${impOwn(l)}</td>`:''}<td>${l.inventory.length}</td>${wc?`<td>${impWil(l)}</td>`:''}<td>${stOf(l)}</td></tr>`).join('')
     ||'<tr><td colspan="6" class="muted">No rows</td></tr>';
   $$('#imp-ptable select[data-own]').forEach(sel=>sel.addEventListener('change',()=>{IMP.own[sel.dataset.own]=sel.value;}));
   $('#imp-commit').toggleAttribute('disabled', s.ready<=0);
   $$('#imp-ptable select[data-row]').forEach(sel=>sel.addEventListener('change',()=>{const v=sel.value;
     IMP.ch[sel.dataset.row]=v==='manual'?{manual:1}:v?{kode:v}:{empty:1};}));}
+/* SID per baris import: di bawah nama; ketikan huruf kecil ditunjukkan jadi kapital */
+function impSid(l){if(!l.sid&&!l.sid_in)return '';
+  const up=l.sid&&l.sid_in&&l.sid_in.replace(/\s+/g,'')!==l.sid;
+  return `<div style="margin-top:3px"><span class="sid-chip">${esc(sidLabel())} ${esc(l.sid||l.sid_in)}</span>${up?`<span class="imp-sub">typed "${esc(l.sid_in)}" → capitals</span>`:''}</div>`;}
 /* Pemilik per baris import: ✓ user cocok · kosong = admin pengimport · ✗ perlu dipilih (tidak dikenal / viewer / nonaktif) */
 function impOwn(l){const o=l.owner||{status:'empty'};
   if(o.status==='ok')return `<span class="imp-own ok"><span class="mi">person</span>${esc(o.name)}</span>`;
@@ -6132,7 +6375,7 @@ async function loadTemplates(openId){const rows=await api('/api/templates');S.tp
 function renderTplList(sel){const rows=S.tplRows||[];
   $('#tpl-list').innerHTML=rows.map(t=>`<div class="mtr ${t.id===sel?'sel':''}" data-id="${t.id}"><span class="rad"></span>
     <div style="min-width:0"><span class="nm" title="${esc(t.name)}">${esc(t.name)}</span><small>${esc(t.filename||'')} · ${esc(t.sheet_log)} · ${esc(t.sheet_detail)} · ${t.mapped?'Mapped':'Not mapped yet'}</small></div>
-    <span>${t.active?'<span class="mbadge">Active</span>':(!t.mapped?'<span class="mbadge warn">Needs mapping</span>':'')}</span>
+    <span>${t.active?'<span class="mbadge">Active</span>':(!t.mapped?'<span class="mbadge warn">Needs mapping</span>':'')}${t.mapped&&!t.has_sid&&sidOn()?`<span class="mbadge warn" data-tip="${esc(sidLabel())} is not mapped — it won't appear in the Excel/PDF BAA">No ${esc(sidLabel())}</span>`:''}</span>
     <span class="ra">${t.active?'':`<md-button variant="text" size="xs" onclick="activateTpl(${t.id})">Activate</md-button>`}
     <md-icon-button size="xs" data-tip="Rename" onclick="renameTpl(${t.id},'${esc(t.name).replace(/'/g,"\\'")}')"><span class="mi">edit</span></md-icon-button>
     ${t.active?'':`<md-icon-button size="xs" data-tip="Delete" onclick="deleteTpl(${t.id},'${esc(t.name).replace(/'/g,"\\'")}')"><span class="mi">delete</span></md-icon-button>`}</span></div>`).join('')
@@ -6201,6 +6444,7 @@ function guessTarget(text){const t=(text||'').toLowerCase();
     if(/provinsi|propinsi|\bprov\b/.test(t))return 'd:wil_prov';if(/\bdesa\b|kelurahan|\bkel\b/.test(t))return 'd:wil_desa';}
   if(/lengkap|complete/.test(t))return 'f:foto_lengkap';
   if(/foto|capture|photo|gambar|screenshot/.test(t)){const p=guessPhoto(text);if(p)return 'p:'+p;}
+  if(sidOn()&&(/\bsid\b|site\s*id/.test(t)||t.trim()===sidLabel().toLowerCase()))return 'd:sid';
   if(/\b(kode|code)\b/.test(t))return 'f:kode';
   const rx={no:/^no\.?$|nomor/,lokasi:/lokasi|site|location/,nama_barang:/nama barang|barang|item|perangkat|inventory/,merk_type:/merk|type|tipe|model|brand/,jumlah:/qty|jumlah|jml|quantity/,sn_tagging:/\bsn\b|serial|tagging/,keterangan:/ket|remark|catatan|notes?/};
   for(const k in rx)if(rx[k].test(t))return 'f:'+k;
@@ -6249,7 +6493,7 @@ const tgtGroup=v=>!v?'':v.startsWith('p:')?'p':(v==='f:foto_lengkap'||v==='f:sca
 function logTargetOpts(sel){
   const grp=(lbl,items)=>`<optgroup label="${lbl}">`+items.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?'selected':''}>${esc(l)}</option>`).join('')+`</optgroup>`;
   return `<option value="">— Ignore —</option>`
-    +grp('Data',[['f:no','No'],['f:kode','Location code'],['f:lokasi','Location']].concat((S.locFields||[]).map(x=>['d:'+x.key,x.label])))
+    +grp('Data',[['f:no','No'],['f:kode','Location code'],['f:lokasi','Location']].concat(sidOn()||sel==='d:sid'?[['d:sid',sidLabel()]]:[],(S.locFields||[]).map(x=>['d:'+x.key,x.label])))
     +(WIL.on()?grp('Wilayah (as written by technician)',WIL_FIELDS.map(f=>['d:'+f.key,f.label.replace('Wilayah · ','')])):'')
     +grp('Inventory',INV_FIELDS.map(f=>['f:'+f,INV_LABELS[f]||f]))
     +grp('Photo status (X if missing)',(S.cats||[]).map(c=>['p:'+c.key,c.label]))
@@ -6305,7 +6549,7 @@ function imgState(a){const v=(a||'').toUpperCase();if(!v)return['',''];
   if(!M.render)return['ok','cell'];const[c,r]=pRef(v);return mergeAt(c,r)?['ok','merge']:['warn','range?'];}
 function cellBox(st,val,ph){return `<span class="mcell ${st[0]}"><input value="${esc(val||'')}" placeholder="${ph}" spellcheck="false"><span class="k">${st[1]}</span></span>`;}
 const WIL_FIELDS=[{key:'wil_desa',label:'Wilayah · Desa/Kelurahan'},{key:'wil_kec',label:'Wilayah · Kecamatan'},{key:'wil_kab',label:'Wilayah · Kab/Kota'},{key:'wil_prov',label:'Wilayah · Provinsi'}];
-const dataFields=()=>[{key:'kode',label:'Location code'}].concat(S.locFields||[],WIL.on()?WIL_FIELDS:[]);
+const dataFields=()=>[{key:'kode',label:'Location code'}].concat(sidOn()?[{key:'sid',label:sidLabel()}]:[],S.locFields||[],WIL.on()?WIL_FIELDS:[]);
 function renderTxtRows(){
   const dopts=sel=>`<option value="">— field —</option>`+dataFields().map(f=>`<option value="${esc(f.key)}" ${f.key===sel?'selected':''}>${esc(f.label)}</option>`).join('');
   const iopts=sel=>`<option value="">— field —</option>`+INV_FIELDS.map(f=>`<option value="${f}" ${f===sel?'selected':''}>${esc(INV_LABELS[f]||f)}</option>`).join('');
@@ -6457,6 +6701,10 @@ async function mapSaveNow(){const s=mapSteps();
   if(!s.wsOk){mapGo(0);toast('Log and Detail must be different sheets');return false;}
   if(s.bad){mapGo(1);toast('Fix the duplicate targets in the Log sheet first');return false;}
   if(s.imErr){mapGo(2);toast('Fix the highlighted cells in the Detail sheet first');return false;}
+  const cfg0=buildMapCfg();
+  if(sidOn()&&!M.sidOk&&!('sid' in cfg0.log.columns)&&!Object.values(cfg0.detail.location_cells).includes('sid')){
+    confirmDo(`${sidLabel()} not mapped`,`This template has no column or cell for <b>${esc(sidLabel())}</b>, so it won't appear in the Excel/PDF BAA.<br><br>Map it in <b>Log sheet</b> (pick “${esc(sidLabel())}”) or <b>Detail sheet</b> (text cell → field “${esc(sidLabel())}”), or save anyway.`,
+      ()=>{M.sidOk=true;mapSaveNow().finally(()=>{M.sidOk=false;});},{okLabel:'Save anyway',onCancel:()=>mapGo(1)});return false;}
   try{await api('/api/templates/'+S.mapTplId+'/mapping',{method:'PUT',body:JSON.stringify({config:buildMapCfg(),sheet_log:mapLogSel.getValue(),sheet_detail:mapDetailSel.getValue()})});
     M.mapped=true;mapSaved();toast('Mapping saved');loadTemplates();return true;}catch(e){toast('Failed: '+e.message);return false;}}
 $('#map-save').addEventListener('click',mapSaveNow);
@@ -6626,7 +6874,27 @@ function lfRow(f={}){const sys=f.key==='nama_lokasi';return `<div class="ecard l
     <div class="segt" data-seg><button type="button" data-v="text" class="${f.type!=='date'?'on':''}">Text</button><button type="button" data-v="date" class="${f.type==='date'?'on':''}">Date</button></div>
     ${pill('required','Required',f.required)}${delBtnCell()}
   </div></div>`;}
-function renderLF(){$('#lf-list').innerHTML=(S.locFields||[]).map(lfRow).join('');lfSug();bindTips();}
+function renderLF(){$('#lf-list').innerHTML=(S.locFields||[]).map(lfRow).join('');lfSug();renderIdSet();bindTips();}
+/* SID & lampiran tambahan: aturan per project (disimpan bersama tombol Save fields) */
+function renderIdSet(){const c=S.sidCfg,a=S.attCfg,ty=(a.types||['pdf']).map(t=>String(t).toLowerCase());
+  $('#idSet').innerHTML=`<div class="fi-sec"><div class="fi-slabel"><span class="mi">badge</span><h4>Location ID from the client</h4><span class="fi-tag">e.g. Site ID · optional</span></div>
+    <div class="ecard"><div class="erow ids-row">${pill('sid_on','Use',c.enabled!==false)}
+      <input class="labelf" id="ids-lab" placeholder="Label, e.g. SID" value="${esc(c.label||'SID')}" maxlength="30">
+      <label class="ids-f">Max length<input type="number" id="ids-max" min="4" max="64" value="${+c.max_len||20}"></label>
+      ${pill('sid_up','Typed letters → CAPITALS',c.uppercase!==false)}</div>
+      <p class="ids-note">Letters &amp; numbers, unique per location in this project. Comes from import; operators can fill it when empty, changes need admin approval. When set, the export file name is <b>Location name - ID</b>. Map it in the BAA template to print it.</p></div></div>
+    <div class="fi-sec"><div class="fi-slabel"><span class="mi">attach_file</span><h4>Additional attachments</h4><span class="fi-tag">optional per location</span></div>
+    <div class="ecard"><div class="erow ids-row">${pill('att_on','Use',a.enabled!==false)}
+      <input class="labelf" id="att-lab" placeholder="Card title" value="${esc(a.label||'Additional attachments')}" maxlength="40">
+      <label class="ids-f">Max MB<input type="number" id="att-mb" min="0.5" max="50" step="0.5" value="${+a.max_mb||5}"></label>
+      ${pill('att_pdf','PDF',ty.includes('pdf'))}${pill('att_img','JPG / PNG',ty.includes('jpg')||ty.includes('png'))}</div>
+      <p class="ids-note">Merged into the location's PDF export, before or after the BAA document (signed scan + generated BAA) — the uploader chooses. Images are converted to PDF. Not included in Excel.</p></div></div>`;}
+async function idSetSave(){const g=k=>{const i=$(`#idSet [data-k="${k}"]`);return !!(i&&i.checked);};if(!$('#ids-lab'))return;
+  const sid={enabled:g('sid_on'),label:($('#ids-lab').value||'').trim()||'SID',uppercase:g('sid_up'),max_len:+$('#ids-max').value||20};
+  const types=(g('att_pdf')?['pdf']:[]).concat(g('att_img')?['jpg','jpeg','png']:[]);
+  const att={enabled:g('att_on'),label:($('#att-lab').value||'').trim()||'Additional attachments',types:types.length?types:['pdf'],max_mb:+$('#att-mb').value||5};
+  const r1=await api('/api/settings/sid-config',{method:'PUT',body:JSON.stringify(sid)});S.sidCfg=r1.sid_config;
+  const r2=await api('/api/settings/attach-config',{method:'PUT',body:JSON.stringify(att)});S.attCfg=r2.attach_config;renderIdSet();}
 $('#lf-add').addEventListener('click',()=>{$('#lf-list').insertAdjacentHTML('beforeend',lfRow());bindTips();});
 /* Saran field umum (project baru mulai kosong) */
 const LF_SUG=[{key:'tanggal',label:'Tanggal Aktivasi',type:'date'},{key:'teknisi',label:'Teknisi',type:'text'},{key:'pic',label:'PIC Lokasi',type:'text'},
@@ -6638,7 +6906,7 @@ function lfSug(){const host=$('#lf-sug');if(!host)return;const have=new Set($$('
 async function lfSave(){const fields=$$('#lf-list .ecard').map(r=>{const g=k=>r.querySelector(`[data-k="${k}"]`);
   const seg=r.querySelector('.segt button.on');
   return {key:(g('key').value||'').trim(),label:(g('label').value||'').trim(),type:seg?seg.dataset.v:'text',required:g('required').checked};}).filter(f=>f.key&&f.label);
-  try{await api('/api/settings/location-fields',{method:'PUT',body:JSON.stringify({fields})});S.locFields=fields;toast('Location fields saved');sfDone('lokasi',true);return true;}catch(e){toast('Failed: '+e.message);sfDone('lokasi',false);return false;}}
+  try{await api('/api/settings/location-fields',{method:'PUT',body:JSON.stringify({fields})});S.locFields=fields;await idSetSave();toast('Location fields saved');sfDone('lokasi',true);return true;}catch(e){toast('Failed: '+e.message);sfDone('lokasi',false);return false;}}
 $('#lf-save').addEventListener('click',()=>lfSave());
 
 /* Field Photo & Capture — tabel terpadu (Opsi A) */

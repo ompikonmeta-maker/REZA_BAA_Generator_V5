@@ -19,6 +19,7 @@ from ..deps import audit, current_user, get_db
 from ..services import excel as excel_svc
 from ..services import pdf as pdf_svc
 from ..services import pdfdoc, xlsx2pdf
+from .attachments import attachment_paths
 
 router = APIRouter(prefix="/api/export", tags=["export"])
 
@@ -81,13 +82,15 @@ def _gather_locations(conn: sqlite3.Connection, scope: str, loc_id: int | None,
         # Wilayah sesuai tulisan teknisi -> bisa dipetakan ke kolom Log / sel Detail seperti field data
         for k in ("wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_kode"):
             data[k] = r[k] or ""
+        data["sid"] = r["sid"] or ""                    # bisa dipetakan di template seperti field data
         out.append({
-            "id": r["id"], "code": r["code"], "name": r["name"],
+            "id": r["id"], "code": r["code"], "name": r["name"], "sid": r["sid"] or "",
             "data": data,
             "inventory": [dict(i) for i in inv],
             "photos": [{**dict(p), "path": str(db.fpath(conn, p["path"]))} for p in photos],
             "scan": (str(db.fpath(conn, sc["path"])) if (sc := conn.execute(
                 "SELECT path FROM scan_docs WHERE location_id=?", (r["id"],)).fetchone()) else None),
+            "attach": {k: [str(p) for p in v] for k, v in attachment_paths(conn, r["id"]).items()},
         })
     return out
 
@@ -103,15 +106,27 @@ def _safe_name(s: str) -> str:
     return re.sub(r"\s+", " ", s) or "lokasi"
 
 
+def _loc_nm(loc: dict) -> str:
+    nm = (loc.get("name") or (loc.get("data") or {}).get("nama_lokasi") or "").strip()
+    return _safe_name(nm)[:100].rstrip(" .") if nm else ""
+
+
 def _dl_name(locs: list[dict], scope: str, ext: str) -> str | None:
-    """Nama file unduhan per lokasi: 'Nama Lokasi - KODE.ext' (kode menjamin unik).
-    Tanpa nama -> 'KODE.ext'. Banyak lokasi -> None (pakai nama bawaan)."""
+    """Nama file unduhan per lokasi: 'Nama Lokasi - SID.ext' bila ada SID (identitas dari klien),
+    selain itu 'Nama Lokasi - KODE.ext'. Tanpa nama -> 'SID/KODE.ext'. Banyak lokasi -> None."""
     if scope != "one" or not locs:
         return None
     loc = locs[0]
-    nm = (loc.get("name") or (loc.get("data") or {}).get("nama_lokasi") or "").strip()
-    nm = _safe_name(nm)[:100].rstrip(" .") if nm else ""
-    return f"{nm} - {loc['code']}.{ext}" if nm else f"{loc['code']}.{ext}"
+    nm, ident = _loc_nm(loc), (_safe_name(loc["sid"]) if loc.get("sid") else loc["code"])
+    return f"{nm} - {ident}.{ext}" if nm else f"{ident}.{ext}"
+
+
+def _zip_nm(loc: dict) -> str:
+    """Nama entri ZIP: 'Nama - SID' bila ada SID, selain itu 'KODE Nama' (seperti sebelumnya)."""
+    if loc.get("sid"):
+        nm = _loc_nm(loc)
+        return f"{nm} - {_safe_name(loc['sid'])}" if nm else _safe_name(loc["sid"])
+    return _safe_name(f"{loc.get('code','')} {loc.get('name','') or loc.get('data',{}).get('nama_lokasi','')}")
 
 
 def _tpl_row(conn: sqlite3.Connection) -> dict | None:
@@ -195,9 +210,10 @@ def _render_pdf(conn, locs, out_pdf: Path, cats, title) -> tuple[str, str]:
 
 
 def _render_pdf_with(tpl, tcfg, locs, out_pdf: Path, cats, title, progress=None, stage=None) -> tuple[str, str]:
-    """Seperti _render_body, plus scan PDF tiap lokasi di depan halaman BAA-nya.
-    Lokasi tanpa scan tetap diekspor apa adanya."""
-    if not any(loc.get("scan") for loc in locs):
+    """Seperti _render_body, plus per lokasi: lampiran 'before' -> Dokumen BAA (scan bertanda tangan
+    + halaman BAA) -> lampiran 'after'. Lokasi tanpa scan/lampiran tetap diekspor apa adanya."""
+    att = lambda loc, k: [p for p in (loc.get("attach") or {}).get(k, []) if Path(p).exists()]
+    if not any(loc.get("scan") or att(loc, "before") or att(loc, "after") for loc in locs):
         return _render_body(tpl, tcfg, locs, out_pdf, cats, title, progress, stage)
     parts, tmps, notes = [], [], []
     mode, warn, n = "template", "", len(locs)
@@ -209,11 +225,13 @@ def _render_pdf_with(tpl, tcfg, locs, out_pdf: Path, cats, title, progress=None,
             m, w = _render_body(tpl, tcfg, [loc], body, cats, title, None, stage)
             tmps.append(body)
             mode, warn = (m if i == 1 else mode), (warn or w)
+            parts += att(loc, "before")
             if loc.get("scan") and Path(loc["scan"]).exists():
                 parts.append(loc["scan"])
                 if not notes:
                     notes += _scan_paper_note(loc["scan"], body)
             parts.append(body)
+            parts += att(loc, "after")
         skipped = pdfdoc.concat(parts, out_pdf)
     finally:
         for t in tmps:
@@ -222,7 +240,7 @@ def _render_pdf_with(tpl, tcfg, locs, out_pdf: Path, cats, title, progress=None,
             except OSError:
                 pass
     if skipped:
-        notes.append(f"{len(skipped)} scan PDF could not be read and was left out.")
+        notes.append(f"{len(skipped)} scan/attachment PDF could not be read and was left out.")
     return mode, " ".join([x for x in (warn, *notes) if x])
 
 
@@ -318,7 +336,7 @@ def export_pdf_zip(scope: str = Query("filter"), loc_id: int | None = None,
     paper_warn = ""
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as zf:
         for loc in locs:
-            nm = _safe_name(f"{loc.get('code','')} {loc.get('name','') or loc.get('data',{}).get('nama_lokasi','')}")
+            nm = _zip_nm(loc)
             entry = f"{nm}.pdf"
             i = 2
             while entry.lower() in used:
@@ -401,7 +419,7 @@ def _run_job(j: dict, locs: list, tpl, tcfg, cats, title) -> None:
                     if j["cancel"]:
                         raise _Cancelled()
                     j["done"], j["total"] = n - 1, len(locs)
-                    nm = _safe_name(f"{loc.get('code','')} {loc.get('name','') or loc.get('data',{}).get('nama_lokasi','')}")
+                    nm = _zip_nm(loc)
                     folder = _wil_folder(loc) if j.get("group") == "wilayah" else ""
                     entry = f"{folder}{nm}.pdf"
                     k = 2

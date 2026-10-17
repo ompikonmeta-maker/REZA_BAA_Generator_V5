@@ -299,7 +299,7 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 | 19-3 | Kolom Owner di Location Log | ✅ dipasang |
 | 20 | Import: kolom Owner di template + tandai nama dobel di file (20b) | ✅ dipasang |
 | 21 | Peringatan lokasi kembar (nama + wilayah) di Entry, Log, Import | ✅ dipasang |
-| 22 | SID (kolom tambahan + revisi lewat admin) & lampiran PDF tambahan | mockup, menunggu "gas" |
+| 22 | SID (kolom tambahan + revisi lewat admin) & lampiran PDF tambahan | ✅ |
 | — | Build Windows: perubahan sejak build #24 (foto tajam & nama file download, peta Gabungan) belum di-build; ketajaman PDF perlu dicek dari build | menunggu "build" |
 | — | Request ganda `dash/today` di Dashboard admin (pra-ada) | ditawarkan, belum dijawab |
 
@@ -379,3 +379,11 @@ Mengikuti `docs/plans/PRINSIP.md` (configurable & futureproof):
 - **Urutan PDF gabungan:** "Dokumen BAA" = scan BAA bertandatangan + BAA hasil generate. Lampiran tambahan diletakkan **sebelum** atau **sesudah** Dokumen BAA — ditanyakan saat upload (bisa diubah).
 
 **Mockup 22 (2026-10-17):** https://claude.ai/artifact/TKaxDHieUtuwbAPAT8nvoP — field SID (admin langsung · operator: kosong boleh isi, terisi terkunci + Request change), dialog revisi SID + status menunggu, Notifications "lama → baru", preview import (SID di bawah nama, kapital otomatis, SID sudah ada → dilewati, SID dobel di file), dropdown & Log dengan SID, aturan nama file, kartu lampiran PDF (Before/After BAA), dialog letak saat upload, urutan PDF gabungan. Menunggu "gas".
+
+### 22 — dikerjakan (2026-10-17, "gas")
+- **Backend:** kolom `locations.sid` (+ index `upper(sid)`), setting `sid_config` {enabled, label, uppercase, max_len} & `attach_config` {enabled, label, types, max_mb} (ikut tersalin saat project baru disalin). `GET /api/locations/sid-check`, `PUT /api/locations/{id}/sid` (admin bebas; operator hanya mengisi yang kosong). `edit_requests.kind='sid'` (value_old/value_new + alasan; unik dicek saat ajukan & approve). Restore lokasi terhapus yang SID-nya sudah dipakai → dipulihkan tanpa SID (dicatat di activity).
+- **Import:** kolom SID (judul = label SID / "SID" / "Site ID"), otomatis kapital, SID sudah ada di project → baris dilewati, SID dobel di file → error. Template import punya kolom SID setelah `ref`.
+- **Export:** `data.sid` bisa dipetakan di template (Log: pilih "SID"; Detail: field "SID"); nama file `Nama - SID` (ZIP juga; tanpa SID tetap seperti sebelumnya). Peringatan saat simpan mapping + badge "No SID" di daftar template bila SID belum dipetakan.
+- **Lampiran:** tabel `attachments`, router `/api/locations/{id}/attachments` (upload + letak, ubah letak, hapus, buka file). Disimpan sebagai PDF (JPG/PNG dikonversi bila diizinkan di Settings). PDF gabungan: lampiran *before* → scan → BAA → lampiran *after* (sekali & ZIP). Ganti kode project ikut memindahkan path lampiran.
+- **UI:** field SID di Entry (tombol **Save SID** sendiri, bukan autosave — supaya ketikan setengah jadi tidak langsung mengunci SID operator; operator dapat konfirmasi sekali), dialog Request change + status menunggu, Notifications "lama → baru", chip SID di dropdown/Log/drawer/ringkasan, kartu lampiran + dialog letak, pengaturan di Settings › Location fields (disimpan dengan Save fields).
+- Belum: tombol "History" SID dari mockup tidak dibuat — perubahan SID tercatat di activity lokasi.

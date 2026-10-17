@@ -18,7 +18,7 @@ import re
 from .. import db
 from ..deps import audit, get_db, require_admin
 from ..services import wilayah
-from .locations import _format_code, _row_name, _wil_values, _WIL_SET, dup_key
+from .locations import _format_code, _row_name, _wil_values, _WIL_SET, dup_key, norm_sid, sid_owner
 
 router = APIRouter(prefix="/api/locations/import", tags=["locations-import"])
 
@@ -30,6 +30,19 @@ WIL_COLS = [("kode", "Kode Wilayah", r"kode\s*wilayah|kode\s*desa"), ("desa", "D
 
 # Kolom pemilik (opsional): username atau nama lengkap user project; kosong = admin pengimport
 OWNER_RX = r"owner|pemilik|operator"
+# Kolom SID (opsional): judul = label SID project, 'SID' atau 'Site ID'
+SID_RX = r"^(sid|site\s*id)$"
+
+
+def _sid_on(conn) -> bool:
+    return bool(db.sid_config(conn).get("enabled", True))
+
+
+def _sid_raw(v) -> str:
+    """Sel Excel -> teks SID (angka 1.2E+11 / 123.0 dari Excel jadi digit utuh)."""
+    if isinstance(v, float) and v.is_integer():
+        v = int(v)
+    return _norm(v)
 
 
 def _wil_on(conn) -> bool:
@@ -69,8 +82,9 @@ def template(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_ad
     ws = wb.active
     ws.title = "Lokasi"
     wcols = [w[1] for w in WIL_COLS[1:]] + [WIL_COLS[0][1]] if _wil_on(conn) else []
-    ws.append(["ref"] + [(_norm(f.get("label")) or f.get("key")) for f in fields] + wcols + ["Owner"])
-    ex = ["L1"]
+    sid_lab = [db.sid_config(conn).get("label") or "SID"] if _sid_on(conn) else []
+    ws.append(["ref"] + sid_lab + [(_norm(f.get("label")) or f.get("key")) for f in fields] + wcols + ["Owner"])
+    ex = ["L1"] + [""] * len(sid_lab)      # SID: dari klien, kosong boleh
     for f in fields:
         if f.get("key") == "nama_lokasi":
             ex.append("Contoh: Desa Sukamaju")
@@ -115,11 +129,14 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
     if not rows:
         return {"locations": [], "summary": {"total": 0, "ready": 0, "items": 0, "errors": 0, "dup": 0}}
     header = [_norm(h) for h in rows[0]]
-    col_field, ref_idx, wil_idx, own_idx = {}, None, {}, None
+    col_field, ref_idx, wil_idx, own_idx, sid_idx = {}, None, {}, None, None
+    sid_lab = (db.sid_config(conn).get("label") or "SID").strip().lower()
     for idx, h in enumerate(header):
         hl = h.lower()
         if hl == "ref":
             ref_idx = idx
+        elif sid_idx is None and _sid_on(conn) and (hl == sid_lab or re.search(SID_RX, hl)):
+            sid_idx = idx
         elif hl in label_to_field:
             col_field[idx] = label_to_field[hl]
         elif own_idx is None and re.search(OWNER_RX, hl):
@@ -189,7 +206,7 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
             return {"status": "viewer", "raw": raw, "name": name}
         return {"status": "ok", "raw": raw, "id": u["id"], "name": name}
 
-    out, seen_ref, seen_key = [], {}, {}
+    out, seen_ref, seen_key, seen_sid = [], {}, {}, {}
     for ri, r in enumerate(rows[1:], start=2):
         if r is None or all(_norm(c) == "" for c in r):
             continue
@@ -234,9 +251,27 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
         if k and not dup_of and not dup_file:
             same_name = by_name.get(k.split("#")[0])
         own = owner_of(_norm(r[own_idx]) if (own_idx is not None and own_idx < len(r)) else "")
+        # SID: dirapikan (kapital bila aktif). Sudah ada di project -> baris dilewati (data lama tidak ditimpa);
+        # dobel di file -> baris berikutnya error (SID harus unik)
+        sid, sid_of, sid_in = "", None, ""
+        if sid_idx is not None:
+            sid_in = _sid_raw(r[sid_idx]) if sid_idx < len(r) else ""
+            try:
+                sid = norm_sid(conn, sid_in)
+            except HTTPException:
+                lab = db.sid_config(conn).get("label") or "SID"
+                errors.append(f"{lab} '{sid_in}' tidak valid (huruf & angka, maks {db.sid_config(conn).get('max_len') or 20})")
+            if sid:
+                o = sid_owner(conn, sid)
+                if o:
+                    sid_of = o["code"]
+                elif sid.upper() in seen_sid:
+                    errors.append(f"{db.sid_config(conn).get('label') or 'SID'} {sid} dobel di file (baris {seen_sid[sid.upper()]})")
+                else:
+                    seen_sid[sid.upper()] = ri
         out.append({"row": ri, "nama": nama, "data": data, "inventory": inv,
                     "errors": errors, "dup": bool(dup_of or dup_file), "dup_of": dup_of, "dup_file": dup_file,
-                    "same_name": same_name, "wil": wil, "owner": own})
+                    "same_name": same_name, "wil": wil, "owner": own, "sid": sid, "sid_in": sid_in, "sid_of": sid_of})
 
     ok_rows = [x for x in out if not x["errors"]]
     owners: dict[str, int] = {}
@@ -245,10 +280,13 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
             owners[x["owner"]["name"]] = owners.get(x["owner"]["name"], 0) + 1
     return {"locations": out, "summary": {
         "total": len(out),
-        "ready": len(ok_rows),
+        "ready": sum(1 for x in ok_rows if not x["sid_of"]),
         "items": sum(len(x["inventory"]) for x in ok_rows),
         "errors": sum(1 for x in out if x["errors"]),
-        "dup": sum(1 for x in ok_rows if x["dup"]),
+        "dup": sum(1 for x in ok_rows if x["dup"] and not x["sid_of"]),
+        "sid_col": sid_idx is not None,
+        "sid_n": sum(1 for x in ok_rows if x["sid"] and not x["sid_of"]),
+        "sid_skip": sum(1 for x in ok_rows if x["sid_of"]),
         "wil_cols": bool(wil_idx),
         "wil_ok": sum(1 for x in ok_rows if x["wil"] and x["wil"]["status"] == "ok"),
         "wil_manual": sum(1 for x in ok_rows if x["wil"] and x["wil"]["status"] == "desa_manual"),
@@ -285,7 +323,7 @@ async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True), wil_
     created = skipped = 0
     now = db.now_iso()
     for loc in res["locations"]:
-        if loc["errors"] or (loc["dup"] and skip_dup):
+        if loc["errors"] or loc.get("sid_of") or (loc["dup"] and skip_dup):
             skipped += 1
             continue
         # pemilik: pilihan admin di preview > kolom Owner yang cocok > admin pengimport; created_by tetap admin
@@ -293,10 +331,10 @@ async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True), wil_
         owner = int(ch) if str(ch or "").isdigit() and int(ch) in can_own else (
             loc["owner"]["id"] if loc["owner"]["status"] == "ok" and ch is None else user["id"])
         cur = conn.execute(
-            "INSERT INTO locations(code,name,data_json,status,created_by,owner_id,created_at,updated_at) "
-            "VALUES(?,?,?,?,?,?,?,?)",
+            "INSERT INTO locations(code,name,data_json,status,created_by,owner_id,created_at,updated_at,sid) "
+            "VALUES(?,?,?,?,?,?,?,?,?)",
             ("", loc["nama"], json.dumps(loc["data"], ensure_ascii=False), "draft",
-             user["id"], owner, now, now),
+             user["id"], owner, now, now, loc.get("sid") or None),
         )
         lid = cur.lastrowid
         conn.execute("UPDATE locations SET code=?, modified_at=?, modified_by=? WHERE id=?",

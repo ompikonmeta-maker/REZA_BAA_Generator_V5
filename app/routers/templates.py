@@ -167,9 +167,13 @@ def list_templates(conn: sqlite3.Connection = Depends(get_db), user=Depends(curr
     for r in rows:
         d = dict(r)
         try:
-            d["mapped"] = bool(json.loads(d.pop("config_json") or "{}").get("mapped"))
+            cfg = json.loads(d.pop("config_json") or "{}")
         except Exception:
-            d["mapped"] = False
+            cfg = {}
+        d["mapped"] = bool(cfg.get("mapped"))
+        # SID ikut tercetak? (kolom Log atau sel Detail) -> peringatan di daftar template
+        d["has_sid"] = "sid" in ((cfg.get("log") or {}).get("columns") or {}) or \
+            "sid" in ((cfg.get("detail") or {}).get("location_cells") or {}).values()
         out.append(d)
     return out
 
@@ -370,7 +374,7 @@ def _sample_locations(conn) -> tuple[list[dict], list[Path]]:
                 data[k] = f"Contoh {f.get('label') or k}"
         data.update({"wil_desa": "Cibodas" if wil else "", "wil_kec": "Lembang" if wil else "",
                      "wil_kab": "Kab. Bandung Barat" if wil else "", "wil_prov": "Jawa Barat" if wil else "",
-                     "wil_kode": "32.17.01.2009" if wil else ""})
+                     "wil_kode": "32.17.01.2009" if wil else "", "sid": f"ABC12345678{n}"})
         inv = [{"nama_barang": it, "merk_type": "Contoh Merk", "jumlah": "1", "sn_tagging": f"SN{n}{i + 1:03d}",
                 "keterangan": "OK"} for i, it in enumerate(items)]
         photos = []

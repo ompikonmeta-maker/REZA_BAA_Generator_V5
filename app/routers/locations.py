@@ -13,6 +13,7 @@ from .. import config, db
 from ..deps import audit, current_user, get_db, require_admin, require_editor
 
 from ..services import wilayah
+from .attachments import attachment_list
 from .scan import scan_info
 
 router = APIRouter(prefix="/api/locations", tags=["locations"])
@@ -41,6 +42,7 @@ class LocationIn(BaseModel):
     status: str = "draft"
     wil: dict | None = None           # {mode, kode, desa, kec, kab, prov}; None = tidak diubah, {} = kosongkan
     wil_kode: str | None = None       # (lama) pilih desa resmi lewat kode saja
+    sid: str | None = None            # identitas lokasi dari klien; None = tidak diubah, "" = kosongkan (admin)
 
 
 WIL_MODES = ("official", "desa_manual", "manual")
@@ -79,6 +81,52 @@ def _wil_values(w: dict | None, kode: str | None = None):
             raise HTTPException(400, "Fill desa, kecamatan, kab/kota and provinsi")
     return (off["kode"], t["desa"] or off["desa"], t["kec"] or off["kec"], t["kab"] or off["kab"],
             t["prov"] or off["prov"], mode)
+
+
+# ---------- SID (identitas lokasi dari klien; label & aturan di pengaturan project 'sid_config') ----------
+def norm_sid(conn, v) -> str:
+    """Rapikan & validasi SID: tanpa spasi, huruf/angka saja, panjang maks sesuai pengaturan,
+    kapital bila 'uppercase' aktif. Kosong = tidak ada SID."""
+    cfg = db.sid_config(conn)
+    s = re.sub(r"\s+", "", str(v or ""))
+    if cfg.get("uppercase", True):
+        s = s.upper()
+    if not s:
+        return ""
+    lab = cfg.get("label") or "SID"
+    if not re.fullmatch(r"[A-Za-z0-9]+", s):
+        raise HTTPException(400, f"{lab} may only contain letters and numbers")
+    if len(s) > int(cfg.get("max_len") or 20):
+        raise HTTPException(400, f"{lab} is longer than {int(cfg.get('max_len') or 20)} characters")
+    return s
+
+
+def sid_owner(conn, sid: str, exclude: int = 0):
+    """Lokasi aktif lain yang sudah memakai SID ini (huruf besar/kecil dianggap sama), atau None."""
+    if not sid:
+        return None
+    return conn.execute("SELECT id, code FROM locations WHERE deleted_at IS NULL AND id<>? AND upper(sid)=upper(?)",
+                        (exclude, sid)).fetchone()
+
+
+def check_sid_free(conn, sid: str, exclude: int = 0) -> None:
+    o = sid_owner(conn, sid, exclude)
+    if o:
+        raise HTTPException(409, f"{db.sid_config(conn).get('label') or 'SID'} {sid} is already used by {o['code']}")
+
+
+def _apply_sid(conn, user, row, raw) -> bool:
+    """SID: admin bebas; operator hanya boleh MENGISI yang masih kosong (ubah -> lewat permintaan ke admin).
+    True bila berubah (belum di-commit)."""
+    new_sid, cur_sid = norm_sid(conn, raw), (row["sid"] or "")
+    if new_sid == cur_sid:
+        return False
+    if user["role"] != "admin" and cur_sid:
+        raise HTTPException(403, f"{db.sid_config(conn).get('label') or 'SID'} is already filled — request a change from the admin")
+    check_sid_free(conn, new_sid, row["id"])
+    conn.execute("UPDATE locations SET sid=?, updated_at=? WHERE id=?", (new_sid or None, db.now_iso(), row["id"]))
+    db.log_activity(conn, row["id"], user["id"], "sid", f"{cur_sid or '—'} -> {new_sid or '—'}")
+    return True
 
 
 _WIL_PREFIX = re.compile(r"^(kabupaten|kab|kota|kecamatan|kec|desa|kelurahan|kel)\b\s*")
@@ -168,10 +216,12 @@ def _location_dict(conn: sqlite3.Connection, row, user=None) -> dict:
     my_request = None
     if user:
         rr = conn.execute(
-            "SELECT status FROM edit_requests WHERE location_id=? AND requester_id=? "
+            "SELECT status FROM edit_requests WHERE location_id=? AND requester_id=? AND kind='edit' "
             "ORDER BY id DESC LIMIT 1", (row["id"], user["id"]),
         ).fetchone()
         my_request = rr["status"] if rr else None
+    sr = conn.execute("SELECT value_new, requester_id FROM edit_requests WHERE location_id=? AND kind='sid' "
+                      "AND status='pending' ORDER BY id DESC LIMIT 1", (row["id"],)).fetchone()
     inv = conn.execute(
         "SELECT id,nama_barang,merk_type,jumlah,sn_tagging,keterangan,sort_order "
         "FROM inventory_items WHERE location_id=? ORDER BY sort_order,id", (row["id"],)
@@ -190,6 +240,9 @@ def _location_dict(conn: sqlite3.Connection, row, user=None) -> dict:
         "photos": [dict(p) for p in photos],
         "scan": scan_info(conn, row["id"]),
         "wilayah": _wil_dict(row),
+        "sid": row["sid"] or "" if "sid" in row.keys() else "",
+        "sid_request": {"value": sr["value_new"], "mine": bool(user) and sr["requester_id"] == user["id"]} if sr else None,
+        "attachments": attachment_list(conn, row["id"]),
     }
 
 
@@ -218,8 +271,8 @@ def list_locations(
         where.append(sc); params.extend(scp)
     if q.strip():
         like = f"%{q.strip()}%"
-        where.append("(l.code LIKE ? OR l.name LIKE ? OR l.old_codes LIKE ?)")
-        params += [like, like, like]
+        where.append("(l.code LIKE ? OR l.name LIKE ? OR l.old_codes LIKE ? OR l.sid LIKE ?)")
+        params += [like, like, like, like]
     if status in ("draft", "selesai"):
         where.append("l.status = ?")
         params.append(status)
@@ -247,7 +300,7 @@ def list_locations(
 
     offset = (page - 1) * size
     rows = conn.execute(
-        f"""SELECT l.id, l.code, l.name, l.status, l.data_json, l.created_by, l.owner_id,
+        f"""SELECT l.id, l.code, l.name, l.status, l.data_json, l.created_by, l.owner_id, l.sid,
               l.created_at, l.updated_at, l.modified_at, l.modified_by,
               COALESCE(NULLIF(TRIM(m.full_name),''), m.username) AS modifier_name,
               COALESCE(NULLIF(TRIM(u.full_name),''), u.username, '—') AS creator_name,
@@ -286,6 +339,7 @@ def list_locations(
             "wil_mode": (r["wil_mode"] or ("official" if r["wil_kode"] else None)) if r["wil_desa"] else None,
             "can_delete": is_admin or r["owner_id"] == user["id"],
             "dup_n": dup_n.get(r["id"], 0),
+            "sid": r["sid"] or "",
         }
         for r in rows
     ]
@@ -307,6 +361,34 @@ def location_creators(conn: sqlite3.Connection = Depends(get_db), user=Depends(c
     return {"creators": by("created_by"), "owners": by("owner_id")}
 
 
+@router.get("/sid-check")
+def sid_check(sid: str = "", exclude: int = 0, conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
+    """Cek SID saat diketik: bentuk rapi + sudah dipakai lokasi lain atau belum."""
+    try:
+        v = norm_sid(conn, sid)
+    except HTTPException as e:
+        return {"sid": sid, "ok": False, "error": e.detail}
+    o = sid_owner(conn, v, exclude)
+    return {"sid": v, "ok": not o, "used_by": o["code"] if o else None}
+
+
+class SidIn(BaseModel):
+    sid: str = ""
+
+
+@router.put("/{loc_id}/sid")
+def set_sid(loc_id: int, body: SidIn, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_editor)):
+    row = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
+    if not row:
+        raise HTTPException(404, "Location not found")
+    if not _can_write(user, row):
+        raise HTTPException(403, "Not your location")
+    if _apply_sid(conn, user, row, body.sid):
+        conn.commit()
+        audit(conn, user, "set_sid", "location", loc_id, f"{row['code']}: {row['sid'] or '—'} -> {norm_sid(conn, body.sid) or '—'}")
+    return _location_dict(conn, conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone(), user)
+
+
 @router.get("/options")
 def location_options(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     """Daftar ringan (id, code, nama) untuk dropdown pemilih lokasi di Entry BAA."""
@@ -314,7 +396,7 @@ def location_options(conn: sqlite3.Connection = Depends(get_db), user=Depends(cu
     sc, scp = _scope(user)
     wsql = "WHERE l.deleted_at IS NULL" + ((" AND " + sc) if sc else "")
     rows = conn.execute(
-        f"SELECT l.id, l.code, l.name, l.status, l.data_json FROM locations l {wsql} ORDER BY l.id DESC", scp
+        f"SELECT l.id, l.code, l.name, l.status, l.data_json, l.sid FROM locations l {wsql} ORDER BY l.id DESC", scp
     ).fetchall()
     opts = []
     for r in rows:
@@ -324,7 +406,7 @@ def location_options(conn: sqlite3.Connection = Depends(get_db), user=Depends(cu
                 nama = (json.loads(r["data_json"]) or {}).get("nama_lokasi", "") or ""
             except Exception:
                 nama = ""
-        opts.append({"id": r["id"], "code": r["code"], "nama": nama, "status": r["status"]})
+        opts.append({"id": r["id"], "code": r["code"], "nama": nama, "status": r["status"], "sid": r["sid"] or ""})
     return {"options": opts, "total": len(opts)}
 
 
@@ -337,11 +419,13 @@ def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db)
     # id dijamin unik & monoton oleh SQLite (write ter-serialisasi), jadi kode
     # urut aman dibuat paralel banyak user tanpa koordinasi.
     wv = _wil_values(body.wil, body.wil_kode) or (None,) * 6
+    sid = norm_sid(conn, body.sid) if body.sid else ""
+    check_sid_free(conn, sid)
     cur = conn.execute(
         "INSERT INTO locations(code,name,data_json,status,created_by,owner_id,created_at,updated_at,"
-        "wil_kode,wil_desa,wil_kec,wil_kab,wil_prov,wil_mode) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "wil_kode,wil_desa,wil_kec,wil_kab,wil_prov,wil_mode,sid) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         ("", body.name, json.dumps(body.data, ensure_ascii=False), body.status,
-         user["id"], user["id"], now, now, *wv),
+         user["id"], user["id"], now, now, *wv, sid or None),
     )
     code = _format_code(conn, cur.lastrowid)
     conn.execute("UPDATE locations SET code=?, modified_at=?, modified_by=? WHERE id=?",
@@ -496,7 +580,8 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
         row[c] or None for c in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_mode"))
     if wil_changed:
         conn.execute(f"UPDATE locations SET {_WIL_SET} WHERE id=?", (*wv, loc_id))
-    changed = (body.name != row["name"] or body.status != row["status"] or wil_changed
+    sid_changed = body.sid is not None and _apply_sid(conn, user, row, body.sid)
+    changed = (body.name != row["name"] or body.status != row["status"] or wil_changed or sid_changed
                or json.loads(new_json) != json.loads(row["data_json"] or "{}"))
     conn.execute(
         "UPDATE locations SET name=?,data_json=?,status=?,updated_at=? WHERE id=?",
@@ -600,14 +685,18 @@ def list_deleted(conn: sqlite3.Connection = Depends(get_db), user=Depends(requir
 @router.post("/{loc_id}/restore")
 def restore_location(loc_id: int, conn: sqlite3.Connection = Depends(get_db),
                      user=Depends(require_admin)):
-    row = conn.execute("SELECT code FROM locations WHERE id=? AND deleted_at IS NOT NULL", (loc_id,)).fetchone()
+    row = conn.execute("SELECT code, sid FROM locations WHERE id=? AND deleted_at IS NOT NULL", (loc_id,)).fetchone()
     if not row:
         raise HTTPException(404, "Deleted location not found")
-    conn.execute("UPDATE locations SET deleted_at=NULL, deleted_by=NULL, updated_at=? WHERE id=?",
-                 (db.now_iso(), loc_id))
+    # SID-nya sudah dipakai lokasi lain selama terhapus -> dipulihkan tanpa SID (SID harus unik)
+    clash = sid_owner(conn, row["sid"] or "", loc_id)
+    conn.execute("UPDATE locations SET deleted_at=NULL, deleted_by=NULL, updated_at=?" + (", sid=NULL" if clash else "")
+                 + " WHERE id=?", (db.now_iso(), loc_id))
+    if clash:
+        db.log_activity(conn, loc_id, user["id"], "sid", f"{row['sid']} -> — (used by {clash['code']})")
     conn.commit()
     audit(conn, user, "restore", "location", loc_id, row["code"])
-    return {"ok": True}
+    return {"ok": True, "sid_cleared": row["sid"] if clash else None, "sid_used_by": clash["code"] if clash else None}
 
 
 @router.delete("/{loc_id}/purge")
