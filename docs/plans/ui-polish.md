@@ -299,6 +299,7 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 | 19-3 | Kolom Owner di Location Log | ✅ dipasang |
 | 20 | Import: kolom Owner di template + tandai nama dobel di file (20b) | ✅ dipasang |
 | 21 | Peringatan lokasi kembar (nama + wilayah) di Entry, Log, Import | ✅ dipasang |
+| 22 | SID (kolom tambahan + revisi lewat admin) & lampiran PDF tambahan | mockup, menunggu "gas" |
 | — | Build Windows: perubahan sejak build #24 (foto tajam & nama file download, peta Gabungan) belum di-build; ketajaman PDF perlu dicek dari build | menunggu "build" |
 | — | Request ganda `dash/today` di Dashboard admin (pra-ada) | ditawarkan, belum dijawab |
 
@@ -376,3 +377,5 @@ Mengikuti `docs/plans/PRINSIP.md` (configurable & futureproof):
 - **Re-import:** baris dengan SID yang sudah ada di project → dilewati (tidak menimpa data yang sudah diisi manual).
 - **Lampiran:** default tipe PDF saja (daftar tipe bisa diatur). Tidak ikut export Excel.
 - **Urutan PDF gabungan:** "Dokumen BAA" = scan BAA bertandatangan + BAA hasil generate. Lampiran tambahan diletakkan **sebelum** atau **sesudah** Dokumen BAA — ditanyakan saat upload (bisa diubah).
+
+**Mockup 22 (2026-10-17):** https://claude.ai/artifact/TKaxDHieUtuwbAPAT8nvoP — field SID (admin langsung · operator: kosong boleh isi, terisi terkunci + Request change), dialog revisi SID + status menunggu, Notifications "lama → baru", preview import (SID di bawah nama, kapital otomatis, SID sudah ada → dilewati, SID dobel di file), dropdown & Log dengan SID, aturan nama file, kartu lampiran PDF (Before/After BAA), dialog letak saat upload, urutan PDF gabungan. Menunggu "gas".
