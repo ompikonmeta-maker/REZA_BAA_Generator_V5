@@ -16,11 +16,11 @@
 <script defer src="/assets/intro.js"></script>
 <script>try{var c=sessionStorage.getItem('pjVeil');if(c){document.documentElement.classList.add('pj-sw');document.documentElement.style.setProperty('--pj-veil',c);}}catch(e){}</script>
 <style>
-  :root{ --nav-w:284px; --rail-w:80px; --warn:#9a5b00; --warn-bg:#fff3e0; --good:#1c7d46; --good-bg:#dcf0e2; --bad:#a3312a; --bad-bg:#fbe4e2; --brand-accent:#ec5a73;
+  :root{ --nav-w:284px; --rail-w:80px; --warn:#9a5b00; --warn-bg:#fff3e0; --good:#1c7d46; --good-bg:#dcf0e2; --bad:#a3312a; --bad-bg:#fbe4e2; --brand-accent:#ec5a73; --wm-stale:#a3459a;
     --sp:var(--md-sys-motion-spring-default-spatial); --nav-lead:.13s;
     --sh:20,24,28; --card-shadow:0 1px 2px rgba(var(--sh),.05), 0 8px 24px rgba(var(--sh),.07); }
-  :root[data-theme="dark"]{ --warn:#ffb877; --warn-bg:#3a2a12; --good:#7ddc9f; --good-bg:#123522; --bad:#ffb1a8; --bad-bg:#3a1714; --sh:0,0,0; }
-  @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--sh:0,0,0}}
+  :root[data-theme="dark"]{ --warn:#ffb877; --warn-bg:#3a2a12; --good:#7ddc9f; --good-bg:#123522; --bad:#ffb1a8; --bad-bg:#3a1714; --wm-stale:#ec9fe0; --sh:0,0,0; }
+  @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--sh:0,0,0;--wm-stale:#ec9fe0}}
   *{box-sizing:border-box}
   body{margin:0;background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-body-medium);letter-spacing:normal;-webkit-font-smoothing:antialiased}
   b,strong,th{font-weight:600}
@@ -126,26 +126,43 @@
   .wm-map path.has{cursor:pointer}
   .wm-map path.ctx{opacity:.35}
   .wm-map path:hover.has,.wm-map path.sel{stroke:var(--md-sys-color-on-surface);stroke-width:1.6}
-  .wm-tip{position:absolute;z-index:3;min-width:190px;max-width:260px;padding:10px 12px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-inverse-surface);color:var(--md-sys-color-inverse-on-surface);
-    box-shadow:var(--md-sys-elevation-level3);font:var(--md-sys-typescale-body-small);pointer-events:none;transform:translate(-50%,calc(-100% - 12px))}
-  .wm-tip.hidden{display:none}
-  /* pin per wilayah: angka sesuai mode, warna = status vs target hari ini; ukuran tetap di layar */
+  .wm-seg .sw{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--c)}
+  /* hover wilayah: wilayah lain meredup */
+  .wm-map svg.dim path:not(.hot){opacity:.28}
+  .wm-map svg.dim path.hot{stroke:var(--md-sys-color-on-surface);stroke-width:1.6}
+  /* ===== Pin (★ Gabungan) — angka sesuai mode, warna = status % Done vs target hari ini; ukuran tetap di layar.
+     Posisi label (lb) = titik tengah-bawah label relatif ke titik pin; garis (st) diputar dari titik ke sisi label terdekat. */
   .wm-pins{position:absolute;inset:0;z-index:2;pointer-events:none;transition:opacity .2s}
   .wm-pins.off{opacity:0}
-  .wm-pin{position:absolute;width:0;height:0}
+  .wm-pin{position:absolute;width:0;height:0;transition:opacity .25s ease}
+  .wm-pins.focus .wm-pin:not(.hov){opacity:0}
+  .wm-pins.focus .wm-pin:not(.hov) .lb,.wm-pins.focus .wm-pin:not(.hov) .dot{pointer-events:none}
   .wm-pin.ok{--pc:var(--md-sys-color-primary);--pt:var(--md-sys-color-on-primary)}
   .wm-pin.warn{--pc:#e6a52e;--pt:#2b1d00}
   .wm-pin.bad{--pc:var(--bad);--pt:var(--md-sys-color-surface)}
-  .wm-pin .st{position:absolute;left:-1px;width:2px;background:var(--pc)}
-  .wm-pin .dot{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 1.5px var(--md-sys-color-surface-container-lowest)}
-  .wm-pin .lb{position:absolute;transform:translate(-50%,-100%);padding:1px 8px;border-radius:99px;background:var(--pc);color:var(--pt);
-    font:var(--md-sys-typescale-label-medium);font-weight:700;line-height:18px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.35);pointer-events:auto;cursor:pointer}
+  .wm-pin .st{position:absolute;z-index:0;left:-1px;bottom:0;width:2px;background:var(--pc);transform-origin:50% 100%;transition:height .35s cubic-bezier(.2,.8,.2,1)}
+  .wm-pin .dot{position:absolute;left:-4.5px;top:-4.5px;width:9px;height:9px;border-radius:50%;background:var(--pc);box-shadow:0 0 0 2px var(--md-sys-color-surface-container-lowest);pointer-events:auto;cursor:pointer;transition:transform .25s}
+  .wm-pin .dot:hover{transform:scale(1.35)}
+  .wm-pin .lb{position:absolute;z-index:1;left:0;top:-12px;transform:translate(-50%,-100%);padding:1px 9px;border-radius:99px;background:var(--pc);color:var(--pt);
+    font:var(--md-sys-typescale-label-medium);font-weight:800;line-height:18px;font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.28);pointer-events:auto;cursor:pointer;
+    transform-origin:50% 100%;transition:transform .3s cubic-bezier(.3,1.5,.5,1),opacity .2s}
+  .wm-pin .lb small{display:block;font:600 10.5px/13px var(--md-sys-typescale-font-plain);opacity:.85;padding-bottom:1px}
+  .wm-pin .lb .big{display:block;font:800 15px/19px var(--md-sys-typescale-font-plain)}
+  .wm-pin .lb small.nm{font:800 12px/15px var(--md-sys-typescale-font-plain);opacity:1}
+  .wm-pin .lb small.go{font-weight:500;opacity:.75;padding-top:2px}
+  .wm-pin.tall .lb{border-radius:10px;padding:3px 10px;text-align:center}
+  .wm-pin.rich .lb{border-radius:12px;padding:5px 11px 6px}
+  .wm-pin.mini .lb{transform:translate(-50%,-100%) scale(0);opacity:0}
+  .wm-pin.mini:not(.rich) .st{height:0!important}
+  .wm-pin.open .lb{transform:translate(-50%,-100%) scale(1);opacity:1}
+  .wm-pin.wm-drop{animation:wmDrop .28s cubic-bezier(.3,1.6,.5,1) backwards}
+  @keyframes wmDrop{0%{opacity:0;transform:translateY(-26px) scale(.6)}60%{opacity:1}100%{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.wm-pin,.wm-pin .lb,.wm-pin .st{transition:none}.wm-pin.wm-drop{animation:none}}
   .wm-pl{display:inline-flex;align-items:center;gap:6px}
   .wm-pl b{display:inline-block;width:9px;height:9px;border-radius:50%;margin-left:4px}
   .wm-pl b.ok{background:var(--md-sys-color-primary)}.wm-pl b.warn{background:#e6a52e}.wm-pl b.bad{background:var(--bad)}
-  .wm-tip b{display:block;font:var(--md-sys-typescale-title-small);margin-bottom:2px}
-  .wm-tip .big{font:var(--md-sys-typescale-title-large);font-weight:600}
-  .wm-tip .go{display:block;margin-top:6px;opacity:.75}
+  .wm-leg .lt{font-weight:700;color:var(--md-sys-color-on-surface)}
+  .wm-acts{margin-left:auto;display:inline-flex;gap:6px}
   .wm-leg{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-on-surface-variant);margin-top:8px}
   .wm-leg i{display:block;width:150px;height:8px;border-radius:99px;background:linear-gradient(90deg,color-mix(in srgb,var(--wm-c) 26%,var(--md-sys-color-surface-container-highest)),var(--wm-c))}
   .wm-leg u{display:inline-block;width:14px;height:8px;border-radius:3px;background:var(--md-sys-color-surface-container-high);text-decoration:none}
@@ -3409,13 +3426,15 @@ window.wilLink=async id=>{const l=LOC_ROWS.find(x=>x.id===id)||{};let sg;try{sg=
    Klik provinsi → peta kab/kota (zoom), klik kab/kota → daftar kecamatan. Tanpa internet/CDN. */
 let PETA=null,WM={mode:'pct',prov:null,kab:null,st:null,vb:null},WIL_PENDING=null;
 async function wilPeta(){if(!PETA){try{PETA=await api('/api/wilayah/peta');}catch(e){PETA=null;}}return PETA;}
-const WM_MODES={pct:{lbl:'% Done',c:'var(--md-sys-color-primary)'},drafts:{lbl:'Drafts',c:'var(--md-sys-color-tertiary)'},stale:{lbl:'Stale',c:'var(--md-sys-color-error)'}};
+const WM_MODES={pct:{lbl:'% Done',c:'var(--md-sys-color-primary)'},drafts:{lbl:'Drafts',c:'var(--md-sys-color-tertiary)'},stale:{lbl:'Stale',c:'var(--wm-stale)'}};
 function wmVal(x,max){if(!x)return null;return WM.mode==='pct'?(x.n?x.done/x.n*100:0):(max?(x[WM.mode]||0)/max*100:0);}
 // tanpa lokasi = netral gelap; ada lokasi = minimal 26% warna mode supaya 0% tetap terlihat "dalam cakupan"
 const wmFill=v=>v==null?'var(--md-sys-color-surface-container-high)':`color-mix(in srgb,${WM_MODES[WM.mode].c} ${Math.round(26+v*.74)}%,var(--md-sys-color-surface-container-highest))`;
-async function loadWilMap(){const host=$('#wmHost');if(!host)return;if(!WIL.on()){host.innerHTML='';return;}
+// fresh = halaman baru dibuka (bukan refresh 60 dtk): putar sapaan pin; refresh tanpa perubahan data tidak menggambar ulang
+async function loadWilMap(fresh){const host=$('#wmHost');if(!host)return;if(!WIL.on()){host.innerHTML='';return;}
   const [pt,st]=await Promise.all([wilPeta(),api('/api/wilayah/stats').catch(()=>null)]);if(!pt||!st){host.innerHTML='';return;}
-  WM.st=st;if(WM.prov&&!st.prov[WM.prov]){WM.prov=null;WM.kab=null;}renderWm();}
+  const sig=JSON.stringify(st);if(!fresh&&sig===WM.sig&&host.querySelector('.wm-map'))return;WM.sig=sig;
+  WM.st=st;if(WM.prov&&!st.prov[WM.prov]){WM.prov=null;WM.kab=null;}if(fresh&&!WM.prov){WM.intro=true;WM.all=false;}renderWm();}
 function wmBox(){const P=PETA;if(!WM.prov)return [0,0,P.w,P.h];const b=P.prov[WM.prov].b,pad=Math.max(b[2],b[3])*.08;
   let [x,y,w,h]=[b[0]-pad,b[1]-pad,b[2]+pad*2,b[3]+pad*2];const ar=P.w/P.h;          // pertahankan rasio peta
   if(w/h<ar){const nw=h*ar;x-=(nw-w)/2;w=nw;}else{const nh=w/ar;y-=(nh-h)/2;h=nh;}return [x,y,w,h];}
@@ -3430,26 +3449,27 @@ function renderWm(){const host=$('#wmHost'),st=WM.st,P=PETA;if(!host||!st||!P)re
   const bc=WM.prov?`<a data-go="nat">Indonesia</a> › ${WM.kab?`<a data-go="prov">${esc(pn)}</a> › ${esc((st.kab[WM.kab]||{}).nama||'')}`:esc(pn)} <span class="sub">· ${Object.keys(st.kab).filter(k=>k.startsWith(WM.prov+'.')).length} kab/kota</span>`
     :`Indonesia <span class="sub">· ${nProv} province${nProv===1?'':'s'} · ${nKab} kab/kota in this project</span>`;
   const notes=[st.manual?`${st.manual} manual (unverified)`:'',st.none?`${st.none} without wilayah`:''].filter(Boolean).join(' · ');
-  const legend=WM.mode==='pct'?'<span>0%</span><i></i><span>100%</span>':`<span>0</span><i></i><span>${max} ${WM.mode==='stale'?`stale (no change ≥ ${st.warm} working days)`:'drafts'}</span>`;
+  // legenda mengikuti pill aktif; warna pin selalu status % Done
+  const legend=`<span class="lt">Regions · ${WM.mode==='pct'?'% done':WM.mode==='stale'?'stale':'drafts'}</span>`+(WM.mode==='pct'?'<span>0%</span><i></i><span>100%</span>':`<span>0</span><i></i><span>${max} ${WM.mode==='stale'?`stale (no change ≥ ${st.warm} working days)`:'drafts'}</span>`);
   const vb=wmBox();
   host.innerHTML=`<div class="card s12" id="wmCard"><div class="wm"><div style="min-width:0">
     <div class="wm-top"><span class="mi acc">map</span><span class="wm-bc">${bc}</span>
-      <div class="wm-seg">${Object.entries(WM_MODES).map(([k,m])=>`<button data-m="${k}" class="${WM.mode===k?'on':''}">${m.lbl}</button>`).join('')}</div></div>
-    <div class="wm-map"><svg viewBox="${(WM.vb||vb).join(' ')}" preserveAspectRatio="xMidYMid meet">${pathsProv}${pathsKab}</svg><div class="wm-tip hidden"></div></div>
-    <div class="wm-leg" style="--wm-c:${WM_MODES[WM.mode].c}">${legend}<span class="sep"></span><u></u><span>no locations</span>${st.ideal_pct!=null?'<span class="sep"></span><span class="wm-pl">Pin:<b class="ok"></b>on track<b class="warn"></b>behind<b class="bad"></b>far behind</span>':''}${notes?`<span class="sep"></span><span>${notes}</span>`:''}<span style="margin-left:auto;opacity:.7">Map: geoBoundaries (CC BY 4.0)</span></div></div>
+      <div class="wm-seg">${Object.entries(WM_MODES).map(([k,m])=>`<button data-m="${k}" class="${WM.mode===k?'on':''}"><i class="sw" style="--c:${m.c}"></i>${m.lbl}</button>`).join('')}</div></div>
+    <div class="wm-map"><svg viewBox="${(WM.vb||vb).join(' ')}" preserveAspectRatio="xMidYMid meet">${pathsProv}${pathsKab}</svg></div>
+    <div class="wm-leg" style="--wm-c:${WM_MODES[WM.mode].c}">${legend}<span class="sep"></span><u></u><span>no locations</span>${st.ideal_pct!=null?'<span class="sep"></span><span class="wm-pl"><span class="lt">Pin · % done vs target</span><b class="ok"></b>on track<b class="warn"></b>behind<b class="bad"></b>far behind</span>':''}${notes?`<span class="sep"></span><span>${notes}</span>`:''}<span class="wm-acts">${WM.prov?'':`<md-button variant="tonal" size="xs" id="wmAll">${WM.all?'Only 4 behind':'All numbers'}</md-button><md-button variant="text" size="xs" icon="replay" id="wmReplay">Replay</md-button>`}</span><span style="opacity:.7">Map: geoBoundaries (CC BY 4.0)</span></div></div>
     <div class="wm-side">${wmSide()}</div></div></div>`;
   const svg=host.querySelector('svg');WM.anim=false;if(WM.vb&&WM.vb.join()!==vb.join())wmZoom(svg,WM.vb,vb);WM.vb=vb;
   const lay=document.createElement('div');lay.className='wm-pins off';host.querySelector('.wm-map').appendChild(lay);
-  if(window.ResizeObserver)new ResizeObserver(()=>wmPins()).observe(host.querySelector('.wm-map'));else wmPins();
+  WMP={map:host.querySelector('.wm-map'),svg,lay};WM.hov=null;wmClearT();
+  if(window.ResizeObserver)new ResizeObserver(()=>wmPins()).observe(WMP.map);else wmPins();
+  const ba=$('#wmAll'),br=$('#wmReplay');
+  if(ba)ba.onclick=()=>{WM.all=!WM.all;ba.textContent=WM.all?'Only 4 behind':'All numbers';wmPins('force');};
+  if(br)br.onclick=()=>{WM.all=false;if(ba)ba.textContent='All numbers';WM.intro=true;wmPins('force');};
   host.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{WM.mode=b.dataset.m;renderWm();});
   host.querySelectorAll('[data-go]').forEach(a=>a.onclick=()=>{if(a.dataset.go==='nat'){WM.prov=null;WM.kab=null;}else WM.kab=null;renderWm();});
-  const tip=host.querySelector('.wm-tip'),map=host.querySelector('.wm-map');
-  svg.querySelectorAll('path.has').forEach(p=>{const k=p.dataset.k,x=(k.length===2?st.prov:st.kab)[k];
-    p.addEventListener('mousemove',e=>{if(!x)return;const r=map.getBoundingClientRect();tip.classList.remove('hidden');
-      tip.style.left=(e.clientX-r.left)+'px';tip.style.top=(e.clientY-r.top)+'px';
-      tip.innerHTML=`<b>${esc(x.nama)}</b><span class="big">${x.done}</span> / ${x.n} done · ${Math.round(x.done/x.n*100)}%<br>${x.drafts} draft${x.drafts===1?'':'s'}${x.stale?` · ${x.stale} stale`:''}<span class="go">${k.length===2?'Click to open kab/kota →':'Click for kecamatan →'}</span>`;});
-    p.addEventListener('mouseleave',()=>tip.classList.add('hidden'));
-    p.addEventListener('click',()=>{if(!x)return;tip.classList.add('hidden');if(k.length===2){WM.prov=k;WM.kab=null;}else WM.kab=k;renderWm();});});
+  // hover wilayah = detail di pinnya (tanpa tooltip gelap); klik = buka kab/kota / kecamatan
+  svg.querySelectorAll('path.has').forEach(p=>{const k=p.dataset.k;
+    p.addEventListener('mousemove',()=>wmHover(k));p.addEventListener('mouseleave',e=>{if(!wmSameK(e,k))wmLeave();});p.addEventListener('click',()=>wmGo(k));});
   host.querySelectorAll('[data-rk]').forEach(r=>r.onclick=()=>{const k=r.dataset.rk;WM.prov=k.slice(0,2);WM.kab=k;renderWm();});
   host.querySelectorAll('[data-log]').forEach(b=>b.onclick=()=>wilOpenLog(b.dataset.log));
   revealCards(host);}
@@ -3470,34 +3490,121 @@ function wmRow(nm,sub,d,n,ideal,k){const p=n?Math.round(d/n*100):0,cls=ideal==nu
   return `<div class="wm-rk ${cls}"><span class="nm">${esc(nm)}${sub?` <small>· ${esc(sub)}</small>`:''}</span><span class="v">${d} / ${n}</span><div class="bar"><i style="width:${p}%"></i>${ideal!=null?`<b style="left:${Math.min(99,ideal)}%"></b>`:''}</div></div>`;}
 function wmZoom(svg,a,b){if(reduced){svg.setAttribute('viewBox',b.join(' '));return;}const t0=performance.now(),D=480,ease=t=>1-Math.pow(1-t,3);WM.anim=true;
   const step=now=>{if(!svg.isConnected){WM.anim=false;return;}const t=Math.min(1,(now-t0)/D),e=ease(t);svg.setAttribute('viewBox',a.map((v,i)=>v+(b[i]-v)*e).join(' '));
-    if(t<1)requestAnimationFrame(step);else{WM.anim=false;wmPins();}};   // pin dipasang setelah zoom selesai
+    if(t<1)requestAnimationFrame(step);else{WM.anim=false;wmPins('zoom');}};   // pin dipasang setelah zoom selesai
   svg.setAttribute('viewBox',a.join(' '));requestAnimationFrame(step);}
-/* Pin per provinsi / kab-kota: ujung pin di titik dalam wilayah, angka sesuai mode (% / jumlah draf / basi),
-   warna = status terhadap target hari ini (sama dengan bar "Furthest behind"). Label yang bertumpuk dinaikkan
-   (garis penunjuk memanjang) — ujung pin tetap di lokasinya. Klik/hover label = klik/hover wilayahnya. */
+/* ===== Pin peta (★ Gabungan) =====
+   Nasional: saat halaman dibuka pin jatuh barat → timur (40 ms/pin), angka terlihat ±3 dtk, lalu mengecil jadi titik;
+   setelah itu pin angka hanya untuk 4 provinsi paling tertinggal (tombol All numbers / Replay). Provinsi: pin per
+   kab/kota lengkap (angka + nama · selesai/total). Hover wilayah: wilayah lain meredup, pin lain memudar, pin wilayah itu
+   membuka detail lengkap yang tidak menutupi wilayahnya. Ujung pin di titik dalam wilayah (wmLabelPt). */
 const WM_LP={};
 function wmLabelPt(path,k){if(WM_LP[k])return WM_LP[k];const svg=path.ownerSVGElement,bb=path.getBBox(),pt=svg.createSVGPoint(),cx=bb.x+bb.width/2,cy=bb.y+bb.height/2;
   for(let r=0;r<=1.0001;r+=.04)for(let a=0;a<6.283;a+=.2618){pt.x=cx+Math.cos(a)*r*bb.width/2;pt.y=cy+Math.sin(a)*r*bb.height/2;
     if(path.isPointInFill(pt))return WM_LP[k]={x:pt.x,y:pt.y};if(!r)break;}
   return WM_LP[k]={x:cx,y:cy};}
-function wmPins(){const host=$('#wmHost'),st=WM.st;if(!host||!st)return;const map=host.querySelector('.wm-map'),lay=map&&map.querySelector('.wm-pins'),svg=map&&map.querySelector('svg');
-  if(!lay||!svg)return;if(WM.anim){lay.classList.add('off');return;}
-  const m=svg.getScreenCTM(),mr=map.getBoundingClientRect();if(!m||!mr.width)return;
-  const lvl=WM.prov?st.kab:st.prov,ideal=st.ideal_pct,items=[];
-  svg.querySelectorAll('path.has[data-k]').forEach(p=>{const k=p.dataset.k,x=lvl[k];if(!x||!x.n)return;
-    const v=WM.mode==='pct'?Math.round(x.done/x.n*100)+'%':(x[WM.mode]||0);if(WM.mode!=='pct'&&!v)return;
-    const lp=wmLabelPt(p,k),sp=new DOMPoint(lp.x,lp.y).matrixTransform(m),pct=x.done/x.n*100;
-    items.push({p,x:sp.x-mr.left,y:sp.y-mr.top,v:String(v),cls:ideal==null||pct>=ideal?'ok':pct>=ideal*.6?'warn':'bad'});});
-  const H=20,placed=[];items.sort((a,b)=>a.y-b.y);
-  items.forEach(it=>{const w=it.v.length*7.5+18;let dx=0;const minX=w/2+2,maxX=mr.width-w/2-2;if(it.x<minX)dx=minX-it.x;else if(it.x>maxX)dx=maxX-it.x;
-    let stem=10;const box=s=>({l:it.x+dx-w/2-2,r:it.x+dx+w/2+2,t:it.y-s-H-2,b:it.y-s+2});
-    const hit=b=>placed.some(q=>b.l<q.r&&b.r>q.l&&b.t<q.b&&b.b>q.t);
-    while(hit(box(stem))&&stem<130&&it.y-stem-H>4)stem+=12;
-    it.stem=stem;it.dx=dx;placed.push(box(stem));});
-  lay.innerHTML=items.map((it,i)=>`<div class="wm-pin ${it.cls}" style="left:${it.x.toFixed(1)}px;top:${it.y.toFixed(1)}px"><i class="st" style="top:${-it.stem}px;height:${it.stem}px"></i><i class="dot"></i><span class="lb" data-i="${i}" style="top:${-it.stem}px;left:${it.dx.toFixed(1)}px">${esc(it.v)}</span></div>`).join('');
-  const fw=(it,type,e)=>it.p.dispatchEvent(new MouseEvent(type,{bubbles:true,clientX:e?e.clientX:0,clientY:e?e.clientY:0}));
-  lay.querySelectorAll('.lb').forEach(b=>{const it=items[+b.dataset.i];b.onclick=e=>fw(it,'click',e);b.onmousemove=e=>fw(it,'mousemove',e);b.onmouseleave=e=>fw(it,'mouseleave',e);});
-  lay.classList.remove('off');}
+let WMP={},WM_T=[];
+const wmClearT=()=>{WM_T.forEach(clearTimeout);WM_T=[];};
+const wmLater=(fn,ms)=>WM_T.push(setTimeout(fn,ms));
+const wmPct=x=>x.n?x.done/x.n*100:0;
+const wmCls=x=>{const id=WM.st.ideal_pct,p=wmPct(x);return id==null||p>=id?'ok':p>=id*.6?'warn':'bad';};
+const wmV=x=>WM.mode==='pct'?Math.round(wmPct(x))+'%':String(x[WM.mode]||0);
+const wmData=k=>(k.length===2?WM.st.prov:WM.st.kab)[k];
+const WM_RANK={bad:0,warn:1,ok:2};
+function wmRich(k,x){const v=wmV(x),u=WM.mode==='drafts'?` draft${v==='1'?'':'s'}`:WM.mode==='stale'?' stale':'';
+  return `<span class="big">${esc(v+u)}</span><small class="nm">${esc(x.nama)}</small><small>${x.done} / ${x.n} done · ${Math.round(wmPct(x))}%</small><small>${x.drafts} draft${x.drafts===1?'':'s'} · ${x.stale||0} stale</small><small class="go">${k.length===2?'Click to open kab/kota →':'Click for kecamatan →'}</small>`;}
+function wmScr(k){const p=WMP.svg.querySelector(`path[data-k="${k}"]`);if(!p)return null;const m=WMP.svg.getScreenCTM(),mr=WMP.map.getBoundingClientRect(),lp=wmLabelPt(p,k),q=new DOMPoint(lp.x,lp.y).matrixTransform(m);
+  return {x:q.x-mr.left,y:q.y-mr.top};}
+function wmItems(){const W=WMP.map.clientWidth,H=WMP.map.clientHeight,out=[];
+  WMP.svg.querySelectorAll('path.has[data-k]').forEach(p=>{const k=p.dataset.k,x=wmData(k);if(!x||!x.n)return;const v=wmV(x);if(WM.mode!=='pct'&&v==='0')return;
+    const q=wmScr(k);if(!q||q.x<0||q.y<0||q.x>W||q.y>H)return;   // wilayah tanpa geometri / di luar tampilan: tanpa pin
+    out.push({k,s:x,c:wmCls(x),v,full:WM.prov?`${esc(v)}<small>${esc(x.nama)} · ${x.done}/${x.n}</small>`:esc(v),...q});});
+  return out.sort((a,b)=>a.x-b.x);}
+/* Penempatan label: ukuran diukur langsung, lalu dicoba posisi atas, diagonal, samping, bawah dengan garis makin panjang.
+   Diterima bila utuh di dalam peta dan tidak menabrak label, titik, atau garis lain. Yang paling tertinggal ditempatkan dulu.
+   Gagal → garis boleh lewat di belakang label lain → angka saja → titik saja (hover untuk detail). */
+const WM_PAD=4,WM_GAPS=[12,20,30,42,56,72,92,116],WM_RGAPS=[...WM_GAPS,145,180,220,270,330,400];
+function wmCands(w,h,gaps){const c=[];gaps.forEach(g=>{const d=g*.7;
+  [[0,-g,0],[w/2+d,-d,1],[-w/2-d,-d,1],[w/2+g,h/2,2],[-w/2-g,h/2,2],[0,g+h,3],[w/2+d,d+h,4],[-w/2-d,d+h,4]].forEach(([ax,ay,p])=>c.push({ax,ay,cost:g+p*7}));});
+  return c.sort((a,b)=>a.cost-b.cost);}
+const wmBoxAt=(it,c,w,h)=>({l:it.x+c.ax-w/2,r:it.x+c.ax+w/2,t:it.y+c.ay-h,b:it.y+c.ay});
+const wmOver=(a,b,m)=>a.l<b.r+m&&a.r>b.l-m&&a.t<b.b+m&&a.b>b.t-m;
+function wmSegHit(s,q){let t0=0,t1=1;const dx=s[2]-s[0],dy=s[3]-s[1];   // garis memotong kotak? (Liang–Barsky)
+  for(const [p,v] of [[-dx,s[0]-q.l],[dx,q.r-s[0]],[-dy,s[1]-q.t],[dy,q.b-s[1]]]){if(!p){if(v<0)return false;continue;}const r=v/p;if(p<0){if(r>t1)return false;if(r>t0)t0=r;}else{if(r<t0)return false;if(r<t1)t1=r;}}
+  return true;}
+const wmNear=(b,x,y)=>[x,y,Math.max(b.l,Math.min(x,b.r)),Math.max(b.t,Math.min(y,b.b))];
+function wmFit(it,w,h,placed,dots,loose,cover,gaps){const W=WMP.map.clientWidth,H=WMP.map.clientHeight;
+  for(const c of wmCands(w,h,gaps||WM_GAPS)){const b=wmBoxAt(it,c,w,h),sg=wmNear(b,it.x,it.y);
+    if(b.l<WM_PAD||b.r>W-WM_PAD||b.t<WM_PAD||b.b>H-WM_PAD)continue;
+    if(cover&&cover(b))continue;
+    if(placed.some(q=>wmOver(b,q.box,3)||(!loose&&((q.seg&&wmSegHit(q.seg,b))||wmSegHit(sg,q.box)))))continue;
+    if(dots&&dots.some(d=>d.k!==it.k&&wmOver(b,{l:d.x-6,r:d.x+6,t:d.y-6,b:d.y+6},0)))continue;
+    return {...c,box:b,seg:sg};}
+  return null;}
+function wmMeasure(list){const m=document.createElement('div');m.style.cssText='position:absolute;left:0;top:0;visibility:hidden';
+  m.innerHTML=list.map(it=>`<div class="wm-pin ok tall"><span class="lb">${it.full}</span></div><div class="wm-pin ok"><span class="lb">${esc(it.v)}</span></div>`).join('');
+  WMP.lay.appendChild(m);const s=m.querySelectorAll('.lb');
+  list.forEach((it,i)=>{it.fw=s[2*i].offsetWidth;it.fh=s[2*i].offsetHeight;it.sw=s[2*i+1].offsetWidth;it.sh=s[2*i+1].offsetHeight;});m.remove();}
+function wmPlace(list,dots){wmMeasure(list);const placed=[];dots=dots||list;
+  list.slice().sort((a,b)=>WM_RANK[a.c]-WM_RANK[b.c]||wmPct(a.s)-wmPct(b.s)||b.s.n-a.s.n).forEach(it=>{
+    const full=it.full!==esc(it.v);let c=full&&(wmFit(it,it.fw,it.fh,placed,dots)||wmFit(it,it.fw,it.fh,placed,dots,1));
+    if(c)it.lv='full';else{c=wmFit(it,it.sw,it.sh,placed,dots)||wmFit(it,it.sw,it.sh,placed,dots,1);it.lv=c?'short':'dot';}
+    if(c){it.ax=c.ax;it.ay=c.ay;placed.push(c);}});
+  return list;}
+function wmStem(ax,ay,w,h){const l=ax-w/2,r=ax+w/2,t=ay-h,px=Math.max(l,Math.min(0,r)),py=Math.max(t,Math.min(0,ay));
+  return `height:${Math.hypot(px,py).toFixed(1)}px;transform:rotate(${(Math.atan2(px,-py)*180/Math.PI).toFixed(1)}deg)`;}
+function wmPinHTML(it,extra=''){const dot=it.lv==='dot',tall=it.lv==='full'&&it.full!==esc(it.v),ax=dot?0:it.ax,ay=dot?-12:it.ay;
+  return `<div class="wm-pin ${it.c}${extra?' '+extra:''}${tall?' tall':''}${dot?' mini':''}" data-k="${it.k}" style="left:${it.x.toFixed(1)}px;top:${it.y.toFixed(1)}px"><i class="st" style="${wmStem(ax,ay,tall?it.fw:it.sw,tall?it.fh:it.sh)}"></i><i class="dot"></i><span class="lb" style="left:${ax.toFixed(1)}px;top:${ay.toFixed(1)}px">${tall?it.full:esc(it.v)}</span></div>`;}
+function wmBindPins(){WMP.lay.querySelectorAll('.wm-pin').forEach(el=>{const k=el.dataset.k;
+  el.querySelectorAll('.lb,.dot').forEach(t=>{t.onmousemove=()=>wmHover(k);t.onmouseleave=e=>{if(!wmSameK(e,k))wmLeave();};t.onclick=()=>wmGo(k);});});}
+// how: 'zoom' = setelah animasi zoom, 'force' = tombol All numbers / Replay; tanpa how = resize/ganti mode (hanya bila lebar berubah)
+function wmPins(how){const st=WM.st,{map,lay}=WMP;if(!st||!lay||!lay.isConnected)return;
+  if(WM.anim){lay.classList.add('off');return;}
+  const W=map.clientWidth;if(!W||(!how&&lay.dataset.w==W))return;lay.dataset.w=W;
+  wmClearT();wmLeave();
+  const all=wmItems(),fin=()=>lay.classList.remove('off'),stagger=(ms,sel)=>lay.querySelectorAll(sel||'.wm-pin').forEach((p,i)=>p.style.animationDelay=(i*ms)+'ms');
+  if(WM.prov){const L=wmPlace(all);lay.innerHTML=L.map(it=>wmPinHTML(it,how==='zoom'&&!reduced?'wm-drop':'')).join('');if(how==='zoom')stagger(35);wmBindPins();fin();return;}
+  // 4 paling tertinggal: di bawah target (atau, tanpa target, % terendah di bawah 100%)
+  const id=st.ideal_pct,worst=new Set(all.filter(i=>id!=null?i.c!=='ok':wmPct(i.s)<100).sort((a,b)=>wmPct(a.s)-wmPct(b.s)).slice(0,4).map(i=>i.k));
+  const final=anim=>{const on=wmPlace(all.filter(i=>WM.all||worst.has(i.k)).map(i=>({...i})),all),off=all.filter(i=>!WM.all&&!worst.has(i.k)).map(i=>({...i,lv:'dot'}));
+    wmMeasure(off);lay.innerHTML=off.map(it=>wmPinHTML(it)).join('')+on.map(it=>wmPinHTML(it,anim?'wm-drop':'')).join('');
+    if(anim)stagger(90,'.wm-pin.wm-drop');wmBindPins();fin();};
+  if(WM.intro&&!reduced&&!WM.all&&all.length){WM.intro=false;const L=wmPlace(all.map(i=>({...i})));
+    lay.innerHTML=L.map(it=>wmPinHTML(it,'wm-drop')).join('');stagger(40);wmBindPins();fin();
+    const t1=280+L.length*40+3000;wmLater(()=>lay.querySelectorAll('.wm-pin').forEach(p=>p.classList.add('mini')),t1);wmLater(()=>final(true),t1+450);}
+  else{WM.intro=false;final(false);}}
+/* ---- hover: detail di pin wilayah itu; pindah antara wilayah dan pinnya sendiri tidak dihitung keluar ---- */
+const wmSameK=(e,k)=>{const t=e.relatedTarget,o=t&&t.closest&&t.closest('[data-k]');return !!o&&o.dataset.k===k;};
+function wmHover(k){const {svg,lay}=WMP;if(WM.anim||WM.hov===k||!lay||!lay.isConnected)return;const x=wmData(k);if(!x)return;WM.hov=k;
+  svg.classList.add('dim');svg.querySelectorAll('path.hot').forEach(p=>p.classList.remove('hot'));const p=svg.querySelector(`path[data-k="${k}"]`);p&&p.classList.add('hot');
+  wmRestore();lay.classList.add('focus');
+  let el=lay.querySelector(`.wm-pin[data-k="${k}"]`);
+  if(!el){const q=wmScr(k);if(!q)return;   // wilayah tanpa pin (mis. 0 draf di mode Drafts): pin sementara untuk detail
+    lay.insertAdjacentHTML('beforeend',`<div class="wm-pin ${wmCls(x)} mini tmp" data-k="${k}" style="left:${q.x.toFixed(1)}px;top:${q.y.toFixed(1)}px"><i class="st"></i><i class="dot"></i><span class="lb"></span></div>`);
+    el=lay.lastElementChild;wmBindPins();}
+  wmOpenRich(el,k,x);}
+function wmLeave(){const {svg,lay}=WMP;WM.hov=null;if(!svg)return;svg.classList.remove('dim');svg.querySelectorAll('path.hot').forEach(p=>p.classList.remove('hot'));lay&&lay.classList.remove('focus');wmRestore();}
+/* bentuk asli wilayah (+4 px) dirender ke kanvas tersembunyi → fungsi "berapa piksel wilayah tertutup kotak ini" (tabel jumlah kumulatif) */
+function wmRegionMask(k){const p=WMP.svg.querySelector(`path[data-k="${k}"]`);if(!p)return null;
+  const W=WMP.map.clientWidth,H=WMP.map.clientHeight,cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d',{willReadFrequently:true});
+  const m=WMP.svg.getScreenCTM(),r=WMP.map.getBoundingClientRect(),P=new Path2D(p.getAttribute('d'));
+  g.setTransform(m.a,m.b,m.c,m.d,m.e-r.left,m.f-r.top);g.fill(P);g.lineWidth=8/Math.hypot(m.a,m.b);g.lineJoin='round';g.stroke(P);
+  const a=g.getImageData(0,0,W,H).data,S=new Uint32Array((W+1)*(H+1));
+  for(let y=0;y<H;y++){let row=0;for(let x=0;x<W;x++){if(a[(y*W+x)*4+3])row++;S[(y+1)*(W+1)+x+1]=S[y*(W+1)+x+1]+row;}}
+  return b=>{const l=Math.max(0,Math.floor(b.l)),t=Math.max(0,Math.floor(b.t)),rr=Math.min(W,Math.ceil(b.r)),bb=Math.min(H,Math.ceil(b.b));
+    return rr<=l||bb<=t?0:S[bb*(W+1)+rr]-S[t*(W+1)+rr]-S[bb*(W+1)+l]+S[t*(W+1)+l];};}
+// detail hover: utuh di dalam peta dan tidak menutupi wilayahnya; tak ada yang bebas → yang paling sedikit menutup
+function wmOpenRich(el,k,x){const lb=el.querySelector('.lb'),st=el.querySelector('.st');
+  el.dataset.cls=el.className;lb.dataset.html=lb.innerHTML;lb.dataset.css=lb.style.cssText;st.dataset.css=st.style.cssText;
+  el.classList.add('open','tall','hov','rich');el.style.zIndex=3;lb.innerHTML=wmRich(k,x);
+  const w=lb.offsetWidth,h=lb.offsetHeight,it={k,x:parseFloat(el.style.left),y:parseFloat(el.style.top)},cover=wmRegionMask(k);
+  let c=wmFit(it,w,h,[],null,0,cover,WM_RGAPS);
+  if(!c&&cover){const W=WMP.map.clientWidth,H=WMP.map.clientHeight;for(const q of wmCands(w,h,WM_RGAPS)){const b=wmBoxAt(it,q,w,h);
+    if(b.l<WM_PAD||b.r>W-WM_PAD||b.t<WM_PAD||b.b>H-WM_PAD)continue;const v=cover(b);if(!c||v<c.v)c={...q,v};}}
+  c=c||{ax:0,ay:-12};lb.style.left=c.ax+'px';lb.style.top=c.ay+'px';st.style.cssText=wmStem(c.ax,c.ay,w,h);}
+function wmRestore(){const lay=WMP.lay;if(!lay)return;lay.querySelectorAll('.wm-pin.tmp').forEach(el=>el.remove());
+  lay.querySelectorAll('.wm-pin.hov').forEach(el=>{const lb=el.querySelector('.lb'),st=el.querySelector('.st');
+    el.className=el.dataset.cls;el.style.zIndex='';lb.innerHTML=lb.dataset.html;lb.style.cssText=lb.dataset.css;st.style.cssText=st.dataset.css;});}
+function wmGo(k){if(!wmData(k))return;wmLeave();if(k.length===2){WM.prov=k;WM.kab=null;}else WM.kab=k;renderWm();}
 function wilOpenLog(code){WIL_PENDING=code;navTo('locations');}
 /* Supervisor (admin): sebaran tim per kab/kota */
 async function loadWilTeam(){const host=$('#tmHost');if(!host)return;const show=WIL.on()&&S.user&&S.user.role==='admin';host.classList.toggle('hidden',!show);if(!show)return;
@@ -4257,7 +4364,7 @@ function bindHover(root){root.querySelectorAll('[data-h]').forEach(el=>{el.onmou
 /* ---------- PROGRESS ---------- */
 let PG=null,_pgTimer=null,_pgAt=0;
 async function loadProgress(quiet){let d;try{d=await api('/api/progress');}catch(e){if(!quiet)toast('Failed: '+e.message);return;}
-  PG=d;_pgAt=Date.now();renderProgress();if(!quiet)revealCards($('#pgBody'));loadWilMap();
+  PG=d;_pgAt=Date.now();renderProgress();if(!quiet)revealCards($('#pgBody'));loadWilMap(!quiet);
   clearInterval(_pgTimer);_pgTimer=setInterval(()=>{if(!_visible('v-progress')){clearInterval(_pgTimer);return;}
     const s=Math.round((Date.now()-_pgAt)/1000);$('#pgUpd').textContent=`Updated ${s<5?'just now':s+' s ago'} · refreshes every 60 s`;
     if(s>=60&&document.visibilityState==='visible'&&!$('#pgEditing'))loadProgress(true);},5000);}

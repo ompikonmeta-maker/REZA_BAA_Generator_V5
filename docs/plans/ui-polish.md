@@ -222,4 +222,11 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - **Legenda per pill** (% Done / Drafts / Stale): tiap pill diberi titik warna modenya; baris legenda pertama berganti mengikuti pill aktif: "Wilayah · % selesai 0% → 100%", "Wilayah · jumlah draf 0 → maks draf", "Wilayah · jumlah basi 0 → maks basi" (maks dihitung per level nasional / kab-kota) + "tanpa lokasi". Baris kedua: "Pin · status % Done" (warna pin tetap status target di semua mode).
 - Warna Stale diganti dari merah (error) ke magenta (`--stale`) supaya tidak tertukar dengan pin "jauh tertinggal"; Drafts tetap biru-ungu (`--drafts`). Di aplikasi nanti: Drafts = tertiary, Stale perlu token baru (bukan error).
 
-Menunggu "gas" untuk dipasang di aplikasi.
+**Dipasang di aplikasi (2026-10-17, "gas")** — `app/web/index.html`, menggantikan pin lama (item 14):
+- Sapaan pin hanya saat halaman Progress dibuka (bukan refresh 60 dtk); refresh tanpa perubahan data tidak menggambar ulang peta (hover tidak terputus).
+- Tooltip gelap lama dihapus; hover = detail di pin (+ baris "Click to open kab/kota →" / "Click for kecamatan →"). Wilayah tanpa pin (mis. 0 draf di mode Drafts) tetap dapat detail lewat pin sementara.
+- Tanpa target (ideal_pct kosong): "4 paling tertinggal" = 4 % Done terendah di bawah 100%.
+- Tombol "All numbers" ↔ "Only 4 behind" dan "Replay" di baris legenda (hanya level nasional). Resize di tengah sapaan langsung ke tampilan akhir.
+- Warna Stale: token baru `--wm-stale` (terang #a3459a / gelap #ec9fe0); Drafts tetap tertiary.
+- Class animasi `wm-drop` (bukan `drop`, yang bentrok dengan gaya kotak upload).
+- Diuji Playwright (data demo, terang & gelap): sapaan 8 → 4 pin + 4 titik; hover 8 provinsi & semua kab/kota: 0 piksel wilayah tertutup, detail utuh di peta, pin lain memudar dan kembali; zoom ke tiap provinsi: 0 label keluar/tumpang tindih; ganti mode, All numbers, Replay, klik baris Furthest behind, klik kab → kecamatan: OK; tanpa error JS.
