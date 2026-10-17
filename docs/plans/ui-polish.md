@@ -230,3 +230,28 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - Warna Stale: token baru `--wm-stale` (terang #a3459a / gelap #ec9fe0); Drafts tetap tertiary.
 - Class animasi `wm-drop` (bukan `drop`, yang bentrok dengan gaya kotak upload).
 - Diuji Playwright (data demo, terang & gelap): sapaan 8 → 4 pin + 4 titik; hover 8 provinsi & semua kab/kota: 0 piksel wilayah tertutup, detail utuh di peta, pin lain memudar dan kembali; zoom ke tiap provinsi: 0 label keluar/tumpang tindih; ganti mode, All numbers, Replay, klik baris Furthest behind, klik kab → kecamatan: OK; tanpa error JS.
+
+## 18. Nama lokasi panjang — area yang terlalu sempit (catatan, 2026-10-17)
+**Permintaan:** dropdown pilih lokasi (BAA Entry) terlalu sempit untuk nama panjang; cek bagian lain yang juga butuh area lebih lebar.
+
+**Cara cek (tanpa asumsi):** aplikasi dijalankan dengan salinan data demo, 12 lokasi diberi nama panjang (19–102 huruf, mis. "SMK NEGERI 1 KALUMPANG BIDANG KEAHLIAN TEKNOLOGI DAN REKAYASA KABUPATEN MAMUJU PROVINSI SULAWESI BARAT"; aplikasi tidak membatasi panjang nama). Playwright memindai semua halaman di lebar 1366 & 1920 dan mencatat teks yang terpotong (lebar isi > lebar kotak).
+
+| # | Bagian | Temuan (diukur) |
+|---|---|---|
+| a | **Dropdown lokasi — panel daftar** | Lebar panel = lebar tombol, minimal 300 px (sama di 1366 & 1920). Kolom nama hanya **111–124 px**; nama 19 huruf (229 px) pun terpotong. Kode + badge status memakan sisa lebar. |
+| b | **Dropdown lokasi — tombol** | Lebar 280 px (kosong) s/d maks 460 px; nama tampil **322 px**. |
+| c | **BAA Summary** (kartu kanan, nama lokasi) | Nama dipotong di **240 px**, satu baris. |
+| d | **Progress › "Almost there, gone quiet"** | Kolom nama **144 px** di 1366 → semua 8 nama terpotong, termasuk nama demo pendek ("Kopdes Karya 2…"); 375 px di 1920. |
+| e | **Dashboard › Team › "Last change"** | Kolom dibatasi **300 px** (337 px di 1920); nama panjang terpotong dan **kode lokasi ikut hilang** (kode ditulis setelah nama). |
+| f | BAA Entry › strip SN foto ("SN not read yet — Read SN") | 96–103 px, butuh 166 px (bukan nama lokasi, tapi area sempit). |
+| — | Location Log, Portfolio, kolom input "Nama Lokasi" | Tidak terpotong (tabel Log membungkus nama penuh). |
+
+**Usulan (menunggu keputusan):**
+- a. Panel daftar lebarnya sendiri (mis. ±560 px, dibatasi lebar layar), tidak ikut tombol. Tiap baris 2 tingkat: nama penuh (boleh 2 baris) di atas, kode + status di bawah; hasil pencarian disorot.
+- b. Tombol melebar mengikuti ruang kosong di bar atas (batas atas lebih besar dari 460 px); nama penuh di tooltip.
+- c. Nama di BAA Summary boleh 2 baris (sisanya "…"), nama penuh di tooltip.
+- d. Nama dipindah ke baris sendiri di atas bar (selebar kartu), atau kartu dilebarkan.
+- e. Kode ditulis lebih dulu (selalu terlihat), nama menyusul dengan "…"; kolom boleh melebar.
+- f. Teks strip SN dipendekkan atau strip boleh 2 baris.
+
+**Belum diketahui:** nama terpanjang di data asli pengguna (contoh di gambar: "SMPN 9 KALUM…").
