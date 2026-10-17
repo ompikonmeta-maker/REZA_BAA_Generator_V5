@@ -215,6 +215,7 @@ Klik **Settings** pertama kali (setelah login/refresh) membuka item teratas **Pr
 - Prioritas: paling tertinggal ditempatkan dulu. Gagal → garis boleh lewat di belakang label lain → label ringkas (angka saja) → titik (hover untuk detail).
 - Label selalu di atas garis penunjuk; detail hover juga dicarikan posisi yang utuh di dalam peta.
 - Kab/kota tanpa geometri (mis. Kepulauan Seribu di data contoh) tidak diberi pin.
+- **Detail hover tidak menutupi wilayah yang di-hover**: bentuk asli wilayah (+4 px) dirender ke kanvas tersembunyi, tiap kandidat posisi dicek berapa piksel wilayah yang tertutup; dipilih posisi terdekat yang 0 piksel (jarak garis penunjuk sampai 400 px), kalau tak ada ambil yang paling sedikit menutup. Diuji di 25 provinsi + semua kab/kota, lebar 1400 & 900: 0 tertutup, hover terlama 22 ms.
 - **Hover wilayah** (provinsi & kab/kota): pin dan angka wilayah lain memudar (0,25 dtk, tidak menangkap kursor), muncul lagi saat kursor lepas; hanya pin wilayah yang di-hover yang tampil.
 - Diuji Playwright di 25 provinsi, lebar 1400 & 900: 0 label keluar peta, 0 tumpang tindih, 0 jatuh ke titik; detail hover tiap kab/kota utuh di dalam peta.
 
