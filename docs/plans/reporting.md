@@ -31,6 +31,13 @@ Status: **diskusi → mockup** (belum "gas").
 - 36 node aktif belum Done (backlog). 3 lokasi Done tanpa tanggal aktivasi.
 - Sebagian Done tercatat **sebelum** tanggal aktivasi (selisih negatif) → perlu aturan data janggal (lihat atas).
 
-## Pertanyaan terbuka
-- Tampilan peta: tombol ganti mode (BAA ↔ Node aktif) atau digabung dalam satu tampilan?
-- Patokan "dokumen selesai": BAA Done (Finish) atau saat pertama kali diekspor/dikirim?
+## Keputusan lanjutan (2026-10-19)
+- BAA selesai **sebelum** tanggal aktivasi = kesalahan data. Selesai di hari yang sama atau sesudahnya = normal (0 hari boleh).
+- Peta: tombol baru **NIS** (node in service) → 4 tombol: **% Done · NIS · Drafts · Stale**.
+- Patokan dokumen selesai: saat dokumen BAA lengkap 100% (scan BAA bertanda tangan sudah di-upload + BAA hasil generate),
+  bukan saat tombol Finish/Done. Waktu pertama kali mencapai 100% perlu dicatat (kolom baru, isi awal dari riwayat).
+
+**Mockup (2026-10-19):** https://claude.ai/artifact/3591eHiZyBgnnnsf398Ejy — peta mode NIS (warna wilayah = jumlah NIS,
+hover: NIS · dokumen selesai · % dari NIS · backlog), menu Reports (periode, wilayah, owner, pilih bagian, preview KPI,
+unduh PDF/Excel, kartu format klien), contoh PDF 2 halaman dari data demo (rata-rata 11,1 hari, median 10, 13 dokumen;
+17 data perlu dicek). Usulan: peringatan di Entry bila tanggal aktivasi di masa depan. Menunggu "gas".
