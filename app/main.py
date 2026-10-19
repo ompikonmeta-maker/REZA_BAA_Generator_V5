@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import config, db
-from .routers import (attachments, auth, backup, export, import_loc, locations, notifications, ocr, photos, progress, projects, scan, settings, stats, templates, users, wilayah)
+from .routers import (attachments, auth, reports, backup, export, import_loc, locations, notifications, ocr, photos, progress, projects, scan, settings, stats, templates, users, wilayah)
 
 app = FastAPI(title="BAA Generator", version="0.1.0")
 
@@ -28,7 +28,8 @@ _GATED = (import_loc.router, locations.router, photos.router, export.router, ocr
           notifications.router, scan.router, attachments.router)
 for r in (auth.router, settings.router, templates.router, import_loc.router, locations.router,
           photos.router, users.router, export.router, backup.router, ocr.router, stats.router,
-          notifications.router, progress.router, projects.router, scan.router, attachments.router, wilayah.router):
+          notifications.router, progress.router, projects.router, scan.router, attachments.router, wilayah.router,
+          reports.router):
     app.include_router(r, dependencies=[Depends(data_gate)] if r in _GATED else [])
 
 

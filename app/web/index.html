@@ -303,11 +303,36 @@
   /* SID (identitas lokasi dari klien) */
   .nf-kind{margin-top:6px;font:var(--md-sys-typescale-label-medium)}.nf-kind .mono{font-size:12px;margin-top:2px}.nf-kind s{opacity:.6}
   .nf-why{margin-top:2px;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant);max-width:280px}
+  /* Reports */
+  .rp-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
+  @media(max-width:1100px){.rp-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .rp-grid .md-select{min-width:0}
+  .rp-h{margin:18px 0 8px;font:var(--md-sys-typescale-title-small);color:var(--md-sys-color-on-surface)}
+  .rp-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .rp-chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:var(--md-sys-shape-corner-small);border:1px solid var(--md-sys-color-outline-variant);background:none;
+    font:var(--md-sys-typescale-label-large);color:var(--md-sys-color-on-surface-variant);cursor:pointer;transition:background var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard)}
+  .rp-chip.on{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);border-color:transparent}
+  .rp-chip .mi{font-size:18px}
+  .rp-act{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}
+  .rp-kpi{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+  @media(max-width:1200px){.rp-kpi{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  .rp-k{padding:12px 14px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-surface-container)}
+  .rp-k span{font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant)}
+  .rp-k b{display:block;font:var(--md-sys-typescale-headline-small);font-weight:700;margin:4px 0 2px;color:var(--md-sys-color-on-surface);font-variant-numeric:tabular-nums}
+  .rp-k small{display:block;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .rp-k.warn{background:var(--warn-bg)}.rp-k.warn b,.rp-k.warn span{color:var(--warn)}
+  .rp-note{margin:10px 0 0;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .rp-note.warn{color:var(--warn)}
+  .rp-tbls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:6px}
+  @media(max-width:1100px){.rp-tbls{grid-template-columns:minmax(0,1fr)}}
+  .rp-tbls table{width:100%;font-size:13px}.rp-tbls td.n,.rp-tbls th.n{text-align:right;font-variant-numeric:tabular-nums}
+  .rp-off{padding:12px 14px;border-radius:var(--md-sys-shape-corner-medium);background:var(--warn-bg);color:var(--warn);font:var(--md-sys-typescale-body-medium)}
   .sb-sum{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
   .sb-sum>span{display:inline-flex;align-items:center;gap:5px;font:var(--md-sys-typescale-label-medium);font-weight:600;padding:4px 10px;border-radius:99px;background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface-variant)}
   .sb-sum>span.ok{background:var(--good-bg);color:var(--good)}.sb-sum>span.bad{background:var(--bad-bg);color:var(--bad)}.sb-sum>span .mi{font-size:16px}
   .sb-tbl{max-height:420px;overflow:auto}
   .sb-tbl td.mono,.sb-tbl .mono{font-family:ui-monospace,Consolas,monospace}
+  .act-warn{display:flex;align-items:center;gap:6px;margin:4px 4px 0;font:var(--md-sys-typescale-body-small);color:var(--warn)}.act-warn .mi{font-size:16px}
   .sid-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:start;margin-top:16px}
   .sid-row md-text-field{width:100%}
   .sid-row .sid-acts{display:flex;gap:8px;align-items:center;min-height:56px;flex-wrap:wrap}
@@ -2322,6 +2347,7 @@
     <a class="navitem multi-only hidden" data-view="portfolio" data-short="Portf" data-tip="Portfolio"><span class="mi">dashboard_customize</span><span class="lbl">Portfolio</span></a>
     <a class="navitem active" data-view="dashboard" data-short="Dash" data-tip="Dashboard"><span class="mi">dashboard</span><span class="lbl">Dashboard</span></a>
     <a class="navitem prog-nav" data-view="progress" data-short="Prog" data-tip="Progress"><span class="mi">insights</span><span class="lbl">Progress</span></a>
+    <a class="navitem prog-nav" data-view="reports" data-short="Rep" data-tip="Reports"><span class="mi">summarize</span><span class="lbl">Reports</span></a>
     <a class="navitem" data-view="entry" data-short="Entry" data-tip="BAA Entry"><span class="mi">edit_document</span><span class="lbl">BAA Entry</span></a>
     <a class="navitem" data-view="locations" data-short="LOG" data-tip="Location Log"><span class="mi">table_rows</span><span class="lbl">Location Log</span><span class="pill" id="loc-count"></span></a>
     <a class="navitem admin-only nav-x" data-view="import" data-short="Import" data-tip="Import Locations"><span class="mi">upload_file</span><span class="lbl">Import Locations</span></a>
@@ -2403,6 +2429,21 @@
         <div id="dashSup" class="hidden"></div>
         <div id="tmHost" class="hidden" style="margin-top:16px"></div>
         <div id="dashMe" class="hidden"></div>
+      </section>
+
+      <section id="v-reports" class="hidden">
+        <div class="card">
+          <div class="sec"><span class="mi acc">summarize</span><h3>Progress report</h3><span class="grow"></span>
+            <span class="code-chip"><span class="mi" style="font-size:15px">visibility</span>Admin &amp; viewer</span></div>
+          <div class="rp-grid"><div id="rpFromW"></div><div id="rpToW"></div><div class="md-select" id="rp-wil"></div><div class="md-select" id="rp-owner"></div></div>
+          <div class="rp-h">Sections</div><div class="rp-chips" id="rpSecs"></div>
+          <div class="rp-act"><md-button variant="filled" icon="picture_as_pdf" id="rpPdf">Download PDF</md-button><md-button variant="tonal" icon="table_view" id="rpXlsx">Download Excel</md-button>
+            <span class="muted" id="rpFile"></span></div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <div class="sec"><span class="mi acc">bar_chart</span><h3 id="rpPrevH">Preview</h3></div>
+          <div id="rpPrev"><div class="muted">Loading…</div></div>
+        </div>
       </section>
 
       <section id="v-progress" class="hidden">
@@ -3101,7 +3142,7 @@ addEventListener('load',()=>sbScan());sbScanSoon();
 new ResizeObserver(es=>es.forEach(en=>{const c=en.target.closest('.canvas');if(c)c.style.setProperty('--topbar-h',Math.round(en.target.getBoundingClientRect().height)+'px');})).observe(document.querySelector('.topbar'));
 /* Multi-project: setiap permintaan /api membawa project aktif (server tetap memeriksa aksesnya) */
 const PJ={id:null,list:[],cur:null};
-const VIEWS=['portfolio','dashboard','progress','entry','locations','import','trash','notif','templates','users','settings','projects','setup','team'];
+const VIEWS=['portfolio','dashboard','progress','reports','entry','locations','import','trash','notif','templates','users','settings','projects','setup','team'];
 const _fetch=window.fetch.bind(window);
 window.fetch=(u,o={})=>{if(PJ.id&&typeof u==='string'&&u.startsWith('/api/')){const h=new Headers(o.headers||{});if(!h.has('X-Project'))h.set('X-Project',PJ.id);o={...o,headers:h};}
   const pr=_fetch(u,o);
@@ -3594,7 +3635,7 @@ window.wilLink=async id=>{const l=LOC_ROWS.find(x=>x.id===id)||{};let sg;try{sg=
    Klik provinsi → peta kab/kota (zoom), klik kab/kota → daftar kecamatan. Tanpa internet/CDN. */
 let PETA=null,WM={mode:'pct',prov:null,kab:null,st:null,vb:null},WIL_PENDING=null;
 async function wilPeta(){if(!PETA){try{PETA=await api('/api/wilayah/peta');}catch(e){PETA=null;}}return PETA;}
-const WM_MODES={pct:{lbl:'% Done',c:'var(--md-sys-color-primary)'},drafts:{lbl:'Drafts',c:'var(--md-sys-color-tertiary)'},stale:{lbl:'Stale',c:'var(--wm-stale)'}};
+const WM_MODES={pct:{lbl:'% Done',c:'var(--md-sys-color-primary)'},nis:{lbl:'NIS',c:'var(--good)',tip:'Node in service — activation date filled'},drafts:{lbl:'Drafts',c:'var(--md-sys-color-tertiary)'},stale:{lbl:'Stale',c:'var(--wm-stale)'}};
 function wmVal(x,max){if(!x)return null;return WM.mode==='pct'?(x.n?x.done/x.n*100:0):(max?(x[WM.mode]||0)/max*100:0);}
 // tanpa lokasi = netral gelap; ada lokasi = minimal 26% warna mode supaya 0% tetap terlihat "dalam cakupan"
 const wmFill=v=>v==null?'var(--md-sys-color-surface-container-high)':`color-mix(in srgb,${WM_MODES[WM.mode].c} ${Math.round(26+v*.74)}%,var(--md-sys-color-surface-container-highest))`;
@@ -3607,6 +3648,7 @@ function wmBox(){const P=PETA;if(!WM.prov)return [0,0,P.w,P.h];const b=P.prov[WM
   let [x,y,w,h]=[b[0]-pad,b[1]-pad,b[2]+pad*2,b[3]+pad*2];const ar=P.w/P.h;          // pertahankan rasio peta
   if(w/h<ar){const nw=h*ar;x-=(nw-w)/2;w=nw;}else{const nh=w/ar;y-=(nh-h)/2;h=nh;}return [x,y,w,h];}
 function renderWm(){const host=$('#wmHost'),st=WM.st,P=PETA;if(!host||!st||!P)return;
+  if(WM.mode==='nis'&&!st.nis_on)WM.mode='pct';
   const lvl=WM.prov?st.kab:st.prov,max=Math.max(1,...Object.values(lvl).map(x=>x[WM.mode]||0));
   const pathsProv=Object.entries(P.prov).map(([k,v])=>{const x=st.prov[k];
     if(WM.prov)return `<path d="${v.d}" class="ctx" fill="${k===WM.prov?'var(--md-sys-color-surface-container-highest)':wmFill(null)}"/>`;
@@ -3618,11 +3660,11 @@ function renderWm(){const host=$('#wmHost'),st=WM.st,P=PETA;if(!host||!st||!P)re
     :`Indonesia <span class="sub">· ${nProv} province${nProv===1?'':'s'} · ${nKab} kab/kota in this project</span>`;
   const notes=[st.manual?`${st.manual} manual (unverified)`:'',st.none?`${st.none} without wilayah`:''].filter(Boolean).join(' · ');
   // legenda mengikuti pill aktif; warna pin selalu status % Done
-  const legend=`<span class="lt">Regions · ${WM.mode==='pct'?'% done':WM.mode==='stale'?'stale':'drafts'}</span>`+(WM.mode==='pct'?'<span>0%</span><i></i><span>100%</span>':`<span>0</span><i></i><span>${max} ${WM.mode==='stale'?`stale (no change ≥ ${st.warm} working days)`:'drafts'}</span>`);
+  const legend=`<span class="lt">Regions · ${WM.mode==='pct'?'% done':WM.mode==='stale'?'stale':WM.mode==='nis'?'NIS (node in service)':'drafts'}</span>`+(WM.mode==='pct'?'<span>0%</span><i></i><span>100%</span>':`<span>0</span><i></i><span>${max} ${WM.mode==='stale'?`stale (no change ≥ ${st.warm} working days)`:WM.mode==='nis'?'NIS (activation date filled)':'drafts'}</span>`);
   const vb=wmBox();
   host.innerHTML=`<div class="card s12" id="wmCard"><div class="wm"><div style="min-width:0">
     <div class="wm-top"><span class="mi acc">map</span><span class="wm-bc">${bc}</span>
-      <div class="wm-seg">${Object.entries(WM_MODES).map(([k,m])=>`<button data-m="${k}" class="${WM.mode===k?'on':''}"><i class="sw" style="--c:${m.c}"></i>${m.lbl}</button>`).join('')}</div></div>
+      <div class="wm-seg">${Object.entries(WM_MODES).filter(([k])=>k!=='nis'||st.nis_on).map(([k,m])=>`<button data-m="${k}" class="${WM.mode===k?'on':''}"${m.tip?` data-tip="${m.tip}"`:''}><i class="sw" style="--c:${m.c}"></i>${m.lbl}</button>`).join('')}</div></div>
     <div class="wm-map"><svg viewBox="${(WM.vb||vb).join(' ')}" preserveAspectRatio="xMidYMid meet">${pathsProv}${pathsKab}</svg></div>
     <div class="wm-leg" style="--wm-c:${WM_MODES[WM.mode].c}">${legend}<span class="sep"></span><u></u><span>no locations</span>${st.ideal_pct!=null?'<span class="sep"></span><span class="wm-pl"><span class="lt">Pin · % done vs target</span><b class="ok"></b>on track<b class="warn"></b>behind<b class="bad"></b>far behind</span>':''}${notes?`<span class="sep"></span><span>${notes}</span>`:''}<span class="wm-acts">${WM.prov?'':`<md-button variant="tonal" size="xs" id="wmAll">${WM.all?'Only 4 behind':'All numbers'}</md-button><md-button variant="text" size="xs" icon="replay" id="wmReplay">Replay</md-button>`}</span><span style="opacity:.7">Map: geoBoundaries (CC BY 4.0)</span></div></div>
     <div class="wm-side">${wmSide()}</div></div></div>`;
@@ -3633,7 +3675,7 @@ function renderWm(){const host=$('#wmHost'),st=WM.st,P=PETA;if(!host||!st||!P)re
   const ba=$('#wmAll'),br=$('#wmReplay');
   if(ba)ba.onclick=()=>{WM.all=!WM.all;ba.textContent=WM.all?'Only 4 behind':'All numbers';wmPins('force');};
   if(br)br.onclick=()=>{WM.all=false;if(ba)ba.textContent='All numbers';WM.intro=true;wmPins('force');};
-  host.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{WM.mode=b.dataset.m;renderWm();});
+  host.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{WM.mode=b.dataset.m;renderWm();});bindTips();
   host.querySelectorAll('[data-go]').forEach(a=>a.onclick=()=>{if(a.dataset.go==='nat'){WM.prov=null;WM.kab=null;}else WM.kab=null;renderWm();});
   // hover wilayah = detail di pinnya (tanpa tooltip gelap); klik = buka kab/kota / kecamatan
   svg.querySelectorAll('path.has').forEach(p=>{const k=p.dataset.k;
@@ -3678,7 +3720,8 @@ const wmCls=x=>{const id=WM.st.ideal_pct,p=wmPct(x);return id==null||p>=id?'ok':
 const wmV=x=>WM.mode==='pct'?Math.round(wmPct(x))+'%':String(x[WM.mode]||0);
 const wmData=k=>(k.length===2?WM.st.prov:WM.st.kab)[k];
 const WM_RANK={bad:0,warn:1,ok:2};
-function wmRich(k,x){const v=wmV(x),u=WM.mode==='drafts'?` draft${v==='1'?'':'s'}`:WM.mode==='stale'?' stale':'';
+function wmRich(k,x){const v=wmV(x),u=WM.mode==='drafts'?` draft${v==='1'?'':'s'}`:WM.mode==='stale'?' stale':WM.mode==='nis'?' NIS':'';
+  if(WM.mode==='nis')return `<span class="big">${esc(v+u)}</span><small class="nm">${esc(x.nama)}</small><small>${x.nd||0} document${x.nd===1?'':'s'} done · ${x.nis?Math.round((x.nd||0)/x.nis*100):0}% of NIS</small><small>${(x.nis||0)-(x.nd||0)} backlog · ${x.n} location${x.n===1?'':'s'}</small><small class="go">${k.length===2?'Click to open kab/kota →':'Click for kecamatan →'}</small>`;
   return `<span class="big">${esc(v+u)}</span><small class="nm">${esc(x.nama)}</small><small>${x.done} / ${x.n} done · ${Math.round(wmPct(x))}%</small><small>${x.drafts} draft${x.drafts===1?'':'s'} · ${x.stale||0} stale</small><small class="go">${k.length===2?'Click to open kab/kota →':'Click for kecamatan →'}</small>`;}
 function wmScr(k){const p=WMP.svg.querySelector(`path[data-k="${k}"]`);if(!p)return null;const m=WMP.svg.getScreenCTM(),mr=WMP.map.getBoundingClientRect(),lp=wmLabelPt(p,k),q=new DOMPoint(lp.x,lp.y).matrixTransform(m);
   return {x:q.x-mr.left,y:q.y-mr.top};}
@@ -4451,7 +4494,7 @@ $$('.navitem[data-view]').forEach(n=>n.addEventListener('click',()=>{
     $('#pageTitle').textContent=n.querySelector('.lbl').textContent;$('#entryTools').classList.toggle('hidden',v!=='entry');$('#locTools').classList.toggle('hidden',v!=='locations');$('#setSaveWrap').classList.add('hidden');
     $('#pageTitle').classList.toggle('hidden',v==='entry');$('#topGrow').classList.toggle('hidden',v==='entry');
     pjChipShow(v!=='portfolio'&&v!=='entry'&&v!=='locations');if(typeof bkSync==='function')setTimeout(bkSync,0);
-    if(v==='portfolio')loadPortfolio();if(v==='dashboard')loadDashboard();if(v==='progress')loadProgress();if(v==='locations')loadLocations();if(v==='templates')loadTemplates();if(v==='trash')loadTrash();if(v==='import')loadImport();if(v==='notif')loadNotif();
+    if(v==='portfolio')loadPortfolio();if(v==='dashboard')loadDashboard();if(v==='progress')loadProgress();if(v==='reports')loadReports();if(v==='locations')loadLocations();if(v==='templates')loadTemplates();if(v==='trash')loadTrash();if(v==='import')loadImport();if(v==='notif')loadNotif();
     revealCards($('#v-'+v));};
   if(n.classList.contains('active'))run(); else guardLeave(run,n.querySelector('.lbl').textContent.trim());}));
 
@@ -4669,6 +4712,80 @@ function bindHover(root){root.querySelectorAll('[data-h]').forEach(el=>{el.onmou
 
 /* ---------- PROGRESS ---------- */
 let PG=null,_pgTimer=null,_pgAt=0;
+/* ===== Reports: laporan sesuai permintaan (admin & viewer). PDF siap kirim + Excel untuk diolah.
+   Angka dihitung server (GET /api/reports/summary); filter & periode sama untuk preview dan unduhan. ===== */
+const REP={init:false,secs:null,t:0,seq:0,d:null};
+const REP_SECS=[['kpi','Summary KPI'],['weekly','Weekly trend'],['completion','Completion time'],['operator','Per operator'],['wilayah','Per wilayah'],
+  ['backlog','Backlog'],['missing','Missing items'],['errors','Data to check'],['locations','Location list (all columns)']];
+let rpWilSel=null,rpOwnerSel=null;
+function rpQuery(){const q=new URLSearchParams();const f=$('#rp-from').value,t=$('#rp-to').value;
+  if(f)q.set('from',f);if(t)q.set('to',t);const w=rpWilSel&&rpWilSel.getValue(),o=rpOwnerSel&&rpOwnerSel.getValue();
+  if(w)q.set('wil',w);if(o)q.set('owner',o);return q;}
+function rpSecs(){$('#rpSecs').innerHTML=REP_SECS.map(([k,l])=>{const on=REP.secs.has(k);
+    return `<button type="button" class="rp-chip${on?' on':''}" data-k="${k}" aria-pressed="${on}"><span class="mi">${on?'check':'add'}</span>${esc(l)}</button>`;}).join('');
+  $$('#rpSecs .rp-chip').forEach(b=>b.onclick=()=>{const k=b.dataset.k;REP.secs.has(k)?REP.secs.delete(k):REP.secs.add(k);
+    try{localStorage.setItem('rep:secs:'+S.user.id,[...REP.secs].join(','));}catch(e){}rpSecs();});}
+async function loadReports(){
+  if(!REP.init){REP.init=true;
+    let saved=null;try{saved=localStorage.getItem('rep:secs:'+S.user.id);}catch(e){}
+    REP.secs=new Set(saved?saved.split(',').filter(Boolean):REP_SECS.map(x=>x[0]).filter(k=>k!=='locations'));
+    $('#rpFromW').innerHTML=dateBox('rp-from','From','');$('#rpToW').innerHTML=dateBox('rp-to','To','');
+    rpWilSel=new MDSelect($('#rp-wil'),{label:'Wilayah',placeholder:'All wilayah',onChange:rpSoon});rpWilSel.setOptions([{value:'',label:'All wilayah'}]).setValue('');
+    rpOwnerSel=new MDSelect($('#rp-owner'),{label:'Owner',placeholder:'All owners',onChange:rpSoon});rpOwnerSel.setOptions([{value:'',label:'All owners'}]).setValue('');
+    ['rp-from','rp-to'].forEach(id=>$('#'+id).addEventListener('change',rpSoon));
+    $('#rpPdf').addEventListener('click',()=>rpDownload('pdf'));$('#rpXlsx').addEventListener('click',()=>rpDownload('xlsx'));}
+  rpSecs();$('#rp-wil').classList.toggle('hidden',!WIL.on());
+  try{const [rg,cr]=await Promise.all([WIL.on()?api('/api/wilayah/regions'):null,api('/api/locations/creators')]);
+    if(rg){const cur=rpWilSel.getValue();rpWilSel.setOptions([{value:'',label:'All wilayah'}].concat(rg.none?[{value:'none',label:`No wilayah yet · ${rg.none}`}]:[],
+      rg.regions.map(x=>({value:x.kode,label:(x.level==='kab'?'   ':'')+x.nama+' · '+x.n}))));rpWilSel.setValue(cur||'');}
+    const oc=rpOwnerSel.getValue();rpOwnerSel.setOptions([{value:'',label:'All owners'}].concat((cr.owners||[]).map(c=>({value:String(c.id),label:c.name+' ('+c.n+')'}))));rpOwnerSel.setValue(oc||'');}
+  catch(e){}
+  rpRefresh();}
+function rpSoon(){clearTimeout(REP.t);REP.t=setTimeout(rpRefresh,250);}
+const rpN=(v,s='')=>v==null?'—':v+s;
+const rpFd=iso=>iso?dpFmt(iso):'—';
+async function rpRefresh(){const seq=++REP.seq;let d;
+  try{d=await api('/api/reports/summary?'+rpQuery().toString());}catch(e){$('#rpPrev').innerHTML=`<div class="rp-off">${esc(e.message)}</div>`;return;}
+  if(seq!==REP.seq)return;REP.d=d;const k=d.kpi;
+  if(!$('#rp-from').value)rpSetDate('rp-from',d.from);if(!$('#rp-to').value)rpSetDate('rp-to',d.to);
+  $('#rpPrevH').textContent=`Preview · ${rpFd(d.from)} – ${rpFd(d.to)}`;
+  $('#rpFile').innerHTML=`File: <b>Laporan BAA ${esc((PJ.cur&&PJ.cur.prefix)||'')} ${esc(d.to)}</b> .pdf / .xlsx`;
+  const base=k.target||k.locations,of=k.target?'of target':'of locations',pc=v=>base?Math.round(v/base*100)+'% '+of:'';
+  const off=!d.activation_field?`<div class="rp-off" style="margin-bottom:12px"><span class="mi" style="vertical-align:-5px">info</span> No activation date field yet — mark one date field as <b>Activation date</b> in Settings › Location data. NIS and completion time need it.</div>`:'';
+  const errN=k.err_before+k.err_noact;
+  const tbl=(head,rows)=>`<table><thead><tr>${head.map((h,i)=>`<th${i?' class="n"':''}>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')||`<tr><td colspan="${head.length}" class="muted">No data</td></tr>`}</tbody></table>`;
+  $('#rpPrev').innerHTML=off+`<div class="rp-kpi">
+    <div class="rp-k"><span>Target</span><b>${rpN(k.target)}</b><small>${k.target!=null?'locations':'not used with filters'}</small></div>
+    <div class="rp-k"><span>NIS (node in service)</span><b>${k.nis}</b><small>${pc(k.nis)}</small></div>
+    <div class="rp-k"><span>BAA documents done</span><b>${k.done}</b><small>${pc(k.done)}</small></div>
+    <div class="rp-k"><span>Backlog</span><b>${k.backlog}</b><small>NIS, document not done</small></div>
+    <div class="rp-k"><span>Avg completion</span><b>${k.avg!=null?k.avg+' d':'—'}</b><small>median ${rpN(k.med,' d')} · ${k.docs} doc${k.docs===1?'':'s'}</small></div>
+    <div class="rp-k${errN?' warn':''}"><span>Data to check</span><b>${errN}</b><small>${k.err_before} done before activation · ${k.err_noact} no activation date</small></div></div>
+    <p class="rp-note">In this period: ${k.nis_new} new NIS · ${k.done_new} documents done. Completion time = activation date → BAA document complete (signed scan + generated BAA), calendar days.</p>
+    ${k.done_incomplete?`<p class="rp-note warn"><span class="mi" style="font-size:16px;vertical-align:-3px">warning</span> ${k.done_incomplete} location${k.done_incomplete>1?'s are':' is'} marked Done but not 100% complete (e.g. no signed scan yet) — not counted as done.</p>`:''}
+    <div class="rp-tbls"><div><div class="rp-h">Per operator</div>${tbl(['Operator','Locations','NIS','Done','Backlog','Avg days'],
+      d.operators.map(o=>`<tr><td>${esc(o.key)}</td><td class="n">${o.n}</td><td class="n">${o.nis}</td><td class="n">${o.done}</td><td class="n">${o.backlog}</td><td class="n">${rpN(o.avg)}</td></tr>`))}</div>
+    <div><div class="rp-h">Per wilayah (top 8 by NIS)</div>${tbl(['Kab/Kota','NIS','Done','% of NIS','Avg days'],
+      d.wilayah.slice(0,8).map(w=>`<tr><td>${esc(w.kab)}<div class="muted" style="font-size:11px">${esc(w.prov)}</div></td><td class="n">${w.nis}</td><td class="n">${w.done}</td><td class="n">${rpN(w.pct_nis,'%')}</td><td class="n">${rpN(w.avg)}</td></tr>`))}</div></div>
+    ${errN?`<div class="rp-h">Data to check (${d.errors_n})</div>${tbl(['Location','Activation','Done','Problem'],
+      d.errors.map(x=>`<tr><td><span class="mono">${esc(x.code)}</span> ${esc(x.name)}</td><td class="n">${rpFd(x.act)}</td><td class="n">${rpFd(x.comp)}</td><td class="n" style="color:var(--bad)">${x.err==='before'?`Done ${-x.days} d before activation`:'No activation date'}</td></tr>`))}
+      ${d.errors_n>d.errors.length?`<p class="rp-note">… ${d.errors_n-d.errors.length} more in the PDF / Excel.</p>`:''}`:''}`;}
+function rpSetDate(id,iso){const h=$('#'+id);if(!h)return;h.value=iso||'';const box=h.parentElement.querySelector('.datefield');
+  box.querySelector('.dfv').textContent=iso?dpFmt(iso):'';box.classList.toggle('filled',!!iso);}
+async function rpDownload(ext){const q=rpQuery();q.set('sections',[...REP.secs].join(','));
+  const name=`Laporan BAA ${(PJ.cur&&PJ.cur.prefix)||''} ${(REP.d&&REP.d.to)||''}.${ext}`;
+  let handle=null;
+  if(expAsk()&&window.showSaveFilePicker){
+    try{handle=await window.showSaveFilePicker({id:'baa-report',suggestedName:name,types:[EXP_TYPES[ext==='pdf'?'pdf':'excel']]});}
+    catch(e){if(e&&e.name==='AbortError')return;handle=null;}}
+  const b=$(ext==='pdf'?'#rpPdf':'#rpXlsx');b.setAttribute('disabled','');
+  try{const r=await fetch(`/api/reports/${ext}?`+q.toString(),{credentials:'same-origin'});
+    if(!r.ok){let m='';try{m=(await r.json()).detail;}catch(e){}throw new Error(m||('HTTP '+r.status));}
+    const blob=await r.blob();
+    if(handle){const w=await handle.createWritable();await w.write(blob);await w.close();}
+    else{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
+    toast('Report downloaded');}
+  catch(e){toast('Report failed: '+e.message);}finally{b.removeAttribute('disabled');}}
 async function loadProgress(quiet){let d;try{d=await api('/api/progress');}catch(e){if(!quiet)toast('Failed: '+e.message);return;}
   PG=d;_pgAt=Date.now();renderProgress();if(!quiet)revealCards($('#pgBody'));loadWilMap(!quiet);
   clearInterval(_pgTimer);_pgTimer=setInterval(()=>{if(!_visible('v-progress')){clearInterval(_pgTimer);return;}
@@ -5198,7 +5315,13 @@ const DP={anchor:null,cb:null,view:null,sel:null,sub:'days',
 document.addEventListener('mousedown',e=>{if(DP.anchor&&!e.target.closest('#dpPop')&&e.target!==DP.anchor&&!DP.anchor.contains(e.target))DP.close();});
 window.addEventListener('resize',()=>DP.anchor&&DP.pos());
 window.dpOpenFor=el=>{if(S.user&&S.user.role==='viewer')return;if(roActive())return;const hid=el.parentElement.querySelector('input[data-lf]');
-  DP.open(el,hid.value||'',iso=>{hid.value=iso;const v=el.querySelector('.dfv');v.textContent=iso?dpFmt(iso):'';el.classList.toggle('filled',!!iso);});};
+  DP.open(el,hid.value||'',iso=>{hid.value=iso;const v=el.querySelector('.dfv');v.textContent=iso?dpFmt(iso):'';el.classList.toggle('filled',!!iso);actWarn();});};
+/* Tanggal aktivasi: ingatkan (tidak memblokir) bila di masa depan atau setelah dokumen BAA lengkap */
+function actWarn(){const k=actKey();$$('#loc-fields .act-warn').forEach(x=>x.remove());if(!k||!S.loc)return;
+  const h=$(`#loc-fields input[data-lf="${k}"]`);if(!h||!h.value)return;const iso=h.value,today=dpToday();
+  const ca=S.loc.complete_at?(d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`)(new Date(S.loc.complete_at)):'';
+  const msg=iso>today?'This activation date is in the future — please check it.':ca&&iso>ca?`The BAA document was complete on ${dpFmt(ca)}, before this activation date — please check it.`:'';
+  if(msg)h.parentElement.insertAdjacentHTML('beforeend',`<div class="act-warn"><span class="mi">warning</span>${msg}</div>`);}
 /* Field tanggal umum (Target date, dll.) memakai date picker aplikasi; nilai di input tersembunyi #id (YYYY-MM-DD) */
 window.dpOpenBox=el=>{const hid=el.parentElement.querySelector('input[type=hidden]');
   DP.open(el,hid.value||'',iso=>{hid.value=iso;el.querySelector('.dfv').textContent=iso?dpFmt(iso):'';el.classList.toggle('filled',!!iso);
@@ -5210,7 +5333,7 @@ function dateField(f){const iso=S.loc.data[f.key]||'';
   return `<div style="position:relative"><input type="hidden" data-lf="${f.key}" value="${esc(iso)}">
     <div class="datefield${iso?' filled':''}" tabindex="0" onclick="dpOpenFor(this)"><span class="mi">calendar_month</span>
     <span class="dfv">${iso?esc(dpFmt(iso)):''}</span><label class="dflab">${esc(f.label)}${f.required?' *':''}</label><span class="mi df-trail">expand_more</span></div></div>`;}
-function renderLocFields(){$('#loc-fields').innerHTML=S.locFields.map(f=>
+function renderLocFields(){setTimeout(actWarn,0);$('#loc-fields').innerHTML=S.locFields.map(f=>
   f.type==='date'?dateField(f)
   :`<md-text-field data-lf="${f.key}" variant="outlined" label="${esc(f.label)}${f.required?' *':''}" type="text" value="${esc(S.loc.data[f.key]||'')}"></md-text-field>`).join('');}
 function merkOpts(name){return (S.itemMerks&&S.itemMerks[(name||'').trim()])||[];}
@@ -6927,8 +7050,11 @@ function lfRow(f={}){const sys=f.key==='nama_lokasi';return `<div class="ecard l
     <input class="keyf" data-k="key" placeholder="key" value="${esc(f.key)}"${sys?' readonly':''}>
     <input class="labelf" data-k="label" placeholder="Field name" value="${esc(f.label)}">
     <div class="segt" data-seg><button type="button" data-v="text" class="${f.type!=='date'?'on':''}">Text</button><button type="button" data-v="date" class="${f.type==='date'?'on':''}">Date</button></div>
-    ${pill('required','Required',f.required)}${delBtnCell()}
+    ${pill('required','Required',f.required)}<span class="act-w"${f.type==='date'?'':' hidden'} data-tip="Activation date of the link: counts the location as NIS (node in service) and starts the document completion time in Reports">${pill('act','Activation date',actKey()===f.key&&f.type==='date')}</span>${delBtnCell()}
   </div></div>`;}
+/* Field tanggal aktivasi (role 'activation'): dasar NIS & lama penyelesaian. Belum pernah diatur -> field 'tanggal'. */
+function actKey(fields){fields=fields||S.locFields||[];const f=fields.find(x=>x.role==='activation'&&x.type==='date');if(f)return f.key;
+  if(fields.some(x=>'role' in x))return null;const t=fields.find(x=>x.key==='tanggal'&&x.type==='date');return t?t.key:null;}
 function renderLF(){$('#lf-list').innerHTML=(S.locFields||[]).map(lfRow).join('');lfSug();renderIdSet();bindTips();}
 /* SID & lampiran tambahan: aturan per project (disimpan bersama tombol Save fields) */
 function renderIdSet(){const c=S.sidCfg,a=S.attCfg,ty=(a.types||['pdf']).map(t=>String(t).toLowerCase());
@@ -6950,6 +7076,11 @@ async function idSetSave(){const g=k=>{const i=$(`#idSet [data-k="${k}"]`);retur
   const att={enabled:g('att_on'),label:($('#att-lab').value||'').trim()||'Additional attachments',types:types.length?types:['pdf'],max_mb:+$('#att-mb').value||5};
   const r1=await api('/api/settings/sid-config',{method:'PUT',body:JSON.stringify(sid)});S.sidCfg=r1.sid_config;
   const r2=await api('/api/settings/attach-config',{method:'PUT',body:JSON.stringify(att)});S.attCfg=r2.attach_config;renderIdSet();}
+/* Activation date: hanya untuk field Tanggal, satu field saja */
+$('#lf-list').addEventListener('click',e=>{const b=e.target.closest('.segt button');if(!b)return;const r=b.closest('.ecard'),w=r&&r.querySelector('.act-w');
+  if(w){w.hidden=b.dataset.v!=='date';if(w.hidden){const c=w.querySelector('input');if(c.checked){c.checked=false;c.closest('.tg').classList.remove('on');}}}});
+$('#lf-list').addEventListener('change',e=>{const c=e.target;if(!(c.matches&&c.matches('input[data-k="act"]'))||!c.checked)return;
+  $$('#lf-list input[data-k="act"]').forEach(o=>{if(o!==c&&o.checked){o.checked=false;o.closest('.tg').classList.remove('on');}});});
 $('#lf-add').addEventListener('click',()=>{$('#lf-list').insertAdjacentHTML('beforeend',lfRow());bindTips();});
 /* Saran field umum (project baru mulai kosong) */
 const LF_SUG=[{key:'tanggal',label:'Tanggal Aktivasi',type:'date'},{key:'teknisi',label:'Teknisi',type:'text'},{key:'pic',label:'PIC Lokasi',type:'text'},
@@ -6960,7 +7091,8 @@ function lfSug(){const host=$('#lf-sug');if(!host)return;const have=new Set($$('
     $('#lf-list').lastElementChild.dispatchEvent(new Event('input',{bubbles:true}));lfSug();bindTips();});}
 async function lfSave(){const fields=$$('#lf-list .ecard').map(r=>{const g=k=>r.querySelector(`[data-k="${k}"]`);
   const seg=r.querySelector('.segt button.on');
-  return {key:(g('key').value||'').trim(),label:(g('label').value||'').trim(),type:seg?seg.dataset.v:'text',required:g('required').checked};}).filter(f=>f.key&&f.label);
+  const type=seg?seg.dataset.v:'text';
+  return {key:(g('key').value||'').trim(),label:(g('label').value||'').trim(),type,required:g('required').checked,role:type==='date'&&g('act')&&g('act').checked?'activation':''};}).filter(f=>f.key&&f.label);
   try{await api('/api/settings/location-fields',{method:'PUT',body:JSON.stringify({fields})});S.locFields=fields;await idSetSave();toast('Location fields saved');sfDone('lokasi',true);return true;}catch(e){toast('Failed: '+e.message);sfDone('lokasi',false);return false;}}
 $('#lf-save').addEventListener('click',()=>lfSave());
 

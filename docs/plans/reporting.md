@@ -1,6 +1,6 @@
 # Reporting & status Node aktif (rencana, 2026-10-19)
 
-Status: **diskusi → mockup** (belum "gas").
+Status: **✅ dikerjakan 2026-10-19** ("gas" atas mockup).
 
 ## Keputusan pengguna
 1. Laporan sebisa mungkin informatif untuk semua pihak/stakeholder.
@@ -41,3 +41,16 @@ Status: **diskusi → mockup** (belum "gas").
 hover: NIS · dokumen selesai · % dari NIS · backlog), menu Reports (periode, wilayah, owner, pilih bagian, preview KPI,
 unduh PDF/Excel, kartu format klien), contoh PDF 2 halaman dari data demo (rata-rata 11,1 hari, median 10, 13 dokumen;
 17 data perlu dicek). Usulan: peringatan di Entry bila tanggal aktivasi di masa depan. Menunggu "gas".
+
+## Dikerjakan (2026-10-19)
+- **Tanggal aktivasi:** Settings › Location fields → pil *Activation date* pada field bertipe Date (satu saja). Disimpan sebagai
+  `role: "activation"`; belum pernah diatur → field `tanggal`. Semua dimatikan → NIS & lama penyelesaian nonaktif.
+- **Dokumen selesai:** kolom `locations.complete_at`, diisi otomatis di `db.touch_modified` saat kelengkapan pertama kali 100%,
+  dikosongkan bila turun < 100% (mis. scan dihapus). Data lama diisi sekali dari riwayat aktivitas (`backfill_complete_at`).
+- **Peta:** tombol NIS (% Done · NIS · Drafts · Stale), hanya muncul bila tanggal aktivasi aktif. Hover: NIS, dokumen selesai, % dari NIS, backlog.
+- **Reports** (menu baru, admin & viewer): periode, wilayah, owner, pilih bagian, preview angka; unduh PDF (reportlab, offline)
+  dan Excel (satu sheet per bagian, tabel polos + sheet Lokasi berisi semua kolom). API: `/api/reports/summary|pdf|xlsx`.
+- **Catatan angka:** lokasi berstatus Done tetapi belum 100% (mis. di-Done sebelum scan diwajibkan) tidak dihitung selesai
+  dan disebut terpisah di laporan.
+- **Entry:** peringatan (tidak memblokir) bila tanggal aktivasi di masa depan atau setelah dokumen lengkap.
+- Format laporan klien: belum (tahap berikutnya).

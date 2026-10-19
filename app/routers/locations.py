@@ -241,6 +241,7 @@ def _location_dict(conn: sqlite3.Connection, row, user=None) -> dict:
         "scan": scan_info(conn, row["id"]),
         "wilayah": _wil_dict(row),
         "sid": row["sid"] or "" if "sid" in row.keys() else "",
+        "complete_at": row["complete_at"] if "complete_at" in row.keys() else None,
         "sid_request": {"value": sr["value_new"], "mine": bool(user) and sr["requester_id"] == user["id"]} if sr else None,
         "attachments": attachment_list(conn, row["id"]),
     }

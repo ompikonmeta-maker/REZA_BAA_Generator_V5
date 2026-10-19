@@ -182,6 +182,40 @@ def loc_completeness(conn, row) -> tuple[int, list[str]]:
                          has_scan, db.wil_counted(conn), db.scan_counted(conn))
 
 
+def mark_complete(conn, loc_id: int, now: str | None = None) -> None:
+    """complete_at = saat dokumen BAA pertama kali lengkap 100% (scan bertanda tangan + data/foto/inventory
+    sesuai pengaturan project). Kembali < 100% -> dikosongkan, terisi lagi saat lengkap lagi."""
+    row = conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone()
+    if not row:
+        return
+    pct = loc_completeness(conn, row)[0]
+    if pct >= 100 and not row["complete_at"]:
+        conn.execute("UPDATE locations SET complete_at=? WHERE id=?", (now or db.now_iso(), loc_id))
+    elif pct < 100 and row["complete_at"]:
+        conn.execute("UPDATE locations SET complete_at=NULL WHERE id=?", (loc_id,))
+
+
+def backfill_complete_at(conn) -> None:
+    """Sekali per project: isi complete_at lokasi yang sudah 100% dari riwayat aktivitas
+    (perubahan isi terakhir sebelum pertama kali Done; belum pernah Done -> perubahan isi terakhir)."""
+    if db.get_setting(conn, "complete_at_backfill", None):
+        return
+    kinds = CONTENT_KINDS + ("scan_add", "att_add")
+    q = ",".join("?" * len(kinds))
+    for row in conn.execute("SELECT * FROM locations WHERE deleted_at IS NULL AND complete_at IS NULL").fetchall():
+        if loc_completeness(conn, row)[0] < 100:
+            continue
+        done = conn.execute("SELECT MIN(created_at) d FROM activity WHERE location_id=? AND kind='done'",
+                            (row["id"],)).fetchone()["d"]
+        last = conn.execute(f"SELECT MAX(created_at) d FROM activity WHERE location_id=? AND kind IN ({q})"
+                            + (" AND created_at<=?" if done else ""),
+                            (row["id"], *kinds, *((done,) if done else ()))).fetchone()["d"]
+        conn.execute("UPDATE locations SET complete_at=? WHERE id=?",
+                     (last or done or row["modified_at"] or row["updated_at"], row["id"]))
+    db.set_setting(conn, "complete_at_backfill", db.now_iso())
+    conn.commit()
+
+
 def _loc_label(loc) -> dict:
     data = json.loads(loc["data_json"] or "{}") if "data_json" in loc.keys() else {}
     return {"id": loc["id"], "code": loc["code"], "name": (data.get("nama_lokasi") or loc["name"] or "").strip()}

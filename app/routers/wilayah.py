@@ -7,6 +7,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import FileResponse
 
+from .. import db
 from ..deps import current_user, get_db, require_admin
 from ..services import wilayah
 
@@ -78,11 +79,16 @@ def _region_stats(conn) -> dict:
     kec: dict[str, dict] = {}
     manual = none = 0
 
-    def add(m, k, done, draft, stale):
-        x = m.setdefault(k, {"n": 0, "done": 0, "drafts": 0, "stale": 0})
-        x["n"] += 1; x["done"] += done; x["drafts"] += draft; x["stale"] += stale
-    for r in conn.execute("SELECT wil_kode, wil_desa, wil_mode, status, modified_at, updated_at FROM locations "
-                          "WHERE deleted_at IS NULL"):
+    pg.backfill_complete_at(conn)
+    akey = db.activation_key(conn)
+    tstr = today.isoformat()
+
+    def add(m, k, done, draft, stale, nis, nd):
+        x = m.setdefault(k, {"n": 0, "done": 0, "drafts": 0, "stale": 0, "nis": 0, "nd": 0})
+        x["n"] += 1; x["done"] += done; x["drafts"] += draft; x["stale"] += stale; x["nis"] += nis; x["nd"] += nd
+    for r in conn.execute("SELECT wil_kode, wil_desa, wil_mode, status, modified_at, updated_at, complete_at, "
+                          "json_extract(data_json, ?) act FROM locations WHERE deleted_at IS NULL",
+                          (f'$."{akey}"' if akey else '$."__none__"',)):
         if not r["wil_desa"]:
             none += 1
             continue
@@ -94,9 +100,11 @@ def _region_stats(conn) -> dict:
         lm = pg._local(r["modified_at"] or r["updated_at"])
         idle = pg._wd_between(lm.date(), today) if lm else 0
         stale = 1 if (not done and idle >= ag["warm"]) else 0
-        add(prov, k[:2], done, 1 - done, stale)
-        add(kab, k[:5], done, 1 - done, stale)
-        add(kec, k[:8], done, 1 - done, stale)
+        # NIS = tanggal aktivasi terisi (dan tidak di masa depan); nd = NIS yang dokumennya sudah lengkap
+        nis = 1 if (r["act"] and str(r["act"])[:10] <= tstr) else 0
+        nd = 1 if (nis and r["complete_at"]) else 0
+        for m, n in ((prov, 2), (kab, 5), (kec, 8)):
+            add(m, k[:n], done, 1 - done, stale, nis, nd)
     names = wilayah._load()["names"]
     kec_total = sum(1 for c in names if c.count(".") == 2 and c[:5] in kab)
     team = pg._team(conn)
@@ -105,7 +113,8 @@ def _region_stats(conn) -> dict:
         for c, x in m.items():
             x["nama"] = wilayah.short_kab(names.get(c, c))
     return {"prov": prov, "kab": kab, "kec": kec, "manual": manual, "none": none,
-            "kec_reached": len(kec), "kec_total": kec_total, "ideal_pct": ideal, "warm": ag["warm"]}
+            "kec_reached": len(kec), "kec_total": kec_total, "ideal_pct": ideal, "warm": ag["warm"],
+            "nis_on": bool(akey)}
 
 
 @router.get("/stats")

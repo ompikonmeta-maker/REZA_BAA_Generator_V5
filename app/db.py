@@ -244,6 +244,18 @@ DEFAULT_SID_CONFIG = {"enabled": True, "label": "SID", "uppercase": True, "max_l
 DEFAULT_ATTACH_CONFIG = {"enabled": True, "label": "Additional attachments", "types": ["pdf"], "max_mb": 5}
 
 
+def activation_key(conn) -> str | None:
+    """Key field tanggal aktivasi link (dasar NIS & lama penyelesaian). Ditandai role 'activation'
+    di Location fields; tanpa penanda -> field tanggal 'tanggal' bila ada. None = fitur NIS tidak aktif."""
+    fields = get_setting(conn, "location_fields", []) or []
+    for f in fields:
+        if f.get("role") == "activation" and f.get("type") == "date":
+            return f["key"]
+    if any("role" in f for f in fields):          # sudah diatur lewat Settings (boleh tanpa tanggal aktivasi)
+        return None
+    return next((f["key"] for f in fields if f.get("key") == "tanggal" and f.get("type") == "date"), None)
+
+
 def sid_config(conn) -> dict:
     return {**DEFAULT_SID_CONFIG, **(get_setting(conn, "sid_config") or {})}
 
@@ -461,7 +473,7 @@ def init_project_db(p, base: dict | None = None) -> None:
     try:
         conn.execute("PRAGMA journal_mode = WAL")
         conn.executescript(PROJECT_SCHEMA)
-        for col in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_mode", "old_codes", "sid"):
+        for col in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_mode", "old_codes", "sid", "complete_at"):
             if not _has_column(conn, "locations", col):
                 conn.execute(f"ALTER TABLE locations ADD COLUMN {col} TEXT")
         conn.execute("CREATE INDEX IF NOT EXISTS ix_loc_sid ON locations(upper(sid))")
@@ -614,6 +626,8 @@ def touch_modified(conn: sqlite3.Connection, loc_id: int, user_id, kind: str = "
     conn.execute("UPDATE locations SET modified_at=?, modified_by=?, updated_at=? WHERE id=?",
                  (now, user_id, now, loc_id))
     log_activity(conn, loc_id, user_id, kind, detail, now)
+    from .routers.progress import mark_complete
+    mark_complete(conn, loc_id, now)
 
 
 def log_activity(conn: sqlite3.Connection, loc_id: int, user_id, kind: str, detail: str = "",
