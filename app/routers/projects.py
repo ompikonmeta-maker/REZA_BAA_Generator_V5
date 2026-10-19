@@ -213,7 +213,7 @@ def create_project(body: ProjectIn, hub: sqlite3.Connection = Depends(get_hub), 
         if not sp:
             raise HTTPException(400, "Project to copy from was not found")
         keep = ("photo_categories", "location_fields", "default_inventory_items", "item_merks", "inventory_keterangan", "aging_days",
-                "sid_config", "attach_config")
+                "sid_config", "attach_config", "activation_rule")
         base, label = {k: v for k, v in db.project_settings(sp).items() if k in keep}, f"Copied from {sp['name']}"
     else:
         base, label = None, "Default BAA settings"

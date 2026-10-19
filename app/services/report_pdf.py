@@ -62,8 +62,8 @@ def build(r: dict, secs: set[str], title: str, filt: str, by: str, app: str) -> 
 
     if "kpi" in secs:
         tiles = [("Target", _n(k["target"]), "lokasi" if k["target"] is not None else "tidak dipakai saat difilter"),
-                 ("NIS (node in service)", _n(k["nis"]), f"{_pct(k['nis'], k['target'] or k['locations'])} dari {'target' if k['target'] else 'lokasi'}"),
-                 ("Dokumen BAA selesai", _n(k["done"]), f"{_pct(k['done'], k['target'] or k['locations'])} dari {'target' if k['target'] else 'lokasi'}"),
+                 ("NIS (node in service)", _n(k["nis"]), f"{k['done_nis']} dokumen selesai · {k['backlog']} backlog"),
+                 ("Dokumen BAA selesai", _n(k["done"]), f"{k['done_nis']} dari NIS" + (f" · {k['done'] - k['done_nis']} tanpa tgl aktivasi" if k['done'] - k['done_nis'] else "")),
                  ("Backlog", _n(k["backlog"]), "NIS, dokumen belum selesai"),
                  ("Rata-rata penyelesaian", _n(k["avg"], " hari"), f"median {_n(k['med'], ' hari')} · {k['docs']} dokumen"),
                  ("Data perlu dicek", _n(k["err_before"] + k["err_noact"]), "tidak ikut rata-rata")]
@@ -74,7 +74,9 @@ def build(r: dict, secs: set[str], title: str, filt: str, by: str, app: str) -> 
                                ("TOPPADDING", (0, 0), (-1, -1), 6), ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
                                ("LEFTPADDING", (0, 0), (-1, -1), 8)]))
         story += [Spacer(1, 8), t,
-                  Paragraph(f"Dalam periode: {k['nis_new']} NIS baru · {k['done_new']} dokumen selesai."
+                  Paragraph(f"NIS {_pct(k['nis'], k['target'] or k['locations'])} dan dokumen selesai {_pct(k['done'], k['target'] or k['locations'])} "
+                            f"dari {'target' if k['target'] else 'lokasi'} · {k['not_active']} lokasi belum aktif (tanggal aktivasi belum diisi). "
+                            f"Dalam periode: {k['nis_new']} NIS baru · {k['done_new']} dokumen selesai."
                             + (f" {k['done_incomplete']} lokasi berstatus Done tetapi belum lengkap 100% (belum dihitung selesai)."
                                if k.get("done_incomplete") else ""), small)]
 

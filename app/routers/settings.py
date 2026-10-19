@@ -49,7 +49,20 @@ def get_settings(conn: sqlite3.Connection = Depends(get_db), user=Depends(curren
         "ocr_available": _ocr_available(),
         "sid_config": db.sid_config(conn),
         "attach_config": db.attach_config(conn),
+        "activation_rule": db.activation_rule(conn),
     }
+
+
+class ActivationRule(BaseModel):
+    required: bool = True
+
+
+@router.put("/activation-rule")
+def update_activation_rule(body: ActivationRule, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    db.set_setting(conn, "activation_rule", body.model_dump())
+    conn.commit()
+    audit(conn, user, "update", "settings", "activation_rule")
+    return {"ok": True, "activation_rule": db.activation_rule(conn)}
 
 
 class SidConfig(BaseModel):

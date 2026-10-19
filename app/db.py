@@ -256,6 +256,31 @@ def activation_key(conn) -> str | None:
     return next((f["key"] for f in fields if f.get("key") == "tanggal" and f.get("type") == "date"), None)
 
 
+# Tanggal aktivasi wajib sebelum lokasi bisa disimpan dari Entry (import tetap boleh tanpa tanggal = "belum aktif")
+DEFAULT_ACTIVATION_RULE = {"required": True}
+
+
+def activation_rule(conn) -> dict:
+    return {**DEFAULT_ACTIVATION_RULE, **(get_setting(conn, "activation_rule") or {})}
+
+
+def activation_missing(conn, data) -> str | None:
+    """Label field tanggal aktivasi bila aturan wajib aktif dan nilainya kosong; selain itu None."""
+    key = activation_key(conn)
+    if not key or not activation_rule(conn).get("required", True):
+        return None
+    if isinstance(data, str):
+        import json as _json
+        try:
+            data = _json.loads(data or "{}")
+        except Exception:
+            data = {}
+    if str((data or {}).get(key) or "").strip():
+        return None
+    f = next((f for f in (get_setting(conn, "location_fields", []) or []) if f.get("key") == key), {})
+    return f.get("label") or "Activation date"
+
+
 def sid_config(conn) -> dict:
     return {**DEFAULT_SID_CONFIG, **(get_setting(conn, "sid_config") or {})}
 

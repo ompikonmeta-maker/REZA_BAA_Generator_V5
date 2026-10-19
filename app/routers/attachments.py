@@ -81,6 +81,8 @@ def upload_attachment(loc_id: int, file: UploadFile = File(...), position: str =
     if position not in POSITIONS:
         raise HTTPException(400, "Position must be 'before' or 'after'")
     loc = _loc(conn, loc_id, user, write=True)
+    from .locations import require_activation
+    require_activation(conn, loc["data_json"])
     name = (file.filename or "").replace("\\", "/").split("/")[-1]
     ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
     types = _types(cfg)

@@ -47,6 +47,8 @@ def _remove_file(conn, loc_id: int) -> None:
 def upload_scan(loc_id: int, file: UploadFile = File(...), conn: sqlite3.Connection = Depends(get_db),
                 user=Depends(require_editor)):
     loc = _loc(conn, loc_id, user, write=True)
+    from .locations import require_activation
+    require_activation(conn, loc["data_json"])
     name = (file.filename or "").replace("\\", "/").split("/")[-1]
     if not name.lower().endswith(".pdf"):
         raise HTTPException(400, "Scan must be a .pdf file")

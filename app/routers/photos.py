@@ -46,6 +46,8 @@ def upload_photos(
         raise HTTPException(404, "Location not found")
     if not loc_access(user, loc["owner_id"], write=True):
         raise HTTPException(403, "Not your location")
+    from .locations import require_activation
+    require_activation(conn, loc["data_json"])
 
     categories = db.get_setting(conn, "photo_categories", [])
     try:

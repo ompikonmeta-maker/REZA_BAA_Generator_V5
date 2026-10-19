@@ -54,3 +54,15 @@ unduh PDF/Excel, kartu format klien), contoh PDF 2 halaman dari data demo (rata-
   dan disebut terpisah di laporan.
 - **Entry:** peringatan (tidak memblokir) bila tanggal aktivasi di masa depan atau setelah dokumen lengkap.
 - Format laporan klien: belum (tahap berikutnya).
+
+## 25. Tanggal aktivasi wajib sebelum simpan (2026-10-19, ✅)
+- Keputusan: lokasi dari BAA Entry baru tersimpan setelah tanggal aktivasi diisi → setiap draf = NIS.
+  Import tetap boleh tanpa tanggal (lokasi "belum aktif"). Data lama tanpa tanggal dibiarkan (data simulasi),
+  tetapi edit berikutnya wajib mengisi tanggal aktivasi dulu.
+- Sakelar per project: Settings › Location fields › *Activation date · Required before saving* (bawaan aktif),
+  setting `activation_rule`, ikut tersalin saat project disalin.
+- Server menolak (400) simpan data, inventory, upload foto/scan/lampiran bila tanggal aktivasi kosong.
+- Entry: field tanggal aktivasi tampil pertama + banner; autosave ditahan ("Fill in … to save"), upload & Save
+  membuka date picker; begitu tanggal diisi, kode dibuat dan draf tersimpan otomatis.
+- Laporan: NIS = dokumen selesai dari NIS + backlog; Dokumen selesai = dari NIS + tanpa tanggal aktivasi;
+  jumlah lokasi belum aktif ditampilkan.

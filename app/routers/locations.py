@@ -115,6 +115,13 @@ def check_sid_free(conn, sid: str, exclude: int = 0) -> None:
         raise HTTPException(409, f"{db.sid_config(conn).get('label') or 'SID'} {sid} is already used by {o['code']}")
 
 
+def require_activation(conn, data) -> None:
+    """Aturan project: lokasi hanya bisa disimpan/ditambah isinya setelah tanggal aktivasi terisi."""
+    lab = db.activation_missing(conn, data)
+    if lab:
+        raise HTTPException(400, f"Fill in the {lab} first — the location is saved once it is filled")
+
+
 def _apply_sid(conn, user, row, raw) -> bool:
     """SID: admin bebas; operator hanya boleh MENGISI yang masih kosong (ubah -> lewat permintaan ke admin).
     True bila berubah (belum di-commit)."""
@@ -419,6 +426,7 @@ def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db)
     # Insert dulu dengan placeholder unik, lalu kunci kode dari id AUTOINCREMENT.
     # id dijamin unik & monoton oleh SQLite (write ter-serialisasi), jadi kode
     # urut aman dibuat paralel banyak user tanpa koordinasi.
+    require_activation(conn, body.data)
     wv = _wil_values(body.wil, body.wil_kode) or (None,) * 6
     sid = norm_sid(conn, body.sid) if body.sid else ""
     check_sid_free(conn, sid)
@@ -575,6 +583,7 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
         raise HTTPException(404, "Location not found")
     if not _can_write(user, row):
         raise HTTPException(403, "Not your location")
+    require_activation(conn, body.data)
     new_json = json.dumps(body.data, ensure_ascii=False)
     wv = _wil_values(body.wil, body.wil_kode)
     wil_changed = wv is not None and tuple(x or None for x in wv) != tuple(
@@ -615,11 +624,12 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
 @router.put("/{loc_id}/inventory")
 def save_inventory(loc_id: int, body: InventoryIn, conn: sqlite3.Connection = Depends(get_db),
                    user=Depends(require_editor)):
-    row = conn.execute("SELECT owner_id FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
+    row = conn.execute("SELECT owner_id, data_json FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
     if not row:
         raise HTTPException(404, "Location not found")
     if not _can_write(user, row):
         raise HTTPException(403, "Not your location")
+    require_activation(conn, row["data_json"])
     cols = ("nama_barang", "merk_type", "jumlah", "sn_tagging", "keterangan")
     old = [tuple(str(r[c] or "") for c in cols) for r in conn.execute(
         "SELECT * FROM inventory_items WHERE location_id=? ORDER BY sort_order,id", (loc_id,)).fetchall()]

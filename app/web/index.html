@@ -332,6 +332,8 @@
   .sb-sum>span.ok{background:var(--good-bg);color:var(--good)}.sb-sum>span.bad{background:var(--bad-bg);color:var(--bad)}.sb-sum>span .mi{font-size:16px}
   .sb-tbl{max-height:420px;overflow:auto}
   .sb-tbl td.mono,.sb-tbl .mono{font-family:ui-monospace,Consolas,monospace}
+  .act-gate{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;margin-bottom:14px;border-radius:var(--md-sys-shape-corner-medium);background:var(--warn-bg);color:var(--warn);font:var(--md-sys-typescale-body-medium)}
+  .act-gate .mi{font-size:20px}.act-gate b{font-weight:700}
   .act-warn{display:flex;align-items:center;gap:6px;margin:4px 4px 0;font:var(--md-sys-typescale-body-small);color:var(--warn)}.act-warn .mi{font-size:16px}
   .sid-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:start;margin-top:16px}
   .sid-row md-text-field{width:100%}
@@ -2460,6 +2462,7 @@
             <div class="ro-note"><span class="mi">lock</span> Viewer mode — you can only view this entry, not edit it.</div>
             <div class="card">
               <div class="sec"><span class="mi acc">location_on</span><h3>Location Data</h3></div>
+              <div class="act-gate hidden" id="actGate"></div>
               <div class="fgrid" id="loc-fields"></div>
               <div class="sid-row hidden" id="sidRow"></div>
               <div class="dup-warn hidden" id="dupWarn"></div>
@@ -3466,7 +3469,7 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
   else{lg.classList.add('hidden');$('#lgGreet').classList.remove('on','out');$('#lgIris').classList.remove('on');$('#lgCard').classList.remove('gone');}
   if(S.user.must_change)await onbPassword();
   if(!await pjInit()){if(window.BFIntro)BFIntro.unveil();return;}
-  S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.keterangan=s.inventory_keterangan||[];S.appTitle=s.app_title||'BAA Generator';S.sidCfg=s.sid_config||S.sidCfg;S.attCfg=s.attach_config||S.attCfg;});
+  S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.keterangan=s.inventory_keterangan||[];S.appTitle=s.app_title||'BAA Generator';S.sidCfg=s.sid_config||S.sidCfg;S.attCfg=s.attach_config||S.attCfg;S.actRule=s.activation_rule||S.actRule;});
   await S.settingsReady;
   if(S.user.role!=='admin')$$('.admin-only').forEach(x=>x.classList.add('hidden'));
   $$('.prog-nav').forEach(x=>x.classList.toggle('hidden',S.user.role==='operator'));
@@ -3485,6 +3488,7 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
 const SCAN={on:()=>!(PJ.cur&&PJ.cur.scan_on===false)};
 /* SID (identitas lokasi dari klien) & lampiran tambahan: label/aturan per project (Settings) */
 S.sidCfg={enabled:true,label:'SID',uppercase:true,max_len:20};S.attCfg={enabled:true,label:'Additional attachments',types:['pdf'],max_mb:5};
+S.actRule={required:true};
 const sidOn=()=>S.sidCfg.enabled!==false,sidLabel=()=>S.sidCfg.label||'SID',attOn=()=>S.attCfg.enabled!==false;
 function scanApply(){$('#app').classList.toggle('scan-off',!SCAN.on());const i=$('#scanInfo');if(!i)return;
   i.innerHTML=SCAN.on()?'<span class="mi">picture_as_pdf</span><span><b>Scan PDF</b> — required for every location · becomes page 1 of the PDF export. Switch off in Project &amp; status › Features.</span>'
@@ -3859,6 +3863,7 @@ async function uploadScan(file){if(!file||!S.loc)return;
   if(roActive()){toast('Viewer mode — cannot upload');return;}
   if(!isPdf(file)){toast('Scan must be a .pdf file');return;}
   if(file.size>25*1048576){toast('PDF is larger than 25 MB');return;}
+  if(!await actReady())return;
   if(isDraft()){try{await ensureLoc();}catch(e){toast('Failed to create location: '+e.message);return;}}
   if(!S.loc.id)return;const lid=S.loc.id;
   renderScan(file.name+' · '+fmtSize(file.size));
@@ -3992,6 +3997,7 @@ async function attDel(id){const lid=S.loc.id;
   catch(e){toast('Failed: '+e.message);}}
 let ATT_Q=null;
 function attPick(file){if(!file||!S.loc)return;
+  if(actMissing()){actReady();return;}
   if(roActive()||frozenRO()){toast('Viewer mode — cannot upload');return;}
   if(!attOk(file)){toast('Allowed: '+attTypes().map(t=>'.'+t).join(', '));return;}
   const mb=S.attCfg.max_mb||5;if(file.size>mb*1048576){toast(`File is larger than ${mb} MB`);return;}
@@ -4001,6 +4007,7 @@ $$('#attPosDlg .ap-opt').forEach(o=>o.addEventListener('click',()=>$$('#attPosDl
 $('#attPosCancel').addEventListener('click',()=>{ATT_Q=null;$('#attPosDlg').close();});
 $('#attPosOk').addEventListener('click',async()=>{const file=ATT_Q;ATT_Q=null;$('#attPosDlg').close();if(!file||!S.loc)return;
   const pos=($('#attPosDlg .ap-opt.on')||{}).dataset.v||'after';
+  if(!await actReady())return;
   if(isDraft()){try{await ensureLoc();}catch(e){toast('Failed to create location: '+e.message);return;}}
   const lid=S.loc.id,fd=new FormData();fd.append('file',file,file.name);fd.append('position',pos);
   toast('Uploading '+file.name+'…');
@@ -4756,12 +4763,12 @@ async function rpRefresh(){const seq=++REP.seq;let d;
   const tbl=(head,rows)=>`<table><thead><tr>${head.map((h,i)=>`<th${i?' class="n"':''}>${h}</th>`).join('')}</tr></thead><tbody>${rows.join('')||`<tr><td colspan="${head.length}" class="muted">No data</td></tr>`}</tbody></table>`;
   $('#rpPrev').innerHTML=off+`<div class="rp-kpi">
     <div class="rp-k"><span>Target</span><b>${rpN(k.target)}</b><small>${k.target!=null?'locations':'not used with filters'}</small></div>
-    <div class="rp-k"><span>NIS (node in service)</span><b>${k.nis}</b><small>${pc(k.nis)}</small></div>
-    <div class="rp-k"><span>BAA documents done</span><b>${k.done}</b><small>${pc(k.done)}</small></div>
+    <div class="rp-k"><span>NIS (node in service)</span><b>${k.nis}</b><small>${k.done_nis} done · ${k.backlog} backlog</small></div>
+    <div class="rp-k"><span>BAA documents done</span><b>${k.done}</b><small>${k.done_nis} from NIS${k.done-k.done_nis?` · ${k.done-k.done_nis} without activation date`:''}</small></div>
     <div class="rp-k"><span>Backlog</span><b>${k.backlog}</b><small>NIS, document not done</small></div>
     <div class="rp-k"><span>Avg completion</span><b>${k.avg!=null?k.avg+' d':'—'}</b><small>median ${rpN(k.med,' d')} · ${k.docs} doc${k.docs===1?'':'s'}</small></div>
     <div class="rp-k${errN?' warn':''}"><span>Data to check</span><b>${errN}</b><small>${k.err_before} done before activation · ${k.err_noact} no activation date</small></div></div>
-    <p class="rp-note">In this period: ${k.nis_new} new NIS · ${k.done_new} documents done. Completion time = activation date → BAA document complete (signed scan + generated BAA), calendar days.</p>
+    <p class="rp-note">NIS ${pc(k.nis)} · documents done ${pc(k.done)} · ${k.not_active} location${k.not_active===1?'':'s'} not active yet (no activation date). In this period: ${k.nis_new} new NIS · ${k.done_new} documents done. Completion time = activation date → BAA document complete (signed scan + generated BAA), calendar days.</p>
     ${k.done_incomplete?`<p class="rp-note warn"><span class="mi" style="font-size:16px;vertical-align:-3px">warning</span> ${k.done_incomplete} location${k.done_incomplete>1?'s are':' is'} marked Done but not 100% complete (e.g. no signed scan yet) — not counted as done.</p>`:''}
     <div class="rp-tbls"><div><div class="rp-h">Per operator</div>${tbl(['Operator','Locations','NIS','Done','Backlog','Avg days'],
       d.operators.map(o=>`<tr><td>${esc(o.key)}</td><td class="n">${o.n}</td><td class="n">${o.nis}</td><td class="n">${o.done}</td><td class="n">${o.backlog}</td><td class="n">${rpN(o.avg)}</td></tr>`))}</div>
@@ -5184,6 +5191,7 @@ function newDraft(){
   const f=$('#loc-fields input');if(f)setTimeout(()=>f.focus(),120);}
 async function ensureLoc(){                                  // buat lokasi (kode) bila masih draft
   if(S.loc&&S.loc.id)return S.loc;
+  if(actMissing())throw new Error(`Fill in the ${actLabel()} first`);
   if(S._creating)return S._creating;
   S._creating=(async()=>{try{
       if(S.settingsReady)await S.settingsReady;
@@ -5315,9 +5323,19 @@ const DP={anchor:null,cb:null,view:null,sel:null,sub:'days',
 document.addEventListener('mousedown',e=>{if(DP.anchor&&!e.target.closest('#dpPop')&&e.target!==DP.anchor&&!DP.anchor.contains(e.target))DP.close();});
 window.addEventListener('resize',()=>DP.anchor&&DP.pos());
 window.dpOpenFor=el=>{if(S.user&&S.user.role==='viewer')return;if(roActive())return;const hid=el.parentElement.querySelector('input[data-lf]');
-  DP.open(el,hid.value||'',iso=>{hid.value=iso;const v=el.querySelector('.dfv');v.textContent=iso?dpFmt(iso):'';el.classList.toggle('filled',!!iso);actWarn();});};
+  DP.open(el,hid.value||'',iso=>{hid.value=iso;const v=el.querySelector('.dfv');v.textContent=iso?dpFmt(iso):'';el.classList.toggle('filled',!!iso);actWarn();markEntry();});};
+/* Aturan project: lokasi baru tersimpan setelah tanggal aktivasi diisi (import boleh tanpa tanggal = belum aktif).
+   Selama kosong: autosave ditahan, upload foto/scan/lampiran & Save diblokir dengan pesan. */
+function actLabel(){const k=actKey(),f=(S.locFields||[]).find(x=>x.key===k);return (f&&f.label)||'Activation date';}
+function actMissing(){const k=actKey();if(!k||S.actRule.required===false||!S.loc||S.loc.can_edit===false||roActive())return false;
+  const h=$(`#loc-fields input[data-lf="${k}"]`);return h?!String(h.value||'').trim():!String((S.loc.data||{})[k]||'').trim();}
+function actPaint(){const g=$('#actGate');if(!g)return;const m=actMissing();g.classList.toggle('hidden',!m);
+  if(m)g.innerHTML=`<span class="mi">event_busy</span><div><b>Fill in the ${esc(actLabel())} first.</b> Nothing is saved until it's filled — the location then counts as NIS (node in service).</div>`;}
+async function actReady(){if(!actMissing()){if(S.loc&&S.loc.id&&entryDirty&&!String((S.loc.data||{})[actKey()]||'').trim()&&asOn())await asRun();return true;}
+  toast(`Fill in the ${actLabel()} first`);const df=$(`#loc-fields input[data-lf="${actKey()}"]`);const box=df&&df.parentElement.querySelector('.datefield');
+  if(box){box.scrollIntoView({block:'center',behavior:'smooth'});setTimeout(()=>dpOpenFor(box),250);}return false;}
 /* Tanggal aktivasi: ingatkan (tidak memblokir) bila di masa depan atau setelah dokumen BAA lengkap */
-function actWarn(){const k=actKey();$$('#loc-fields .act-warn').forEach(x=>x.remove());if(!k||!S.loc)return;
+function actWarn(){const k=actKey();actPaint();$$('#loc-fields .act-warn').forEach(x=>x.remove());if(!k||!S.loc)return;
   const h=$(`#loc-fields input[data-lf="${k}"]`);if(!h||!h.value)return;const iso=h.value,today=dpToday();
   const ca=S.loc.complete_at?(d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`)(new Date(S.loc.complete_at)):'';
   const msg=iso>today?'This activation date is in the future — please check it.':ca&&iso>ca?`The BAA document was complete on ${dpFmt(ca)}, before this activation date — please check it.`:'';
@@ -5333,7 +5351,8 @@ function dateField(f){const iso=S.loc.data[f.key]||'';
   return `<div style="position:relative"><input type="hidden" data-lf="${f.key}" value="${esc(iso)}">
     <div class="datefield${iso?' filled':''}" tabindex="0" onclick="dpOpenFor(this)"><span class="mi">calendar_month</span>
     <span class="dfv">${iso?esc(dpFmt(iso)):''}</span><label class="dflab">${esc(f.label)}${f.required?' *':''}</label><span class="mi df-trail">expand_more</span></div></div>`;}
-function renderLocFields(){setTimeout(actWarn,0);$('#loc-fields').innerHTML=S.locFields.map(f=>
+function renderLocFields(){setTimeout(actWarn,0);const ak=S.actRule.required!==false&&actKey();
+  $('#loc-fields').innerHTML=(ak?[...S.locFields].sort((a,b)=>(b.key===ak)-(a.key===ak)):S.locFields).map(f=>
   f.type==='date'?dateField(f)
   :`<md-text-field data-lf="${f.key}" variant="outlined" label="${esc(f.label)}${f.required?' *':''}" type="text" value="${esc(S.loc.data[f.key]||'')}"></md-text-field>`).join('');}
 function merkOpts(name){return (S.itemMerks&&S.itemMerks[(name||'').trim()])||[];}
@@ -5436,7 +5455,7 @@ $('#loc-fields').addEventListener('keydown',e=>{if(e.key!==' '&&e.key!=='Spaceba
   const df=e.target.closest&&e.target.closest('.datefield');if(df){e.preventDefault();dpOpenFor(df);}});
 function collectData(){const d={};$$('[data-lf]').forEach(el=>d[el.dataset.lf]=el.value);return d;}
 $('#entry-form').addEventListener('input',e=>{updateSummary();markEntry();
-  if(isDraft()&&e.target&&String(e.target.value||'').trim())ensureLoc();   // data pertama -> buat kode
+  if(isDraft()&&e.target&&String(e.target.value||'').trim()&&!actMissing())ensureLoc().catch(()=>{});   // data pertama -> buat kode
   const nm=e.target.closest('[data-lf="nama_lokasi"]');if(nm&&pickerSel)pickerSel.updateCurrentName(nm.value.trim());});
 $('#entry-form').addEventListener('change',()=>markEntry());
 /* Highlight kartu aktif (andal walau field di dalam shadow DOM) */
@@ -5680,6 +5699,7 @@ function doUpload(files,category,relpaths){return new Promise(async res=>{
   if(pdf){const ix=arr.map((f,i)=>isPdf(f)?-1:i).filter(i=>i>=0);
     if(relpaths&&relpaths.length)relpaths=ix.map(i=>relpaths[i]);arr=ix.map(i=>arr[i]);
     await uploadScan(pdf);if(!arr.length)return resolve();}
+  if(!await actReady())return resolve();
   if(isDraft()){try{await ensureLoc();}catch(e){toast('Failed to create location: '+e.message);return resolve();}}  // first photo -> create code first
   if(!S.loc||!S.loc.id)return resolve();
   const fd=new FormData();arr.forEach(f=>fd.append('files',f));if(category)fd.append('category',category);
@@ -5837,6 +5857,7 @@ async function _saveEntry(finish){try{
   if(status==='selesai'&&!was)nextDraft(id);
   return true;}catch(e){toast('Failed: '+e.message);return false;}}
 $('#save-btn').addEventListener('click',()=>{
+  if(actMissing()){actReady();return;}
   const hits=S.dupHits||[],ec=S.loc?entryCalc(computeState()):null;
   if(hits.length&&!S.dupOk&&S.loc&&S.loc.status!=='selesai'&&ec&&ec.pct>=100){
     const w=(S.loc.wilayah)||{},nm=(collectData().nama_lokasi||'').trim();
@@ -5845,7 +5866,7 @@ $('#save-btn').addEventListener('click',()=>{
   saveEntry(true);});
 /* ===== Auto-save draft: data lokasi, wilayah, inventory tersimpan ±1 dtk setelah berhenti mengetik ===== */
 const AS={t:0,busy:null,again:false,at:0,err:''};
-function asOn(){return !!(S.loc&&S.loc.status!=='selesai'&&S.loc.can_edit!==false&&!roActive()&&!frozenRO()&&S.user&&S.user.role!=='viewer');}
+function asOn(){return !!(S.loc&&S.loc.status!=='selesai'&&S.loc.can_edit!==false&&!roActive()&&!frozenRO()&&S.user&&S.user.role!=='viewer'&&!actMissing());}
 function markEntry(){if(!S.loc)return;entryDirty=true;$('#nextDraft').classList.add('hidden');dupSoon();
   if(asOn()){clearTimeout(AS.t);AS.t=setTimeout(asRun,1000);}asPaint();}
 function asReset(){clearTimeout(AS.t);AS.t=0;AS.at=0;AS.err='';$('#nextDraft').classList.add('hidden');asPaint();}
@@ -5870,7 +5891,7 @@ function asPaint(){const el=$('#asStat');if(!el)return;
   el.classList.toggle('hidden',!show);if(!show)return;
   const st=AS.err?'err':(AS.t||AS.busy)?'saving':entryDirty?(asOn()?'saving':'dirty'):'ok';
   el.className='set-status '+st;
-  $('#asTxt').textContent=st==='err'?'Not saved — retry':st==='saving'?'Saving…':st==='dirty'?'Unsaved changes':'Saved'+(AS.at?' · '+asAgo():'');
+  $('#asTxt').textContent=st==='err'?'Not saved — retry':st==='saving'?'Saving…':st==='dirty'?(actMissing()?`Fill in ${actLabel()} to save`:'Unsaved changes'):'Saved'+(AS.at?' · '+asAgo():'');
   if(st==='err')el.dataset.tip=AS.err;else delete el.dataset.tip;}
 $('#asStat').addEventListener('click',()=>{if(AS.err){AS.err='';entryDirty=true;asRun();}});
 setInterval(()=>{if(AS.at&&_visible('v-entry'))asPaint();},30000);
@@ -7058,7 +7079,10 @@ function actKey(fields){fields=fields||S.locFields||[];const f=fields.find(x=>x.
 function renderLF(){$('#lf-list').innerHTML=(S.locFields||[]).map(lfRow).join('');lfSug();renderIdSet();bindTips();}
 /* SID & lampiran tambahan: aturan per project (disimpan bersama tombol Save fields) */
 function renderIdSet(){const c=S.sidCfg,a=S.attCfg,ty=(a.types||['pdf']).map(t=>String(t).toLowerCase());
-  $('#idSet').innerHTML=`<div class="fi-sec"><div class="fi-slabel"><span class="mi">badge</span><h4>Location ID from the client</h4><span class="fi-tag">e.g. Site ID · optional</span></div>
+  $('#idSet').innerHTML=`<div class="fi-sec"><div class="fi-slabel"><span class="mi">event_available</span><h4>Activation date</h4><span class="fi-tag">NIS · node in service</span></div>
+    <div class="ecard"><div class="erow ids-row">${pill('act_req','Required before saving',S.actRule.required!==false)}</div>
+      <p class="ids-note">Mark the date field with <b>Activation date</b> above. When required, a location in BAA Entry is only saved after its activation date is filled — every saved draft then counts as NIS. Imported locations may stay without it (not active yet).</p></div></div>
+    <div class="fi-sec"><div class="fi-slabel"><span class="mi">badge</span><h4>Location ID from the client</h4><span class="fi-tag">e.g. Site ID · optional</span></div>
     <div class="ecard"><div class="erow ids-row">${pill('sid_on','Use',c.enabled!==false)}
       <input class="labelf" id="ids-lab" placeholder="Label, e.g. SID" value="${esc(c.label||'SID')}" maxlength="30">
       <label class="ids-f">Max length<input type="number" id="ids-max" min="4" max="64" value="${+c.max_len||20}"></label>
@@ -7074,6 +7098,7 @@ async function idSetSave(){const g=k=>{const i=$(`#idSet [data-k="${k}"]`);retur
   const sid={enabled:g('sid_on'),label:($('#ids-lab').value||'').trim()||'SID',uppercase:g('sid_up'),max_len:+$('#ids-max').value||20};
   const types=(g('att_pdf')?['pdf']:[]).concat(g('att_img')?['jpg','jpeg','png']:[]);
   const att={enabled:g('att_on'),label:($('#att-lab').value||'').trim()||'Additional attachments',types:types.length?types:['pdf'],max_mb:+$('#att-mb').value||5};
+  const r0=await api('/api/settings/activation-rule',{method:'PUT',body:JSON.stringify({required:g('act_req')})});S.actRule=r0.activation_rule;
   const r1=await api('/api/settings/sid-config',{method:'PUT',body:JSON.stringify(sid)});S.sidCfg=r1.sid_config;
   const r2=await api('/api/settings/attach-config',{method:'PUT',body:JSON.stringify(att)});S.attCfg=r2.attach_config;renderIdSet();}
 /* Activation date: hanya untuk field Tanggal, satu field saja */
