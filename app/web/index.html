@@ -155,6 +155,10 @@
   .wm-pin.mini .lb{transform:translate(-50%,-100%) scale(0);opacity:0}
   .wm-pin.mini:not(.rich) .st{height:0!important}
   .wm-pin.open .lb{transform:translate(-50%,-100%) scale(1);opacity:1}
+  .wm-pin.alldone .dot{box-shadow:0 0 0 2px var(--md-sys-color-surface-container-lowest),0 0 0 4px var(--good),0 0 0 6px var(--md-sys-color-surface-container-lowest),0 0 0 8px var(--good)}
+  .wm-ad-leg{display:inline-flex;align-items:center;gap:8px}
+  .wm-ad-leg .ad-dot{display:inline-block;flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--md-sys-color-primary);margin:0 5px;
+    box-shadow:0 0 0 2px var(--md-sys-color-surface-container-lowest),0 0 0 4px var(--good),0 0 0 6px var(--md-sys-color-surface-container-lowest),0 0 0 8px var(--good)}
   .wm-pin.wm-drop{animation:wmDrop .28s cubic-bezier(.3,1.6,.5,1) backwards}
   @keyframes wmDrop{0%{opacity:0;transform:translateY(-26px) scale(.6)}60%{opacity:1}100%{opacity:1;transform:none}}
   @media(prefers-reduced-motion:reduce){.wm-pin,.wm-pin .lb,.wm-pin .st{transition:none}.wm-pin.wm-drop{animation:none}}
@@ -3670,7 +3674,7 @@ function renderWm(){const host=$('#wmHost'),st=WM.st,P=PETA;if(!host||!st||!P)re
     <div class="wm-top"><span class="mi acc">map</span><span class="wm-bc">${bc}</span>
       <div class="wm-seg">${Object.entries(WM_MODES).filter(([k])=>k!=='nis'||st.nis_on).map(([k,m])=>`<button data-m="${k}" class="${WM.mode===k?'on':''}"${m.tip?` data-tip="${m.tip}"`:''}><i class="sw" style="--c:${m.c}"></i>${m.lbl}</button>`).join('')}</div></div>
     <div class="wm-map"><svg viewBox="${(WM.vb||vb).join(' ')}" preserveAspectRatio="xMidYMid meet">${pathsProv}${pathsKab}</svg></div>
-    <div class="wm-leg" style="--wm-c:${WM_MODES[WM.mode].c}">${legend}<span class="sep"></span><u></u><span>no locations</span>${st.ideal_pct!=null?'<span class="sep"></span><span class="wm-pl"><span class="lt">Pin · % done vs target</span><b class="ok"></b>on track<b class="warn"></b>behind<b class="bad"></b>far behind</span>':''}${notes?`<span class="sep"></span><span>${notes}</span>`:''}<span class="wm-acts">${WM.prov?'':`<md-button variant="tonal" size="xs" id="wmAll">${WM.all?'Only 4 behind':'All numbers'}</md-button><md-button variant="text" size="xs" icon="replay" id="wmReplay">Replay</md-button>`}</span><span style="opacity:.7">Map: geoBoundaries (CC BY 4.0)</span></div></div>
+    <div class="wm-leg" style="--wm-c:${WM_MODES[WM.mode].c}">${legend}<span class="sep"></span><u></u><span>no locations</span>${Object.entries(lvl).some(([k,v])=>(!WM.prov||k.startsWith(WM.prov+'.'))&&wmAllDone(v))?`<span class="sep"></span><span class="wm-ad-leg"><span class="ad-dot"></span>all done (${st.nis_on?'all NIS, all documents done, ':''}no drafts)</span>`:''}${st.ideal_pct!=null?'<span class="sep"></span><span class="wm-pl"><span class="lt">Pin · % done vs target</span><b class="ok"></b>on track<b class="warn"></b>behind<b class="bad"></b>far behind</span>':''}${notes?`<span class="sep"></span><span>${notes}</span>`:''}<span class="wm-acts">${WM.prov?'':`<md-button variant="tonal" size="xs" id="wmAll">${WM.all?'Only 4 behind':'All numbers'}</md-button><md-button variant="text" size="xs" icon="replay" id="wmReplay">Replay</md-button>`}</span><span style="opacity:.7">Map: geoBoundaries (CC BY 4.0)</span></div></div>
     <div class="wm-side">${wmSide()}</div></div></div>`;
   const svg=host.querySelector('svg');WM.anim=false;if(WM.vb&&WM.vb.join()!==vb.join())wmZoom(svg,WM.vb,vb);WM.vb=vb;
   const lay=document.createElement('div');lay.className='wm-pins off';host.querySelector('.wm-map').appendChild(lay);
@@ -3693,12 +3697,13 @@ function wmSide(){const st=WM.st,id=st.ideal_pct;
     return `<div class="wm-cov"><b>${kb.done} / ${kb.n}</b><span>done in ${esc(kb.nama)} · ${kb.drafts} draft${kb.drafts===1?'':'s'}${kb.stale?` · ${kb.stale} stale`:''}</span></div>
       <h4>Kecamatan</h4>${kecs.map(x=>wmRow(x.nama,'',x.done,x.n,id,'')).join('')||'<div class="wm-note">No data</div>'}
       <md-button variant="tonal" icon="table_rows" data-log="${WM.kab}" style="margin-top:6px">Open in Location Log</md-button>`;}
-  const kabs=Object.entries(st.kab).filter(([k])=>!WM.prov||k.startsWith(WM.prov+'.')).map(([k,v])=>({k,...v}))
+  const kabIn=Object.entries(st.kab).filter(([k])=>!WM.prov||k.startsWith(WM.prov+'.'));
+  const kabs=kabIn.filter(([,v])=>!wmAllDone(v)).map(([k,v])=>({k,...v}))   // kab tuntas tidak termasuk "tertinggal"
     .sort((a,b)=>a.done/a.n-b.done/b.n||b.n-a.n).slice(0,6);
   const cov=WM.prov?(()=>{const ks=Object.keys(st.kab).filter(k=>k.startsWith(WM.prov+'.'));const r=Object.keys(st.kec).filter(k=>k.startsWith(WM.prov+'.')).length;
       const p=st.prov[WM.prov]||{n:0,done:0};return `<div class="wm-cov"><b>${p.done} / ${p.n}</b><span>done · ${r} kecamatan reached in ${ks.length} kab/kota</span></div>`;})()
     :`<div class="wm-cov"><b>${st.kec_reached}</b><span>of ${st.kec_total} kecamatan reached · ${st.kec_total?Math.round(st.kec_reached/st.kec_total*100):0}% of the kab/kota in this project</span></div>`;
-  return cov+`<h4>Furthest behind (kab/kota)</h4>${kabs.map(x=>`<div data-rk="${x.k}">${wmRow(x.nama,WM.prov?'':(st.prov[x.k.slice(0,2)]||{}).nama,x.done,x.n,id,x.k)}</div>`).join('')||'<div class="wm-note">No locations with wilayah yet</div>'}
+  return cov+`<h4>Furthest behind (kab/kota)</h4>${kabs.map(x=>`<div data-rk="${x.k}">${wmRow(x.nama,WM.prov?'':(st.prov[x.k.slice(0,2)]||{}).nama,x.done,x.n,id,x.k)}</div>`).join('')||(kabIn.length?'<div class="wm-note">All kab/kota here are done</div>':'<div class="wm-note">No locations with wilayah yet</div>')}
     ${id!=null&&kabs.length?'<div class="wm-note">Marker = where the project should be today · click a row to zoom in</div>':''}`;}
 function wmRow(nm,sub,d,n,ideal,k){const p=n?Math.round(d/n*100):0,cls=ideal==null?'':p>=ideal?'':p>=ideal*.6?'warn':'bad';
   return `<div class="wm-rk ${cls}"><span class="nm">${esc(nm)}${sub?` <small>· ${esc(sub)}</small>`:''}</span><span class="v">${d} / ${n}</span><div class="bar"><i style="width:${p}%"></i>${ideal!=null?`<b style="left:${Math.min(99,ideal)}%"></b>`:''}</div></div>`;}
@@ -3720,11 +3725,14 @@ let WMP={},WM_T=[];
 const wmClearT=()=>{WM_T.forEach(clearTimeout);WM_T=[];};
 const wmLater=(fn,ms)=>WM_T.push(setTimeout(fn,ms));
 const wmPct=x=>x.n?x.done/x.n*100:0;
+/* Wilayah tuntas: semua lokasi NIS, semua dokumen lengkap 100%, tanpa draf (NIS nonaktif → semua Done, tanpa draf) */
+const wmAllDone=x=>!!x&&x.n>0&&x.drafts===0&&(WM.st&&WM.st.nis_on?(x.nis===x.n&&x.nd===x.n):x.done===x.n);
 const wmCls=x=>{const id=WM.st.ideal_pct,p=wmPct(x);return id==null||p>=id?'ok':p>=id*.6?'warn':'bad';};
 const wmV=x=>WM.mode==='pct'?Math.round(wmPct(x))+'%':String(x[WM.mode]||0);
 const wmData=k=>(k.length===2?WM.st.prov:WM.st.kab)[k];
 const WM_RANK={bad:0,warn:1,ok:2};
-function wmRich(k,x){const v=wmV(x),u=WM.mode==='drafts'?` draft${v==='1'?'':'s'}`:WM.mode==='stale'?' stale':WM.mode==='nis'?' NIS':'';
+function wmRich(k,x){
+  if(wmAllDone(x))return `<span class="big">All done</span><small class="nm">${esc(x.nama)}</small><small>${x.n} location${x.n===1?'':'s'}${WM.st.nis_on?' · all NIS · all documents done':' · all Done'}</small><small>No drafts left</small><small class="go">${k.length===2?'Click to open kab/kota →':'Click for kecamatan →'}</small>`;const v=wmV(x),u=WM.mode==='drafts'?` draft${v==='1'?'':'s'}`:WM.mode==='stale'?' stale':WM.mode==='nis'?' NIS':'';
   if(WM.mode==='nis')return `<span class="big">${esc(v+u)}</span><small class="nm">${esc(x.nama)}</small><small>${x.nd||0} document${x.nd===1?'':'s'} done · ${x.nis?Math.round((x.nd||0)/x.nis*100):0}% of NIS</small><small>${(x.nis||0)-(x.nd||0)} backlog · ${x.n} location${x.n===1?'':'s'}</small><small class="go">${k.length===2?'Click to open kab/kota →':'Click for kecamatan →'}</small>`;
   return `<span class="big">${esc(v+u)}</span><small class="nm">${esc(x.nama)}</small><small>${x.done} / ${x.n} done · ${Math.round(wmPct(x))}%</small><small>${x.drafts} draft${x.drafts===1?'':'s'} · ${x.stale||0} stale</small><small class="go">${k.length===2?'Click to open kab/kota →':'Click for kecamatan →'}</small>`;}
 function wmScr(k){const p=WMP.svg.querySelector(`path[data-k="${k}"]`);if(!p)return null;const m=WMP.svg.getScreenCTM(),mr=WMP.map.getBoundingClientRect(),lp=wmLabelPt(p,k),q=new DOMPoint(lp.x,lp.y).matrixTransform(m);
@@ -3732,7 +3740,8 @@ function wmScr(k){const p=WMP.svg.querySelector(`path[data-k="${k}"]`);if(!p)ret
 function wmItems(){const W=WMP.map.clientWidth,H=WMP.map.clientHeight,out=[];
   WMP.svg.querySelectorAll('path.has[data-k]').forEach(p=>{const k=p.dataset.k,x=wmData(k);if(!x||!x.n)return;const v=wmV(x);if(WM.mode!=='pct'&&v==='0')return;
     const q=wmScr(k);if(!q||q.x<0||q.y<0||q.x>W||q.y>H)return;   // wilayah tanpa geometri / di luar tampilan: tanpa pin
-    out.push({k,s:x,c:wmCls(x),v,full:WM.prov?`${esc(v)}<small>${esc(x.nama)} · ${x.done}/${x.n}</small>`:esc(v),...q});});
+    const ad=wmAllDone(x);
+    out.push({k,s:x,c:wmCls(x),v,ad,full:WM.prov?`${esc(v)}<small>${esc(x.nama)} · ${ad?'all done':`${x.done}/${x.n}`}</small>`:esc(v),...q});});
   return out.sort((a,b)=>a.x-b.x);}
 /* Penempatan label: ukuran diukur langsung, lalu dicoba posisi atas, diagonal, samping, bawah dengan garis makin panjang.
    Diterima bila utuh di dalam peta dan tidak menabrak label, titik, atau garis lain. Yang paling tertinggal ditempatkan dulu.
@@ -3767,7 +3776,7 @@ function wmPlace(list,dots){wmMeasure(list);const placed=[];dots=dots||list;
   return list;}
 function wmStem(ax,ay,w,h){const l=ax-w/2,r=ax+w/2,t=ay-h,px=Math.max(l,Math.min(0,r)),py=Math.max(t,Math.min(0,ay));
   return `height:${Math.hypot(px,py).toFixed(1)}px;transform:rotate(${(Math.atan2(px,-py)*180/Math.PI).toFixed(1)}deg)`;}
-function wmPinHTML(it,extra=''){const dot=it.lv==='dot',tall=it.lv==='full'&&it.full!==esc(it.v),ax=dot?0:it.ax,ay=dot?-12:it.ay;
+function wmPinHTML(it,extra=''){if(it.ad)extra=(extra?extra+' ':'')+'alldone';const dot=it.lv==='dot',tall=it.lv==='full'&&it.full!==esc(it.v),ax=dot?0:it.ax,ay=dot?-12:it.ay;
   return `<div class="wm-pin ${it.c}${extra?' '+extra:''}${tall?' tall':''}${dot?' mini':''}" data-k="${it.k}" style="left:${it.x.toFixed(1)}px;top:${it.y.toFixed(1)}px"><i class="st" style="${wmStem(ax,ay,tall?it.fw:it.sw,tall?it.fh:it.sh)}"></i><i class="dot"></i><span class="lb" style="left:${ax.toFixed(1)}px;top:${ay.toFixed(1)}px">${tall?it.full:esc(it.v)}</span></div>`;}
 function wmBindPins(){WMP.lay.querySelectorAll('.wm-pin').forEach(el=>{const k=el.dataset.k;
   el.querySelectorAll('.lb,.dot').forEach(t=>{t.onmousemove=()=>wmHover(k);t.onmouseleave=e=>{if(!wmSameK(e,k))wmLeave();};t.onclick=()=>wmGo(k);});});}

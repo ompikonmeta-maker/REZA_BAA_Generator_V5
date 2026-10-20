@@ -66,3 +66,12 @@ unduh PDF/Excel, kartu format klien), contoh PDF 2 halaman dari data demo (rata-
   membuka date picker; begitu tanggal diisi, kode dibuat dan draf tersimpan otomatis.
 - Laporan: NIS = dokumen selesai dari NIS + backlog; Dokumen selesai = dari NIS + tanpa tanggal aktivasi;
   jumlah lokasi belum aktif ditampilkan.
+
+## 26. Penanda wilayah tuntas di peta (2026-10-20, ✅)
+- Syarat: semua lokasi NIS, semua dokumen selesai 100%, tanpa draf (bila tanggal aktivasi nonaktif: semua Done, tanpa draf).
+  Berlaku untuk provinsi & kab/kota, di keempat tombol.
+- Tampilan: hanya **titik pin** diberi garis ganda hijau (`--good`); label angka & hover tetap seperti pin lain
+  (bintang ditolak pengguna karena bisa terbaca sebagai simbol tertentu). Hover: "All done · n locations · all NIS · all
+  documents done · No drafts left". Label kab saat diperbesar: "… · all done". Legenda muncul bila ada wilayah tuntas.
+- Kab/kota tuntas dikeluarkan dari daftar "Furthest behind"; bila semuanya tuntas tertulis "All kab/kota here are done".
+- Mockup: https://claude.ai/artifact/VbQVvtqzSDZyWUFYELRaii (versi 3).
