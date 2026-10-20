@@ -19,6 +19,7 @@ for pkg in ("uvicorn", "fastapi", "starlette", "pydantic", "openpyxl",
         pass
 
 hiddenimports += collect_submodules("uvicorn")
+hiddenimports += ["zxingcpp"]   # pembaca barcode/QR (modul biner tunggal)
 
 a = Analysis(
     ["run.py"],

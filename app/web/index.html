@@ -2113,6 +2113,26 @@
   .tg .sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--md-sys-color-surface);transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
   .tg.on{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}
   .tg.on .sw{background:var(--md-sys-color-primary)}.tg.on .sw::after{transform:translateX(14px)}
+  .sn-status{display:flex;align-items:center;gap:6px;margin-top:8px;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .sn-status .mi{font-size:18px}
+  .sn-status.busy .mi{animation:scspin 1s linear infinite;color:var(--md-sys-color-primary)}
+  .sn-status:not(.busy) .mi{display:none}
+  .pcrule{display:flex;align-items:center;gap:4px;margin-top:6px;border:none;background:transparent;padding:2px 0;cursor:pointer;color:var(--md-sys-color-primary);font:var(--md-sys-typescale-label-small);font-weight:600;max-width:100%;text-align:left}
+  .pcrule .mi{font-size:15px}
+  .pcrule{align-items:flex-start}
+  .pcrule span:last-child{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.35}
+  .pcrule.empty{color:var(--md-sys-color-on-surface-variant);font-weight:500}
+  .sr-body{display:flex;flex-direction:column;gap:var(--md-sys-spacing-4);min-width:300px;max-width:480px}
+  .sr-row{display:flex;align-items:center;justify-content:space-between;gap:var(--md-sys-spacing-3);flex-wrap:wrap}
+  .sr-l{display:flex;flex-direction:column;gap:2px;min-width:150px;flex:1}
+  .sr-l small{color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-body-small)}
+  .sr-len{display:flex;align-items:center;gap:6px}
+  .sr-len input{width:64px;text-align:center}
+  #srChars button{white-space:nowrap}
+  .sr-no{display:flex;flex-wrap:wrap;gap:6px;max-width:260px}
+  .sr-no button{min-width:34px;height:32px;border-radius:var(--md-sys-shape-corner-small);border:1px solid var(--md-sys-color-outline-variant);background:transparent;color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-label-large);font-family:ui-monospace,Consolas,monospace;cursor:pointer;transition:background .2s,color .2s,border-color .2s}
+  .sr-no button.on{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);border-color:transparent}
+  .sr-no button:disabled{opacity:.35;cursor:default}
   .segt{display:inline-flex;background:var(--md-sys-color-surface-container-high);border-radius:12px;padding:3px}
   .segt button{border:none;background:transparent;color:var(--md-sys-color-on-surface-variant);padding:7px 14px;border-radius:9px;cursor:pointer;font:var(--md-sys-typescale-label-medium);font-weight:600}
   .segt button.on{background:var(--md-sys-color-surface);color:var(--md-sys-color-primary);box-shadow:var(--md-sys-elevation-level1)}
@@ -3038,19 +3058,35 @@
 <md-dialog id="snDlg">
   <span slot="headline" id="sn-title">Read Serial Number</span>
   <div style="min-width:320px;max-width:460px">
-    <p class="muted" style="margin:0 0 8px">Tries barcode/QR automatically. If needed, drag a box over the serial then "Read area".</p>
+    <p class="muted" style="margin:0 0 8px">Reads barcodes first, then the printed text. If the result is wrong, drag a box over the serial, then "Read area".</p>
     <div id="sn-view" style="position:relative;width:100%;overflow:hidden;background:#111;border-radius:12px;touch-action:none;cursor:crosshair;user-select:none">
       <img id="sn-img" draggable="false" style="display:block;width:100%;user-select:none;pointer-events:none">
       <div id="sn-sel" class="hidden" style="position:absolute;border:2px solid var(--md-sys-color-primary);background:color-mix(in srgb,var(--md-sys-color-primary) 20%,transparent)"></div>
     </div>
     <div class="rowflex" style="margin-top:10px">
-      <md-button id="sn-barcode" variant="text" icon="qr_code_scanner">Scan barcode/QR</md-button>
+      <md-button id="sn-barcode" variant="text" icon="barcode_reader">Read whole photo</md-button>
       <md-button id="sn-read" variant="tonal" icon="document_scanner">Read area</md-button>
     </div>
+    <div id="sn-status" class="sn-status hidden"><span class="mi">progress_activity</span><span class="t"></span></div>
     <div id="sn-cands" class="rowflex" style="margin-top:8px;gap:6px"></div>
     <md-text-field id="sn-serial" variant="outlined" label="Serial Number" style="width:100%;margin-top:8px"></md-text-field>
   </div>
   <div slot="actions"><md-button variant="text" id="sn-cancel">Close</md-button><md-button variant="filled" id="sn-save" icon="check">Save SN</md-button></div>
+</md-dialog>
+
+<md-dialog id="snRuleDlg">
+  <span slot="headline">SN rule · <span id="srCat"></span></span>
+  <div class="sr-body">
+    <p class="muted" style="margin:0">Helps OCR pick and correct the serial number for this category. Leave a setting empty when the SNs vary.</p>
+    <div class="sr-row"><div class="sr-l"><b>Length</b><small>Total characters, prefix included</small></div>
+      <div class="sr-len"><input class="pcinp" id="srMin" type="number" min="1" max="40" placeholder="min"><span>–</span><input class="pcinp" id="srMax" type="number" min="1" max="40" placeholder="max"></div></div>
+    <div class="sr-row"><div class="sr-l"><b>Characters</b><small id="srCharsHint"></small></div>
+      <div class="segt" id="srChars"><button type="button" data-v="">Any</button><button type="button" data-v="hex">Hex</button><button type="button" data-v="digits">Digits</button></div></div>
+    <div class="sr-row"><div class="sr-l"><b>Letters never used</b><small>Read as the look-alike digit, e.g. O → 0</small></div>
+      <div class="sr-no" id="srNo"></div></div>
+    <div class="sr-row"><div class="sr-l"><b>Keep suffix after "/"</b><small>On: HJD0A0YY1VY/r2 · Off: HJD0A0YY1VY</small></div><md-switch id="srSuffix"></md-switch></div>
+  </div>
+  <div slot="actions"><md-button variant="text" id="srClear">Clear rule</md-button><span style="flex:1"></span><md-button variant="text" id="srCancel">Cancel</md-button><md-button variant="filled" id="srOk" icon="check">Apply</md-button></div>
 </md-dialog>
 
 <div class="tip" id="tip"></div>
@@ -5793,28 +5829,29 @@ async function commitClearAll(){$('#clrSnack').classList.remove('on');const ids=
   clrPending.clear();try{await reloadLoc();}catch(e){}renderPhotos();updateSummary();
   toast(ids.length+' photos deleted');}
 
-/* ---- Baca SN: barcode/QR-first + seleksi area OCR ---- */
-let sn={photoId:null,cat:null,rect:null};
-function catPrefixes(cat){const c=S.cats.find(x=>x.key===cat);return (c&&c.prefixes)||[];}
-function pickByPrefix(cands,prefixes){if(!cands.length)return '';
-  for(const p of prefixes){const hit=cands.find(c=>c.startsWith(p.toUpperCase()));if(hit)return hit;}return cands[0];}
-window.openSnReader=(photoId,cat)=>{sn={photoId,cat,rect:null};
+/* ---- Baca SN: server membaca barcode dulu, lalu teks (aturan SN per kategori); area pilihan untuk label sulit ---- */
+let sn={photoId:null,cat:null,rect:null,seq:0,auto:''};
+window.openSnReader=(photoId,cat)=>{sn={photoId,cat,rect:null,seq:sn.seq+1,auto:''};
   const c=S.cats.find(x=>x.key===cat);$('#sn-title').textContent='Read SN — '+(c?c.label:cat);
   $('#sn-serial').setAttribute('value','');$('#sn-cands').innerHTML='';$('#sn-sel').classList.add('hidden');
-  const img=$('#sn-img');img.onload=()=>{tryBarcode();};img.src='/api/photos/'+photoId+'/file?ts='+Date.now();
-  $('#snDlg').show();};
-async function tryBarcode(){
-  if(!('BarcodeDetector' in window)){toast('Barcode scan not supported — draw a box, then Read area');return;}
-  try{const bd=new BarcodeDetector({formats:['qr_code','code_128','code_39','ean_13','ean_8','itf','codabar','upc_a','upc_e','data_matrix','pdf417']});
-    const codes=await bd.detect($('#sn-img'));
-    if(codes&&codes.length){const vals=codes.map(x=>(x.rawValue||'').toUpperCase().replace(/\s+/g,''));
-      const best=pickByPrefix(vals,catPrefixes(sn.cat));
-      $('#sn-serial').setAttribute('value',best);showCands(vals);toast('Barcode read');}
-  }catch(e){}
-}
-window.snSet=v=>$('#sn-serial').setAttribute('value',v);
-function showCands(list){$('#sn-cands').innerHTML=[...new Set(list)].filter(Boolean).map(v=>
-  `<md-button variant="tonal" size="xs" onclick="snSet('${esc(v)}')">${esc(v)}</md-button>`).join('');}
+  $('#sn-img').src='/api/photos/'+photoId+'/file?ts='+Date.now();
+  $('#snDlg').show();snWhole();};
+function snBusy(msg,busy){const el=$('#sn-status');el.classList.toggle('hidden',!msg);el.classList.toggle('busy',!!busy);el.querySelector('.t').textContent=msg||'';}
+/* Isi field dengan hasil terbaik — kecuali operator sudah mengetik sendiri */
+function snFill(v){const f=$('#sn-serial');const cur=(f.value||'').trim();if(!v||(cur&&cur!==sn.auto))return;sn.auto=v;f.setAttribute('value',v);f.value=v;}
+async function snWhole(){const my=++sn.seq;snBusy('Reading barcode & text…',true);
+  try{const d=await api('/api/photos/'+sn.photoId+'/sn-read');if(my!==sn.seq)return;
+    if(!d.available){snBusy('SN reader is off on the server');return;}
+    showCands(d.candidates||[]);snFill(d.serial);
+    snBusy(d.serial?(d.candidates[0].src==='barcode'?'Read from barcode':'Read from text — check it against the photo')
+      :'Not found — drag a box over the serial, then Read area');
+  }catch(e){if(my===sn.seq)snBusy('Failed: '+e.message);}}
+window.snSet=v=>{sn.auto=v;$('#sn-serial').setAttribute('value',v);$('#sn-serial').value=v;};
+function showCands(list){const L=[];const seen=new Set();
+  (list||[]).forEach((c,i)=>{const o=typeof c==='string'?{sn:c,full:c,src:'ocr'}:c;
+    [o.sn,i===0&&o.full!==o.sn?o.full:null].forEach(v=>{if(v&&!seen.has(v)){seen.add(v);L.push({v,bc:o.src==='barcode'});}});});
+  $('#sn-cands').innerHTML=L.slice(0,8).map(x=>
+    `<md-button variant="tonal" size="xs"${x.bc?' icon="barcode" title="From barcode"':''} onclick="snSet('${esc(x.v)}')">${esc(x.v)}</md-button>`).join('');}
 /* selection drag on sn-view */
 (function(){const view=$('#sn-view');let drag=false,x0,y0;
   const rel=e=>{const r=view.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};};
@@ -5823,20 +5860,22 @@ function showCands(list){$('#sn-cands').innerHTML=[...new Set(list)].filter(Bool
     s.style.left=Math.min(x0,p.x)+'px';s.style.top=Math.min(y0,p.y)+'px';s.style.width=Math.abs(p.x-x0)+'px';s.style.height=Math.abs(p.y-y0)+'px';});
   view.addEventListener('pointerup',()=>{drag=false;const s=$('#sn-sel');sn.rect={l:parseFloat(s.style.left),t:parseFloat(s.style.top),w:parseFloat(s.style.width),h:parseFloat(s.style.height)};});
 })();
-$('#sn-barcode').addEventListener('click',tryBarcode);
-$('#sn-read').addEventListener('click',async()=>{
+$('#sn-barcode').addEventListener('click',snWhole);
+$('#sn-read').addEventListener('click',()=>{
   const img=$('#sn-img');const dispW=img.clientWidth,dispH=img.clientHeight;const sc=img.naturalWidth/dispW;
   let r=sn.rect;if(!r||r.w<5||r.h<5)r={l:0,t:0,w:dispW,h:dispH};
   const cv=document.createElement('canvas');cv.width=Math.round(r.w*sc);cv.height=Math.round(r.h*sc);
   cv.getContext('2d').drawImage(img,r.l*sc,r.t*sc,r.w*sc,r.h*sc,0,0,cv.width,cv.height);
-  toast('Membaca area…');
-  cv.toBlob(async b=>{const fd=new FormData();fd.append('file',new File([b],'roi.jpg',{type:'image/jpeg'}));
-    try{const res=await fetch('/api/ocr',{method:'POST',credentials:'same-origin',body:fd});const d=await res.json();
-      if(!d.available){toast('OCR nonaktif di server');return;}
-      const best=pickByPrefix(d.candidates||[],catPrefixes(sn.cat));
-      if(best)$('#sn-serial').setAttribute('value',best);showCands(d.candidates||[]);
-      toast((d.candidates||[]).length?'Read: '+best:'Not readable, try another area');}catch(e){toast('Failed: '+e.message);}
-  },'image/jpeg',0.92);
+  const my=++sn.seq;snBusy('Reading area…',true);
+  /* PNG: tanpa kompresi ulang, tepi huruf tetap tajam */
+  cv.toBlob(async b=>{const fd=new FormData();fd.append('file',new File([b],'roi.png',{type:'image/png'}));fd.append('cat',sn.cat||'');
+    try{const res=await fetch('/api/ocr',{method:'POST',credentials:'same-origin',body:fd});const d=await res.json();if(my!==sn.seq)return;
+      if(!d.available){snBusy('SN reader is off on the server');return;}
+      showCands(d.candidates||[]);
+      if(d.serial){sn.auto=d.serial;$('#sn-serial').setAttribute('value',d.serial);$('#sn-serial').value=d.serial;}
+      snBusy(d.serial?'Read: '+d.serial+(d.candidates[0].src==='barcode'?' (barcode)':''):'Not readable — try a tighter box around the serial');
+    }catch(e){if(my===sn.seq)snBusy('Failed: '+e.message);}
+  },'image/png');
 });
 $('#sn-cancel').addEventListener('click',()=>$('#snDlg').close());
 $('#sn-save').addEventListener('click',async()=>{const val=$('#sn-serial').value.trim();const cat=sn.cat;
@@ -7137,7 +7176,7 @@ const PC_TIPS={
   key:'Unique category code (auto, prefixed img_). Used by the system to match photos — so it cannot be edited manually.',
   keywords:'When uploading many photos at once: if a filename contains one of these words, the photo goes to this category automatically.',
   ocr:'If on, the serial number (SN) is read automatically from photos in this category.',
-  prefixes:'Correct SN prefixes (e.g. AP). Helps pick the right SN when OCR finds several candidates. Active when OCR is on.',
+  prefixes:'Correct SN prefixes (e.g. AP), plus an optional rule: length, characters, letters never used. Helps OCR pick and correct the SN. Active when OCR is on.',
   sn_item:'The OCR serial automatically fills the SN/Tagging column of the Inventory item whose name you enter here. Active when OCR is on.'};
 function pcRowT(c={}){const isNew=!c.key;const off=c.ocr?'':' off';
   return `<div class="pctr" data-pc${isNew?' data-new="1"':''}>
@@ -7146,10 +7185,47 @@ function pcRowT(c={}){const isNew=!c.key;const off=c.ocr?'':' off';
     <div class="c-key"><span class="pckey" title="Auto key (read-only)">${esc(c.key||pcSlug(c.label||''))}</span><input type="hidden" data-k="key" value="${esc(c.key||'')}"></div>
     <div class="c-kw"><div class="pckw"></div><input type="hidden" data-k="keywords" value="${esc((c.keywords||[]).join(', '))}"></div>
     <div class="c-ocr"><label class="tg pctg${c.ocr?' on':''}"><input type="checkbox" data-k="ocr" ${c.ocr?'checked':''} hidden onchange="pcOcr(this)"><span class="sw"></span></label></div>
-    <div class="c-prefix pcocrlink${off}"><input class="pcinp" data-k="prefixes" placeholder="AP, TLSAT" value="${esc((c.prefixes||[]).join(', '))}"></div>
+    <div class="c-prefix pcocrlink${off}"><input class="pcinp" data-k="prefixes" placeholder="AP, TLSAT" value="${esc((c.prefixes||[]).join(', '))}">
+      ${SR_KEYS.map(k=>`<input type="hidden" data-k="${k}" value="${esc(String(c[k]??''))}">`).join('')}
+      <button type="button" class="pcrule${srSummary(c)?'':' empty'}" data-tip="SN rule: length, characters, letters never used" onclick="srOpen(this)"><span class="mi">tune</span><span>${esc(srSummary(c)||'Add rule')}</span></button></div>
     <div class="c-auto pcocrlink${off}"><input class="pcinp" data-k="sn_item" placeholder="item name" value="${esc(c.sn_item||'')}"></div>
     <div><button type="button" class="ecard-del" data-tip="Delete category" onclick="pcDel(this)"><span class="mi">close</span></button></div>
   </div>`;}
+/* ---- Aturan SN per kategori (panjang, jenis karakter, huruf yang tidak dipakai, akhiran "/r2") ---- */
+const SR_KEYS=['sn_min','sn_max','sn_chars','sn_no','sn_suffix'];
+const SR_LETTERS={O:'0',I:'1',L:'1',Q:'0',D:'0',S:'5',Z:'2',B:'8',G:'6',T:'7',A:'4'};
+function srRead(row){const v=k=>(row.querySelector(`[data-k="${k}"]`)||{}).value||'';const n=k=>{const x=parseInt(v(k),10);return x>0?x:null;};
+  return {sn_min:n('sn_min'),sn_max:n('sn_max'),sn_chars:v('sn_chars'),sn_no:v('sn_no'),sn_suffix:v('sn_suffix')==='true'};}
+function srSummary(c){const p=[];const lo=+c.sn_min||0,hi=+c.sn_max||0;
+  if(lo||hi)p.push((lo&&hi?(lo===hi?lo:lo+'–'+hi):lo?'≥ '+lo:'≤ '+hi)+' chars');
+  if(c.sn_chars==='hex')p.push('hex');else if(c.sn_chars==='digits')p.push('digits only');
+  if(c.sn_no)p.push('no '+c.sn_no.split('').join(' '));
+  if(c.sn_suffix===true||c.sn_suffix==='true')p.push('keeps /suffix');
+  return p.join(' · ');}
+let srRow=null;
+window.srOpen=btn=>{srRow=btn.closest('.pctr');const c=srRead(srRow);
+  $('#srCat').textContent=(srRow.querySelector('[data-k="label"]').value||'').trim()||'New category';
+  $('#srMin').value=c.sn_min||'';$('#srMax').value=c.sn_max||'';
+  srSetChars(c.sn_chars||'');
+  $('#srNo').innerHTML=Object.keys(SR_LETTERS).map(L=>`<button type="button" data-l="${L}" title="${L} → ${SR_LETTERS[L]}" class="${c.sn_no.includes(L)?'on':''}">${L}</button>`).join('');
+  $$('#srNo button').forEach(b=>b.onclick=()=>b.classList.toggle('on'));srNoLock();
+  $('#srSuffix').selected=!!c.sn_suffix;$('#snRuleDlg').show();};
+function srSetChars(v){$$('#srChars button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  $('#srCharsHint').textContent=v==='hex'?'0–9 and A–F only · other letters read as look-alike digits (O → 0, S → 5)':v==='digits'?'Digits only · letters read as look-alike digits':'Any mix of letters and digits';
+  srNoLock();}
+/* hex/digits sudah menangani huruf mirip-angka: kunci pilihan huruf yang sudah tercakup */
+function srNoLock(){const v=($('#srChars button.on')||{}).dataset?.v||'';
+  $$('#srNo button').forEach(b=>{const cov=v==='digits'||(v==='hex'&&!'ABCDEF'.includes(b.dataset.l));b.disabled=cov;if(cov)b.classList.remove('on');});}
+$$('#srChars button').forEach(b=>b.addEventListener('click',()=>srSetChars(b.dataset.v)));
+function srApply(c){if(!srRow)return;SR_KEYS.forEach(k=>{const h=srRow.querySelector(`[data-k="${k}"]`);h.value=c[k]==null?'':String(c[k]);});
+  const btn=srRow.querySelector('.pcrule');const sum=srSummary(c);btn.classList.toggle('empty',!sum);btn.lastElementChild.textContent=sum||'Add rule';
+  srRow.querySelector('[data-k="sn_min"]').dispatchEvent(new Event('input',{bubbles:true}));$('#snRuleDlg').close();}
+$('#srOk').addEventListener('click',()=>{let lo=parseInt($('#srMin').value,10)||null,hi=parseInt($('#srMax').value,10)||null;
+  if(lo&&hi&&lo>hi)[lo,hi]=[hi,lo];
+  srApply({sn_min:lo,sn_max:hi,sn_chars:($('#srChars button.on')||{}).dataset?.v||'',
+    sn_no:$$('#srNo button.on').map(b=>b.dataset.l).join(''),sn_suffix:!!$('#srSuffix').selected});});
+$('#srClear').addEventListener('click',()=>srApply({sn_min:null,sn_max:null,sn_chars:'',sn_no:'',sn_suffix:false}));
+$('#srCancel').addEventListener('click',()=>$('#snRuleDlg').close());
 function pcHelp(k){return `<span class="mi thelp" data-tip="${esc(PC_TIPS[k])}">info</span>`;}
 function renderPC(){$('#pc-list').innerHTML=`<div class="pctable"><div class="pcthead">
     <div>No</div>
@@ -7157,7 +7233,7 @@ function renderPC(){$('#pc-list').innerHTML=`<div class="pctable"><div class="pc
     <div>Key ${pcHelp('key')}</div>
     <div>Keywords (comma) ${pcHelp('keywords')}</div>
     <div class="c-ocr">OCR ${pcHelp('ocr')}</div>
-    <div class="c-prefix">SN Prefix ${pcHelp('prefixes')}</div>
+    <div class="c-prefix">SN Prefix &amp; rule ${pcHelp('prefixes')}</div>
     <div class="c-auto">Auto-fill SN ${pcHelp('sn_item')}</div>
     <div></div>
   </div><div id="pc-rows"></div></div>`;
@@ -7194,7 +7270,7 @@ async function pcSave(){const categories=$$('#pc-rows .pctr').map(r=>{const g=k=
   return {key,label,ocr:g('ocr').checked,required:true,
     keywords:(g('keywords').value||'').split(',').map(s=>s.trim()).filter(Boolean),
     prefixes:(g('prefixes').value||'').split(',').map(s=>s.trim().toUpperCase()).filter(Boolean),
-    sn_item:(g('sn_item').value||'').trim()};}).filter(c=>c.key&&c.label);
+    sn_item:(g('sn_item').value||'').trim(),...srRead(r)};}).filter(c=>c.key&&c.label);
   try{await api('/api/settings/photo-categories',{method:'PUT',body:JSON.stringify({categories})});S.cats=categories;
     // Sinkronkan badge OCR/label di mapping yang sedang terbuka (tanpa perlu buka ulang)
     if(typeof MAP_IMG!=='undefined'&&MAP_IMG.length){MAP_IMG.forEach(p=>{const c=S.cats.find(x=>x.key===p.key);if(c){p.ocr=c.ocr;p.label=c.label;}});if(typeof renderImgRows==='function')renderImgRows();}

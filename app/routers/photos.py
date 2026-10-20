@@ -96,7 +96,7 @@ def upload_photos(
 
         ocr_serial, ocr_text = "", ""
         if autosort.category_needs_ocr(cat_key, categories):
-            ocr_serial, ocr_text = ocr.read_serial(fpath)
+            ocr_serial, ocr_text = ocr.read_serial(fpath, ocr.rule_for(categories, cat_key))
         # Simpan versi kompres (OCR di atas sudah membaca foto asli)
         small = imgstore.compress(data)
         if small:
@@ -161,7 +161,7 @@ def reassign_photo(photo_id: int, payload: dict, conn: sqlite3.Connection = Depe
     categories = db.get_setting(conn, "photo_categories", [])
     ocr_serial, ocr_text = row["ocr_serial"], row["ocr_text"]
     if autosort.category_needs_ocr(new_cat, categories) and not ocr_serial:
-        ocr_serial, ocr_text = ocr.read_serial(db.fpath(conn, row["path"]))
+        ocr_serial, ocr_text = ocr.read_serial(db.fpath(conn, row["path"]), ocr.rule_for(categories, new_cat))
     conn.execute(
         "UPDATE photos SET category=?,matched_by='manual',ocr_serial=?,ocr_text=? WHERE id=?",
         (new_cat, ocr_serial, ocr_text, photo_id),
@@ -180,10 +180,24 @@ def reocr_photo(photo_id: int, conn: sqlite3.Connection = Depends(get_db),
     if not row:
         raise HTTPException(404, "Photo not found")
     _guard_photo(conn, user, row, write=True)
-    serial, text = ocr.read_serial(db.fpath(conn, row["path"]))
-    conn.execute("UPDATE photos SET ocr_serial=?,ocr_text=? WHERE id=?", (serial, text, photo_id))
+    rule = ocr.rule_for(db.get_setting(conn, "photo_categories", []), row["category"])
+    r = ocr.read_image(db.fpath(conn, row["path"]), rule)
+    conn.execute("UPDATE photos SET ocr_serial=?,ocr_text=? WHERE id=?", (r["serial"], r["text"], photo_id))
     conn.commit()
-    return {"ok": True, "ocr_serial": serial, "ocr_available": ocr.available()}
+    return {"ok": True, "ocr_serial": r["serial"], "candidates": r["candidates"], "ocr_available": ocr.available()}
+
+
+@router.get("/photos/{photo_id}/sn-read")
+def sn_read_photo(photo_id: int, conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
+    """Baca SN seluruh foto (barcode dulu, lalu OCR) untuk dialog Read SN — tidak menyimpan apa pun."""
+    row = conn.execute("SELECT * FROM photos WHERE id=?", (photo_id,)).fetchone()
+    if not row:
+        raise HTTPException(404, "Photo not found")
+    _guard_photo(conn, user, row, write=False)
+    rule = ocr.rule_for(db.get_setting(conn, "photo_categories", []), row["category"])
+    r = ocr.read_image(db.fpath(conn, row["path"]), rule)
+    return {"available": ocr.available(), "serial": r["serial"], "candidates": r["candidates"],
+            "barcodes": r["barcodes"]}
 
 
 @router.get("/photos/{photo_id}/file")
