@@ -6403,7 +6403,7 @@ $('#imp-file')&&$('#imp-file').addEventListener('change',async e=>{const f=e.tar
   $('#imp-fname').innerHTML='<b>'+esc(f.name)+'</b>';$('#imp-s2').classList.add('done');$('#imp-s2sub').textContent=f.name;await impPreview();});
 async function impPreview(){const fd=new FormData();fd.append('file',IMP.file);
   try{const r=await fetch('/api/locations/import/preview',{method:'POST',credentials:'same-origin',body:fd});
-    if(!r.ok)throw new Error((await r.json()).detail||'Failed to read file');IMP.res=await r.json();IMP.ch={};IMP.own={};renderImp();}
+    if(!r.ok){let d;try{d=await r.json()}catch{d={detail:'Server error ('+r.status+') — see the BAA_Generator window'}}throw new Error(d.detail||'Failed to read file');}IMP.res=await r.json();IMP.ch={};IMP.own={};renderImp();}
   catch(e){toast('Failed: '+e.message);}}
 function renderImp(){const res=IMP.res;if(!res)return;const s=res.summary;
   $('#imp-preview-card').classList.remove('hidden');
@@ -6456,7 +6456,7 @@ $('#imp-commit')&&$('#imp-commit').addEventListener('click',async()=>{if(!IMP.fi
   const fd=new FormData();fd.append('file',IMP.file);fd.append('skip_dup',$('#imp-skipdup').checked?'true':'false');fd.append('wil_choices',JSON.stringify(IMP.ch||{}));fd.append('owner_choices',JSON.stringify(IMP.own||{}));
   $('#imp-commit').setAttribute('disabled','');
   try{const r=await fetch('/api/locations/import/commit',{method:'POST',credentials:'same-origin',body:fd});
-    if(!r.ok)throw new Error((await r.json()).detail||'Failed');const res=await r.json();
+    if(!r.ok){let d;try{d=await r.json()}catch{d={detail:'Server error ('+r.status+') — see the BAA_Generator window'}}throw new Error(d.detail||'Failed');}const res=await r.json();
     $('#imp-s4').classList.add('done');toast(res.created+' locations imported'+(res.skipped?(' · '+res.skipped+' skipped'):''));
     loadImport();if(typeof loadLocations==='function')loadLocations();if(typeof loadDashboard==='function')loadDashboard();}
   catch(e){toast('Failed: '+e.message);$('#imp-commit').removeAttribute('disabled');}});

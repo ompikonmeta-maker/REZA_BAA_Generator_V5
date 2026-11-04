@@ -45,6 +45,9 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
+    # Bongkar ke %LOCALAPPDATA%, bukan %TEMP%: Storage Sense / pembersih Temp Windows menghapus file
+    # yang lama tidak disentuh saat server berjalan berhari-hari (mis. data wilayah hilang -> import gagal).
+    runtime_tmpdir=r"%LOCALAPPDATA%\BAA_Generator",
     console=True,
     disable_windowed_traceback=False,
     target_arch=None,

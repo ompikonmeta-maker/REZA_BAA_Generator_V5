@@ -17,6 +17,10 @@ app = FastAPI(title="BAA Generator", version="0.1.0")
 def _startup() -> None:
     config.ensure_dirs()
     db.init_db()
+    # Data wilayah dimuat sekali di awal (latar belakang): siap di memori sebelum dipakai import/pencarian
+    import threading
+    from .services import wilayah as _wil
+    threading.Thread(target=_wil._load, daemon=True).start()
 
 
 from fastapi import Depends  # noqa: E402
