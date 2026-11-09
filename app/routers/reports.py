@@ -73,7 +73,7 @@ def _rows(conn, wil: str, owner: int, so: str = "") -> list[dict]:
                     "status": r["status"], "owner": r["owner_name"], "prov": r["wil_prov"] or "",
                     "kab": r["wil_kab"] or "", "kec": r["wil_kec"] or "", "desa": r["wil_desa"] or "",
                     "act": _d(data.get(akey)) if akey else None, "comp": ca.date() if ca else None,
-                    "pct": pct, "miss": [_miss_id(m) for m in miss], "data": data})
+                    "pct": pct, "miss": [_miss_id(m) for m in miss], "has_scan": r["id"] in scans, "data": data})
     return out
 
 

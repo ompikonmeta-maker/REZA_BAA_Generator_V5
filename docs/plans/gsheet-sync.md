@@ -155,3 +155,17 @@ Mockup: https://claude.ai/artifact/EufjdGmi8PMtAiApUsQT5Y (layar update + alarm,
   - status Done yang diketik manual di sheet ditimpa menjadi Undone;
   - 1 lokasi dibuat dari sheet.
 - **Belum diuji dengan Google asli.** Perlu dicek saat pemasangan: parsing tanggal oleh locale sheet, Drive API (`Drive.Files.update`), dan batas waktu Apps Script (6 menit per panggilan; satu PDF per panggilan, aman).
+
+## Revisi: nilai STATUS bisa ditambah (2026-11-09)
+- "Values written" diganti **daftar aturan**: tiap baris = teks nilai + syarat. Dibaca dari atas, aturan pertama yang cocok ditulis; tidak ada yang cocok = kosong.
+- **Syarat yang tersedia:**
+  - dokumen 100% (tanggal aktivasi terisi);
+  - kelengkapan ≥ n%;
+  - scan bertanda tangan sudah di-upload;
+  - ditandai Done di BAA Flow;
+  - tanggal aktivasi terisi;
+  - tanpa tanggal aktivasi;
+  - semua lokasi.
+- Tombol *Add value*, naik urutan, dan hapus. Bawaan: Done (100%) lalu Undone (tanggal aktivasi terisi). Setting lama (Done/Undone) otomatis diubah jadi aturan.
+- Unggah PDF tetap hanya untuk dokumen 100%, tidak bergantung pada teks status.
+- Ringkasan "Will change" menghitung per nilai.

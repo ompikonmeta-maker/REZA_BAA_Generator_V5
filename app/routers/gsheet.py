@@ -30,7 +30,19 @@ DEFAULT = {
     "key_col": "ID Node Link", "name_col": "Nama Lokasi", "desa_col": "Desa", "kec_col": "Kecamatan",
     "kab_col": "Kabupaten", "prov_col": "Provinsi", "so_col": "SO",
     "status_col": "STATUS BAPB", "date_col": "TANGGAL BAPB", "link_col": "LINK BAPB",
-    "done_text": "Done", "undone_text": "Undone", "date_fmt": "dd-MMM-yyyy",
+    "date_fmt": "dd-MMM-yyyy",
+    # aturan STATUS BAPB: dibaca dari atas, aturan pertama yang cocok dipakai; tidak ada yang cocok = kosong
+    "status_rules": [{"text": "Done", "when": "complete"}, {"text": "Undone", "when": "activation"}],
+}
+# syarat yang bisa dipilih per aturan (pct memakai angka "n")
+CONDS = {
+    "complete": "Document 100% (activation date filled)",
+    "pct": "Completeness at least n%",
+    "scan": "Signed scan uploaded",
+    "done": "Marked Done in BAA Flow",
+    "activation": "Activation date filled",
+    "no_activation": "No activation date",
+    "any": "Any location",
 }
 COLS = ("key_col", "name_col", "desa_col", "kec_col", "kab_col", "prov_col", "so_col", "status_col", "date_col", "link_col")
 DATE_FMTS = {"dd-MMM-yyyy": None, "yyyy-mm-dd": "%Y-%m-%d", "dd/mm/yyyy": "%d/%m/%Y"}
@@ -39,7 +51,26 @@ _MON_ID = {"mei": 5, "agu": 8, "agt": 8, "okt": 10, "des": 12}
 
 
 def config(conn) -> dict:
-    return {**DEFAULT, **(db.get_setting(conn, "gsheet_config") or {})}
+    cfg = {**DEFAULT, **(db.get_setting(conn, "gsheet_config") or {})}
+    if "status_rules" not in (db.get_setting(conn, "gsheet_config") or {}) and "done_text" in cfg:
+        # setting lama (Done/Undone tetap) -> aturan
+        cfg["status_rules"] = [{"text": cfg.get("done_text") or "Done", "when": "complete"},
+                               {"text": cfg.get("undone_text") or "Undone", "when": "activation"}]
+    return cfg
+
+
+def _rules(raw) -> list[dict]:
+    out = []
+    for r in raw or []:
+        when = str((r or {}).get("when") or "")
+        if when not in CONDS:
+            continue
+        try:
+            n = max(0, min(100, int((r or {}).get("n") or 0)))
+        except (TypeError, ValueError):
+            n = 0
+        out.append({"text": str(r.get("text") or "").strip()[:80], "when": when, **({"n": n} if when == "pct" else {})})
+    return out[:20]
 
 
 def _public(cfg: dict) -> dict:
@@ -130,15 +161,28 @@ def parse_date(s: str) -> date | None:
     return None
 
 
+def _cond(x: dict, r: dict) -> bool:
+    w = r["when"]
+    if w == "complete":
+        return x["pct"] >= 100 and bool(x["act"])
+    if w == "pct":
+        return x["pct"] >= r.get("n", 0)
+    if w == "scan":
+        return bool(x.get("has_scan"))
+    if w == "done":
+        return x["status"] == "selesai"
+    if w == "activation":
+        return bool(x["act"])
+    if w == "no_activation":
+        return not x["act"]
+    return w == "any"
+
+
 def wanted(x: dict, cfg: dict) -> dict:
-    """Nilai BAPB yang seharusnya ada di sheet untuk satu lokasi BAA Flow."""
-    if x["pct"] >= 100 and x["act"]:
-        st = cfg["done_text"]
-    elif x["act"]:
-        st = cfg["undone_text"]
-    else:
-        st = ""
-    return {"status": st, "date": x["act"]}
+    """Nilai BAPB yang seharusnya ada di sheet untuk satu lokasi BAA Flow.
+    PDF diunggah hanya untuk dokumen 100% (terlepas dari teks status)."""
+    st = next((r["text"] for r in _rules(cfg.get("status_rules")) if _cond(x, r)), "")
+    return {"status": st, "date": x["act"], "pdf": x["pct"] >= 100 and bool(x["act"])}
 
 
 # ---------------------------------------------------------------- rekonsiliasi
@@ -239,7 +283,7 @@ def reconcile(conn, cfg: dict, res: dict) -> dict:
             ch["status"] = [s["status"], w["status"]]
         if w["date"] != parse_date(s["date"]):
             ch["date"] = [s["date"], fmt_date(w["date"], cfg["date_fmt"])]
-        if w["status"] == cfg["done_text"] and s["key"]:
+        if w["pdf"] and s["key"]:
             url, at = pdfs.get(x["id"], (None, None))
             if not s["link"] or not url:
                 ch["link"] = [s["link"], "upload PDF"]
@@ -270,8 +314,8 @@ def reconcile(conn, cfg: dict, res: dict) -> dict:
         "missing_cols": res.get("missing", []), "so_scope": sorted(db.so_list(conn)),
         "counts": {"baa": len(locs), "sheet": len(sheet), "scope": len(scope), "matched": len(matched),
                    "by_id": hows["id"], "by_name": hows["name"], "changes": len(changes),
-                   "to_done": n_ch("status", cfg["done_text"]), "to_undone": n_ch("status", cfg["undone_text"]),
-                   "to_blank": n_ch("status", ""), "pdf": n_ch("link")},
+                   "to": {v: n_ch("status", v) for v in dict.fromkeys(c["ch"]["status"][1] for c in changes if "status" in c["ch"])},
+                   "pdf": n_ch("link")},
         "changes": changes, "alarms": A,
         "alarm_n": sum(len(v) for k, v in A.items() if k not in ("take_sid", "fill_so")) + len(res.get("missing", [])),
     }
@@ -291,14 +335,13 @@ class CfgIn(BaseModel):
     status_col: str = DEFAULT["status_col"]
     date_col: str = DEFAULT["date_col"]
     link_col: str = DEFAULT["link_col"]
-    done_text: str = DEFAULT["done_text"]
-    undone_text: str = DEFAULT["undone_text"]
+    status_rules: list[dict] = DEFAULT["status_rules"]
     date_fmt: str = DEFAULT["date_fmt"]
 
 
 @router.get("/config")
 def get_config(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
-    return {"config": _public(config(conn)), "date_fmts": list(DATE_FMTS),
+    return {"config": _public(config(conn)), "date_fmts": list(DATE_FMTS), "conds": CONDS,
             "last": db.get_setting(conn, "gsheet_last_check"), "log": log_rows(conn, 10)}
 
 
@@ -306,6 +349,9 @@ def get_config(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_
 def put_config(body: CfgIn, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
     cur = config(conn)
     new = {k: (str(v).strip() if isinstance(v, str) else v) for k, v in body.model_dump().items() if k != "secret"}
+    new["status_rules"] = _rules(body.status_rules)
+    if any(not r["text"] for r in new["status_rules"]):
+        raise HTTPException(400, "Each status rule needs a value")
     if new["date_fmt"] not in DATE_FMTS:
         raise HTTPException(400, "Unknown date format")
     new["secret"] = cur.get("secret", "") if body.secret is None else body.secret.strip()
@@ -440,7 +486,7 @@ def push(body: PushIn, conn: sqlite3.Connection = Depends(get_db), user=Depends(
             continue
         w = wanted(x, cfg)
         vals = {cfg["status_col"]: w["status"], cfg["date_col"]: fmt_date(w["date"], cfg["date_fmt"])}
-        if it.pdf and w["status"] == cfg["done_text"]:
+        if it.pdf and w["pdf"]:
             try:
                 data = _make_pdf(conn, it.id)
                 up = call(cfg, "upload", timeout=180, name=_pdf_name(x["name"], it.key),
@@ -458,7 +504,7 @@ def push(body: PushIn, conn: sqlite3.Connection = Depends(get_db), user=Depends(
             conn.commit()
         else:
             known = conn.execute("SELECT pdf_url FROM gsheet_sync WHERE location_id=?", (it.id,)).fetchone()
-            if known and known[0] and w["status"] == cfg["done_text"]:
+            if known and known[0] and w["pdf"]:
                 vals[cfg["link_col"]] = known[0]
         updates.append({"row": it.row, "key": it.key, "values": vals, "_id": it.id})
     if updates:

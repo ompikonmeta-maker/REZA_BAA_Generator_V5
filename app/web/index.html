@@ -327,6 +327,11 @@
   .gs-note{margin:10px 0 0;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
   .gs-f{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 14px;margin-top:12px}
   .gs-f md-text-field{width:100%}.gs-f .full{grid-column:1/-1}
+  .gs-rules{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+  .gs-rule{display:grid;grid-template-columns:24px minmax(140px,1fr) minmax(200px,1.4fr) 104px auto;gap:10px;align-items:center}
+  .gs-rule md-text-field{width:100%;min-width:0}.gs-rule [data-rn]{max-width:104px;overflow:hidden}.gs-rno{font:var(--md-sys-typescale-label-large);color:var(--md-sys-color-on-surface-variant);text-align:center}
+  .gs-rbtn{display:flex}
+  @media(max-width:700px){.gs-rule{grid-template-columns:24px minmax(0,1fr) auto}.gs-rule select,.gs-rule .sel-dd{grid-column:2/-1}}
   .gs-lab{font:var(--md-sys-typescale-title-small);margin:18px 0 0}
   .gs-steps{margin:10px 0 0;padding:12px 16px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-surface-container);font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
   .gs-steps ol{margin:6px 0 0;padding-left:18px}.gs-steps li{margin:2px 0}
@@ -6494,7 +6499,7 @@ const GS={cfg:null,last:null,res:null,fmts:[],all:false,exp:{},selSid:new Set(),
 const GS_COLS=[['key_col','Key column (= SID)'],['name_col','Location name'],['desa_col','Desa'],['kec_col','Kecamatan'],['kab_col','Kabupaten'],
   ['prov_col','Provinsi'],['so_col','SO'],['status_col','Status column'],['date_col','Date column'],['link_col','Link column']];
 const gsWhen=iso=>{try{return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return iso;}};
-async function loadGs(){try{const r=await api('/api/gsheet/config');GS.cfg=r.config;GS.last=r.last;GS.fmts=r.date_fmts;GS.log=r.log||[];}catch(e){toast('Failed: '+e.message);return;}
+async function loadGs(){try{const r=await api('/api/gsheet/config');GS.cfg=r.config;GS.last=r.last;GS.fmts=r.date_fmts;GS.conds=r.conds||{};GS.log=r.log||[];}catch(e){toast('Failed: '+e.message);return;}
   gsStatus();gsLogPaint();if(!GS.cfg.url||!GS.cfg.has_secret)gsCfgOpen(true);if(GS.res)gsRender();}
 function gsOn(){const c=GS.cfg;return !!(c&&c.url&&c.has_secret);}
 function gsStatus(){const l=GS.last;
@@ -6514,15 +6519,32 @@ function gsCfgOpen(force){const el=$('#gsCfg');const show=force===true||el.class
     <div class="gs-lab">Columns in the sheet — header text in row 1</div>
     <div class="gs-f">${GS_COLS.map(([k,l])=>`<div><md-text-field data-gk="${k}" variant="outlined" label="${l}" value="${esc(c[k]||'')}"></md-text-field></div>`).join('')}</div>
     <div class="gs-lab">Values written</div>
-    <div class="gs-f"><div><md-text-field id="gs-done" variant="outlined" label="Document 100%" value="${esc(c.done_text)}"></md-text-field></div>
-      <div><md-text-field id="gs-undone" variant="outlined" label="Activation date set, below 100%" value="${esc(c.undone_text)}"></md-text-field></div>
-      <div><select id="gs-fmt">${GS.fmts.map(f=>`<option value="${f}" ${f===c.date_fmt?'selected':''}>Date format ${f}</option>`).join('')}</select></div></div>
-    <p class="gs-note">No activation date yet → status stays empty. The date column gets the activation date.</p>
+    <p class="gs-note" style="margin-top:4px">${esc(c.status_col)}: rules are read from the top — the first one that matches is written. No match → left empty.</p>
+    <div class="gs-rules" id="gsRules"></div>
+    <div class="gs-acts" style="margin-top:8px"><md-button variant="text" icon="add" id="gsRuleAdd">Add value</md-button></div>
+    <div class="gs-f"><div><select id="gs-fmt">${GS.fmts.map(f=>`<option value="${f}" ${f===c.date_fmt?'selected':''}>Date format ${f}</option>`).join('')}</select></div></div>
+    <p class="gs-note">${esc(c.date_col)} gets the activation date. The merged PDF is uploaded only for documents at 100%.</p>
     <div class="gs-acts"><md-button variant="filled" icon="check" id="gsSave">Save</md-button><md-button variant="tonal" icon="lan" id="gsTest">Test connection</md-button>
       <md-button variant="text" icon="content_copy" id="gsCopy">Copy Apps Script</md-button><span class="gs-msg" id="gsMsg"></span></div>`;
+  GS.rules=(c.status_rules||[]).map(r=>({...r}));gsRules();
+  $('#gsRuleAdd').onclick=()=>{GS.rules.push({text:'',when:'any'});gsRules();const t=$$('#gsRules [data-rt]');if(t.length)setTimeout(()=>{const i=tfInput(t[t.length-1]);(i||t[t.length-1]).focus();},50);};
   $('#gsSave').onclick=()=>gsSave();$('#gsTest').onclick=gsTest;$('#gsCopy').onclick=gsCopy;bindTips();}
+/* Aturan STATUS: teks + syarat; urutan = prioritas (atas dulu) */
+function gsRules(){const C=GS.conds||{};
+  $('#gsRules').innerHTML=GS.rules.map((r,i)=>`<div class="gs-rule"><span class="gs-rno">${i+1}</span>
+    <md-text-field data-rt="${i}" variant="outlined" label="Value" value="${esc(r.text||'')}"></md-text-field>
+    <select data-rw="${i}">${Object.entries(C).map(([k,l])=>`<option value="${k}" ${k===r.when?'selected':''}>${esc(l)}</option>`).join('')}</select>
+    ${r.when==='pct'?`<md-text-field data-rn="${i}" variant="outlined" type="number" label="n %" value="${r.n??50}"></md-text-field>`:'<span></span>'}
+    <span class="gs-rbtn"><md-icon-button data-ru="${i}" aria-label="Move up" ${i?'':'disabled'}><span>arrow_upward</span></md-icon-button>
+      <md-icon-button data-rx="${i}" aria-label="Remove"><span>close</span></md-icon-button></span></div>`).join('')
+    ||'<div class="gs-msg">No rules — the status column will be left empty.</div>';
+  $$('#gsRules [data-rt]').forEach(t=>t.addEventListener('input',()=>{GS.rules[+t.dataset.rt].text=t.value;}));
+  $$('#gsRules [data-rn]').forEach(t=>t.addEventListener('input',()=>{GS.rules[+t.dataset.rn].n=+t.value||0;}));
+  $$('#gsRules [data-rw]').forEach(t=>t.addEventListener('change',()=>{const r=GS.rules[+t.dataset.rw];r.when=t.value;if(r.when==='pct'&&r.n==null)r.n=50;gsRules();}));
+  $$('#gsRules [data-ru]').forEach(b=>b.onclick=()=>{const i=+b.dataset.ru;if(!i)return;[GS.rules[i-1],GS.rules[i]]=[GS.rules[i],GS.rules[i-1]];gsRules();});
+  $$('#gsRules [data-rx]').forEach(b=>b.onclick=()=>{GS.rules.splice(+b.dataset.rx,1);gsRules();});}
 async function gsSave(quiet){const v=id=>($('#'+id).value||'').trim();
-  const body={url:v('gs-url'),done_text:v('gs-done'),undone_text:v('gs-undone'),date_fmt:$('#gs-fmt').value};
+  const body={url:v('gs-url'),date_fmt:$('#gs-fmt').value,status_rules:GS.rules.map(r=>({text:(r.text||'').trim(),when:r.when,n:r.n}))};
   $$('#gsCfg [data-gk]').forEach(t=>body[t.dataset.gk]=(t.value||'').trim());const sec=v('gs-sec');if(sec)body.secret=sec;
   try{const r=await api('/api/gsheet/config',{method:'PUT',body:JSON.stringify(body)});GS.cfg=r.config;gsStatus();if(!quiet)toast('Google Sheet settings saved');return true;}
   catch(e){toast('Failed: '+e.message);return false;}}
@@ -6571,7 +6593,7 @@ function gsRender(){const r=GS.res;if(!r)return;const k=r.counts,A=r.alarms,c=GS
       <div class="rp-k"><span>Locations in BAA Flow</span><b>${k.baa}</b><small>matched ${k.matched}</small></div>
       <div class="rp-k${diff?' warn':''}"><span>Rows in the sheet</span><b>${k.scope}</b><small>${esc(so)}</small></div>
       <div class="rp-k"><span>Matched</span><b>${k.matched}</b><small>by ID ${k.by_id} · by name ${k.by_name}</small></div>
-      <div class="rp-k"><span>Will change</span><b>${k.changes}</b><small>${esc(c.done_text)} ${k.to_done} · ${esc(c.undone_text)} ${k.to_undone} · empty ${k.to_blank}</small></div>
+      <div class="rp-k"><span>Will change</span><b>${k.changes}</b><small>${Object.entries(k.to||{}).map(([v,n])=>esc(v||'empty')+' '+n).join(' · ')||'status unchanged'}</small></div>
       <div class="rp-k"><span>PDF to upload</span><b>${k.pdf}</b><small>merged PDF · documents at 100%</small></div>
       <div class="rp-k${r.alarm_n?' warn':''}"><span>Alarms</span><b>${r.alarm_n}</b><small>${esc(r.file||'')} · ${esc(r.sheet||'')}</small></div></div>
       <p class="rp-note">Checked ${esc(gsWhen(r.checked_at))}.${k.changes?' Update to GSheet sends these changes.':' The sheet already matches BAA Flow.'}</p></div>
