@@ -318,6 +318,31 @@
   .rp-chip.on{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);border-color:transparent}
   .rp-chip .mi{font-size:18px}
   .rp-act{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}
+  .gs-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .gs-st{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font:var(--md-sys-typescale-body-medium);color:var(--md-sys-color-on-surface-variant)}
+  .gs-st .dot{width:8px;height:8px;border-radius:50%;background:var(--md-sys-color-outline)}.gs-st .dot.ok{background:var(--good)}.gs-st .dot.bad{background:var(--md-sys-color-error)}
+  .gs-note{margin:10px 0 0;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .gs-f{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 14px;margin-top:12px}
+  .gs-f md-text-field{width:100%}.gs-f .full{grid-column:1/-1}
+  .gs-lab{font:var(--md-sys-typescale-title-small);margin:18px 0 0}
+  .gs-steps{margin:10px 0 0;padding:12px 16px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-surface-container);font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .gs-steps ol{margin:6px 0 0;padding-left:18px}.gs-steps li{margin:2px 0}
+  .gs-acts{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+  .gs-msg{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}.gs-msg.ok{color:var(--good)}.gs-msg.bad{color:var(--md-sys-color-error)}
+  .gs-grid{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:16px}
+  .gs-grid>.card{flex:1 1 560px;min-width:0;margin:0}.gs-grid>.gs-al{flex:1 1 360px}
+  .gs-tbl{width:100%;border-collapse:collapse;font:var(--md-sys-typescale-body-medium)}
+  .gs-tbl th{text-align:left;font:var(--md-sys-typescale-label-medium);color:var(--md-sys-color-on-surface-variant);padding:8px;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+  .gs-tbl td{padding:8px;border-bottom:1px solid color-mix(in srgb,var(--md-sys-color-outline-variant) 50%,transparent);vertical-align:top}
+  .gs-tbl .old{color:var(--md-sys-color-on-surface-variant)}.gs-tbl .new{font-weight:700}
+  .gs-al{border:1px solid color-mix(in srgb,var(--warn) 45%,transparent);background:color-mix(in srgb,var(--warn) 7%,var(--md-sys-color-surface-container-low))}
+  .gs-a{padding:12px 0;border-top:1px solid color-mix(in srgb,var(--warn) 25%,transparent)}.gs-a:first-of-type{border-top:none}
+  .gs-a h4{margin:0 0 6px;font:var(--md-sys-typescale-title-small);color:var(--warn)}.gs-a h4.err{color:var(--md-sys-color-error)}.gs-a h4.ok{color:var(--md-sys-color-primary)}
+  .gs-a .it{font:var(--md-sys-typescale-body-small);margin:3px 0;color:var(--md-sys-color-on-surface)}
+  .gs-a .it small{color:var(--md-sys-color-on-surface-variant)}
+  .gs-a label.it{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+  .gs-a .more{font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
+  .gs-a .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}
   .rp-kpi{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
   @media(max-width:1200px){.rp-kpi{grid-template-columns:repeat(3,minmax(0,1fr))}}
   .rp-k{padding:12px 14px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-surface-container)}
@@ -2383,6 +2408,7 @@
     <a class="navitem" data-view="entry" data-short="Entry" data-tip="BAA Entry"><span class="mi">edit_document</span><span class="lbl">BAA Entry</span></a>
     <a class="navitem" data-view="locations" data-short="LOG" data-tip="Location Log"><span class="mi">table_rows</span><span class="lbl">Location Log</span><span class="pill" id="loc-count"></span></a>
     <a class="navitem admin-only nav-x" data-view="import" data-short="Import" data-tip="Import Locations"><span class="mi">upload_file</span><span class="lbl">Import Locations</span></a>
+    <a class="navitem admin-only nav-x" data-view="gsheet" data-short="Sheet" data-tip="Google Sheet"><span class="mi">sync_alt</span><span class="lbl">Google Sheet</span><span class="pill" id="gs-count"></span></a>
     <a class="navitem admin-only nav-x" data-view="trash" data-short="Trash" data-tip="Deleted Locations"><span class="mi">delete_sweep</span><span class="lbl">Deleted Locations</span><span class="pill" id="trash-count"></span></a>
     <a class="navitem admin-only nav-x" data-view="notif" data-short="Notif" data-tip="Notifications"><span class="mi">notifications</span><span class="lbl">Notifications</span><span class="pill" id="notif-count"></span></a>
     <div class="navgroup admin-only" id="navSettings">
@@ -2735,6 +2761,17 @@
         </div>
       </section>
 
+      <section id="v-gsheet" class="hidden">
+        <div class="card gs-head">
+          <div class="sec"><span class="mi acc">sync_alt</span><h3>Google Sheet</h3><span class="grow"></span><span class="code-chip"><span class="mi" style="font-size:15px">admin_panel_settings</span>Admin only</span></div>
+          <div class="gs-bar"><div class="gs-st" id="gsSt"></div><span class="grow"></span>
+            <md-button variant="text" icon="tune" id="gsCfgBtn">Settings</md-button>
+            <md-button variant="filled" icon="fact_check" id="gsCheck">Check only</md-button></div>
+          <p class="gs-note">Check only reads the sheet and compares it with BAA Flow — nothing in the sheet is changed. Names, IDs and other columns in the sheet are never edited; differences show up as alarms.</p>
+        </div>
+        <div class="card hidden" id="gsCfg"></div>
+        <div id="gsRes"></div>
+      </section>
       <section id="v-import" class="hidden">
         <div class="map-ws">
           <nav class="map-steps card">
@@ -3193,7 +3230,7 @@ addEventListener('load',()=>sbScan());sbScanSoon();
 new ResizeObserver(es=>es.forEach(en=>{const c=en.target.closest('.canvas');if(c)c.style.setProperty('--topbar-h',Math.round(en.target.getBoundingClientRect().height)+'px');})).observe(document.querySelector('.topbar'));
 /* Multi-project: setiap permintaan /api membawa project aktif (server tetap memeriksa aksesnya) */
 const PJ={id:null,list:[],cur:null};
-const VIEWS=['portfolio','dashboard','progress','reports','entry','locations','import','trash','notif','templates','users','settings','projects','setup','team'];
+const VIEWS=['portfolio','dashboard','progress','reports','entry','locations','import','gsheet','trash','notif','templates','users','settings','projects','setup','team'];
 const _fetch=window.fetch.bind(window);
 window.fetch=(u,o={})=>{if(PJ.id&&typeof u==='string'&&u.startsWith('/api/')){const h=new Headers(o.headers||{});if(!h.has('X-Project'))h.set('X-Project',PJ.id);o={...o,headers:h};}
   const pr=_fetch(u,o);
@@ -3991,12 +4028,12 @@ let soSel=null;
 function renderSo(){const row=$('#soRow');if(!row)return;const L=S.loc,list=S.soList||[];
   if(!L||(!list.length&&!L.so)){row.classList.add('hidden');return;}
   row.classList.remove('hidden');
-  if(!soSel)soSel=new MDSelect($('#soSel'),{label:'SO / order',placeholder:'— no SO —',onChange:soSave});
+  if(!soSel)soSel=new MDSelect($('#soSel'),{label:'SO',placeholder:'— no SO —',onChange:soSave});
   const opts=[{value:'',label:'— no SO —'}].concat(list.map(v=>({value:v,label:v})));
   if(L.so&&!list.some(v=>v.toUpperCase()===L.so.toUpperCase()))opts.push({value:L.so,label:L.so+' (not in project list)'});
   soSel.setOptions(opts).setValue(L.so||'');
   const ro=roActive()||frozenRO()||L.can_edit===false;$('#soSel').classList.toggle('dis',ro);soSel.ro=ro;
-  $('#soHint').innerHTML=list.length?'<span class="mi">info</span>Pick the SO / order this location belongs to · list is set per project':'';}
+  $('#soHint').innerHTML=list.length?'<span class="mi">info</span>SO of this location · the list is set per project':'';}
 async function soSave(v){const L=S.loc;if(!L)return;if(soSel.ro){soSel.setValue(L.so||'');return;}
   try{if(isDraft())await ensureLoc();
     const r=await api('/api/locations/'+S.loc.id+'/so',{method:'PUT',body:JSON.stringify({so:v})});
@@ -4456,7 +4493,7 @@ function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
       <div><div class="pjm-lab">Color</div><div class="pjm-sw">${PJM.colors.map(c=>`<button type="button" style="--c:${c}" data-c="${c}" class="${c===q.color?'on':''}" aria-label="${c}"></button>`).join('')}</div></div>
       <div><md-text-field id="pjm-total" variant="outlined" type="number" label="Target (BAA)" value="${q.total??''}"></md-text-field></div>
       <div>${dateBox('pjm-date','Target date',q.target_date)}</div>
-      <div class="full"><div class="pjm-lab">SO / internal order numbers <span style="opacity:.7">(optional)</span></div>
+      <div class="full"><div class="pjm-lab">SO <span style="opacity:.7">(optional)</span></div>
         <div class="pckw so-chips" id="pjm-so"></div><input type="hidden" id="pjm-so-v" value="${esc((q.so_list||[]).join('\n'))}">
         <div class="pjm-hint">One project can hold several SOs. Each location can be tagged with one; Locations and Reports can be filtered by SO. An SO used by a location can't be removed.</div></div>
       <div class="full"><div class="pjm-lab">Template</div><div class="pjm-tpl"><span class="mi">description</span><span class="pj-tx">
@@ -4590,7 +4627,7 @@ $$('.navitem[data-view]').forEach(n=>n.addEventListener('click',()=>{
     $('#pageTitle').textContent=n.querySelector('.lbl').textContent;$('#entryTools').classList.toggle('hidden',v!=='entry');$('#locTools').classList.toggle('hidden',v!=='locations');$('#setSaveWrap').classList.add('hidden');
     $('#pageTitle').classList.toggle('hidden',v==='entry');$('#topGrow').classList.toggle('hidden',v==='entry');
     pjChipShow(v!=='portfolio'&&v!=='entry'&&v!=='locations');if(typeof bkSync==='function')setTimeout(bkSync,0);
-    if(v==='portfolio')loadPortfolio();if(v==='dashboard')loadDashboard();if(v==='progress')loadProgress();if(v==='reports')loadReports();if(v==='locations')loadLocations();if(v==='templates')loadTemplates();if(v==='trash')loadTrash();if(v==='import')loadImport();if(v==='notif')loadNotif();
+    if(v==='portfolio')loadPortfolio();if(v==='dashboard')loadDashboard();if(v==='progress')loadProgress();if(v==='reports')loadReports();if(v==='locations')loadLocations();if(v==='templates')loadTemplates();if(v==='trash')loadTrash();if(v==='import')loadImport();if(v==='gsheet')loadGs();if(v==='notif')loadNotif();
     revealCards($('#v-'+v));};
   if(n.classList.contains('active'))run(); else guardLeave(run,n.querySelector('.lbl').textContent.trim());}));
 
@@ -6053,7 +6090,7 @@ function renderLocTable(){
     const present=(l.photo_cats||[]).filter(k=>S.cats.some(c=>c.key===k)).length;
     const stCls=l.status==='selesai'?'ok':'warn';
     const wl=wilCell(l);
-    return `<tr class="lrow" data-i="${l.id}" onclick='openLocDrawer(${l.id})'><td class="bk-col" onclick="bkTog(event,${l.id})"><span class="bk-ck${BK.has(l.id)?' on':''}" data-id="${l.id}"></span></td><td><a class="loc-link mono">${esc(l.code)}</a>${(l.sid&&sidOn())||l.so?`<div>${l.sid&&sidOn()?`<span class="sid-chip" data-tip="${esc(sidLabel())}">${esc(l.sid)}</span>`:''}${l.so?`<span class="so-chip" data-tip="SO / order">SO ${esc(l.so)}</span>`:''}</div>`:''}</td>
+    return `<tr class="lrow" data-i="${l.id}" onclick='openLocDrawer(${l.id})'><td class="bk-col" onclick="bkTog(event,${l.id})"><span class="bk-ck${BK.has(l.id)?' on':''}" data-id="${l.id}"></span></td><td><a class="loc-link mono">${esc(l.code)}</a>${(l.sid&&sidOn())||l.so?`<div>${l.sid&&sidOn()?`<span class="sid-chip" data-tip="${esc(sidLabel())}">${esc(l.sid)}</span>`:''}${l.so?`<span class="so-chip" data-tip="SO">SO ${esc(l.so)}</span>`:''}</div>`:''}</td>
     <td>${esc(l.data.nama_lokasi||l.name||'')}${l.dup_n>1?`<span class="dup-kb" data-tip="Same name and wilayah as ${l.dup_n-1} other location${l.dup_n>2?'s':''}"><span class="mi">content_copy</span>×${l.dup_n}</span>`:''}${wl}</td>
     <td>${esc(l.creator_name||'—')}${l.owner_id&&l.owner_id!==l.created_by?`<div class="lc-own" data-tip="Current owner (can edit)"><span class="mi">swap_horiz</span>${esc(l.owner_name||'—')}</div>`:''}</td>
     <td class="lc-date">${lcWhen(l.created_at)}</td>
@@ -6445,6 +6482,111 @@ $('#sb-apply').addEventListener('click',async()=>{if(!SBU.file||$('#sb-apply').h
     try{const r=await fetch('/api/locations/import/sid-commit',{method:'POST',credentials:'same-origin',body:fd});const d=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(d.detail||'Failed');toast(`${d.updated} ${sidLabel()} filled`);sbuPreview();refreshPicker();loadLocations();}
     catch(e){toast('Failed: '+e.message);}},{okLabel:'Fill'});});
+/* ===== Google Sheet (admin): koneksi Apps Script, Check only (rekonsiliasi + alarm), ambil SID/SO dari sheet.
+   BAA Flow tidak pernah mengubah nama/ID/kolom lain di sheet; perbedaan = alarm. ===== */
+const GS={cfg:null,last:null,res:null,fmts:[],all:false,exp:{},selSid:new Set(),selSo:new Set()};
+const GS_COLS=[['key_col','Key column (= SID)'],['name_col','Location name'],['desa_col','Desa'],['kec_col','Kecamatan'],['kab_col','Kabupaten'],
+  ['so_col','SO'],['status_col','Status column'],['date_col','Date column'],['link_col','Link column']];
+const gsWhen=iso=>{try{return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return iso;}};
+async function loadGs(){try{const r=await api('/api/gsheet/config');GS.cfg=r.config;GS.last=r.last;GS.fmts=r.date_fmts;}catch(e){toast('Failed: '+e.message);return;}
+  gsStatus();if(!GS.cfg.url||!GS.cfg.has_secret)gsCfgOpen(true);if(GS.res)gsRender();}
+function gsOn(){const c=GS.cfg;return !!(c&&c.url&&c.has_secret);}
+function gsStatus(){const l=GS.last;
+  $('#gsSt').innerHTML=`<span class="dot ${gsOn()?'ok':''}"></span>${gsOn()?'Web App set':'Not set up yet'}${l?` · last check <b>${esc(gsWhen(l.at))}</b> by ${esc(l.by)} · ${l.alarms} alarm${l.alarms===1?'':'s'}`:''}`;
+  $('#gsCheck').toggleAttribute('disabled',!gsOn());gsPill();}
+function gsPill(){const p=$('#gs-count');if(!p)return;const n=GS.last?GS.last.alarms:0;p.textContent=n||'';p.classList.toggle('hidden',!n);}
+function gsCfgOpen(force){const el=$('#gsCfg');const show=force===true||el.classList.contains('hidden');el.classList.toggle('hidden',!show);if(!show)return;const c=GS.cfg;
+  el.innerHTML=`<div class="sec"><span class="mi acc">tune</span><h3>Connection &amp; columns</h3></div>
+    <div class="gs-steps"><b>For the sheet owner — once</b><ol>
+      <li>Copy the Apps Script → in the sheet: <b>Extensions › Apps Script</b> → replace Code.gs with it.</li>
+      <li>In the script set <b>SECRET</b> (the same code as below) and <b>FOLDER_ID</b> (Drive folder for the BAPB PDFs, used in the next stage).</li>
+      <li><b>Services (+) › Drive API › Add</b>.</li>
+      <li><b>Deploy › New deployment › Web app</b> · Execute as: <b>Me</b> · Who has access: <b>Anyone</b> → paste the URL ending in <b>/exec</b> below.</li></ol></div>
+    <div class="gs-f"><div class="full"><md-text-field id="gs-url" variant="outlined" label="Web App URL" value="${esc(c.url)}"></md-text-field></div>
+      <div><md-text-field id="gs-sec" variant="outlined" type="password" label="Secret code" value=""></md-text-field>
+        <div class="gs-msg" style="margin:4px 4px 0">${c.has_secret?'Saved · type only to change it':'Same code as SECRET in the script'}</div></div></div>
+    <div class="gs-lab">Columns in the sheet — header text in row 1</div>
+    <div class="gs-f">${GS_COLS.map(([k,l])=>`<div><md-text-field data-gk="${k}" variant="outlined" label="${l}" value="${esc(c[k]||'')}"></md-text-field></div>`).join('')}</div>
+    <div class="gs-lab">Values written (next stage)</div>
+    <div class="gs-f"><div><md-text-field id="gs-done" variant="outlined" label="Document 100%" value="${esc(c.done_text)}"></md-text-field></div>
+      <div><md-text-field id="gs-undone" variant="outlined" label="Activation date set, below 100%" value="${esc(c.undone_text)}"></md-text-field></div>
+      <div><select id="gs-fmt">${GS.fmts.map(f=>`<option value="${f}" ${f===c.date_fmt?'selected':''}>Date format ${f}</option>`).join('')}</select></div></div>
+    <p class="gs-note">No activation date yet → status stays empty. The date column gets the activation date.</p>
+    <div class="gs-acts"><md-button variant="filled" icon="check" id="gsSave">Save</md-button><md-button variant="tonal" icon="lan" id="gsTest">Test connection</md-button>
+      <md-button variant="text" icon="content_copy" id="gsCopy">Copy Apps Script</md-button><span class="gs-msg" id="gsMsg"></span></div>`;
+  $('#gsSave').onclick=()=>gsSave();$('#gsTest').onclick=gsTest;$('#gsCopy').onclick=gsCopy;bindTips();}
+async function gsSave(quiet){const v=id=>($('#'+id).value||'').trim();
+  const body={url:v('gs-url'),done_text:v('gs-done'),undone_text:v('gs-undone'),date_fmt:$('#gs-fmt').value};
+  $$('#gsCfg [data-gk]').forEach(t=>body[t.dataset.gk]=(t.value||'').trim());const sec=v('gs-sec');if(sec)body.secret=sec;
+  try{const r=await api('/api/gsheet/config',{method:'PUT',body:JSON.stringify(body)});GS.cfg=r.config;gsStatus();if(!quiet)toast('Google Sheet settings saved');return true;}
+  catch(e){toast('Failed: '+e.message);return false;}}
+async function gsTest(){if(!await gsSave(true))return;const m=$('#gsMsg');m.className='gs-msg';m.textContent='Connecting…';
+  try{const r=await api('/api/gsheet/test',{method:'POST'});m.className='gs-msg '+(r.missing.length?'bad':'ok');
+    m.innerHTML=`✓ ${esc(r.file)} · tab ${esc(r.sheet)} · ${r.rows} rows`+(r.missing.length?` · <b>not found in row 1:</b> ${r.missing.map(esc).join(', ')}`:' · all columns found');}
+  catch(e){m.className='gs-msg bad';m.textContent=e.message;}}
+async function gsCopy(){let t='';try{t=await (await fetch('/api/gsheet/script',{credentials:'same-origin'})).text();await navigator.clipboard.writeText(t);toast('Apps Script copied');}
+  catch(e){window.open('/api/gsheet/script','_blank');toast('Opened the script in a new tab — select all and copy');}}
+async function gsRun(){const b=$('#gsCheck');b.setAttribute('disabled','');
+  $('#gsRes').innerHTML='<div class="card"><div class="gs-msg"><span class="mi spin">progress_activity</span> Reading the sheet…</div></div>';
+  try{GS.res=await api('/api/gsheet/check',{method:'POST'});GS.all=false;GS.exp={};
+    const A=GS.res.alarms;GS.selSid=new Set(A.take_sid.filter(x=>x.wil_ok).map(x=>x.id));GS.selSo=new Set(A.fill_so.map(x=>x.id));
+    GS.last={at:GS.res.checked_at,by:S.user.full_name||S.user.username,alarms:GS.res.alarm_n};gsStatus();gsRender();}
+  catch(e){$('#gsRes').innerHTML=`<div class="card"><div class="gs-msg bad">${esc(e.message)}</div></div>`;}finally{b.removeAttribute('disabled');}}
+const gsLoc=x=>`<b>${esc(x.name)}</b> <small>${esc(x.code)}${x.desa?' · '+esc(x.desa):''}</small>`;
+const gsRow=s=>`<small>row ${s.row}${s.key?' · ID '+esc(s.key):''} · ${esc(s.name)}${s.desa?' · '+esc(s.desa):''}${s.kec?', '+esc(s.kec):''}</small>`;
+function gsList(k,arr,fn){const n=arr.length,open=GS.exp[k],lim=open?n:5;
+  return arr.slice(0,lim).map(fn).join('')+(n>lim?`<div class="more">+${n-lim} more · <a class="lnk" data-gx="${k}">show all</a></div>`:'');}
+function gsRender(){const r=GS.res;if(!r)return;const k=r.counts,A=r.alarms,c=GS.cfg;const diff=k.scope!==k.baa;
+  const so=r.so_scope.length?`SO ${r.so_scope.map(esc).join(', ')}`:'all rows (no SO set on the project)';
+  const ch=GS.all?r.changes:r.changes.slice(0,15);
+  const arrow=(f,x)=>x.ch[f]?`<span class="old">${esc(x.ch[f][0]||'(empty)')}</span> → <span class="new">${esc(x.ch[f][1]||'(empty)')}</span>`:'<span class="old">—</span>';
+  const sec=(cls,title,body)=>body?`<div class="gs-a"><h4 class="${cls}">${title}</h4>${body}</div>`:'';
+  const al=[
+    r.missing_cols.length?sec('err','Columns not found in the sheet',`<div class="it">${r.missing_cols.map(esc).join(', ')} — fix the column names in Settings</div>`):'',
+    A.sid_diff.length?sec('err',`SID ≠ sheet ID · ${A.sid_diff.length}`,gsList('sid_diff',A.sid_diff,x=>`<div class="it">${gsLoc(x)} — BAA Flow <b>${esc(x.sid)}</b>, sheet <b>${esc(x.sheet.key)}</b> ${gsRow(x.sheet)}${x.sid_row?`<br><small>${esc(x.sid)} in the sheet is row ${x.sid_row.row}: ${esc(x.sid_row.name)}</small>`:''}</div>`)+'<div class="more">Not updated until fixed in BAA Flow or in the sheet.</div>'):'',
+    diff?sec('',`Count differs · sheet ${k.scope} vs BAA Flow ${k.baa}`,`<div class="more">Sheet rows counted: ${so}.</div>`):'',
+    A.only_sheet.length?sec('',`Only in the sheet · ${A.only_sheet.length}`,gsList('only_sheet',A.only_sheet,s=>`<div class="it">${esc(s.name)} ${gsRow(s)}${s.so?' <small>· SO '+esc(s.so)+'</small>':''}</div>`)):'',
+    A.only_baa.length?sec('',`Only in BAA Flow · ${A.only_baa.length}`,gsList('only_baa',A.only_baa,x=>`<div class="it">${gsLoc(x)}</div>`)):'',
+    A.name_diff.length?sec('',`Name differs · ${A.name_diff.length}`,gsList('name_diff',A.name_diff,x=>`<div class="it">${gsLoc(x)} — sheet: <b>${esc(x.sheet.name)}</b> ${gsRow(x.sheet)}${x.pair?'<br><small>same desa &amp; kecamatan · not matched automatically</small>':''}</div>`)):'',
+    A.wil_diff.length?sec('',`Same name, different wilayah · ${A.wil_diff.length}`,gsList('wil_diff',A.wil_diff,x=>`<div class="it">${gsLoc(x)}${x.kec?' <small>· '+esc(x.kec)+'</small>':''} — sheet ${gsRow(x.sheet)}</div>`)):'',
+    A.dup_sheet.length?sec('',`Duplicate ID in the sheet · ${A.dup_sheet.length}`,gsList('dup_sheet',A.dup_sheet,d=>`<div class="it">ID <b>${esc(d.key)}</b> · ${esc(d.name)} <small>· rows ${d.rows.join(', ')} — skipped</small></div>`)):'',
+    A.ambiguous.length?sec('',`Several sheet rows match · ${A.ambiguous.length}`,gsList('ambiguous',A.ambiguous,x=>`<div class="it">${gsLoc(x)} <small>· rows ${x.rows.join(', ')}</small></div>`)):'',
+    A.so_diff.length?sec('',`SO differs · ${A.so_diff.length}`,gsList('so_diff',A.so_diff,x=>`<div class="it">${gsLoc(x)} — BAA Flow SO <b>${esc(x.so)}</b>, sheet <b>${esc(x.sheet.so)}</b></div>`)):'',
+  ].join('');
+  const take=A.take_sid.length||A.fill_so.length?`<div class="gs-a"><h4 class="ok">Take from the sheet (admin)</h4>
+    ${A.take_sid.length?`<label class="it"><input type="checkbox" data-gall="sid" ${GS.selSid.size===A.take_sid.length?'checked':''}> <b>${esc(sidLabel())} from "${esc(c.key_col)}" · ${GS.selSid.size}/${A.take_sid.length}</b></label>
+      ${gsList('take_sid',A.take_sid,x=>`<label class="it"><input type="checkbox" data-gsid="${x.id}" ${GS.selSid.has(x.id)?'checked':''}> <span>${gsLoc(x)} → <b>${esc(x.sheet.key)}</b>${x.wil_ok?'':' <small style="color:var(--warn)">· wilayah differs, check first</small>'}</span></label>`)}`:''}
+    ${A.fill_so.length?`<label class="it" style="margin-top:8px"><input type="checkbox" data-gall="so" ${GS.selSo.size===A.fill_so.length?'checked':''}> <b>SO from the sheet · ${GS.selSo.size}/${A.fill_so.length}</b></label>
+      ${gsList('fill_so',A.fill_so,x=>`<label class="it"><input type="checkbox" data-gso="${x.id}" ${GS.selSo.has(x.id)?'checked':''}> <span>${gsLoc(x)} → SO <b>${esc(x.sheet.so)}</b>${x.known?'':' <small>· new SO, added to the project</small>'}</span></label>`)}`:''}
+    <div class="row"><md-button variant="filled" icon="download_done" id="gsApply" ${GS.selSid.size+GS.selSo.size?'':'disabled'}>Use selected (${GS.selSid.size+GS.selSo.size})</md-button></div></div>`:'';
+  $('#gsRes').innerHTML=`<div class="card"><div class="rp-kpi">
+      <div class="rp-k"><span>Locations in BAA Flow</span><b>${k.baa}</b><small>matched ${k.matched}</small></div>
+      <div class="rp-k${diff?' warn':''}"><span>Rows in the sheet</span><b>${k.scope}</b><small>${esc(so)}</small></div>
+      <div class="rp-k"><span>Matched</span><b>${k.matched}</b><small>by ID ${k.by_id} · by name ${k.by_name}</small></div>
+      <div class="rp-k"><span>Will change</span><b>${k.changes}</b><small>${esc(c.done_text)} ${k.to_done} · ${esc(c.undone_text)} ${k.to_undone} · empty ${k.to_blank}</small></div>
+      <div class="rp-k"><span>PDF to upload</span><b>${k.pdf}</b><small>next stage</small></div>
+      <div class="rp-k${r.alarm_n?' warn':''}"><span>Alarms</span><b>${r.alarm_n}</b><small>${esc(r.file||'')} · ${esc(r.sheet||'')}</small></div></div>
+      <p class="rp-note">Checked ${esc(gsWhen(r.checked_at))}. Nothing was written to the sheet.</p></div>
+    <div class="gs-grid"><div class="card"><div class="sec"><span class="mi acc">difference</span><h3>Changes to send</h3><span class="grow"></span><span class="gs-msg">${esc(c.status_col)} · ${esc(c.date_col)} · ${esc(c.link_col)}</span></div>
+      ${r.changes.length?`<div style="overflow-x:auto"><table class="gs-tbl"><thead><tr><th>Location</th><th>ID</th><th>Status</th><th>Date</th><th>Link</th></tr></thead><tbody>
+        ${ch.map(x=>`<tr><td>${gsLoc(x)}</td><td class="mono">${esc(x.key||'—')}</td><td>${arrow('status',x)}</td><td>${arrow('date',x)}</td><td>${arrow('link',x)}</td></tr>`).join('')}</tbody></table></div>
+        ${r.changes.length>ch.length?`<div class="gs-msg" style="margin-top:8px"><a class="lnk" id="gsAll">Show all ${r.changes.length} changes</a></div>`:''}`:'<div class="gs-msg">Nothing to change — the sheet already matches BAA Flow.</div>'}</div>
+      <div class="card gs-al"><div class="sec"><span class="mi" style="color:var(--warn)">notifications_active</span><h3>Alarms · ${r.alarm_n}</h3></div>${al||'<div class="gs-msg ok">No differences found.</div>'}${take}</div></div>`;
+  const a=$('#gsAll');if(a)a.onclick=()=>{GS.all=true;gsRender();};
+  $$('#gsRes [data-gx]').forEach(x=>x.onclick=()=>{GS.exp[x.dataset.gx]=true;gsRender();});
+  $$('#gsRes [data-gsid]').forEach(x=>x.onchange=()=>{x.checked?GS.selSid.add(+x.dataset.gsid):GS.selSid.delete(+x.dataset.gsid);gsRender();});
+  $$('#gsRes [data-gso]').forEach(x=>x.onchange=()=>{x.checked?GS.selSo.add(+x.dataset.gso):GS.selSo.delete(+x.dataset.gso);gsRender();});
+  $$('#gsRes [data-gall]').forEach(x=>x.onchange=()=>{const sid=x.dataset.gall==='sid';const set=sid?GS.selSid:GS.selSo;set.clear();
+    if(x.checked)(sid?A.take_sid:A.fill_so).forEach(i=>set.add(i.id));gsRender();});
+  const ap=$('#gsApply');if(ap)ap.onclick=gsApply;bindTips();}
+async function gsApply(){const n=GS.selSid.size+GS.selSo.size;if(!n)return;
+  confirmDo('Use values from the sheet',`Fill <b>${GS.selSid.size}</b> empty ${esc(sidLabel())} and <b>${GS.selSo.size}</b> empty SO from the sheet? Values already filled in BAA Flow are never overwritten.`,async()=>{
+    try{const r=await api('/api/gsheet/apply',{method:'POST',body:JSON.stringify({sid:[...GS.selSid],so:[...GS.selSo]})});
+      if((r.so_added||[]).length)S.soList=(S.soList||[]).concat(r.so_added);
+      toast(`${sidLabel()} filled: ${r.sid} · SO filled: ${r.so}`+(r.skipped?` · ${r.skipped} skipped (changed meanwhile)`:''));gsRun();}
+    catch(e){toast('Failed: '+e.message);}},{okLabel:'Fill'});}
+$('#gsCfgBtn')&&$('#gsCfgBtn').addEventListener('click',()=>gsCfgOpen());
+$('#gsCheck')&&$('#gsCheck').addEventListener('click',gsRun);
 function loadImport(){IMP={file:null,res:null,ch:{},own:{}};sbuReset();
   const f=$('#imp-file');if(f)f.value='';$('#imp-fname').textContent='No file selected';
   $('#imp-preview-card').classList.add('hidden');$('#imp-commit').setAttribute('disabled','');

@@ -95,3 +95,35 @@ Mockup: https://claude.ai/artifact/EufjdGmi8PMtAiApUsQT5Y (layar update + alarm,
   - export massal Excel / PDF / ZIP mengikuti filter;
   - Reports: preview, PDF, dan Excel. Sheet Lokasi diberi kolom SO, dan label filter di laporan menyebut SO.
 - Belum: filter SO di Dashboard (Dashboard belum punya filter apa pun). SO dari Google Sheet ditangani di tahap 2.
+
+## Tahap 2: koneksi sheet + Check only + alarm (2026-11-09, ✅)
+- **Apps Script** (`app/data/gsheet_apps_script.gs`, tombol *Copy Apps Script*):
+  - aksi `ping`, `read`, `update`, `upload` (dua aksi terakhir dipakai di tahap 3);
+  - dilindungi SECRET; menulis hanya kolom yang diminta, dicari lewat header baris 1;
+  - `update` mengecek ID baris dulu supaya baris yang bergeser tidak tertimpa;
+  - `upload` menimpa file bernama sama lewat Drive API, sehingga link tetap.
+- **Menu Google Sheet** (admin), dengan panel *Settings*:
+  - URL Web App, kode rahasia (tidak pernah dikirim balik ke browser);
+  - 9 nama kolom, teks Done/Undone, format tanggal;
+  - langkah pasang untuk pemilik sheet, tombol *Test connection* (menyebut kolom yang tidak ditemukan).
+- **Check only** (`POST /api/gsheet/check`), tidak menulis apa pun ke sheet:
+  - **Pencocokan:** ID sheet = SID lokasi; lokasi tanpa SID dicocokkan lewat nama (tanpa spasi/tanda baca). Nama kembar dipilah dengan desa + kecamatan.
+  - **Ringkasan:** jumlah BAA Flow, baris sheet ber-SO project, yang cocok (by ID / by name), perubahan yang akan dikirim (Done / Undone / kosong, tanggal), PDF yang perlu diunggah.
+  - **Alarm:**
+    - kolom tidak ditemukan;
+    - SID ≠ ID sheet (termasuk SID yang menunjuk baris lokasi lain);
+    - jumlah berbeda;
+    - hanya di sheet / hanya di BAA Flow;
+    - nama beda (pasangan desa + kecamatan sama, tidak dicocokkan otomatis);
+    - nama sama tetapi wilayah beda;
+    - ID kembar di sheet;
+    - beberapa baris cocok;
+    - SO beda.
+  - **"Take from the sheet"** (admin, `POST /api/gsheet/apply`):
+    - mengisi SID kosong dari ID sheet dan SO kosong dari sheet;
+    - SO baru otomatis masuk daftar project;
+    - nilai yang sudah ada tidak ditimpa;
+    - baris dengan wilayah beda tidak dicentang otomatis;
+    - dicek ulang dengan data sheet terbaru sebelum menyimpan.
+- Hasil cek terakhir (waktu, oleh siapa, jumlah alarm) disimpan; jumlah alarm tampil sebagai angka di menu.
+- **Diuji** dengan tiruan Apps Script lokal + 188 lokasi dari file import KDKMP dan 5 kasus alarm sengaja. Semua kasus terdeteksi; 181 SID dan 186 SO terisi.
