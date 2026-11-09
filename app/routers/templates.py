@@ -14,7 +14,11 @@ from ..deps import audit, current_user, get_db, require_admin
 router = APIRouter(prefix="/api/templates", tags=["templates"])
 
 
-def _inspect_workbook(path: Path, preview_rows: int = 300, preview_cols: int = 78) -> list[dict]:
+# Baris sheet template yang ditampilkan/bisa dipetakan di Template Mapping (Detail sheet bisa panjang: banyak foto)
+PREVIEW_ROWS = 400
+
+
+def _inspect_workbook(path: Path, preview_rows: int = PREVIEW_ROWS, preview_cols: int = 78) -> list[dict]:
     """Kembalikan tiap worksheet: sel non-kosong (koordinat+nilai) + merged ranges.
 
     Dipakai UI Template Mapping untuk memilih anchor sel per kategori foto,
@@ -39,7 +43,7 @@ def _inspect_workbook(path: Path, preview_rows: int = 300, preview_cols: int = 7
     return sheets
 
 
-def _sheet_render(ws, max_rows: int = 300, max_cols: int = 78) -> dict:
+def _sheet_render(ws, max_rows: int = PREVIEW_ROWS, max_cols: int = 78) -> dict:
     """Data untuk menggambar worksheet di UI (Pick on sheet): lebar kolom &
     tinggi baris (px), merge, border, tebal, rata, ukuran font, warna isi, teks."""
     from openpyxl.utils import get_column_letter
