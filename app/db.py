@@ -168,6 +168,24 @@ CREATE TABLE IF NOT EXISTS activity (
 );
 
 -- Lampiran PDF tambahan (opsional, banyak per lokasi): ikut PDF gabungan sebelum/sesudah Dokumen BAA
+CREATE TABLE IF NOT EXISTS gsheet_sync (       -- PDF BAPB terakhir yang diunggah ke Drive per lokasi
+    location_id INTEGER PRIMARY KEY,
+    pdf_url     TEXT,
+    pdf_at      TEXT,                          -- modified_at lokasi saat PDF dibuat (lebih baru = unggah ulang)
+    sent_at     TEXT
+);
+
+CREATE TABLE IF NOT EXISTS gsheet_log (
+    id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    at      TEXT NOT NULL,
+    by_name TEXT,
+    rows    INTEGER DEFAULT 0,
+    pdf     INTEGER DEFAULT 0,
+    failed  INTEGER DEFAULT 0,
+    alarms  INTEGER DEFAULT 0,
+    detail  TEXT
+);
+
 CREATE TABLE IF NOT EXISTS attachments (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     location_id INTEGER NOT NULL REFERENCES locations(id) ON DELETE CASCADE,

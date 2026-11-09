@@ -127,3 +127,31 @@ Mockup: https://claude.ai/artifact/EufjdGmi8PMtAiApUsQT5Y (layar update + alarm,
     - dicek ulang dengan data sheet terbaru sebelum menyimpan.
 - Hasil cek terakhir (waktu, oleh siapa, jumlah alarm) disimpan; jumlah alarm tampil sebagai angka di menu.
 - **Diuji** dengan tiruan Apps Script lokal + 188 lokasi dari file import KDKMP dan 5 kasus alarm sengaja. Semua kasus terdeteksi; 181 SID dan 186 SO terisi.
+
+## Tahap 3: tulis ke sheet + PDF ke Drive + log + buat lokasi dari sheet (2026-11-09, ✅, belum di-build)
+- **Tombol Update to GSheet:**
+  - jalankan Check (bila hasil terakhir lebih dari 5 menit), lalu konfirmasi jumlah baris dan PDF;
+  - baris tanpa PDF dikirim per 50 sekaligus; PDF per lokasi satu per satu dengan progress bar dan tombol **Stop**;
+  - lokasi yang beralarm tidak disentuh.
+- **Nilai yang ditulis:**
+  - STATUS: Done (100%) / Undone (tanggal aktivasi terisi) / kosong;
+  - TANGGAL: tanggal aktivasi, format mengikuti setting;
+  - LINK: URL file Drive.
+- **Keamanan baris:** Apps Script mengecek ID di baris itu sebelum menulis. Baris yang bergeser dilewati dan dilaporkan "run Check again".
+- **PDF:**
+  - PDF gabungan yang sama dengan tombol PDF di Entry (lampiran sebelum, scan, BAA, lampiran sesudah);
+  - nama `Nama Lokasi-SID.pdf`, satu folder;
+  - file bernama sama ditimpa lewat Drive API, sehingga link tetap;
+  - unggah ulang hanya bila lokasi berubah sejak PDF terakhir (`gsheet_sync.pdf_at` dibanding `modified_at`), tampil sebagai "replace PDF (changed)".
+- **Log update** (`gsheet_log`): waktu, oleh siapa, jumlah baris, PDF, gagal (dengan detail), alarm.
+- **Create in BAA Flow:**
+  - baris yang hanya ada di sheet dicentang → lokasi draf dengan nama, wilayah (dicocokkan ke data Kemendagri), SID = ID, dan SO (SO baru masuk daftar project);
+  - owner = admin; tanggal aktivasi diisi operator.
+- **Kolom baru di setting:** Provinsi (untuk pencocokan wilayah lokasi baru).
+- **Diuji** dengan tiruan Apps Script:
+  - 5 baris ditulis dan 2 PDF diunggah (5 halaman: scan + BAA);
+  - cek ulang menghasilkan 0 perubahan;
+  - setelah lokasi diedit, muncul "replace PDF";
+  - status Done yang diketik manual di sheet ditimpa menjadi Undone;
+  - 1 lokasi dibuat dari sheet.
+- **Belum diuji dengan Google asli.** Perlu dicek saat pemasangan: parsing tanggal oleh locale sheet, Drive API (`Drive.Files.update`), dan batas waktu Apps Script (6 menit per panggilan; satu PDF per panggilan, aman).

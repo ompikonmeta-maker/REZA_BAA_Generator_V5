@@ -321,6 +321,9 @@
   .gs-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .gs-st{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font:var(--md-sys-typescale-body-medium);color:var(--md-sys-color-on-surface-variant)}
   .gs-st .dot{width:8px;height:8px;border-radius:50%;background:var(--md-sys-color-outline)}.gs-st .dot.ok{background:var(--good)}.gs-st .dot.bad{background:var(--md-sys-color-error)}
+  .gs-prog{margin-top:12px}.gs-pbar{height:8px;border-radius:99px;background:var(--md-sys-color-surface-container-highest);overflow:hidden}
+  .gs-pbar i{display:block;height:100%;width:0;background:var(--md-sys-color-primary);border-radius:99px;transition:width .4s cubic-bezier(.2,.8,.2,1)}
+  .gs-ptx{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:6px;font:var(--md-sys-typescale-body-medium)}
   .gs-note{margin:10px 0 0;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant)}
   .gs-f{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 14px;margin-top:12px}
   .gs-f md-text-field{width:100%}.gs-f .full{grid-column:1/-1}
@@ -2766,11 +2769,14 @@
           <div class="sec"><span class="mi acc">sync_alt</span><h3>Google Sheet</h3><span class="grow"></span><span class="code-chip"><span class="mi" style="font-size:15px">admin_panel_settings</span>Admin only</span></div>
           <div class="gs-bar"><div class="gs-st" id="gsSt"></div><span class="grow"></span>
             <md-button variant="text" icon="tune" id="gsCfgBtn">Settings</md-button>
-            <md-button variant="filled" icon="fact_check" id="gsCheck">Check only</md-button></div>
-          <p class="gs-note">Check only reads the sheet and compares it with BAA Flow — nothing in the sheet is changed. Names, IDs and other columns in the sheet are never edited; differences show up as alarms.</p>
+            <md-button variant="tonal" icon="fact_check" id="gsCheck">Check only</md-button>
+            <md-button variant="filled" icon="cloud_upload" id="gsPush">Update to GSheet</md-button></div>
+          <p class="gs-note">Check only compares the sheet with BAA Flow without changing anything. Update to GSheet writes only the status, date and link columns and uploads the merged PDF of documents at 100% — names, IDs and other columns are never edited; differences show up as alarms.</p>
+          <div class="gs-prog hidden" id="gsProg"><div class="gs-pbar"><i id="gsPBar"></i></div><div class="gs-ptx"><span id="gsPTx"></span><md-button variant="text" icon="stop_circle" id="gsStop">Stop</md-button></div></div>
         </div>
         <div class="card hidden" id="gsCfg"></div>
         <div id="gsRes"></div>
+        <div class="card" id="gsLog"></div>
       </section>
       <section id="v-import" class="hidden">
         <div class="map-ws">
@@ -6484,16 +6490,16 @@ $('#sb-apply').addEventListener('click',async()=>{if(!SBU.file||$('#sb-apply').h
     catch(e){toast('Failed: '+e.message);}},{okLabel:'Fill'});});
 /* ===== Google Sheet (admin): koneksi Apps Script, Check only (rekonsiliasi + alarm), ambil SID/SO dari sheet.
    BAA Flow tidak pernah mengubah nama/ID/kolom lain di sheet; perbedaan = alarm. ===== */
-const GS={cfg:null,last:null,res:null,fmts:[],all:false,exp:{},selSid:new Set(),selSo:new Set()};
+const GS={cfg:null,last:null,res:null,fmts:[],all:false,exp:{},selSid:new Set(),selSo:new Set(),selNew:new Set(),log:[],busy:false,stop:false};
 const GS_COLS=[['key_col','Key column (= SID)'],['name_col','Location name'],['desa_col','Desa'],['kec_col','Kecamatan'],['kab_col','Kabupaten'],
-  ['so_col','SO'],['status_col','Status column'],['date_col','Date column'],['link_col','Link column']];
+  ['prov_col','Provinsi'],['so_col','SO'],['status_col','Status column'],['date_col','Date column'],['link_col','Link column']];
 const gsWhen=iso=>{try{return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return iso;}};
-async function loadGs(){try{const r=await api('/api/gsheet/config');GS.cfg=r.config;GS.last=r.last;GS.fmts=r.date_fmts;}catch(e){toast('Failed: '+e.message);return;}
-  gsStatus();if(!GS.cfg.url||!GS.cfg.has_secret)gsCfgOpen(true);if(GS.res)gsRender();}
+async function loadGs(){try{const r=await api('/api/gsheet/config');GS.cfg=r.config;GS.last=r.last;GS.fmts=r.date_fmts;GS.log=r.log||[];}catch(e){toast('Failed: '+e.message);return;}
+  gsStatus();gsLogPaint();if(!GS.cfg.url||!GS.cfg.has_secret)gsCfgOpen(true);if(GS.res)gsRender();}
 function gsOn(){const c=GS.cfg;return !!(c&&c.url&&c.has_secret);}
 function gsStatus(){const l=GS.last;
   $('#gsSt').innerHTML=`<span class="dot ${gsOn()?'ok':''}"></span>${gsOn()?'Web App set':'Not set up yet'}${l?` · last check <b>${esc(gsWhen(l.at))}</b> by ${esc(l.by)} · ${l.alarms} alarm${l.alarms===1?'':'s'}`:''}`;
-  $('#gsCheck').toggleAttribute('disabled',!gsOn());gsPill();}
+  $('#gsCheck').toggleAttribute('disabled',!gsOn()||!!GS.busy);$('#gsPush').toggleAttribute('disabled',!gsOn()||!!GS.busy);gsPill();}
 function gsPill(){const p=$('#gs-count');if(!p)return;const n=GS.last?GS.last.alarms:0;p.textContent=n||'';p.classList.toggle('hidden',!n);}
 function gsCfgOpen(force){const el=$('#gsCfg');const show=force===true||el.classList.contains('hidden');el.classList.toggle('hidden',!show);if(!show)return;const c=GS.cfg;
   el.innerHTML=`<div class="sec"><span class="mi acc">tune</span><h3>Connection &amp; columns</h3></div>
@@ -6507,7 +6513,7 @@ function gsCfgOpen(force){const el=$('#gsCfg');const show=force===true||el.class
         <div class="gs-msg" style="margin:4px 4px 0">${c.has_secret?'Saved · type only to change it':'Same code as SECRET in the script'}</div></div></div>
     <div class="gs-lab">Columns in the sheet — header text in row 1</div>
     <div class="gs-f">${GS_COLS.map(([k,l])=>`<div><md-text-field data-gk="${k}" variant="outlined" label="${l}" value="${esc(c[k]||'')}"></md-text-field></div>`).join('')}</div>
-    <div class="gs-lab">Values written (next stage)</div>
+    <div class="gs-lab">Values written</div>
     <div class="gs-f"><div><md-text-field id="gs-done" variant="outlined" label="Document 100%" value="${esc(c.done_text)}"></md-text-field></div>
       <div><md-text-field id="gs-undone" variant="outlined" label="Activation date set, below 100%" value="${esc(c.undone_text)}"></md-text-field></div>
       <div><select id="gs-fmt">${GS.fmts.map(f=>`<option value="${f}" ${f===c.date_fmt?'selected':''}>Date format ${f}</option>`).join('')}</select></div></div>
@@ -6529,7 +6535,7 @@ async function gsCopy(){let t='';try{t=await (await fetch('/api/gsheet/script',{
 async function gsRun(){const b=$('#gsCheck');b.setAttribute('disabled','');
   $('#gsRes').innerHTML='<div class="card"><div class="gs-msg"><span class="mi spin">progress_activity</span> Reading the sheet…</div></div>';
   try{GS.res=await api('/api/gsheet/check',{method:'POST'});GS.all=false;GS.exp={};
-    const A=GS.res.alarms;GS.selSid=new Set(A.take_sid.filter(x=>x.wil_ok).map(x=>x.id));GS.selSo=new Set(A.fill_so.map(x=>x.id));
+    const A=GS.res.alarms;GS.selSid=new Set(A.take_sid.filter(x=>x.wil_ok).map(x=>x.id));GS.selSo=new Set(A.fill_so.map(x=>x.id));GS.selNew=new Set(A.only_sheet.map(x=>x.row));
     GS.last={at:GS.res.checked_at,by:S.user.full_name||S.user.username,alarms:GS.res.alarm_n};gsStatus();gsRender();}
   catch(e){$('#gsRes').innerHTML=`<div class="card"><div class="gs-msg bad">${esc(e.message)}</div></div>`;}finally{b.removeAttribute('disabled');}}
 const gsLoc=x=>`<b>${esc(x.name)}</b> <small>${esc(x.code)}${x.desa?' · '+esc(x.desa):''}</small>`;
@@ -6545,7 +6551,9 @@ function gsRender(){const r=GS.res;if(!r)return;const k=r.counts,A=r.alarms,c=GS
     r.missing_cols.length?sec('err','Columns not found in the sheet',`<div class="it">${r.missing_cols.map(esc).join(', ')} — fix the column names in Settings</div>`):'',
     A.sid_diff.length?sec('err',`SID ≠ sheet ID · ${A.sid_diff.length}`,gsList('sid_diff',A.sid_diff,x=>`<div class="it">${gsLoc(x)} — BAA Flow <b>${esc(x.sid)}</b>, sheet <b>${esc(x.sheet.key)}</b> ${gsRow(x.sheet)}${x.sid_row?`<br><small>${esc(x.sid)} in the sheet is row ${x.sid_row.row}: ${esc(x.sid_row.name)}</small>`:''}</div>`)+'<div class="more">Not updated until fixed in BAA Flow or in the sheet.</div>'):'',
     diff?sec('',`Count differs · sheet ${k.scope} vs BAA Flow ${k.baa}`,`<div class="more">Sheet rows counted: ${so}.</div>`):'',
-    A.only_sheet.length?sec('',`Only in the sheet · ${A.only_sheet.length}`,gsList('only_sheet',A.only_sheet,s=>`<div class="it">${esc(s.name)} ${gsRow(s)}${s.so?' <small>· SO '+esc(s.so)+'</small>':''}</div>`)):'',
+    A.only_sheet.length?sec('',`Only in the sheet · ${A.only_sheet.length}`,`<label class="it"><input type="checkbox" data-gall="new" ${GS.selNew.size===A.only_sheet.length?'checked':''}> <b>Select all · ${GS.selNew.size}/${A.only_sheet.length}</b></label>`
+      +gsList('only_sheet',A.only_sheet,s=>`<label class="it"><input type="checkbox" data-gnew="${s.row}" ${GS.selNew.has(s.row)?'checked':''}> <span>${esc(s.name)} ${gsRow(s)}${s.so?' <small>· SO '+esc(s.so)+'</small>':''}</span></label>`)
+      +`<div class="row"><md-button variant="tonal" icon="add_location_alt" id="gsCreate" ${GS.selNew.size?'':'disabled'}>Create in BAA Flow (${GS.selNew.size})</md-button></div><div class="more">Creates draft locations with name, wilayah, ${esc(sidLabel())} = ID and SO from the sheet. The activation date is filled by the operator.</div>`):'',
     A.only_baa.length?sec('',`Only in BAA Flow · ${A.only_baa.length}`,gsList('only_baa',A.only_baa,x=>`<div class="it">${gsLoc(x)}</div>`)):'',
     A.name_diff.length?sec('',`Name differs · ${A.name_diff.length}`,gsList('name_diff',A.name_diff,x=>`<div class="it">${gsLoc(x)} — sheet: <b>${esc(x.sheet.name)}</b> ${gsRow(x.sheet)}${x.pair?'<br><small>same desa &amp; kecamatan · not matched automatically</small>':''}</div>`)):'',
     A.wil_diff.length?sec('',`Same name, different wilayah · ${A.wil_diff.length}`,gsList('wil_diff',A.wil_diff,x=>`<div class="it">${gsLoc(x)}${x.kec?' <small>· '+esc(x.kec)+'</small>':''} — sheet ${gsRow(x.sheet)}</div>`)):'',
@@ -6564,20 +6572,24 @@ function gsRender(){const r=GS.res;if(!r)return;const k=r.counts,A=r.alarms,c=GS
       <div class="rp-k${diff?' warn':''}"><span>Rows in the sheet</span><b>${k.scope}</b><small>${esc(so)}</small></div>
       <div class="rp-k"><span>Matched</span><b>${k.matched}</b><small>by ID ${k.by_id} · by name ${k.by_name}</small></div>
       <div class="rp-k"><span>Will change</span><b>${k.changes}</b><small>${esc(c.done_text)} ${k.to_done} · ${esc(c.undone_text)} ${k.to_undone} · empty ${k.to_blank}</small></div>
-      <div class="rp-k"><span>PDF to upload</span><b>${k.pdf}</b><small>next stage</small></div>
+      <div class="rp-k"><span>PDF to upload</span><b>${k.pdf}</b><small>merged PDF · documents at 100%</small></div>
       <div class="rp-k${r.alarm_n?' warn':''}"><span>Alarms</span><b>${r.alarm_n}</b><small>${esc(r.file||'')} · ${esc(r.sheet||'')}</small></div></div>
-      <p class="rp-note">Checked ${esc(gsWhen(r.checked_at))}. Nothing was written to the sheet.</p></div>
+      <p class="rp-note">Checked ${esc(gsWhen(r.checked_at))}.${k.changes?' Update to GSheet sends these changes.':' The sheet already matches BAA Flow.'}</p></div>
     <div class="gs-grid"><div class="card"><div class="sec"><span class="mi acc">difference</span><h3>Changes to send</h3><span class="grow"></span><span class="gs-msg">${esc(c.status_col)} · ${esc(c.date_col)} · ${esc(c.link_col)}</span></div>
       ${r.changes.length?`<div style="overflow-x:auto"><table class="gs-tbl"><thead><tr><th>Location</th><th>ID</th><th>Status</th><th>Date</th><th>Link</th></tr></thead><tbody>
-        ${ch.map(x=>`<tr><td>${gsLoc(x)}</td><td class="mono">${esc(x.key||'—')}</td><td>${arrow('status',x)}</td><td>${arrow('date',x)}</td><td>${arrow('link',x)}</td></tr>`).join('')}</tbody></table></div>
+        ${ch.map(x=>`<tr><td>${gsLoc(x)}</td><td class="mono">${esc(x.key||'—')}</td><td>${arrow('status',x)}</td><td>${arrow('date',x)}</td><td>${gsLink(x)}</td></tr>`).join('')}</tbody></table></div>
         ${r.changes.length>ch.length?`<div class="gs-msg" style="margin-top:8px"><a class="lnk" id="gsAll">Show all ${r.changes.length} changes</a></div>`:''}`:'<div class="gs-msg">Nothing to change — the sheet already matches BAA Flow.</div>'}</div>
       <div class="card gs-al"><div class="sec"><span class="mi" style="color:var(--warn)">notifications_active</span><h3>Alarms · ${r.alarm_n}</h3></div>${al||'<div class="gs-msg ok">No differences found.</div>'}${take}</div></div>`;
   const a=$('#gsAll');if(a)a.onclick=()=>{GS.all=true;gsRender();};
   $$('#gsRes [data-gx]').forEach(x=>x.onclick=()=>{GS.exp[x.dataset.gx]=true;gsRender();});
   $$('#gsRes [data-gsid]').forEach(x=>x.onchange=()=>{x.checked?GS.selSid.add(+x.dataset.gsid):GS.selSid.delete(+x.dataset.gsid);gsRender();});
   $$('#gsRes [data-gso]').forEach(x=>x.onchange=()=>{x.checked?GS.selSo.add(+x.dataset.gso):GS.selSo.delete(+x.dataset.gso);gsRender();});
-  $$('#gsRes [data-gall]').forEach(x=>x.onchange=()=>{const sid=x.dataset.gall==='sid';const set=sid?GS.selSid:GS.selSo;set.clear();
+  $$('#gsRes [data-gall]').forEach(x=>x.onchange=()=>{const g=x.dataset.gall;
+    if(g==='new'){GS.selNew.clear();if(x.checked)A.only_sheet.forEach(i=>GS.selNew.add(i.row));gsRender();return;}
+    const sid=g==='sid';const set=sid?GS.selSid:GS.selSo;set.clear();
     if(x.checked)(sid?A.take_sid:A.fill_so).forEach(i=>set.add(i.id));gsRender();});
+  $$('#gsRes [data-gnew]').forEach(x=>x.onchange=()=>{x.checked?GS.selNew.add(+x.dataset.gnew):GS.selNew.delete(+x.dataset.gnew);gsRender();});
+  const cr=$('#gsCreate');if(cr)cr.onclick=gsCreate;
   const ap=$('#gsApply');if(ap)ap.onclick=gsApply;bindTips();}
 async function gsApply(){const n=GS.selSid.size+GS.selSo.size;if(!n)return;
   confirmDo('Use values from the sheet',`Fill <b>${GS.selSid.size}</b> empty ${esc(sidLabel())} and <b>${GS.selSo.size}</b> empty SO from the sheet? Values already filled in BAA Flow are never overwritten.`,async()=>{
@@ -6587,6 +6599,43 @@ async function gsApply(){const n=GS.selSid.size+GS.selSo.size;if(!n)return;
     catch(e){toast('Failed: '+e.message);}},{okLabel:'Fill'});}
 $('#gsCfgBtn')&&$('#gsCfgBtn').addEventListener('click',()=>gsCfgOpen());
 $('#gsCheck')&&$('#gsCheck').addEventListener('click',gsRun);
+$('#gsPush')&&$('#gsPush').addEventListener('click',gsPush);
+$('#gsStop')&&$('#gsStop').addEventListener('click',()=>{GS.stop=true;$('#gsPTx').textContent='Stopping after the current item…';});
+function gsLink(x){const v=x.ch.link;if(!v)return '<span class="old">—</span>';
+  return /^https?:/.test(v[1])?`<a class="lnk" href="${esc(v[1])}" target="_blank" rel="noopener">link</a>`:`<span class="new">${esc(v[1])}</span>`;}
+function gsLogPaint(){const L=GS.log||[];const el=$('#gsLog');if(!el)return;
+  el.innerHTML=`<div class="sec"><span class="mi acc">history</span><h3>Update log</h3><span class="grow"></span><span class="gs-msg">${L.length?'Last update '+esc(gsWhen(L[0].at))+' · '+esc(L[0].by_name):'No update yet'}</span></div>
+    ${L.length?`<div style="overflow-x:auto"><table class="gs-tbl"><thead><tr><th>Time</th><th>By</th><th>Rows</th><th>PDF</th><th>Failed</th><th>Alarms</th></tr></thead><tbody>
+      ${L.map((r,i)=>`<tr><td>${esc(gsWhen(r.at))}</td><td>${esc(r.by_name||'')}</td><td>${r.rows}</td><td>${r.pdf}</td><td${r.failed?' style="color:var(--md-sys-color-error)"':''}>${r.failed}${r.failed&&r.detail.length?` · <a class="lnk" data-glog="${i}">details</a>`:''}</td><td>${r.alarms}</td></tr>`).join('')}</tbody></table></div>`:'<div class="gs-msg">Each Update to GSheet is recorded here.</div>'}`;
+  $$('#gsLog [data-glog]').forEach(a=>a.onclick=()=>{const r=L[+a.dataset.glog];confirmDo('Failed items',r.detail.map(esc).join('<br>'),()=>{},{okLabel:'OK'});});}
+function gsProg(on,done,total,txt){$('#gsProg').classList.toggle('hidden',!on);if(!on)return;
+  $('#gsPBar').style.width=(total?Math.round(done/total*100):0)+'%';$('#gsPTx').textContent=txt;}
+async function gsPush(){if(GS.busy)return;
+  if(!GS.res||Date.now()-new Date(GS.res.checked_at).getTime()>5*60*1000)await gsRun();
+  const r=GS.res;if(!r)return;const items=r.changes.filter(c=>c.key).map(c=>({id:c.id,row:c.row,key:c.key,pdf:!!c.ch.link}));
+  if(!items.length){toast('Nothing to send — the sheet already matches BAA Flow');return;}
+  const np=items.filter(i=>i.pdf).length;
+  confirmDo('Update Google Sheet',`Write <b>${items.length}</b> row${items.length>1?'s':''} (${esc(GS.cfg.status_col)}, ${esc(GS.cfg.date_col)}, ${esc(GS.cfg.link_col)})${np?` and upload <b>${np}</b> merged PDF${np>1?'s':''} to Drive`:''}?`+(r.alarm_n?`<br><br>${r.alarm_n} alarm${r.alarm_n>1?'s':''} — those locations are not touched.`:''),()=>gsPushRun(items),{okLabel:'Update'});}
+async function gsPushRun(items){GS.busy=true;GS.stop=false;gsStatus();
+  const rest=items.filter(i=>!i.pdf),pdf=items.filter(i=>i.pdf),total=items.length;let done=0,ok=0,okPdf=0;const errs=[];
+  const nm=id=>{const c=GS.res.changes.find(x=>x.id===id);return c?c.name+' ('+c.code+')':'#'+id;};
+  const take=res=>res.forEach(x=>{if(x.ok){ok++;if(x.pdf)okPdf++;}else errs.push(nm(x.id)+': '+x.error);});
+  try{for(let i=0;i<rest.length&&!GS.stop;i+=50){const part=rest.slice(i,i+50);gsProg(true,done,total,`Writing rows ${done+1}–${done+part.length} of ${total}…`);
+      try{take((await api('/api/gsheet/push',{method:'POST',body:JSON.stringify({items:part})})).results);}catch(e){part.forEach(p=>errs.push(nm(p.id)+': '+e.message));}
+      done+=part.length;}
+    for(const it of pdf){if(GS.stop)break;gsProg(true,done,total,`Uploading PDF ${done-rest.length+1} of ${pdf.length} · ${nm(it.id)}`);
+      try{take((await api('/api/gsheet/push',{method:'POST',body:JSON.stringify({items:[it]})})).results);}catch(e){errs.push(nm(it.id)+': '+e.message);}
+      done++;}
+    gsProg(true,done,total,GS.stop?`Stopped · ${ok} of ${total} sent`:`Done · ${ok} of ${total} sent`);
+    const lg=await api('/api/gsheet/log',{method:'POST',body:JSON.stringify({rows:ok,pdf:okPdf,failed:errs.length,alarms:GS.res.alarm_n,errors:errs})});GS.log=lg.log;gsLogPaint();
+    toast(`Google Sheet updated: ${ok} row${ok===1?'':'s'}${okPdf?' · '+okPdf+' PDF':''}${errs.length?' · '+errs.length+' failed':''}`);}
+  finally{GS.busy=false;gsStatus();setTimeout(()=>gsProg(false),4000);}
+  gsRun();}
+async function gsCreate(){const rows=[...GS.selNew];if(!rows.length)return;
+  confirmDo('Create locations from the sheet',`Create <b>${rows.length}</b> draft location${rows.length>1?'s':''} from the sheet? The operator fills the activation date and the rest in BAA Entry.`,async()=>{
+    try{const r=await api('/api/gsheet/create',{method:'POST',body:JSON.stringify({rows})});if((r.so_added||[]).length)S.soList=(S.soList||[]).concat(r.so_added);
+      toast(`${r.created} location${r.created===1?'':'s'} created`+(r.skipped?` · ${r.skipped} skipped`:''));loadLocations();gsRun();}
+    catch(e){toast('Failed: '+e.message);}},{okLabel:'Create'});}
 function loadImport(){IMP={file:null,res:null,ch:{},own:{}};sbuReset();
   const f=$('#imp-file');if(f)f.value='';$('#imp-fname').textContent='No file selected';
   $('#imp-preview-card').classList.add('hidden');$('#imp-commit').setAttribute('disabled','');

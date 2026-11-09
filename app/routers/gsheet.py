@@ -28,11 +28,11 @@ SCRIPT = Path(__file__).resolve().parent.parent / "data" / "gsheet_apps_script.g
 DEFAULT = {
     "url": "", "secret": "",
     "key_col": "ID Node Link", "name_col": "Nama Lokasi", "desa_col": "Desa", "kec_col": "Kecamatan",
-    "kab_col": "Kabupaten", "so_col": "SO",
+    "kab_col": "Kabupaten", "prov_col": "Provinsi", "so_col": "SO",
     "status_col": "STATUS BAPB", "date_col": "TANGGAL BAPB", "link_col": "LINK BAPB",
     "done_text": "Done", "undone_text": "Undone", "date_fmt": "dd-MMM-yyyy",
 }
-COLS = ("key_col", "name_col", "desa_col", "kec_col", "kab_col", "so_col", "status_col", "date_col", "link_col")
+COLS = ("key_col", "name_col", "desa_col", "kec_col", "kab_col", "prov_col", "so_col", "status_col", "date_col", "link_col")
 DATE_FMTS = {"dd-MMM-yyyy": None, "yyyy-mm-dd": "%Y-%m-%d", "dd/mm/yyyy": "%d/%m/%Y"}
 _MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 _MON_ID = {"mei": 5, "agu": 8, "agt": 8, "okt": 10, "des": 12}
@@ -151,6 +151,7 @@ def reconcile(conn, cfg: dict, res: dict) -> dict:
         v = r["v"]
         sheet.append({"row": r["row"], "key": (v.get(C["key_col"]) or "").strip(), "name": (v.get(C["name_col"]) or "").strip(),
                       "desa": v.get(C["desa_col"]) or "", "kec": v.get(C["kec_col"]) or "", "kab": v.get(C["kab_col"]) or "",
+                      "prov": v.get(C["prov_col"]) or "",
                       "so": (v.get(C["so_col"]) or "").strip(), "status": (v.get(C["status_col"]) or "").strip(),
                       "date": (v.get(C["date_col"]) or "").strip(), "link": (v.get(C["link_col"]) or "").strip()})
     scope = [s for s in sheet if not sos or _so(s["so"]) in sos]
@@ -169,6 +170,8 @@ def reconcile(conn, cfg: dict, res: dict) -> dict:
         if _cmp(s["name"]):
             by_nm.setdefault(_cmp(s["name"]), []).append(s)
     locs = _rows(conn, "", 0)
+    mod = {r[0]: r[1] for r in conn.execute("SELECT id, modified_at FROM locations WHERE deleted_at IS NULL")}
+    pdfs = {r[0]: (r[1], r[2]) for r in conn.execute("SELECT location_id, pdf_url, pdf_at FROM gsheet_sync")}
     used_sid = {_key(x["sid"]) for x in locs if x["sid"]}
     A = {k: [] for k in ("sid_diff", "take_sid", "only_sheet", "only_baa", "wil_diff", "dup_sheet",
                          "ambiguous", "so_diff", "fill_so", "name_diff")}
@@ -236,8 +239,14 @@ def reconcile(conn, cfg: dict, res: dict) -> dict:
             ch["status"] = [s["status"], w["status"]]
         if w["date"] != parse_date(s["date"]):
             ch["date"] = [s["date"], fmt_date(w["date"], cfg["date_fmt"])]
-        if w["status"] == cfg["done_text"] and not s["link"]:
-            ch["link"] = ["", "upload PDF"]
+        if w["status"] == cfg["done_text"] and s["key"]:
+            url, at = pdfs.get(x["id"], (None, None))
+            if not s["link"] or not url:
+                ch["link"] = [s["link"], "upload PDF"]
+            elif (mod.get(x["id"]) or "") > (at or ""):
+                ch["link"] = [s["link"], "replace PDF (changed)"]
+            elif s["link"] != url:
+                ch["link"] = [s["link"], url]
         if ch:
             changes.append({**lb, "row": s["row"], "key": s["key"], "how": how, "ch": ch})
     rest = [s for s in scope if id(s) not in matched and id(s) not in claimed and not (s["key"] and _key(s["key"]) in dup_keys)]
@@ -277,6 +286,7 @@ class CfgIn(BaseModel):
     desa_col: str = DEFAULT["desa_col"]
     kec_col: str = DEFAULT["kec_col"]
     kab_col: str = DEFAULT["kab_col"]
+    prov_col: str = DEFAULT["prov_col"]
     so_col: str = DEFAULT["so_col"]
     status_col: str = DEFAULT["status_col"]
     date_col: str = DEFAULT["date_col"]
@@ -289,7 +299,7 @@ class CfgIn(BaseModel):
 @router.get("/config")
 def get_config(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
     return {"config": _public(config(conn)), "date_fmts": list(DATE_FMTS),
-            "last": db.get_setting(conn, "gsheet_last_check")}
+            "last": db.get_setting(conn, "gsheet_last_check"), "log": log_rows(conn, 10)}
 
 
 @router.put("/config")
@@ -381,3 +391,175 @@ def apply(body: ApplyIn, conn: sqlite3.Connection = Depends(get_db), user=Depend
     conn.commit()
     audit(conn, user, "gsheet_apply", "location", "", f"SID {len(done_sid)}, SO {len(done_so)}")
     return {"ok": True, "sid": len(done_sid), "so": len(done_so), "skipped": len(set(skipped)), "so_added": add_so, "at": now}
+
+
+# ---------------------------------------------------------------- tahap 3: tulis ke sheet + PDF ke Drive
+def _pdf_name(name: str, sid: str) -> str:
+    """Nama file di Drive: 'Nama Lokasi-SID.pdf' (karakter terlarang dibuang)."""
+    nm = re.sub(r'[\\/:*?"<>|]+', " ", f"{name}-{sid}").strip()
+    return re.sub(r"\s+", " ", nm)[:150] + ".pdf"
+
+
+def _make_pdf(conn, lid: int) -> bytes:
+    """PDF gabungan satu lokasi — sama dengan tombol PDF di Entry (lampiran, scan, BAA)."""
+    from .export import _gather_locations, _render_pdf, _stamp
+    locs = _gather_locations(conn, "one", lid)
+    out = _stamp(locs[0]["code"] + "_gs", "pdf")
+    try:
+        _render_pdf(conn, locs, out, db.get_setting(conn, "photo_categories", []), db.app_title(conn))
+        return out.read_bytes()
+    finally:
+        out.unlink(missing_ok=True)
+
+
+class PushItem(BaseModel):
+    id: int
+    row: int
+    key: str
+    pdf: bool = False
+
+
+class PushIn(BaseModel):
+    items: list[PushItem]
+
+
+@router.post("/push")
+def push(body: PushIn, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    """Tulis STATUS/TANGGAL/LINK BAPB untuk lokasi terpilih (baris & ID dari hasil Check terakhir).
+    Apps Script mencocokkan ulang ID di baris itu, jadi baris yang bergeser tidak tertimpa."""
+    import base64
+    from .reports import _rows
+    cfg = config(conn)
+    want = {x["id"]: x for x in _rows(conn, "", 0)}
+    mod = {r[0]: r[1] for r in conn.execute("SELECT id, modified_at FROM locations WHERE deleted_at IS NULL")}
+    updates, res = [], []
+    for it in body.items:
+        x = want.get(it.id)
+        if not x:
+            res.append({"id": it.id, "ok": False, "error": "Location not found"})
+            continue
+        w = wanted(x, cfg)
+        vals = {cfg["status_col"]: w["status"], cfg["date_col"]: fmt_date(w["date"], cfg["date_fmt"])}
+        if it.pdf and w["status"] == cfg["done_text"]:
+            try:
+                data = _make_pdf(conn, it.id)
+                up = call(cfg, "upload", timeout=180, name=_pdf_name(x["name"], it.key),
+                          data=base64.b64encode(data).decode())
+            except HTTPException as e:
+                res.append({"id": it.id, "ok": False, "error": str(e.detail)})
+                continue
+            except Exception as e:  # render PDF gagal
+                res.append({"id": it.id, "ok": False, "error": f"PDF: {e}"})
+                continue
+            vals[cfg["link_col"]] = up["url"]
+            conn.execute("INSERT INTO gsheet_sync(location_id,pdf_url,pdf_at,sent_at) VALUES(?,?,?,?) "
+                         "ON CONFLICT(location_id) DO UPDATE SET pdf_url=excluded.pdf_url, pdf_at=excluded.pdf_at",
+                         (it.id, up["url"], mod.get(it.id) or db.now_iso(), db.now_iso()))
+            conn.commit()
+        else:
+            known = conn.execute("SELECT pdf_url FROM gsheet_sync WHERE location_id=?", (it.id,)).fetchone()
+            if known and known[0] and w["status"] == cfg["done_text"]:
+                vals[cfg["link_col"]] = known[0]
+        updates.append({"row": it.row, "key": it.key, "values": vals, "_id": it.id})
+    if updates:
+        r = call(cfg, "update", key_col=cfg["key_col"],
+                 updates=[{k: v for k, v in u.items() if k != "_id"} for u in updates])
+        moved = {(s["row"], str(s["key"])) for s in r.get("skipped", [])}
+        now = db.now_iso()
+        for u in updates:
+            if (u["row"], str(u["key"])) in moved:
+                res.append({"id": u["_id"], "ok": False, "error": "Row moved in the sheet — run Check again"})
+            else:
+                conn.execute("INSERT INTO gsheet_sync(location_id,sent_at) VALUES(?,?) "
+                             "ON CONFLICT(location_id) DO UPDATE SET sent_at=excluded.sent_at", (u["_id"], now))
+                res.append({"id": u["_id"], "ok": True, "pdf": cfg["link_col"] in u["values"] and any(
+                    i.pdf for i in body.items if i.id == u["_id"])})
+        conn.commit()
+    return {"ok": True, "results": res}
+
+
+class LogIn(BaseModel):
+    rows: int = 0
+    pdf: int = 0
+    failed: int = 0
+    alarms: int = 0
+    errors: list[str] = []
+
+
+@router.post("/log")
+def add_log(body: LogIn, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    conn.execute("INSERT INTO gsheet_log(at,by_name,rows,pdf,failed,alarms,detail) VALUES(?,?,?,?,?,?,?)",
+                 (db.now_iso(), user["full_name"] or user["username"], body.rows, body.pdf, body.failed, body.alarms,
+                  json.dumps(body.errors[:200], ensure_ascii=False)))
+    conn.commit()
+    audit(conn, user, "gsheet_update", "settings", "", f"{body.rows} rows, {body.pdf} PDF, {body.failed} failed")
+    return {"ok": True, "log": log_rows(conn)}
+
+
+def log_rows(conn, n: int = 20) -> list[dict]:
+    return [{**dict(r), "detail": json.loads(r["detail"] or "[]")} for r in
+            conn.execute("SELECT * FROM gsheet_log ORDER BY id DESC LIMIT ?", (n,))]
+
+
+@router.get("/log")
+def get_log(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    return {"log": log_rows(conn)}
+
+
+class CreateIn(BaseModel):
+    rows: list[int]
+
+
+@router.post("/create")
+def create_from_sheet(body: CreateIn, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    """Buat lokasi draf dari baris sheet yang belum ada di BAA Flow (nama, wilayah, SID = ID, SO).
+    Tanggal aktivasi tetap diisi operator saat entry."""
+    from ..services import wilayah
+    from .import_loc import _import_wil
+    from .locations import _WIL_SET, _format_code
+    cfg = config(conn)
+    res = call(cfg, "read", columns=[cfg[k] for k in COLS if cfg[k]])
+    out = reconcile(conn, cfg, res)
+    allowed = {s["row"] for s in out["alarms"]["only_sheet"]}
+    rows = {r["row"]: r["v"] for r in res.get("rows", [])}
+    made, skipped, add_so = [], [], []
+    now = db.now_iso()
+    for rn in body.rows:
+        v = rows.get(rn)
+        if rn not in allowed or not v:
+            skipped.append(rn)
+            continue
+        name = (v.get(cfg["name_col"]) or "").strip()
+        key = (v.get(cfg["key_col"]) or "").strip()
+        sid = ""
+        if key:
+            try:
+                sid = norm_sid(conn, key)
+                check_sid_free(conn, sid)
+            except HTTPException:
+                sid = ""
+        so_raw = db.norm_so(v.get(cfg["so_col"]) or "")
+        so = db.so_match(conn, so_raw) if so_raw else ""
+        if so_raw and not so:
+            so = so_raw
+            db.set_setting(conn, "so_list", db.so_list(conn) + [so])
+            add_so.append(so)
+        w = wilayah.match(v.get(cfg["desa_col"]) or "", v.get(cfg["kec_col"]) or "", v.get(cfg["kab_col"]) or "",
+                          v.get(cfg["prov_col"]) or "")
+        w["raw"] = {k: (v.get(cfg[k + "_col"]) or "").strip() for k in ("desa", "kec", "kab", "prov")}
+        cur = conn.execute(
+            "INSERT INTO locations(code,name,data_json,status,created_by,owner_id,created_at,updated_at,sid,so) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?)",
+            ("", name, json.dumps({"nama_lokasi": name}, ensure_ascii=False), "draft", user["id"], user["id"],
+             now, now, sid or None, so or None))
+        lid = cur.lastrowid
+        conn.execute("UPDATE locations SET code=?, modified_at=?, modified_by=? WHERE id=?",
+                     (_format_code(conn, lid), now, user["id"], lid))
+        wv = _import_wil(w, {})
+        if wv:
+            conn.execute(f"UPDATE locations SET {_WIL_SET} WHERE id=?", (*wv, lid))
+        db.log_activity(conn, lid, user["id"], "create", "Google Sheet", now)
+        made.append(lid)
+    conn.commit()
+    audit(conn, user, "gsheet_create", "location", "", f"{len(made)} from Google Sheet")
+    return {"ok": True, "created": len(made), "skipped": len(skipped), "so_added": add_so}
