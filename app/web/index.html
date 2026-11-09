@@ -308,7 +308,7 @@
   .nf-kind{margin-top:6px;font:var(--md-sys-typescale-label-medium)}.nf-kind .mono{font-size:12px;margin-top:2px}.nf-kind s{opacity:.6}
   .nf-why{margin-top:2px;font:var(--md-sys-typescale-body-small);color:var(--md-sys-color-on-surface-variant);max-width:280px}
   /* Reports */
-  .rp-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
+  .rp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;align-items:end}
   @media(max-width:1100px){.rp-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
   .rp-grid .md-select{min-width:0}
   .rp-h{margin:18px 0 8px;font:var(--md-sys-typescale-title-small);color:var(--md-sys-color-on-surface)}
@@ -341,6 +341,12 @@
   .act-warn{display:flex;align-items:center;gap:6px;margin:4px 4px 0;font:var(--md-sys-typescale-body-small);color:var(--warn)}.act-warn .mi{font-size:16px}
   .sid-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:start;margin-top:16px}
   .sid-row md-text-field{width:100%}
+  .so-chip{display:inline-block;margin:3px 0 0 4px;padding:1px 7px;border-radius:99px;font:600 11px ui-monospace,Consolas,monospace;
+    background:color-mix(in srgb,var(--md-sys-color-tertiary) 16%,transparent);color:var(--md-sys-color-tertiary)}
+  .so-chip:first-child{margin-left:0}
+  .so-row{display:grid;grid-template-columns:minmax(0,1fr);gap:6px;margin-top:16px}
+  .so-row .md-select{width:100%}
+  .md-select.dis{pointer-events:none;opacity:.6}
   .sid-row .sid-acts{display:flex;gap:8px;align-items:center;min-height:56px;flex-wrap:wrap}
   .sid-lock{position:relative;display:flex;align-items:center;min-height:56px;padding:0 16px;border:1px solid var(--md-sys-color-outline-variant);border-radius:var(--md-sys-shape-corner-extra-small);
     background:color-mix(in srgb,var(--md-sys-color-on-surface) 4%,transparent);font:600 16px ui-monospace,Consolas,monospace;letter-spacing:.06em;color:var(--md-sys-color-on-surface)}
@@ -2461,7 +2467,7 @@
         <div class="card">
           <div class="sec"><span class="mi acc">summarize</span><h3>Progress report</h3><span class="grow"></span>
             <span class="code-chip"><span class="mi" style="font-size:15px">visibility</span>Admin &amp; viewer</span></div>
-          <div class="rp-grid"><div id="rpFromW"></div><div id="rpToW"></div><div class="md-select" id="rp-wil"></div><div class="md-select" id="rp-owner"></div></div>
+          <div class="rp-grid"><div id="rpFromW"></div><div id="rpToW"></div><div class="md-select" id="rp-wil"></div><div class="md-select" id="rp-owner"></div><div class="md-select hidden" id="rp-so"></div></div>
           <div class="rp-h">Sections</div><div class="rp-chips" id="rpSecs"></div>
           <div class="rp-act"><md-button variant="filled" icon="picture_as_pdf" id="rpPdf">Download PDF</md-button><md-button variant="tonal" icon="table_view" id="rpXlsx">Download Excel</md-button>
             <span class="muted" id="rpFile"></span></div>
@@ -2489,6 +2495,7 @@
               <div class="act-gate hidden" id="actGate"></div>
               <div class="fgrid" id="loc-fields"></div>
               <div class="sid-row hidden" id="sidRow"></div>
+              <div class="so-row hidden" id="soRow"><div class="md-select" id="soSel"></div><div class="sid-hint" id="soHint"></div></div>
               <div class="dup-warn hidden" id="dupWarn"></div>
               <div id="wil-field" class="wl-f hidden"></div>
             </div>
@@ -2600,6 +2607,7 @@
             <div class="md-select" id="loc-creator"></div>
             <div class="md-select" id="loc-owner"></div>
             <div class="md-select wil-only" id="loc-wil"></div>
+            <div class="md-select hidden" id="loc-so"></div>
             <div style="position:relative;min-width:200px"><input type="hidden" id="loc-date" value="">
               <div class="datefield dffilter" id="loc-date-field" onclick="dpOpenFilter(this)"><span class="mi">calendar_month</span>
               <span class="dfv ph">All</span><label class="dflab">Date created</label><span class="mi df-trail">expand_more</span></div></div>
@@ -3353,6 +3361,7 @@ async function boot(){paint();themeIcon(false);
   // role user kini via kartu (uRoles), bukan dropdown
   locCreatorSel=new MDSelect($('#loc-creator'),{label:'Created by',placeholder:'All creators',onChange:()=>loadLocations()});locCreatorSel.setOptions([{value:'',label:'All creators'}]).setValue('');
   locOwnerSel=new MDSelect($('#loc-owner'),{label:'Owner',placeholder:'All owners',onChange:()=>{BK.clear();loadLocations();}});locOwnerSel.setOptions([{value:'',label:'All owners'}]).setValue('');
+  locSoSel=new MDSelect($('#loc-so'),{label:'SO',placeholder:'All SO',onChange:()=>{BK.clear();loadLocations();}});locSoSel.setOptions([{value:'',label:'All SO'}]).setValue('');
   locWilSel=new MDSelect($('#loc-wil'),{label:'Wilayah',placeholder:'All wilayah',onChange:()=>{BK.clear();loadLocations();}});locWilSel.setOptions([{value:'',label:'All wilayah'}]).setValue('');
   $('#bkAll').addEventListener('click',e=>{e.stopPropagation();const all=LOC_ROWS.length&&LOC_ROWS.every(l=>BK.has(l.id));LOC_ROWS.forEach(l=>all?BK.delete(l.id):BK.add(l.id));bkSync();});
   try{S.user=await api('/api/auth/me');showApp();}catch{$('#login').classList.remove('hidden');bindTips();}}
@@ -3509,7 +3518,7 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
   else{lg.classList.add('hidden');$('#lgGreet').classList.remove('on','out');$('#lgIris').classList.remove('on');$('#lgCard').classList.remove('gone');}
   if(S.user.must_change)await onbPassword();
   if(!await pjInit()){if(window.BFIntro)BFIntro.unveil();return;}
-  S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.keterangan=s.inventory_keterangan||[];S.appTitle=s.app_title||'BAA Generator';S.sidCfg=s.sid_config||S.sidCfg;S.attCfg=s.attach_config||S.attCfg;S.actRule=s.activation_rule||S.actRule;});
+  S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.keterangan=s.inventory_keterangan||[];S.appTitle=s.app_title||'BAA Generator';S.sidCfg=s.sid_config||S.sidCfg;S.attCfg=s.attach_config||S.attCfg;S.actRule=s.activation_rule||S.actRule;S.soList=s.so_list||[];});
   await S.settingsReady;
   if(S.user.role!=='admin')$$('.admin-only').forEach(x=>x.classList.add('hidden'));
   $$('.prog-nav').forEach(x=>x.classList.toggle('hidden',S.user.role==='operator'));
@@ -3977,6 +3986,22 @@ function renderSid(){const row=$('#sidRow');if(!row)return;const L=S.loc;
       <div class="sid-hint">${ro?'':sid?'<span class="mi">lock</span>Filled — ask the admin to change it':''}</div>`;
     const b=$('#sidReqBtn');if(b)b.onclick=openSidReq;}
   const pg=$('#sidPendGo');if(pg)pg.onclick=()=>navTo('notif');}
+/* SO lokasi: pilih dari daftar SO project (Settings › Projects); tersimpan langsung */
+let soSel=null;
+function renderSo(){const row=$('#soRow');if(!row)return;const L=S.loc,list=S.soList||[];
+  if(!L||(!list.length&&!L.so)){row.classList.add('hidden');return;}
+  row.classList.remove('hidden');
+  if(!soSel)soSel=new MDSelect($('#soSel'),{label:'SO / order',placeholder:'— no SO —',onChange:soSave});
+  const opts=[{value:'',label:'— no SO —'}].concat(list.map(v=>({value:v,label:v})));
+  if(L.so&&!list.some(v=>v.toUpperCase()===L.so.toUpperCase()))opts.push({value:L.so,label:L.so+' (not in project list)'});
+  soSel.setOptions(opts).setValue(L.so||'');
+  const ro=roActive()||frozenRO()||L.can_edit===false;$('#soSel').classList.toggle('dis',ro);soSel.ro=ro;
+  $('#soHint').innerHTML=list.length?'<span class="mi">info</span>Pick the SO / order this location belongs to · list is set per project':'';}
+async function soSave(v){const L=S.loc;if(!L)return;if(soSel.ro){soSel.setValue(L.so||'');return;}
+  try{if(isDraft())await ensureLoc();
+    const r=await api('/api/locations/'+S.loc.id+'/so',{method:'PUT',body:JSON.stringify({so:v})});
+    S.loc.so=r.so;renderSo();loadLocations();toast(v?'SO set: '+v:'SO cleared');}
+  catch(e){toast('Failed: '+e.message);soSel.setValue(S.loc.so||'');}}
 async function sidSave(){const tf=$('#sidInp');if(!tf||!S.loc)return;const v=sidNorm(tfInput(tf).value),adm=S.user.role==='admin';
   const go=async()=>{try{if(isDraft())await ensureLoc();
       const r=await api('/api/locations/'+S.loc.id+'/sid',{method:'PUT',body:JSON.stringify({sid:v})});
@@ -4431,6 +4456,9 @@ function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
       <div><div class="pjm-lab">Color</div><div class="pjm-sw">${PJM.colors.map(c=>`<button type="button" style="--c:${c}" data-c="${c}" class="${c===q.color?'on':''}" aria-label="${c}"></button>`).join('')}</div></div>
       <div><md-text-field id="pjm-total" variant="outlined" type="number" label="Target (BAA)" value="${q.total??''}"></md-text-field></div>
       <div>${dateBox('pjm-date','Target date',q.target_date)}</div>
+      <div class="full"><div class="pjm-lab">SO / internal order numbers <span style="opacity:.7">(optional)</span></div>
+        <div class="pckw so-chips" id="pjm-so"></div><input type="hidden" id="pjm-so-v" value="${esc((q.so_list||[]).join('\n'))}">
+        <div class="pjm-hint">One project can hold several SOs. Each location can be tagged with one; Locations and Reports can be filtered by SO. An SO used by a location can't be removed.</div></div>
       <div class="full"><div class="pjm-lab">Template</div><div class="pjm-tpl"><span class="mi">description</span><span class="pj-tx">
         <span class="pj-nm">${isNew?'Upload after the project is created':q.template?esc(q.template):'No template yet'}</span>
         <span class="pj-sb">${isNew?'Each project has its own BAA Excel template':'Managed in Settings · Template of this project'}</span></span>
@@ -4465,18 +4493,34 @@ function pjmEdit(p){const isNew=!p;const used=new Set(PJM.rows.map(x=>x.color));
     const sync=()=>{const s=$('#pjmSrc button.on').dataset.s;const sel=$('#pjmSrcPj');sel.classList.toggle('hidden',s!=='copy');if(sel._ddBtn)sel._ddBtn.classList.toggle('hidden',s!=='copy');$('#pjmSrcH').textContent=H[s];};
     $$('#pjmSrc button').forEach(b=>b.onclick=()=>{if(b.dataset.s==='copy'&&!PJM.rows.length)return;$$('#pjmSrc button').forEach(x=>x.classList.toggle('on',x===b));sync();});
     if(!PJM.rows.length)$('#pjmSrc button[data-s="copy"]').disabled=true;setTimeout(sync,0);}
+  soChips($('#pjm-so'),$('#pjm-so-v'));
   $('#pjm-save').onclick=()=>pjmSave();bindTips();revealCards($('#pjmEd').parentElement);
   PJM.snap=null;setTimeout(()=>{PJM.snap=fgSnap($('#pjmEd'));fgTick();},0);}
+/* ---- Editor chip SO / order (daftar disimpan di input tersembunyi, satu per baris) ---- */
+function soList(h){return (h.value||'').split('\n').map(s=>s.trim().replace(/\s+/g,' ')).filter(Boolean);}
+function soChips(wrap,h){const L=soList(h);
+  wrap.innerHTML=L.map(v=>`<span class="kwchip">${esc(v)}<span class="x" title="Remove" role="button" aria-label="Remove ${esc(v)}">✕</span></span>`).join('')
+    +`<button type="button" class="kwadd" title="Add SO" aria-label="Add SO">+</button>`;
+  const set=l=>{const seen=new Set();h.value=l.filter(v=>{const k=v.toUpperCase();if(seen.has(k))return false;seen.add(k);return true;}).join('\n');
+    h.dispatchEvent(new Event('input',{bubbles:true}));soChips(wrap,h);};
+  wrap.querySelectorAll('.kwchip .x').forEach((x,i)=>x.onclick=()=>{const l=soList(h);l.splice(i,1);set(l);});
+  wrap.querySelector('.kwadd').onclick=()=>{const inp=document.createElement('input');inp.className='kwin';inp.placeholder='e.g. 11803, Enter…';
+    wrap.insertBefore(inp,wrap.lastChild);wrap.lastChild.style.display='none';inp.focus();
+    const commit=again=>{const parts=inp.value.split(/[,;]/).map(s=>s.trim()).filter(Boolean);if(parts.length)set(soList(h).concat(parts));else soChips(wrap,h);
+      if(again&&parts.length)wrap.querySelector('.kwadd').click();};
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();commit(true);}else if(e.key==='Escape')soChips(wrap,h);});
+    inp.addEventListener('blur',()=>{if(inp.isConnected)commit(false);});};}
 async function pjmSave(archived){const q=PJM.sel,isNew=!q.id;const tot=$('#pjm-total').value;
   const body={name:($('#pjm-name').value||'').trim(),prefix:($('#pjm-pre').value||'').trim(),color:q.color,total:tot?+tot:null,target_date:$('#pjm-date').value||null,
     members:$$('#pjmEd md-switch[data-u]').filter(x=>x.selected).map(x=>+x.dataset.u),
-    wilayah_on:!!$('#ft-wil').selected,wilayah_progress:!!$('#ft-prog').selected,scan_on:!!$('#ft-scan').selected};
+    wilayah_on:!!$('#ft-wil').selected,wilayah_progress:!!$('#ft-prog').selected,scan_on:!!$('#ft-scan').selected,
+    so_list:soList($('#pjm-so-v'))};
   if(archived!==undefined)body.archived=archived;
   if(isNew){const s=($('#pjmSrc button.on')||{dataset:{s:'default'}}).dataset.s;body.source=s==='copy'?'copy:'+$('#pjmSrcPj').value:s;}
   try{const r=await api(isNew?'/api/projects':'/api/projects/'+q.id,{method:isNew?'POST':'PUT',body:JSON.stringify(body)});
     toast(isNew?'Project created':'Project saved');PJM.sel=r;PJM.snap=null;await loadProjects(true);await pjRefresh();
     const multi=PJ.list.filter(p=>!p.archived).length>1;$$('.multi-only').forEach(x=>x.classList.toggle('hidden',!multi||S.user.role==='operator'));
-    if(String(r.id)===PJ.id){PJ.cur={...PJ.cur,...r};paint();pjPaint();wilApply();scanApply();}fgTick();return true;}catch(e){toast('Failed: '+e.message);fgTick();return false;}}
+    if(String(r.id)===PJ.id){PJ.cur={...PJ.cur,...r};S.soList=r.so_list||[];paint();pjPaint();wilApply();scanApply();}fgTick();return true;}catch(e){toast('Failed: '+e.message);fgTick();return false;}}
 $('#pjm-new').addEventListener('click',()=>guardLeave(()=>pjmEdit(null),'New project'));
 FG.pjm={get label(){return PJM.sel&&!PJM.sel.id?'Create project':'Save project';},active:()=>_visible('v-projects')&&!!$('#pjm-save'),dirty:()=>PJM.snap!=null&&fgSnap($('#pjmEd'))!==PJM.snap,
   save:()=>pjmSave(),discard:()=>{PJM.snap=null;}};
@@ -4755,7 +4799,7 @@ function fmtDay(iso){if(!iso)return '—';const d=new Date(iso+(iso.length===10?
 function hhmm(iso){const d=new Date(iso);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
 const ACT_TXT={create:'Created',data:'Edited location data',inventory:'Edited inventory',photo_add:d=>`Uploaded ${d||1} photo${(+d||1)>1?'s':''}`,photo_del:'Deleted a photo',photo_move:'Moved a photo',sn:'Edited an SN',done:'Marked Done',reopen:'Reopened',
   scan_add:'Uploaded the scan PDF',scan_del:'Removed the scan PDF',att_add:d=>'Attached '+(d||'a file'),att_del:d=>'Removed attachment '+(d||''),att_move:d=>'Moved attachment '+(d||''),
-  sid:d=>`${sidLabel()} ${d||'changed'}`};
+  sid:d=>`${sidLabel()} ${d||'changed'}`,so:d=>`SO ${d&&d!=='—'?'set to '+d:'cleared'}`};
 function actTxt(f){const t=ACT_TXT[f.kind];return typeof t==='function'?t(f.detail):(t||f.kind);}
 let _pgTipEl=null;function pgTip(e,h){if(!_pgTipEl){_pgTipEl=document.createElement('div');_pgTipEl.className='pg-tip';document.body.appendChild(_pgTipEl);}
   if(!h){_pgTipEl.style.opacity=0;return;}_pgTipEl.innerHTML=h;_pgTipEl.style.opacity=1;
@@ -4769,10 +4813,11 @@ let PG=null,_pgTimer=null,_pgAt=0;
 const REP={init:false,secs:null,t:0,seq:0,d:null};
 const REP_SECS=[['kpi','Summary KPI'],['weekly','Weekly trend'],['completion','Completion time'],['operator','Per operator'],['wilayah','Per wilayah'],
   ['backlog','Backlog'],['missing','Missing items'],['errors','Data to check'],['locations','Location list (all columns)']];
-let rpWilSel=null,rpOwnerSel=null;
+let rpWilSel=null,rpOwnerSel=null,rpSoSel=null;
 function rpQuery(){const q=new URLSearchParams();const f=$('#rp-from').value,t=$('#rp-to').value;
   if(f)q.set('from',f);if(t)q.set('to',t);const w=rpWilSel&&rpWilSel.getValue(),o=rpOwnerSel&&rpOwnerSel.getValue();
-  if(w)q.set('wil',w);if(o)q.set('owner',o);return q;}
+  if(w)q.set('wil',w);if(o)q.set('owner',o);
+  const so=rpSoSel&&!$('#rp-so').classList.contains('hidden')&&rpSoSel.getValue();if(so)q.set('so',so);return q;}
 function rpSecs(){$('#rpSecs').innerHTML=REP_SECS.map(([k,l])=>{const on=REP.secs.has(k);
     return `<button type="button" class="rp-chip${on?' on':''}" data-k="${k}" aria-pressed="${on}"><span class="mi">${on?'check':'add'}</span>${esc(l)}</button>`;}).join('');
   $$('#rpSecs .rp-chip').forEach(b=>b.onclick=()=>{const k=b.dataset.k;REP.secs.has(k)?REP.secs.delete(k):REP.secs.add(k);
@@ -4784,13 +4829,17 @@ async function loadReports(){
     $('#rpFromW').innerHTML=dateBox('rp-from','From','');$('#rpToW').innerHTML=dateBox('rp-to','To','');
     rpWilSel=new MDSelect($('#rp-wil'),{label:'Wilayah',placeholder:'All wilayah',onChange:rpSoon});rpWilSel.setOptions([{value:'',label:'All wilayah'}]).setValue('');
     rpOwnerSel=new MDSelect($('#rp-owner'),{label:'Owner',placeholder:'All owners',onChange:rpSoon});rpOwnerSel.setOptions([{value:'',label:'All owners'}]).setValue('');
+    rpSoSel=new MDSelect($('#rp-so'),{label:'SO',placeholder:'All SO',onChange:rpSoon});rpSoSel.setOptions([{value:'',label:'All SO'}]).setValue('');
     ['rp-from','rp-to'].forEach(id=>$('#'+id).addEventListener('change',rpSoon));
     $('#rpPdf').addEventListener('click',()=>rpDownload('pdf'));$('#rpXlsx').addEventListener('click',()=>rpDownload('xlsx'));}
   rpSecs();$('#rp-wil').classList.toggle('hidden',!WIL.on());
   try{const [rg,cr]=await Promise.all([WIL.on()?api('/api/wilayah/regions'):null,api('/api/locations/creators')]);
     if(rg){const cur=rpWilSel.getValue();rpWilSel.setOptions([{value:'',label:'All wilayah'}].concat(rg.none?[{value:'none',label:`No wilayah yet · ${rg.none}`}]:[],
       rg.regions.map(x=>({value:x.kode,label:(x.level==='kab'?'   ':'')+x.nama+' · '+x.n}))));rpWilSel.setValue(cur||'');}
-    const oc=rpOwnerSel.getValue();rpOwnerSel.setOptions([{value:'',label:'All owners'}].concat((cr.owners||[]).map(c=>({value:String(c.id),label:c.name+' ('+c.n+')'}))));rpOwnerSel.setValue(oc||'');}
+    const oc=rpOwnerSel.getValue();rpOwnerSel.setOptions([{value:'',label:'All owners'}].concat((cr.owners||[]).map(c=>({value:String(c.id),label:c.name+' ('+c.n+')'}))));rpOwnerSel.setValue(oc||'');
+    const so=cr.sos||[],has=so.length>0||(S.soList||[]).length>0;$('#rp-so').classList.toggle('hidden',!has);
+    const sopt=[{value:'',label:'All SO'}].concat(so.map(x=>({value:x.so,label:'SO '+x.so+' ('+x.n+')'})),cr.so_none&&has?[{value:'none',label:'No SO yet ('+cr.so_none+')'}]:[]);
+    const sc=rpSoSel.getValue();rpSoSel.setOptions(sopt);rpSoSel.setValue(sopt.some(o=>o.value===sc)?sc:'');}
   catch(e){}
   rpRefresh();}
 function rpSoon(){clearTimeout(REP.t);REP.t=setTimeout(rpRefresh,250);}
@@ -5230,7 +5279,7 @@ function newDraft(){
   if(pickerSel){pickerSel.setValue('');const v=$('#picker .lp-val');
     if(v){v.innerHTML='<span class="lp-nm-main">New location</span><span class="lp-code">not saved</span>';v.classList.remove('ph');}}
   updateLocNav();
-  renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();renderScan();renderWil();renderSid();renderAtt();
+  renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();renderScan();renderWil();renderSid();renderSo();renderAtt();
   entryDirty=false;asReset();
   requestAnimationFrame(()=>revealCards($('#v-entry')));
   const f=$('#loc-fields input');if(f)setTimeout(()=>f.focus(),120);}
@@ -5276,7 +5325,7 @@ async function openLoc(id){S.loc=await api('/api/locations/'+id);
   pickerSel.setValue(String(id));
   $('#entry-empty').classList.add('hidden');$('#entry-form').classList.remove('hidden');
   updateLocNav();
-  renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();renderScan();renderWil();renderSid();renderAtt();
+  renderLocFields();renderInventory();renderPhotos();updateSummary();bindTips();lockEntry();renderScan();renderWil();renderSid();renderSo();renderAtt();
   entryDirty=false;asReset();S.dupHits=[];S.dupOk=false;dupCheck();
   requestAnimationFrame(()=>revealCards($('#v-entry')));}
 /* Lokasi kembar: nama + wilayah sama dengan lokasi lain → peringatan (tidak memblokir simpan) */
@@ -5989,7 +6038,7 @@ function fetchLocPage(page){
   const cr=(locCreatorSel&&locCreatorSel.getValue())||'';const ow=(locOwnerSel&&locOwnerSel.getValue())||'';
   const dt=($('#loc-date').value||'').trim();
   const wl=WIL.on()&&locWilSel?locWilSel.getValue()||'':'';
-  return api(`/api/locations?page=${page}&size=${LOC_SIZE}&q=${q}&status=${st}&creator=${cr||0}&owner=${ow||0}&dup=${S.locDup?1:0}&date=${encodeURIComponent(dt)}&wil=${encodeURIComponent(wl)}`);
+  return api(`/api/locations?page=${page}&size=${LOC_SIZE}&q=${q}&status=${st}&creator=${cr||0}&owner=${ow||0}&dup=${S.locDup?1:0}&date=${encodeURIComponent(dt)}&wil=${encodeURIComponent(wl)}&so=${encodeURIComponent(locSoVal())}`);
 }
 async function loadLocations(){LOC_PAGE=1;wilRegions();const r=await fetchLocPage(1);
   LOC_ROWS=r.rows||[];LOC_TOTAL=r.total||0;renderLocTable();dupChip(r.dup_total||0);}
@@ -6004,7 +6053,7 @@ function renderLocTable(){
     const present=(l.photo_cats||[]).filter(k=>S.cats.some(c=>c.key===k)).length;
     const stCls=l.status==='selesai'?'ok':'warn';
     const wl=wilCell(l);
-    return `<tr class="lrow" data-i="${l.id}" onclick='openLocDrawer(${l.id})'><td class="bk-col" onclick="bkTog(event,${l.id})"><span class="bk-ck${BK.has(l.id)?' on':''}" data-id="${l.id}"></span></td><td><a class="loc-link mono">${esc(l.code)}</a>${l.sid&&sidOn()?`<div><span class="sid-chip" data-tip="${esc(sidLabel())}">${esc(l.sid)}</span></div>`:''}</td>
+    return `<tr class="lrow" data-i="${l.id}" onclick='openLocDrawer(${l.id})'><td class="bk-col" onclick="bkTog(event,${l.id})"><span class="bk-ck${BK.has(l.id)?' on':''}" data-id="${l.id}"></span></td><td><a class="loc-link mono">${esc(l.code)}</a>${(l.sid&&sidOn())||l.so?`<div>${l.sid&&sidOn()?`<span class="sid-chip" data-tip="${esc(sidLabel())}">${esc(l.sid)}</span>`:''}${l.so?`<span class="so-chip" data-tip="SO / order">SO ${esc(l.so)}</span>`:''}</div>`:''}</td>
     <td>${esc(l.data.nama_lokasi||l.name||'')}${l.dup_n>1?`<span class="dup-kb" data-tip="Same name and wilayah as ${l.dup_n-1} other location${l.dup_n>2?'s':''}"><span class="mi">content_copy</span>×${l.dup_n}</span>`:''}${wl}</td>
     <td>${esc(l.creator_name||'—')}${l.owner_id&&l.owner_id!==l.created_by?`<div class="lc-own" data-tip="Current owner (can edit)"><span class="mi">swap_horiz</span>${esc(l.owner_name||'—')}</div>`:''}</td>
     <td class="lc-date">${lcWhen(l.created_at)}</td>
@@ -6024,7 +6073,7 @@ function locFilterParams(){
   const cr=(locCreatorSel&&locCreatorSel.getValue())||'';const ow=(locOwnerSel&&locOwnerSel.getValue())||'';
   const dt=($('#loc-date').value||'').trim();
   const wl=WIL.on()&&locWilSel?locWilSel.getValue()||'':'';
-  return `q=${encodeURIComponent(q)}&status=${st}&creator=${cr||0}&owner=${ow||0}&date=${encodeURIComponent(dt)}&wil=${encodeURIComponent(wl)}`;
+  return `q=${encodeURIComponent(q)}&status=${st}&creator=${cr||0}&owner=${ow||0}&date=${encodeURIComponent(dt)}&wil=${encodeURIComponent(wl)}&so=${encodeURIComponent(locSoVal())}`;
 }
 function locFilterLabel(){
   const st=S.locFilter||'all';const bits=[];
@@ -6033,6 +6082,7 @@ function locFilterLabel(){
   const dt=($('#loc-date').value||'').trim();if(dt)bits.push('date: '+dpFmt(dt));
   const cr=(locCreatorSel&&locCreatorSel.getValue())||'';if(cr)bits.push('creator selected');
   const ow=(locOwnerSel&&locOwnerSel.getValue())||'';if(ow)bits.push('owner selected');
+  const so=locSoVal();if(so)bits.push(so==='none'?'no SO':'SO '+so);
   return bits.join(' · ');
 }
 let _expKind='excel';
@@ -6298,7 +6348,8 @@ $('#loc-clear').addEventListener('click',()=>{$('#loc-search').value='';locDateS
   const seg=$('#loc-filter');seg&&seg.querySelectorAll('button').forEach(b=>b.toggleAttribute('selected',b.dataset.value==='all'));
   loadLocations();});
 $('#loc-more-btn').addEventListener('click',loadMoreLoc);
-let locCreatorSel=null,locOwnerSel=null;
+let locCreatorSel=null,locOwnerSel=null,locSoSel=null;
+const locSoVal=()=>(locSoSel&&!$('#loc-so').classList.contains('hidden')&&locSoSel.getValue())||'';
 async function loadCreators(){if(!locCreatorSel)return;
   try{const d=await api('/api/locations/creators');
     const ids=(d.creators||[]).map(c=>String(c.id));
@@ -6306,7 +6357,10 @@ async function loadCreators(){if(!locCreatorSel)return;
     const cur=locCreatorSel.getValue();if(cur&&!ids.includes(cur))locCreatorSel.setValue('');else locCreatorSel.setValue(cur||'');
     if(locOwnerSel){const oids=(d.owners||[]).map(c=>String(c.id));
       locOwnerSel.setOptions([{value:'',label:'All owners'}].concat((d.owners||[]).map(c=>({value:String(c.id),label:c.name+' ('+c.n+')'}))));
-      const oc=locOwnerSel.getValue();locOwnerSel.setValue(oc&&!oids.includes(oc)?'':oc||'');}}catch(e){}}
+      const oc=locOwnerSel.getValue();locOwnerSel.setValue(oc&&!oids.includes(oc)?'':oc||'');}
+    if(locSoSel){const so=d.sos||[],has=so.length>0||(S.soList||[]).length>0;$('#loc-so').classList.toggle('hidden',!has);
+      const opts=[{value:'',label:'All SO'}].concat(so.map(x=>({value:x.so,label:'SO '+x.so+' ('+x.n+')'})),d.so_none&&has?[{value:'none',label:'No SO yet ('+d.so_none+')'}]:[]);
+      const sc=locSoSel.getValue();locSoSel.setOptions(opts);locSoSel.setValue(opts.some(o=>o.value===sc)?sc:'');}}catch(e){}}
 /* Dashboard › Next step: buka Location Log berisi draf milik user tsb */
 function logByOwner(uid){if(!locOwnerSel)return;locOwnerSel.setValue(String(uid));locCreatorSel&&locCreatorSel.setValue('');S.locFilter='draft';
   const seg=$('#loc-filter');seg&&seg.querySelectorAll('button').forEach(b=>b.toggleAttribute('selected',b.dataset.value==='draft'));
@@ -6417,6 +6471,7 @@ function renderImp(){const res=IMP.res;if(!res)return;const s=res.summary;
     .concat(wc?[['task_alt',s.wil_ok+' wilayah ✓'],['edit_location_alt',s.wil_manual+' desa manual'],['help',s.wil_check+' to check']]:[])
     .concat(s.sid_col?[['badge',s.sid_n+' with '+esc(sidLabel())]].concat(s.sid_skip?[['block',s.sid_skip+' '+esc(sidLabel())+' already in project']]:[]):[])
     .concat(oc?[['group',own||'no owners matched'],['admin_panel_settings','you '+s.own_me]].concat(s.own_check?[['person_off',s.own_check+' check owner']]:[]):[])
+    .concat(s.so_col?[['tag',s.so_n+' with SO']].concat((s.so_new||[]).length?[['playlist_add','new SO added to project: '+s.so_new.map(esc).join(', ')]]:[]):[])
     .map(([i,t])=>`<div style="display:flex;align-items:center;gap:6px"><span class="mi" style="font-size:15px;color:var(--md-sys-color-primary)">${i}</span>${t}</div>`).join('');
   // status: kembar dihitung dari nama + wilayah (ke project & ke baris sebelumnya di file)
   const stOf=l=>l.errors.length?`<span class="loc-st warn">${esc(l.errors[0])}</span>`
@@ -6431,10 +6486,11 @@ function renderImp(){const res=IMP.res;if(!res)return;const s=res.summary;
   $('#imp-commit').toggleAttribute('disabled', s.ready<=0);
   $$('#imp-ptable select[data-row]').forEach(sel=>sel.addEventListener('change',()=>{const v=sel.value;
     IMP.ch[sel.dataset.row]=v==='manual'?{manual:1}:v?{kode:v}:{empty:1};}));}
-/* SID per baris import: di bawah nama; ketikan huruf kecil ditunjukkan jadi kapital */
-function impSid(l){if(!l.sid&&!l.sid_in)return '';
+/* SID & SO per baris import: di bawah nama; ketikan huruf kecil ditunjukkan jadi kapital */
+function impSid(l){const so=l.so?`<span class="so-chip"${l.so_new?' data-tip="New SO — added to the project on import"':''}>SO ${esc(l.so)}${l.so_new?' · new':''}</span>`:'';
+  if(!l.sid&&!l.sid_in)return so?`<div style="margin-top:3px">${so}</div>`:'';
   const up=l.sid&&l.sid_in&&l.sid_in.replace(/\s+/g,'')!==l.sid;
-  return `<div style="margin-top:3px"><span class="sid-chip">${esc(sidLabel())} ${esc(l.sid||l.sid_in)}</span>${up?`<span class="imp-sub">typed "${esc(l.sid_in)}" → capitals</span>`:''}</div>`;}
+  return `<div style="margin-top:3px"><span class="sid-chip">${esc(sidLabel())} ${esc(l.sid||l.sid_in)}</span>${so}${up?`<span class="imp-sub">typed "${esc(l.sid_in)}" → capitals</span>`:''}</div>`;}
 /* Pemilik per baris import: ✓ user cocok · kosong = admin pengimport · ✗ perlu dipilih (tidak dikenal / viewer / nonaktif) */
 function impOwn(l){const o=l.owner||{status:'empty'};
   if(o.status==='ok')return `<span class="imp-own ok"><span class="mi">person</span>${esc(o.name)}</span>`;
@@ -6457,7 +6513,8 @@ $('#imp-commit')&&$('#imp-commit').addEventListener('click',async()=>{if(!IMP.fi
   $('#imp-commit').setAttribute('disabled','');
   try{const r=await fetch('/api/locations/import/commit',{method:'POST',credentials:'same-origin',body:fd});
     if(!r.ok){let d;try{d=await r.json()}catch{d={detail:'Server error ('+r.status+') — see the BAA_Generator window'}}throw new Error(d.detail||'Failed');}const res=await r.json();
-    $('#imp-s4').classList.add('done');toast(res.created+' locations imported'+(res.skipped?(' · '+res.skipped+' skipped'):''));
+    $('#imp-s4').classList.add('done');toast(res.created+' locations imported'+(res.skipped?(' · '+res.skipped+' skipped'):'')+((res.so_added||[]).length?' · new SO: '+res.so_added.join(', '):''));
+    if((res.so_added||[]).length)S.soList=(S.soList||[]).concat(res.so_added);
     loadImport();if(typeof loadLocations==='function')loadLocations();if(typeof loadDashboard==='function')loadDashboard();}
   catch(e){toast('Failed: '+e.message);$('#imp-commit').removeAttribute('disabled');}});
 function gotoEntry(){$$('.navitem[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view==='entry'));

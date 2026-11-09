@@ -133,6 +133,26 @@ class ProjectIn(BaseModel):
     wilayah_progress: bool | None = None
     source: str | None = None        # isi awal project baru: default | copy:<id> | empty
     scan_on: bool | None = None
+    so_list: list[str] | None = None   # nomor SO / order internal (opsional, bisa lebih dari satu)
+
+
+def _set_so(pc, so: list[str] | None) -> None:
+    """Simpan daftar SO project. SO yang sudah dipakai lokasi tidak boleh dihapus."""
+    if so is None:
+        return
+    new, seen = [], set()
+    for x in so:
+        s = db.norm_so(x)
+        if s and s.upper() not in seen:
+            seen.add(s.upper())
+            new.append(s)
+    used = {r[0].upper(): r[0] for r in pc.execute(
+        "SELECT DISTINCT so FROM locations WHERE deleted_at IS NULL AND so IS NOT NULL AND so<>''")}
+    gone = [v for k, v in used.items() if k not in seen]
+    if gone:
+        raise HTTPException(400, "SO still used by locations: " + ", ".join(sorted(gone)))
+    db.set_setting(pc, "so_list", new)
+    pc.commit()
 
 
 def _members(hub, pid: int) -> list[int]:
@@ -152,7 +172,7 @@ def _admin_row(hub, p) -> dict:
                 "setup": _readiness(hub, pc, p["id"]),
                 "next_code": db.format_code(pc, seq + 1), "template": tpl["name"] if tpl else None,
                 "total": g["total"], "target_date": g["target_date"],
-                "locations": n["c"] or 0, "done": n["d"] or 0,
+                "locations": n["c"] or 0, "done": n["d"] or 0, "so_list": db.so_list(pc),
                 "wil_missing": pc.execute("SELECT COUNT(*) c FROM locations WHERE deleted_at IS NULL "
                                           "AND (wil_desa IS NULL OR wil_desa='')").fetchone()["c"]}
     finally:
@@ -223,6 +243,7 @@ def create_project(body: ProjectIn, hub: sqlite3.Connection = Depends(get_hub), 
         db.set_setting(pc, "setup_source", label)
         db.set_setting(pc, "setup_data_confirmed", src == "empty")
         pc.commit()
+        _set_so(pc, body.so_list)
     finally:
         pc.close()
     hub.execute("UPDATE projects SET wilayah_on=?, wilayah_progress=?, scan_on=? WHERE id=?",
@@ -261,6 +282,7 @@ def update_project(pid: int, body: ProjectIn, hub: sqlite3.Connection = Depends(
             raise HTTPException(400, "At least one project must stay active")
         if body.total is not None or body.target_date:
             pg.apply_goal(pc, user, body.total, body.target_date or None)
+        _set_so(pc, body.so_list)
     finally:
         pc.close()
     w_on = p["wilayah_on"] if body.wilayah_on is None else int(body.wilayah_on)

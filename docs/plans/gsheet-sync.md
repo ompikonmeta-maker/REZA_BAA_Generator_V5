@@ -76,3 +76,22 @@ Mockup: https://claude.ai/artifact/EufjdGmi8PMtAiApUsQT5Y (layar update + alarm,
 - **SO per lokasi:**
   - disimpan per lokasi; sumber utamanya kolom SO di sheet, dan template import juga diberi kolom **SO**;
   - Locations dan Reports bisa difilter per SO.
+
+## Tahap 1: SO di project & per lokasi (2026-11-09, ✅)
+- **Project:** isian chip "SO / internal order numbers" di Settings › All projects / Project & status, opsional, bisa lebih dari satu.
+  - Disimpan sebagai setting project `so_list`.
+  - SO yang masih dipakai lokasi tidak bisa dihapus (400).
+  - Tidak ikut tersalin saat project disalin (order berbeda per project).
+- **Lokasi:**
+  - kolom `locations.so`;
+  - Entry punya pilihan **SO / order** di bawah SID; daftar dari project, tersimpan langsung (`PUT /api/locations/{id}/so`, aktivitas "SO set to …");
+  - API create/update menerima `so`, dan nilainya harus terdaftar di project.
+- **Import Excel:**
+  - kolom **SO** di template (judul dikenali: SO, No SO, Nomor SO, Order, No Order);
+  - angka Excel 11803.0 dibaca "11803";
+  - SO yang belum terdaftar ditandai "new" di preview, lalu otomatis masuk daftar SO project saat import.
+- **Filter SO** (termasuk "No SO yet"):
+  - Location Log, dengan chip SO di kolom kode;
+  - export massal Excel / PDF / ZIP mengikuti filter;
+  - Reports: preview, PDF, dan Excel. Sheet Lokasi diberi kolom SO, dan label filter di laporan menyebut SO.
+- Belum: filter SO di Dashboard (Dashboard belum punya filter apa pun). SO dari Google Sheet ditangani di tahap 2.

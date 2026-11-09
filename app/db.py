@@ -260,6 +260,30 @@ def activation_key(conn) -> str | None:
 DEFAULT_ACTIVATION_RULE = {"required": True}
 
 
+def norm_so(v) -> str:
+    """Nomor SO / order internal: teks apa adanya, spasi dirapikan (angka Excel 11803.0 -> '11803')."""
+    if isinstance(v, float) and v.is_integer():
+        v = int(v)
+    return " ".join(str(v or "").split())[:60]
+
+
+def so_list(conn) -> list[str]:
+    """Daftar SO / order internal project (urut sesuai isian admin)."""
+    out, seen = [], set()
+    for x in get_setting(conn, "so_list", []) or []:
+        s = norm_so(x)
+        if s and s.upper() not in seen:
+            seen.add(s.upper())
+            out.append(s)
+    return out
+
+
+def so_match(conn, v) -> str | None:
+    """Ejaan SO terdaftar di project untuk nilai v (tanpa beda huruf besar/kecil); None bila belum terdaftar."""
+    s = norm_so(v).upper()
+    return next((x for x in so_list(conn) if x.upper() == s), None)
+
+
 def activation_rule(conn) -> dict:
     return {**DEFAULT_ACTIVATION_RULE, **(get_setting(conn, "activation_rule") or {})}
 
@@ -498,7 +522,7 @@ def init_project_db(p, base: dict | None = None) -> None:
     try:
         conn.execute("PRAGMA journal_mode = WAL")
         conn.executescript(PROJECT_SCHEMA)
-        for col in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_mode", "old_codes", "sid", "complete_at"):
+        for col in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_mode", "old_codes", "sid", "complete_at", "so"):
             if not _has_column(conn, "locations", col):
                 conn.execute(f"ALTER TABLE locations ADD COLUMN {col} TEXT")
         conn.execute("CREATE INDEX IF NOT EXISTS ix_loc_sid ON locations(upper(sid))")

@@ -32,6 +32,8 @@ WIL_COLS = [("kode", "Kode Wilayah", r"kode\s*wilayah|kode\s*desa"), ("desa", "D
 OWNER_RX = r"owner|pemilik|operator"
 # Kolom SID (opsional): judul = label SID project, 'SID' atau 'Site ID'
 SID_RX = r"^(sid|site\s*id)$"
+# Kolom SO / order internal (opsional): 'SO', 'No SO', 'Nomor SO', 'Order', 'No Order'
+SO_RX = r"^(so|no\.?\s*so|nomor\s*so|so\s*no\.?|order|no\.?\s*order|nomor\s*order)$"
 
 
 def _sid_on(conn) -> bool:
@@ -83,8 +85,9 @@ def template(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_ad
     ws.title = "Lokasi"
     wcols = [w[1] for w in WIL_COLS[1:]] + [WIL_COLS[0][1]] if _wil_on(conn) else []
     sid_lab = [db.sid_config(conn).get("label") or "SID"] if _sid_on(conn) else []
-    ws.append(["ref"] + sid_lab + [(_norm(f.get("label")) or f.get("key")) for f in fields] + wcols + ["Owner"])
-    ex = ["L1"] + [""] * len(sid_lab)      # SID: dari klien, kosong boleh
+    ws.append(["ref"] + sid_lab + ["SO"] + [(_norm(f.get("label")) or f.get("key")) for f in fields] + wcols + ["Owner"])
+    so1 = db.so_list(conn)
+    ex = ["L1"] + [""] * len(sid_lab) + [so1[0] if so1 else ""]   # SID: dari klien, kosong boleh · SO: opsional
     for f in fields:
         if f.get("key") == "nama_lokasi":
             ex.append("Contoh: Desa Sukamaju")
@@ -129,7 +132,7 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
     if not rows:
         return {"locations": [], "summary": {"total": 0, "ready": 0, "items": 0, "errors": 0, "dup": 0}}
     header = [_norm(h) for h in rows[0]]
-    col_field, ref_idx, wil_idx, own_idx, sid_idx = {}, None, {}, None, None
+    col_field, ref_idx, wil_idx, own_idx, sid_idx, so_idx = {}, None, {}, None, None, None
     sid_lab = (db.sid_config(conn).get("label") or "SID").strip().lower()
     for idx, h in enumerate(header):
         hl = h.lower()
@@ -137,6 +140,8 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
             ref_idx = idx
         elif sid_idx is None and _sid_on(conn) and (hl == sid_lab or re.search(SID_RX, hl)):
             sid_idx = idx
+        elif so_idx is None and re.search(SO_RX, hl) and hl not in label_to_field:
+            so_idx = idx
         elif hl in label_to_field:
             col_field[idx] = label_to_field[hl]
         elif own_idx is None and re.search(OWNER_RX, hl):
@@ -269,7 +274,12 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
                     errors.append(f"{db.sid_config(conn).get('label') or 'SID'} {sid} dobel di file (baris {seen_sid[sid.upper()]})")
                 else:
                     seen_sid[sid.upper()] = ri
-        out.append({"row": ri, "nama": nama, "data": data, "inventory": inv,
+        # SO: ejaan mengikuti daftar project; SO belum terdaftar -> ditandai, ditambahkan ke project saat import
+        so, so_new = "", False
+        if so_idx is not None and so_idx < len(r) and db.norm_so(r[so_idx]):
+            so = db.so_match(conn, r[so_idx]) or db.norm_so(r[so_idx])
+            so_new = db.so_match(conn, so) is None
+        out.append({"row": ri, "nama": nama, "data": data, "inventory": inv, "so": so, "so_new": so_new,
                     "errors": errors, "dup": bool(dup_of or dup_file), "dup_of": dup_of, "dup_file": dup_file,
                     "same_name": same_name, "wil": wil, "owner": own, "sid": sid, "sid_in": sid_in, "sid_of": sid_of})
 
@@ -292,6 +302,9 @@ def _parse(conn: sqlite3.Connection, data: bytes) -> dict:
         "wil_manual": sum(1 for x in ok_rows if x["wil"] and x["wil"]["status"] == "desa_manual"),
         "wil_check": sum(1 for x in ok_rows if x["wil"] and x["wil"]["status"] in ("ambiguous", "notfound")),
         "own_col": own_idx is not None, "owners": owners,
+        "so_col": so_idx is not None,
+        "so_n": sum(1 for x in ok_rows if x["so"]),
+        "so_new": sorted({x["so"] for x in ok_rows if x["so_new"]}, key=str.upper),
         "own_me": sum(1 for x in ok_rows if x["owner"]["status"] == "empty"),
         "own_check": sum(1 for x in ok_rows if x["owner"]["status"] in ("unknown", "viewer", "inactive")),
     }}
@@ -322,6 +335,11 @@ async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True), wil_
     can_own = {r["id"] for r in conn.execute("SELECT id FROM pm_users WHERE active=1 AND role<>'viewer'")}
     created = skipped = 0
     now = db.now_iso()
+    # SO baru dari file (hanya baris yang benar-benar diimport) -> masuk daftar SO project
+    take = [x for x in res["locations"] if not (x["errors"] or x.get("sid_of") or (x["dup"] and skip_dup))]
+    add_so = sorted({x["so"] for x in take if x.get("so_new")}, key=str.upper)
+    if add_so:
+        db.set_setting(conn, "so_list", db.so_list(conn) + add_so)
     for loc in res["locations"]:
         if loc["errors"] or loc.get("sid_of") or (loc["dup"] and skip_dup):
             skipped += 1
@@ -331,10 +349,10 @@ async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True), wil_
         owner = int(ch) if str(ch or "").isdigit() and int(ch) in can_own else (
             loc["owner"]["id"] if loc["owner"]["status"] == "ok" and ch is None else user["id"])
         cur = conn.execute(
-            "INSERT INTO locations(code,name,data_json,status,created_by,owner_id,created_at,updated_at,sid) "
-            "VALUES(?,?,?,?,?,?,?,?,?)",
+            "INSERT INTO locations(code,name,data_json,status,created_by,owner_id,created_at,updated_at,sid,so) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?)",
             ("", loc["nama"], json.dumps(loc["data"], ensure_ascii=False), "draft",
-             user["id"], owner, now, now, loc.get("sid") or None),
+             user["id"], owner, now, now, loc.get("sid") or None, loc.get("so") or None),
         )
         lid = cur.lastrowid
         conn.execute("UPDATE locations SET code=?, modified_at=?, modified_by=? WHERE id=?",
@@ -352,8 +370,9 @@ async def commit(file: UploadFile = File(...), skip_dup: bool = Form(True), wil_
             )
         created += 1
     conn.commit()
-    audit(conn, user, "import", "location", "", f"{created} lokasi, {skipped} dilewati")
-    return {"ok": True, "created": created, "skipped": skipped}
+    audit(conn, user, "import", "location", "", f"{created} lokasi, {skipped} dilewati"
+          + (f", SO baru: {', '.join(add_so)}" if add_so else ""))
+    return {"ok": True, "created": created, "skipped": skipped, "so_added": add_so}
 
 
 def _import_wil(w: dict | None, ch: dict):

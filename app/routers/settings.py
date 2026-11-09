@@ -50,6 +50,7 @@ def get_settings(conn: sqlite3.Connection = Depends(get_db), user=Depends(curren
         "sid_config": db.sid_config(conn),
         "attach_config": db.attach_config(conn),
         "activation_rule": db.activation_rule(conn),
+        "so_list": db.so_list(conn),
     }
 
 

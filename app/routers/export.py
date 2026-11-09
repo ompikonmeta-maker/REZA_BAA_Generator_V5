@@ -28,7 +28,7 @@ class _Cancelled(Exception):
     """Dilempar dari callback progress saat user membatalkan export."""
 
 
-def _filter_where(q: str, status: str, creator: int, date: str, user=None, wil: str = "", owner: int = 0):
+def _filter_where(q: str, status: str, creator: int, date: str, user=None, wil: str = "", owner: int = 0, so: str = ""):
     """Bangun klausa WHERE yang sama dengan GET /api/locations (Log Lokasi).
     Read-all: semua user boleh mengekspor lokasi mana pun."""
     where, params = ["deleted_at IS NULL"], []
@@ -52,17 +52,21 @@ def _filter_where(q: str, status: str, creator: int, date: str, user=None, wil: 
         from .locations import wil_where
         w, p = wil_where(wil)
         where.append(w); params += p
+    if so.strip():
+        from .locations import so_where
+        w, p = so_where(so)
+        where.append(w); params += p
     wsql = ("WHERE " + " AND ".join(where)) if where else ""
     return wsql, params
 
 
 def _gather_locations(conn: sqlite3.Connection, scope: str, loc_id: int | None,
                       q: str = "", status: str = "all", creator: int = 0,
-                      date: str = "", user=None, wil: str = "", owner: int = 0) -> list[dict]:
+                      date: str = "", user=None, wil: str = "", owner: int = 0, so: str = "") -> list[dict]:
     if scope == "all":
         rows = conn.execute("SELECT * FROM locations WHERE deleted_at IS NULL ORDER BY id").fetchall()
     elif scope == "filter":
-        wsql, params = _filter_where(q, status, creator, date, user, wil, owner)
+        wsql, params = _filter_where(q, status, creator, date, user, wil, owner, so)
         rows = conn.execute(f"SELECT * FROM locations {wsql} ORDER BY id", params).fetchall()
     else:
         if not loc_id:
@@ -273,14 +277,14 @@ def _log_export(conn, locs, kind: str, user) -> None:
 @router.get("/excel")
 def export_excel(scope: str = Query("one"), loc_id: int | None = None,
                  q: str = Query(""), status: str = Query("all"),
-                 creator: int = Query(0), owner: int = Query(0), date: str = Query(""), wil: str = Query(""),
+                 creator: int = Query(0), owner: int = Query(0), date: str = Query(""), wil: str = Query(""), so: str = Query(""),
                  conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     tpl = _tpl_row(conn)
     if not tpl:
         raise HTTPException(400, "No active template. Add one in the Template menu first.")
     if not Path(tpl["path"]).exists():
         raise HTTPException(400, "Template file is missing on the server.")
-    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user, wil, owner)
+    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user, wil, owner, so)
     tcfg = json.loads(tpl["config_json"]) if tpl["config_json"] else {}
     tcfg["sheet_log"] = tpl["sheet_log"]
     tcfg["sheet_detail"] = tpl["sheet_detail"]
@@ -306,9 +310,9 @@ def export_excel(scope: str = Query("one"), loc_id: int | None = None,
 @router.get("/pdf")
 def export_pdf(scope: str = Query("one"), loc_id: int | None = None,
                q: str = Query(""), status: str = Query("all"),
-               creator: int = Query(0), owner: int = Query(0), date: str = Query(""), wil: str = Query(""),
+               creator: int = Query(0), owner: int = Query(0), date: str = Query(""), wil: str = Query(""), so: str = Query(""),
                conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
-    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user, wil, owner)
+    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user, wil, owner, so)
     cats = db.get_setting(conn, "photo_categories", [])
     title = db.app_title(conn)
     out = _stamp(locs[0]["code"] if scope == "one" else "BAA", "pdf")
@@ -325,10 +329,10 @@ def export_pdf(scope: str = Query("one"), loc_id: int | None = None,
 @router.get("/pdf-zip")
 def export_pdf_zip(scope: str = Query("filter"), loc_id: int | None = None,
                    q: str = Query(""), status: str = Query("all"),
-                   creator: int = Query(0), owner: int = Query(0), date: str = Query(""), wil: str = Query(""),
+                   creator: int = Query(0), owner: int = Query(0), date: str = Query(""), wil: str = Query(""), so: str = Query(""),
                    conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     """Satu PDF detail per lokasi (tanpa LOG sheet), dibundel dalam satu ZIP."""
-    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user, wil, owner)
+    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user, wil, owner, so)
     cats = db.get_setting(conn, "photo_categories", [])
     title = db.app_title(conn)
     zpath = _stamp("PDF_BAA", "zip")
@@ -446,13 +450,13 @@ def _run_job(j: dict, locs: list, tpl, tcfg, cats, title) -> None:
 
 @router.post("/jobs")
 def start_job(kind: str = Query(...), scope: str = Query("one"), loc_id: int | None = None,
-              q: str = Query(""), status: str = Query("all"), creator: int = Query(0), owner: int = Query(0), date: str = Query(""), wil: str = Query(""),
+              q: str = Query(""), status: str = Query("all"), creator: int = Query(0), owner: int = Query(0), date: str = Query(""), wil: str = Query(""), so: str = Query(""),
               group: str = Query(""),
               conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):
     if kind not in ("excel", "pdf", "pdfzip"):
         raise HTTPException(400, "Unknown export type")
     _purge_jobs()
-    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user, wil, owner)
+    locs = _gather_locations(conn, scope, loc_id, q, status, creator, date, user, wil, owner, so)
     tpl, tcfg = _active_template(conn)
     if kind == "excel":
         t = conn.execute("SELECT * FROM templates WHERE active=1 ORDER BY id DESC LIMIT 1").fetchone()

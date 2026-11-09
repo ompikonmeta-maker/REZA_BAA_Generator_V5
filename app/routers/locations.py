@@ -43,6 +43,7 @@ class LocationIn(BaseModel):
     wil: dict | None = None           # {mode, kode, desa, kec, kab, prov}; None = tidak diubah, {} = kosongkan
     wil_kode: str | None = None       # (lama) pilih desa resmi lewat kode saja
     sid: str | None = None            # identitas lokasi dari klien; None = tidak diubah, "" = kosongkan (admin)
+    so: str | None = None             # nomor SO / order (harus terdaftar di project); None = tidak diubah, "" = kosongkan
 
 
 WIL_MODES = ("official", "desa_manual", "manual")
@@ -113,6 +114,16 @@ def check_sid_free(conn, sid: str, exclude: int = 0) -> None:
     o = sid_owner(conn, sid, exclude)
     if o:
         raise HTTPException(409, f"{db.sid_config(conn).get('label') or 'SID'} {sid} is already used by {o['code']}")
+
+
+def check_so(conn, v) -> str:
+    """SO lokasi: kosong boleh; selain itu harus terdaftar di project (ejaan mengikuti daftar)."""
+    if not db.norm_so(v):
+        return ""
+    s = db.so_match(conn, v)
+    if not s:
+        raise HTTPException(400, f"SO '{db.norm_so(v)}' is not in this project's SO list")
+    return s
 
 
 def require_activation(conn, data) -> None:
@@ -248,6 +259,7 @@ def _location_dict(conn: sqlite3.Connection, row, user=None) -> dict:
         "scan": scan_info(conn, row["id"]),
         "wilayah": _wil_dict(row),
         "sid": row["sid"] or "" if "sid" in row.keys() else "",
+        "so": (row["so"] or "") if "so" in row.keys() else "",
         "complete_at": row["complete_at"] if "complete_at" in row.keys() else None,
         "sid_request": {"value": sr["value_new"], "mine": bool(user) and sr["requester_id"] == user["id"]} if sr else None,
         "attachments": attachment_list(conn, row["id"]),
@@ -265,6 +277,7 @@ def list_locations(
     date: str = Query(""),            # filter tanggal dibuat (YYYY-MM-DD, waktu lokal)
     wil: str = Query(""),             # filter wilayah: kode provinsi/kab/kec, atau "none" = belum diisi
     dup: int = Query(0),              # 1 = hanya lokasi yang kemungkinan kembar (nama + wilayah sama)
+    so: str = Query(""),              # filter SO; "none" = belum ada SO
     conn: sqlite3.Connection = Depends(get_db),
     user=Depends(current_user),
 ):
@@ -296,6 +309,9 @@ def list_locations(
     if wil.strip():
         w, p = wil_where(wil, "l.")
         where.append(w); params += p
+    if so.strip():
+        w, p = so_where(so, "l.")
+        where.append(w); params += p
     groups = dup_groups(conn)
     dup_n = {r["id"]: len(v) for v in groups.values() for r in v}
     if dup:
@@ -308,7 +324,7 @@ def list_locations(
 
     offset = (page - 1) * size
     rows = conn.execute(
-        f"""SELECT l.id, l.code, l.name, l.status, l.data_json, l.created_by, l.owner_id, l.sid,
+        f"""SELECT l.id, l.code, l.name, l.status, l.data_json, l.created_by, l.owner_id, l.sid, l.so,
               l.created_at, l.updated_at, l.modified_at, l.modified_by,
               COALESCE(NULLIF(TRIM(m.full_name),''), m.username) AS modifier_name,
               COALESCE(NULLIF(TRIM(u.full_name),''), u.username, '—') AS creator_name,
@@ -348,6 +364,7 @@ def list_locations(
             "can_delete": is_admin or r["owner_id"] == user["id"],
             "dup_n": dup_n.get(r["id"], 0),
             "sid": r["sid"] or "",
+            "so": r["so"] or "",
         }
         for r in rows
     ]
@@ -366,7 +383,13 @@ def location_creators(conn: sqlite3.Connection = Depends(get_db), user=Depends(c
                FROM users u JOIN locations l ON l.{col} = u.id
                WHERE l.deleted_at IS NULL{extra}
                GROUP BY u.id ORDER BY name COLLATE NOCASE""", scp).fetchall()]
-    return {"creators": by("created_by"), "owners": by("owner_id")}
+    sos: dict[str, int] = {}
+    for r in conn.execute(f"SELECT COALESCE(so,'') s, COUNT(*) n FROM locations l WHERE l.deleted_at IS NULL{extra} "
+                          "GROUP BY upper(COALESCE(so,''))", scp):
+        sos[r["s"]] = r["n"]
+    order = {v.upper(): i for i, v in enumerate(db.so_list(conn))}
+    so_rows = sorted(({"so": k, "n": v} for k, v in sos.items() if k), key=lambda x: (order.get(x["so"].upper(), 999), x["so"]))
+    return {"creators": by("created_by"), "owners": by("owner_id"), "sos": so_rows, "so_none": sos.get("", 0)}
 
 
 @router.get("/sid-check")
@@ -395,6 +418,27 @@ def set_sid(loc_id: int, body: SidIn, conn: sqlite3.Connection = Depends(get_db)
         conn.commit()
         audit(conn, user, "set_sid", "location", loc_id, f"{row['code']}: {row['sid'] or '—'} -> {norm_sid(conn, body.sid) or '—'}")
     return _location_dict(conn, conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone(), user)
+
+
+class SoIn(BaseModel):
+    so: str = ""
+
+
+@router.put("/{loc_id}/so")
+def set_so(loc_id: int, body: SoIn, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_editor)):
+    """Pilih SO lokasi (dari daftar SO project); kosong = lepas SO."""
+    row = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
+    if not row:
+        raise HTTPException(404, "Location not found")
+    if not _can_write(user, row):
+        raise HTTPException(403, "Not your location")
+    so = check_so(conn, body.so)
+    if so != (row["so"] or ""):
+        conn.execute("UPDATE locations SET so=? WHERE id=?", (so or None, loc_id))
+        db.touch_modified(conn, loc_id, user["id"], "so", so or "—")
+        conn.commit()
+        audit(conn, user, "set_so", "location", loc_id, so or "—")
+    return {"ok": True, "so": so}
 
 
 @router.get("/options")
@@ -430,11 +474,12 @@ def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db)
     wv = _wil_values(body.wil, body.wil_kode) or (None,) * 6
     sid = norm_sid(conn, body.sid) if body.sid else ""
     check_sid_free(conn, sid)
+    so = check_so(conn, body.so)
     cur = conn.execute(
         "INSERT INTO locations(code,name,data_json,status,created_by,owner_id,created_at,updated_at,"
-        "wil_kode,wil_desa,wil_kec,wil_kab,wil_prov,wil_mode,sid) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        "wil_kode,wil_desa,wil_kec,wil_kab,wil_prov,wil_mode,sid,so) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
         ("", body.name, json.dumps(body.data, ensure_ascii=False), body.status,
-         user["id"], user["id"], now, now, *wv, sid or None),
+         user["id"], user["id"], now, now, *wv, sid or None, so or None),
     )
     code = _format_code(conn, cur.lastrowid)
     conn.execute("UPDATE locations SET code=?, modified_at=?, modified_by=? WHERE id=?",
@@ -444,6 +489,13 @@ def create_location(body: LocationIn, conn: sqlite3.Connection = Depends(get_db)
     audit(conn, user, "create", "location", cur.lastrowid, code)
     row = conn.execute("SELECT * FROM locations WHERE id=?", (cur.lastrowid,)).fetchone()
     return _location_dict(conn, row, user)
+
+
+def so_where(so: str, alias: str = "") -> tuple[str, list]:
+    """Klausa filter SO: 'none' = belum ada SO; selain itu SO persis (tanpa beda huruf besar/kecil)."""
+    if so.strip() == "none":
+        return f"({alias}so IS NULL OR {alias}so='')", []
+    return f"upper({alias}so)=?", [db.norm_so(so).upper()]
 
 
 def wil_where(wil: str, alias: str = "") -> tuple[str, list]:
@@ -591,7 +643,13 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
     if wil_changed:
         conn.execute(f"UPDATE locations SET {_WIL_SET} WHERE id=?", (*wv, loc_id))
     sid_changed = body.sid is not None and _apply_sid(conn, user, row, body.sid)
-    changed = (body.name != row["name"] or body.status != row["status"] or wil_changed or sid_changed
+    so_changed = False
+    if body.so is not None:
+        so = check_so(conn, body.so)
+        if so != (row["so"] or ""):
+            conn.execute("UPDATE locations SET so=? WHERE id=?", (so or None, loc_id))
+            so_changed = True
+    changed = (body.name != row["name"] or body.status != row["status"] or wil_changed or sid_changed or so_changed
                or json.loads(new_json) != json.loads(row["data_json"] or "{}"))
     conn.execute(
         "UPDATE locations SET name=?,data_json=?,status=?,updated_at=? WHERE id=?",
