@@ -64,3 +64,15 @@ Mockup: https://claude.ai/artifact/EufjdGmi8PMtAiApUsQT5Y (layar update + alarm,
   - Semua bisa diatur, tanpa nama kolom yang ditanam di kode.
 - **BAA Flow** mencatat sidik (hash) terakhir yang terkirim per lokasi, jadi yang dikirim hanya yang berubah. PDF hanya diunggah ulang kalau isinya berubah.
 - Log update disimpan per project.
+
+## Keputusan lanjutan (2026-11-09)
+- **Update pertama:** operator menyelesaikan lokasi satu per satu, jadi PDF terunggah bertahap. Yang dikirim hanya yang berubah.
+- **SO baru:** ditambah di pengaturan project (chip SO yang sama dengan saat buat project), kapan saja.
+- **Lokasi baru dari sheet:** baris ber-SO project yang belum ada di BAA Flow muncul di alarm "Only in sheet".
+  - Admin mencentang lalu klik **Create in BAA Flow**.
+  - Lokasi draf dibuat dengan nama, desa/kec/kab/prov, SID = ID Node Link, dan SO dari sheet.
+  - Tanggal aktivasi tetap diisi operator.
+  - Import Excel dan tambah manual tetap ada.
+- **SO per lokasi:**
+  - disimpan per lokasi; sumber utamanya kolom SO di sheet, dan template import juga diberi kolom **SO**;
+  - Locations dan Reports bisa difilter per SO.
