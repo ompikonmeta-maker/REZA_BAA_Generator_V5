@@ -149,7 +149,7 @@ Mockup: https://claude.ai/artifact/EufjdGmi8PMtAiApUsQT5Y (layar update + alarm,
   - owner = admin; tanggal aktivasi diisi operator.
 - **Kolom baru di setting:** Provinsi (untuk pencocokan wilayah lokasi baru).
 - **Diuji** dengan tiruan Apps Script:
-  - 5 baris ditulis dan 2 PDF diunggah (5 halaman: scan + BAA);
+  - 5 baris ditulis dan 2 PDF diunggah (masing-masing 3 halaman: scan + BAA);
   - cek ulang menghasilkan 0 perubahan;
   - setelah lokasi diedit, muncul "replace PDF";
   - status Done yang diketik manual di sheet ditimpa menjadi Undone;
