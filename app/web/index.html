@@ -5994,6 +5994,8 @@ async function _saveEntry(finish){try{
   if(!S.loc||!S.loc.id){toast('Fill in the location data first');return false;}
   const st=computeState(),ec=entryCalc(st),was=S.loc.status==='selesai';
   const status=ec.pct>=100&&(was||finish)?'selesai':'draft';
+  // lokasi hasil import tanpa tanggal aktivasi di server: simpan data (draft) dulu, karena server menolak inventory sebelum tanggal ada
+  if(actStoredMissing())await api('/api/locations/'+S.loc.id,{method:'PUT',body:JSON.stringify({name:st.data.nama_lokasi||'',data:st.data,status:'draft',...wilBody(false)})});
   await api('/api/locations/'+S.loc.id+'/inventory',{method:'PUT',body:JSON.stringify({items:collectInventory()})});   // inventory dulu: server cek kelengkapan saat Done
   await api('/api/locations/'+S.loc.id,{method:'PUT',body:JSON.stringify({name:st.data.nama_lokasi||'',data:st.data,status,...wilBody()})});
   S.loc._wilDirty=false;entryDirty=false;
@@ -6022,8 +6024,10 @@ async function asRun(){clearTimeout(AS.t);AS.t=0;
   AS.busy=(async()=>{try{
       if(isDraft()){if(!draftHasData()&&!S._creating)return;await ensureLoc();}
       const lid=S.loc.id,st=computeState(),wb=wilBody(false),nm0=S.loc.name;entryDirty=false;asPaint();
-      await api('/api/locations/'+lid+'/inventory',{method:'PUT',body:JSON.stringify({items:collectInventory()})});
+      // draf: data lokasi dulu (membawa tanggal aktivasi), baru inventory — server mengecek tanggal yang sudah tersimpan
       const r=await api('/api/locations/'+lid,{method:'PUT',body:JSON.stringify({name:st.data.nama_lokasi||'',data:st.data,status:'draft',...wb})});
+      if(S.loc&&S.loc.id===lid)S.loc.data=r.data;
+      await api('/api/locations/'+lid+'/inventory',{method:'PUT',body:JSON.stringify({items:collectInventory()})});
       if(S.loc&&S.loc.id===lid){if(wb.wil)S.loc._wilDirty=false;S.loc.name=r.name;S.loc.data=r.data;S.loc.modified_at=r.modified_at;if(r.name!==nm0)refreshPicker();}
       AS.at=Date.now();AS.err='';
     }catch(e){entryDirty=true;AS.err=e.message||'Save failed';}
@@ -7392,6 +7396,8 @@ function lfRow(f={}){const sys=f.key==='nama_lokasi';return `<div class="ecard l
     ${pill('required','Required',f.required)}<span class="act-w"${f.type==='date'?'':' hidden'} data-tip="Activation date of the link: counts the location as NIS (node in service) and starts the document completion time in Reports">${pill('act','Activation date',actKey()===f.key&&f.type==='date')}</span>${delBtnCell()}
   </div></div>`;}
 /* Field tanggal aktivasi (role 'activation'): dasar NIS & lama penyelesaian. Belum pernah diatur -> field 'tanggal'. */
+/* Tanggal aktivasi belum tersimpan di server untuk lokasi aktif (mis. hasil import), walau di form sudah diisi */
+function actStoredMissing(){const k=actKey();return !!(k&&S.loc&&S.loc.id&&!String((S.loc.data||{})[k]||'').trim());}
 function actKey(fields){fields=fields||S.locFields||[];const f=fields.find(x=>x.role==='activation'&&x.type==='date');if(f)return f.key;
   if(fields.some(x=>'role' in x))return null;const t=fields.find(x=>x.key==='tanggal'&&x.type==='date');return t?t.key:null;}
 function renderLF(){$('#lf-list').innerHTML=(S.locFields||[]).map(lfRow).join('');lfSug();renderIdSet();bindTips();}
