@@ -599,6 +599,80 @@ def transfer_locations(body: TransferIn, conn: sqlite3.Connection = Depends(get_
     return {"ok": True, "count": n, "to": {"id": tgt["id"], "name": name}}
 
 
+class ResetIn(BaseModel):
+    ids: list[int]
+    dry: bool = False  # True = hanya hitung isi yang akan terhapus (untuk kotak konfirmasi)
+
+
+def _reset_counts(conn, lid: int) -> dict:
+    q = lambda sql: conn.execute(sql, (lid,)).fetchone()[0]  # noqa: E731
+    return {"inventory": q("SELECT COUNT(*) FROM inventory_items WHERE location_id=?"),
+            "photos": q("SELECT COUNT(*) FROM photos WHERE location_id=?"),
+            "scan": q("SELECT COUNT(*) FROM scan_docs WHERE location_id=?"),
+            "attachments": q("SELECT COUNT(*) FROM attachments WHERE location_id=?")}
+
+
+def _reset_one(conn, row, user) -> None:
+    """Kembalikan lokasi ke kondisi awal: identitas (kode, nama, SID, SO, wilayah, pemilik) tetap;
+    isian form, inventory, foto, scan, lampiran & status Done dihapus permanen."""
+    lid = row["id"]
+    files = [r[0] for t in ("photos", "scan_docs", "attachments")
+             for r in conn.execute(f"SELECT path FROM {t} WHERE location_id=?", (lid,))]
+    for t in ("inventory_items", "photos", "scan_docs", "attachments"):
+        conn.execute(f"DELETE FROM {t} WHERE location_id=?", (lid,))
+    data = json.loads(row["data_json"] or "{}")
+    keep = {"nama_lokasi": data.get("nama_lokasi") or row["name"] or ""}
+    conn.execute("UPDATE locations SET data_json=?, status='draft', done_at=NULL, complete_at=NULL WHERE id=?",
+                 (json.dumps(keep, ensure_ascii=False), lid))
+    conn.execute("UPDATE gsheet_sync SET pdf_url=NULL, pdf_at=NULL WHERE location_id=?", (lid,))
+    db.touch_modified(conn, lid, user["id"], "reset")
+    conn.commit()
+    for p in files:
+        try:
+            db.fpath(conn, p).unlink(missing_ok=True)
+        except Exception:
+            pass
+    code = (row["code"] or "").strip()
+    if code and "/" not in code and "\\" not in code and code not in (".", ".."):  # jangan pernah hapus folder induk
+        shutil.rmtree(db.images_dir(conn) / code, ignore_errors=True)
+        shutil.rmtree(db.docs_dir(conn) / code, ignore_errors=True)
+
+
+@router.post("/reset")
+def reset_locations(body: ResetIn, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_editor)):
+    """Reset BAA. Satu lokasi: admin, atau operator pemilik selama belum Done. Lebih dari satu: admin saja."""
+    ids = list(dict.fromkeys(body.ids))
+    if not ids:
+        raise HTTPException(400, "No locations selected")
+    admin = user["role"] == "admin"
+    if len(ids) > 1 and not admin:
+        raise HTTPException(403, "Bulk reset is for admins only")
+    rows = []
+    for lid in ids:
+        r = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (lid,)).fetchone()
+        if not r:
+            raise HTTPException(404, "Location not found")
+        if not _can_write(user, r):
+            raise HTTPException(403, "Not your location")
+        if not admin and r["status"] == "selesai":
+            raise HTTPException(403, "This location is Done — ask an admin to reset it")
+        rows.append(r)
+    tot = {"locations": len(rows), "inventory": 0, "photos": 0, "scan": 0, "attachments": 0, "done": 0, "dated": 0}
+    akey = db.activation_key(conn)
+    for r in rows:
+        for k, v in _reset_counts(conn, r["id"]).items():
+            tot[k] += v
+        tot["done"] += r["status"] == "selesai"
+        tot["dated"] += bool(akey and (json.loads(r["data_json"] or "{}").get(akey) or ""))
+    if body.dry:
+        return {"ok": True, "dry": True, **tot}
+    for r in rows:
+        _reset_one(conn, r, user)
+    audit(conn, user, "reset", "location", ",".join(str(r["id"]) for r in rows),
+          ", ".join(r["code"] for r in rows)[:500])
+    return {"ok": True, **tot}
+
+
 @router.get("/dups")
 def location_dups(name: str = Query(""), desa: str = Query(""), kec: str = Query(""), kab: str = Query(""),
                   exclude: int = Query(0), conn: sqlite3.Connection = Depends(get_db), user=Depends(current_user)):

@@ -283,6 +283,10 @@
   .bk-bar button.pri{background:var(--md-sys-color-inverse-primary);color:var(--md-sys-color-on-primary-container)}
   .bk-dlg{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;padding:16px;background:color-mix(in srgb,var(--md-sys-color-scrim,#000) 45%,transparent)}
   .bk-dlg .box{width:min(580px,100%);padding:22px;border-radius:var(--md-sys-shape-corner-extra-large);background:var(--md-sys-color-surface-container-high);box-shadow:var(--md-sys-elevation-level3);animation:pjin .22s cubic-bezier(.05,.7,.1,1)}
+  .rs-box md-text-field{width:100%;margin:4px 0 2px}
+  .rs-del{margin:0 0 12px;padding:12px 14px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);font:var(--md-sys-typescale-body-medium)}
+  .rs-del ul{margin:6px 0 0;padding-left:20px}.rs-del li{margin:2px 0}
+  .rs-warn{display:flex;gap:8px;align-items:flex-start}.rs-warn .mi{color:var(--md-sys-color-error);font-size:20px}
   .bk-dlg h3{margin:0 0 4px;font:var(--md-sys-typescale-headline-small)}
   .bk-dlg p{margin:0 0 14px;color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-body-medium)}
   .bk-dlg .lst{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px;max-height:84px;overflow:auto}
@@ -2470,6 +2474,7 @@
           <md-icon-button id="loc-next" data-tip="Next location"><span>chevron_right</span></md-icon-button>
         </span>
         <span class="set-status hidden" id="asStat"><span class="dot"></span><span id="asTxt">Saved</span></span>
+        <md-icon-button id="entryReset" class="hidden" data-tip="Reset BAA — clear everything entered for this location"><span>restart_alt</span></md-icon-button>
         <span class="grow"></span>
         <button class="addloc" id="entry-new" data-tip="New location"><span class="mi">add</span><span class="albl">Add Location</span></button>
       </span>
@@ -3700,8 +3705,8 @@ function wilCell(l){if(!WIL.on())return '';if(!l.wil_desa)return '<span class="l
   return `<span class="lc-wil">${esc(l.wil_desa)}${l.wil_kab?' · '+esc(l.wil_kab):''}${b?`<span class="badge-m${adm?' lk':''}"${adm?` onclick="event.stopPropagation();wilLink(${l.id})" data-tip="Link to official wilayah"`:''}>${b}</span>`:''}</span>`;}
 function bkSync(){const n=BK.size;let bar=$('#bkBar');
   if(!bar){bar=document.createElement('div');bar.id='bkBar';bar.className='bk-bar';
-    bar.innerHTML='<span id="bkN"></span><button class="pri" id="bkSet"><span class="mi">location_on</span>Set wilayah</button>'+(S.user&&S.user.role==='admin'?'<button class="pri" id="bkTr"><span class="mi">swap_horiz</span>Transfer…</button>':'')+'<button id="bkClr" data-tip="Clear selection"><span class="mi">close</span></button>';
-    document.body.appendChild(bar);$('#bkSet').onclick=bkDialog;const bt=$('#bkTr');if(bt)bt.onclick=()=>bkTransfer(bt);$('#bkClr').onclick=()=>{BK.clear();bkSync();};bindTips();}
+    bar.innerHTML='<span id="bkN"></span><button class="pri" id="bkSet"><span class="mi">location_on</span>Set wilayah</button>'+(S.user&&S.user.role==='admin'?'<button class="pri" id="bkTr"><span class="mi">swap_horiz</span>Transfer…</button><button class="pri" id="bkRs"><span class="mi">restart_alt</span>Reset BAA…</button>':'')+'<button id="bkClr" data-tip="Clear selection"><span class="mi">close</span></button>';
+    document.body.appendChild(bar);$('#bkSet').onclick=bkDialog;const bt=$('#bkTr');if(bt)bt.onclick=()=>bkTransfer(bt);const br=$('#bkRs');if(br)br.onclick=()=>{const ids=[...BK];if(ids.length)resetBaa(ids,LOC_ROWS.filter(l=>BK.has(l.id)).map(l=>l.code));};$('#bkClr').onclick=()=>{BK.clear();bkSync();};bindTips();}
   $('#bkN').textContent=n+' selected';bar.classList.toggle('on',n>0&&_visible('v-locations'));
   $$('#loc-table .bk-ck').forEach(c=>c.classList.toggle('on',BK.has(+c.dataset.id)));
   const all=$('#bkAll');if(all){const vis=LOC_ROWS.length,sel=LOC_ROWS.filter(l=>BK.has(l.id)).length;all.className='bk-ck'+(sel&&sel===vis?' on':sel?' some':'');}}
@@ -4845,7 +4850,7 @@ function agingRanges(a){return {fresh:`0–${a.fresh} d`,warm:`${a.fresh+1}–${
 function ageChip(d){return `<span class="pg-age-chip" style="background:var(${AGE_VAR[d.aging]});color:var(${AGE_INK[d.aging]})">${AGE_LBL[d.aging]} · ${d.idle} d</span>`;}
 function fmtDay(iso){if(!iso)return '—';const d=new Date(iso+(iso.length===10?'T00:00:00':''));return `${d.getDate()} ${_IDMON[d.getMonth()]} ${d.getFullYear()}`;}
 function hhmm(iso){const d=new Date(iso);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
-const ACT_TXT={create:'Created',data:'Edited location data',inventory:'Edited inventory',photo_add:d=>`Uploaded ${d||1} photo${(+d||1)>1?'s':''}`,photo_del:'Deleted a photo',photo_move:'Moved a photo',sn:'Edited an SN',done:'Marked Done',reopen:'Reopened',
+const ACT_TXT={create:'Created',data:'Edited location data',inventory:'Edited inventory',photo_add:d=>`Uploaded ${d||1} photo${(+d||1)>1?'s':''}`,photo_del:'Deleted a photo',photo_move:'Moved a photo',sn:'Edited an SN',done:'Marked Done',reopen:'Reopened',reset:'Reset the BAA',
   scan_add:'Uploaded the scan PDF',scan_del:'Removed the scan PDF',att_add:d=>'Attached '+(d||'a file'),att_del:d=>'Removed attachment '+(d||''),att_move:d=>'Moved attachment '+(d||''),
   sid:d=>`${sidLabel()} ${d||'changed'}`,so:d=>`SO ${d&&d!=='—'?'set to '+d:'cleared'}`};
 function actTxt(f){const t=ACT_TXT[f.kind];return typeof t==='function'?t(f.detail):(t||f.kind);}
@@ -5394,7 +5399,7 @@ async function dupCheck(){const el=$('#dupWarn');if(!el||!S.loc)return;const seq
   el.querySelectorAll('[data-open]').forEach(a=>a.onclick=async()=>{if(entryDirty&&!roActive()){await saveEntry(false);}openLoc(+a.dataset.open);});}
 /* Read-only bila viewer, atau operator membuka lokasi milik user lain (boleh lihat,
    tak boleh edit). Field dikunci + tombol tulis disembunyikan (class .ro). */
-function lockEntry(){
+function lockEntry(){rsSync();
   const ro = (S.user && S.user.role==='viewer') || (S.loc && S.loc.can_edit===false);
   const form=$('#entry-form'); if(!form)return; form.classList.toggle('ro', !!ro);
   let ban=$('#ro-banner');
@@ -6114,7 +6119,7 @@ function renderLocTable(){
     <td>${l.inv_count}</td><td>${present}/${S.cats.length}</td>
     <td><span class="loc-st ${stCls}">${esc(l.status)}</span></td>
     <td>${locKel(l)}</td>
-    <td style="text-align:right"><md-icon-button data-tip="Actions" onclick='event.stopPropagation();locMenu(this,${JSON.stringify({id:l.id,code:l.code,cd:l.can_delete,owner_id:l.owner_id,owner_name:l.owner_name})})'><span>more_vert</span></md-icon-button></td></tr>`;}).join('')||'<tr><td colspan=12 class="muted">No data</td></tr>';
+    <td style="text-align:right"><md-icon-button data-tip="Actions" onclick='event.stopPropagation();locMenu(this,${JSON.stringify({id:l.id,code:l.code,cd:l.can_delete,st:l.status,owner_id:l.owner_id,owner_name:l.owner_name})})'><span>more_vert</span></md-icon-button></td></tr>`;}).join('')||'<tr><td colspan=12 class="muted">No data</td></tr>';
   $('#loc-info').textContent=LOC_TOTAL?`Showing ${Math.min(LOC_ROWS.length,LOC_TOTAL)} of ${LOC_TOTAL}`:'';
   const cnt=$('#loc-exp-cnt');if(cnt)cnt.textContent=LOC_TOTAL?`${LOC_TOTAL} locations match filter`:'No locations';
   $('#loc-more').classList.toggle('hidden',LOC_ROWS.length>=LOC_TOTAL);bkSync();bindTips();}
@@ -6422,6 +6427,7 @@ window.locMenu=(btn,l)=>{const items=[
   {icon:'grid_on',label:'Export Excel',fn:()=>downloadExport('/api/export/excel?scope=one&loc_id='+l.id)},
   {icon:'picture_as_pdf',label:'Export PDF',fn:()=>downloadExport('/api/export/pdf?scope=one&loc_id='+l.id)}];
   if(S.user&&S.user.role==='admin')items.push({icon:'swap_horiz',label:'Transfer to…',fn:()=>transferMenu(btn,l)});
+  if(l.cd&&(S.user.role==='admin'||l.st!=='selesai'))items.push({icon:'restart_alt',label:'Reset BAA…',fn:()=>resetBaa([l.id],[l.code])});
   if(l.cd)items.push({icon:'delete',label:'Delete',fn:()=>confirmDelete(l.id,l.code,false)});openMenu(btn,items);};
 const trTargets=()=>(USR_ROWS||[]).filter(u=>u.active&&u.role!=='viewer'&&(u.role==='admin'||(u.projects||[]).includes(+PJ.id)));
 function transferMenu(btn,l){const targets=trTargets();
@@ -6439,6 +6445,36 @@ function bkTransfer(btn){const ids=[...BK],targets=trTargets();if(!ids.length)re
   openMenu(btn,targets.map(u=>({icon:'person',label:u.full_name||u.username,
     fn:()=>confirmDo('Transfer locations',`Move <b>${ids.length} location${ids.length>1?'s':''}</b> to <b>${esc(u.full_name||u.username)}</b>? They become the owner and can edit them.`,
       ()=>doTransfer(ids,u),{okLabel:'Transfer'})})));}
+
+/* ===== Reset BAA: kosongkan isian lokasi (identitas tetap). Satu: admin / operator pemilik (belum Done). Banyak: admin ===== */
+function rsSync(){const b=$('#entryReset');if(!b)return;const L=S.loc,u=S.user;
+  b.classList.toggle('hidden',!(L&&L.id&&u&&u.role!=='viewer'&&L.can_edit!==false&&(u.role==='admin'||L.status!=='selesai')));}
+$('#entryReset').addEventListener('click',()=>{if(S.loc&&S.loc.id)resetBaa([S.loc.id],[S.loc.code],true);});
+async function resetBaa(ids,codes,fromEntry){let c;
+  try{c=await api('/api/locations/reset',{method:'POST',body:JSON.stringify({ids,dry:true})});}catch(e){toast('Failed: '+e.message);return;}
+  const one=ids.length===1,word=one?codes[0]:'RESET',pl=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
+  const lines=[c.dated&&(one?'Activation date':pl(c.dated,'activation date')),'Technician, PIC and all other form fields',
+    c.inventory&&pl(c.inventory,'inventory item'),c.photos&&pl(c.photos,'photo'),c.scan&&(one?'Signed scan PDF':pl(c.scan,'signed scan PDF')),
+    c.attachments&&pl(c.attachments,'attachment'),c.done&&(one?'Done status → back to Draft':pl(c.done,'Done status')+' → back to Draft')].filter(Boolean);
+  const d=document.createElement('div');d.className='bk-dlg';
+  d.innerHTML=`<div class="box rs-box"><h3>Reset BAA</h3>
+    <p>${one?`<b>${esc(codes[0])}</b> goes back to an empty BAA.`:`<b>${ids.length} locations</b> go back to an empty BAA.`} Code, location name, ${esc(sidLabel())}, SO, wilayah and owner stay.</p>
+    ${one?'':`<div class="lst">${codes.slice(0,40).map(x=>`<span>${esc(x)}</span>`).join('')}${ids.length>40?`<span>+${ids.length-40}</span>`:''}</div>`}
+    <div class="rs-del"><b>Permanently deleted</b><ul>${lines.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+    <p class="rs-warn"><span class="mi">warning</span>This cannot be undone. The Google Sheet row is cleared on the next Update; the PDF already on Drive stays.</p>
+    <md-text-field id="rsType" variant="outlined" label="Type ${esc(word)} to confirm" autocomplete="off"></md-text-field>
+    <div class="acts"><md-button variant="text" id="rsCancel">Cancel</md-button><md-button variant="filled" icon="restart_alt" id="rsOk" disabled>Reset${one?'':' '+ids.length}</md-button></div></div>`;
+  document.body.appendChild(d);const shut=()=>d.remove(),ok=$('#rsOk'),inp=$('#rsType');
+  $('#rsCancel').onclick=shut;d.addEventListener('mousedown',e=>{if(e.target===d)shut();});
+  inp.addEventListener('input',()=>ok.toggleAttribute('disabled',inp.value.trim().toUpperCase()!==word.toUpperCase()));
+  ok.onclick=async()=>{if(ok.hasAttribute('disabled'))return;ok.setAttribute('disabled','');
+    try{if(fromEntry){asReset();entryDirty=false;}
+      const r=await api('/api/locations/reset',{method:'POST',body:JSON.stringify({ids})});shut();
+      toast(one?codes[0]+' reset':r.locations+' locations reset');BK.clear();bkSync();
+      if(fromEntry||(S.loc&&ids.includes(S.loc.id)))await openLoc(S.loc.id);
+      refreshPicker();loadLocations();loadCreators();if(typeof loadDashboard==='function')loadDashboard();}
+    catch(e){toast('Failed: '+e.message);ok.removeAttribute('disabled');}};
+  setTimeout(()=>inp.focus(),60);}
 
 /* ===== Lokasi Terhapus (soft-delete) — admin ===== */
 let TRASH=[];
