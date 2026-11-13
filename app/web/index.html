@@ -296,6 +296,22 @@
   .cl-chip{display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;border-radius:var(--md-sys-shape-corner-full);font:var(--md-sys-typescale-label-small);
     background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}.cl-chip .mi{font-size:14px}
   #flagBan:empty{display:none}
+  .navitem .nav-led{margin-left:auto;margin-right:6px;width:9px;height:9px}.navitem .nav-led+.pill{margin-left:0}
+  #v-projects:not(.single) #gsAuto{display:none}
+  .ga-f{display:flex;flex-direction:column;gap:12px}.ga-f.off{opacity:.5}
+  .ga-row{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;font:var(--md-sys-typescale-body-medium)}
+  .ga-row input[type=time],.ga-row input[type=number]{padding:8px 10px;border-radius:var(--md-sys-shape-corner-small);border:1px solid var(--md-sys-color-outline);background:transparent;color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-body-medium);color-scheme:light dark}
+  .ga-ts{display:flex;flex-wrap:wrap;gap:6px}
+  .ga-t{display:inline-flex;align-items:center;gap:4px;padding:4px 6px 4px 12px;border-radius:var(--md-sys-shape-corner-full);background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);font:var(--md-sys-typescale-label-large)}
+  .ga-t button{border:0;background:none;color:inherit;cursor:pointer;font-size:16px;line-height:1;padding:0 4px}
+  .ga-st{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--md-sys-color-outline-variant);font:var(--md-sys-typescale-body-medium);color:var(--md-sys-color-on-surface-variant)}
+  .ga-st>span{display:inline-flex;align-items:center;gap:6px}.ga-st .mi{font-size:18px}.ga-st .bad{color:var(--md-sys-color-error)}.ga-st .grow{flex:1}
+  .nt-box{width:min(560px,100%)}.nt-list{display:flex;flex-direction:column;gap:4px;max-height:min(60vh,520px);overflow:auto;margin:6px 0 4px}
+  .nt-it{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:10px 12px;border:0;border-radius:var(--md-sys-shape-corner-medium);background:transparent;color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-body-medium);cursor:pointer}
+  .nt-it:hover{background:var(--md-sys-color-surface-container-highest)}.nt-it.new{background:color-mix(in srgb,var(--md-sys-color-primary) 10%,transparent)}
+  .nt-it .tx{flex:1;min-width:0}.nt-it small{display:block;color:var(--md-sys-color-on-surface-variant);font:var(--md-sys-typescale-body-small);margin-top:2px}
+  .nt-it .mi{font-size:20px;color:var(--md-sys-color-on-surface-variant)}.nt-it .led{margin:0 5px}
+  .nt-er{border:1px solid var(--md-sys-color-outline-variant);margin-bottom:6px}
   .fl-ban{display:flex;gap:12px;align-items:center;margin:0 0 14px;padding:12px 16px;border-radius:var(--md-sys-shape-corner-large);font:var(--md-sys-typescale-body-medium)}
   .fl-ban .tx{flex:1;min-width:0}.fl-ban .tx small{display:block;opacity:.8;font:var(--md-sys-typescale-body-small)}
   .fl-ban.on{background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container)}
@@ -2451,7 +2467,7 @@
     <a class="navitem prog-nav" data-view="progress" data-short="Prog" data-tip="Progress"><span class="mi">insights</span><span class="lbl">Progress</span></a>
     <a class="navitem prog-nav" data-view="reports" data-short="Rep" data-tip="Reports"><span class="mi">summarize</span><span class="lbl">Reports</span></a>
     <a class="navitem" data-view="entry" data-short="Entry" data-tip="BAA Entry"><span class="mi">edit_document</span><span class="lbl">BAA Entry</span></a>
-    <a class="navitem" data-view="locations" data-short="LOG" data-tip="Location Log"><span class="mi">table_rows</span><span class="lbl">Location Log</span><span class="pill" id="loc-count"></span></a>
+    <a class="navitem" data-view="locations" data-short="LOG" data-tip="Location Log"><span class="mi">table_rows</span><span class="lbl">Location Log</span><span class="led nav-led hidden" id="navLed"></span><span class="pill" id="loc-count"></span></a>
     <a class="navitem admin-only nav-x" data-view="import" data-short="Import" data-tip="Import Locations"><span class="mi">upload_file</span><span class="lbl">Import Locations</span></a>
     <a class="navitem admin-only" data-view="gsheet" data-short="Sheet" data-tip="Google Sheet"><span class="mi">sync_alt</span><span class="lbl">Google Sheet</span><span class="pill" id="gs-count"></span></a>
     <a class="navitem admin-only nav-x" data-view="trash" data-short="Trash" data-tip="Deleted Locations"><span class="mi">delete_sweep</span><span class="lbl">Deleted Locations</span><span class="pill" id="trash-count"></span></a>
@@ -2488,7 +2504,7 @@
           <span class="mi" id="wbIco">schedule</span></span>
         <span class="wb-lbl"><span id="wbTime">0h 00m</span><small id="wbSub">active</small></span>
       </button>
-      <span class="bell admin-only" id="bellWrap"><md-icon-button id="bellBtn" data-tip="Notifications · edit requests"><span>notifications</span></md-icon-button><b id="bellCount"></b></span>
+      <span class="bell" id="bellWrap"><md-icon-button id="bellBtn" data-tip="Notifications"><span>notifications</span></md-icon-button><b id="bellCount"></b></span>
       <md-icon-button id="helpBtn" data-tip="Help · user guide &amp; intro"><span>help</span></md-icon-button>
       <md-icon-button id="pwBtn" data-tip="Change password"><span>password</span></md-icon-button>
       <md-icon-button id="themeBtn" data-tip="Toggle theme"><span>dark_mode</span></md-icon-button>
@@ -2916,6 +2932,7 @@
           </div>
           <div class="card" id="pjmEd"></div>
         </div>
+        <div class="card" id="gsAuto" style="margin-top:16px"></div>
       </section>
 
       <section id="v-users" class="hidden">
@@ -3614,7 +3631,7 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
   $('#app').classList.toggle('is-operator',S.user.role!=='admin');
   $('#app').classList.toggle('is-viewer',S.user.role==='viewer');
   fzApply();scanApply();
-  refreshPicker();loadLocations();loadCreators();pjLand();if(S.user.role==='admin'){loadTemplates();loadUsers();loadNotifCount();}bindTips();
+  refreshPicker();loadLocations();loadCreators();pjLand();if(S.user.role==='admin'){loadTemplates();loadUsers();}loadNotifCount();$('#bellWrap').classList.toggle('hidden',S.user.role==='viewer');bindTips();
   wbInit();expAskSync();introMaybe();}
 /* ===== Wilayah (Desa/Kelurahan → Provinsi), per project bisa on/off =====
    Pencarian di server (data Kemendagri offline): beberapa kata urutan bebas, singkatan provinsi,
@@ -4496,7 +4513,7 @@ function ldConfirmSync(sub){const b=$('#ldConfirm'),on=SX.on&&['lokasi','photo',
 function ldTabsSync(sub){ldConfirmSync(sub);const on=['lokasi','photo','inventory'].includes(sub);$('#ldTabs').classList.toggle('hidden',!on);if(!on)return;
   const n={lokasi:(S.locFields||[]).filter(f=>f.key!=='nama_lokasi').length,photo:(S.cats||[]).length,inventory:(S.invItems||[]).length};
   $$('#ldTabs button').forEach(b=>{b.classList.toggle('on',b.dataset.k===sub);const i=b.querySelector('i');i.textContent=n[b.dataset.k];i.classList.toggle('zero',!n[b.dataset.k]);});}
-$('#bellBtn').addEventListener('click',()=>{if(SX.on){toast('Notifications open once the project is active');return;}navTo('notif');});
+$('#bellBtn').addEventListener('click',()=>{if(SX.on){toast('Notifications open once the project is active');return;}bellOpen();});
 
 /* Portfolio (admin & viewer): satu kartu per project */
 const PF_LT={good:'On track',warn:'Behind',bad:'At risk',none:'No pace yet'};
@@ -4714,7 +4731,7 @@ const SET_VIEWS={projects:{view:'projects',title:'All projects',load:()=>loadPro
 const subOn=(s,sub)=>s.dataset.sub===sub||(s.dataset.grp==='data'&&['lokasi','photo','inventory'].includes(sub));
 function openSettings(sub){
   sub=sub||curSetSub;if(sub==='backup')bkPhotoInfo();pjChipShow(!['projects','users','backup'].includes(sub));
-  $('#v-projects').classList.toggle('single',sub==='pjstatus');ldTabsSync(sub);
+  $('#v-projects').classList.toggle('single',sub==='pjstatus');ldTabsSync(sub);if(sub==='pjstatus')gaLoad();
   if(typeof SX!=='undefined'&&SX.on){const st={lokasi:'data',photo:'data',inventory:'data',templates:'template',team:'team',projects:'projects',users:'users'}[sub];
     if(st&&st!==SX.step){SX.step=st;sxNav();}setTimeout(sxFoot,0);}
   $$('.navitem[data-view]').forEach(x=>x.classList.remove('active'));
@@ -5344,7 +5361,7 @@ function requiredCats(){return S.cats||[];} /* semua kategori wajib (konsep "req
 
 /* ENTRY */
 async function refreshPicker(){const r=await api('/api/locations/options');const opts=r.options||[];
-  $('#loc-count').textContent=r.total||'';const an=$('#lgActN');if(an)an.textContent=r.total||'';lgTrashCount();
+  $('#loc-count').textContent=r.total||'';const nl=$('#navLed');if(nl){nl.classList.toggle('hidden',!r.online_n);nl.dataset.tip=r.online_n?`${r.online_n} location${r.online_n>1?'s':''} online — BAA not complete, collect the evidence`:'';}const an=$('#lgActN');if(an)an.textContent=r.total||'';lgTrashCount();
   pickerSel.setOptions(opts.map(l=>({value:String(l.id),code:l.code,nama:l.nama||'',status:l.status||'draft',sid:l.sid||'',online:!!l.online})));
   if(S.loc)pickerSel.setValue(String(S.loc.id));}
 /* ---- Draft-first (#23): kode dibuat hanya saat ada data pertama ---- */
@@ -6410,11 +6427,26 @@ document.addEventListener('click',e=>{const dr=$('#ldDrawer');
   if(e.target.closest('#ldDrawer')||e.target.closest('#loc-table tr.lrow')||e.target.closest('#unsOv')||e.target.id==='ldFile'||e.target.id==='ldScanFile')return;
   closeLocDrawer();});
 
-/* ===== Notifikasi (permintaan edit) — admin ===== */
-let NOTIF_ROWS=[];
-async function loadNotifCount(){if(!S.user||S.user.role!=='admin')return;
-  try{const r=await api('/api/edit-requests/pending-count');const el=$('#notif-count');
-    if(el)el.textContent=r.count?String(r.count):'';const b=$('#bellCount');if(b)b.textContent=r.count?String(r.count):'';}catch(e){}}
+/* ===== Notifikasi: lonceng (semua admin & operator) + permintaan edit (admin) ===== */
+let NOTIF_ROWS=[];S.editPend=0;
+async function loadNotifCount(){if(!S.user||S.user.role==='viewer')return;
+  try{let pend=0;if(S.user.role==='admin'){const r=await api('/api/edit-requests/pending-count');pend=r.count||0;
+      const el=$('#notif-count');if(el)el.textContent=pend?String(pend):'';}
+    S.editPend=pend;const n=await api('/api/notices/count'),t=pend+(n.unread||0);
+    const b=$('#bellCount');if(b)b.textContent=t?String(t):'';}catch(e){}}
+setInterval(()=>{if(S.user&&!document.hidden){loadNotifCount();if(_visible('v-entry')||_visible('v-locations'))refreshPicker().catch(()=>{});}},60000);
+const NT_IC={online:'wifi_tethering',auto_fail:'sync_problem'};
+async function bellOpen(){let r;try{r=await api('/api/notices');}catch(e){toast('Failed: '+e.message);return;}
+  const adm=S.user.role==='admin',d=document.createElement('div');d.className='bk-dlg';
+  d.innerHTML=`<div class="box nt-box"><h3>Notifications</h3>
+    ${adm?`<button class="nt-it nt-er" id="ntEr"><span class="mi">how_to_reg</span><span class="tx"><b>Edit requests</b><small>${S.editPend?S.editPend+' waiting for you':'none pending'}</small></span><span class="mi">chevron_right</span></button>`:''}
+    <div class="nt-list">${r.rows.length?r.rows.map(n=>`<button class="nt-it${n.read_at?'':' new'}" data-l="${n.location_id&&n.code?n.location_id:''}">${n.kind==='online'?'<span class="led"></span>':`<span class="mi">${NT_IC[n.kind]||'notifications'}</span>`}
+      <span class="tx">${esc(n.text)}<small>${fmtDateTime(n.created_at)}</small></span>${n.location_id&&n.code?'<span class="mi">chevron_right</span>':''}</button>`).join(''):'<div class="muted" style="padding:12px 4px">No notifications yet.</div>'}</div>
+    <div class="acts"><md-button variant="text" id="ntClose">Close</md-button></div></div>`;
+  document.body.appendChild(d);const shut=()=>d.remove();$('#ntClose').onclick=shut;d.addEventListener('mousedown',e=>{if(e.target===d)shut();});
+  const er=$('#ntEr');if(er)er.onclick=()=>{shut();navTo('notif');};
+  d.querySelectorAll('.nt-it[data-l]').forEach(b=>{if(!b.dataset.l)return;b.onclick=()=>{shut();openFromLog(+b.dataset.l);};});
+  if(r.unread){api('/api/notices/read',{method:'POST'}).then(loadNotifCount).catch(()=>{});}}
 async function loadNotif(){if(!S.user||S.user.role!=='admin')return;
   try{const r=await api('/api/edit-requests?status=all');NOTIF_ROWS=r.rows||[];renderNotif();loadNotifCount();}
   catch(e){toast('Failed: '+e.message);}}
@@ -6620,6 +6652,41 @@ $('#sb-apply').addEventListener('click',async()=>{if(!SBU.file||$('#sb-apply').h
     try{const r=await fetch('/api/locations/import/sid-commit',{method:'POST',credentials:'same-origin',body:fd});const d=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(d.detail||'Failed');toast(`${d.updated} ${sidLabel()} filled`);sbuPreview();refreshPicker();loadLocations();}
     catch(e){toast('Failed: '+e.message);}},{okLabel:'Fill'});});
+/* ===== Google Sheet auto-check terjadwal (Project & status, admin): jam tetap atau interval ===== */
+const GA={v:null};
+async function gaLoad(){const el=$('#gsAuto');if(!el)return;try{GA.v=await api('/api/gsheet/auto');}catch(e){el.innerHTML='';return;}gaPaint();}
+function gaPaint(){const el=$('#gsAuto'),v=GA.v,a=v.auto,st=v.state||{},r=st.result||{};
+  const tm=t=>`<span class="ga-t">${esc(t)}<button type="button" data-gx="${esc(t)}" aria-label="Remove">×</button></span>`;
+  el.innerHTML=`<div class="sec"><span class="mi acc">schedule</span><h3>Google Sheet auto-check</h3><span class="grow"></span><md-switch id="gaOn" ${a.on?'selected':''}></md-switch></div>
+    <p class="muted" style="margin:0 0 14px">Runs <b>Check</b> on a schedule: takes "Tanggal Terpasang" into the activation date, flags online locations (LED) and notifies their owners. <b>Update to GSheet</b> stays manual.${v.connected?'':' <b style="color:var(--md-sys-color-error)">Connect the Google Sheet first (menu Google Sheet › Settings).</b>'}</p>
+    <div class="ga-f${a.on?'':' off'}">
+      <div class="ga-row"><span class="lg-seg" id="gaMode"><button type="button" data-m="times" class="${a.mode!=='interval'?'on':''}"><span class="mi">alarm</span>At set times</button><button type="button" data-m="interval" class="${a.mode==='interval'?'on':''}"><span class="mi">repeat</span>Every few hours</button></span>
+        <span class="lg-seg" id="gaDays"><button type="button" data-d="weekdays" class="${a.days!=='all'?'on':''}">Mon–Fri</button><button type="button" data-d="all" class="${a.days==='all'?'on':''}">Every day</button></span></div>
+      ${a.mode!=='interval'?`<div class="ga-row"><div class="ga-ts" id="gaTs">${(a.times||[]).map(tm).join('')||'<span class="muted">No times yet</span>'}</div>
+          <input type="time" id="gaNew" value="07:00"><md-button variant="tonal" icon="add" id="gaAdd">Add time</md-button></div>`
+        :`<div class="ga-row"><label>Every <input type="number" id="gaEv" min="1" max="12" value="${a.every_h}" style="width:64px"> hours</label>
+          <label>from <input type="time" id="gaFr" value="${esc(a.from)}"></label><label>to <input type="time" id="gaTo" value="${esc(a.to)}"></label>
+          <span class="muted" id="gaPrev">→ ${gaSlots(a).join(' · ')||'—'}</span></div>`}
+    </div>
+    <div class="ga-st">${a.on&&v.next?`<span><span class="mi">event_upcoming</span>Next: <b>${esc(gaWhen(v.next))}</b></span>`:''}
+      ${st.last_run?`<span class="${st.ok===false?'bad':''}"><span class="mi">${st.ok===false?'error':'task_alt'}</span>Last: <b>${esc(gaWhen(st.last_run))}</b> · ${st.ok===false?esc(st.error):`${r.seen||0} online · ${r.filled||0} date${r.filled===1?'':'s'} filled · ${r.notified||0} notified`}</span>`:'<span class="muted">Not run yet</span>'}
+      <span class="grow"></span><md-button variant="text" icon="play_arrow" id="gaRun" ${v.connected?'':'disabled'}>Run now</md-button><md-button variant="filled" icon="save" id="gaSave">Save schedule</md-button></div>`;
+  const pick=(id,attr,key)=>$$('#'+id+' button').forEach(b=>b.onclick=()=>{a[key]=b.dataset[attr];if(key==='mode'){gaGrab();gaPaint();}else $$('#'+id+' button').forEach(x=>x.classList.toggle('on',x===b));});
+  pick('gaMode','m','mode');pick('gaDays','d','days');
+  $$('#gaEv,#gaFr,#gaTo').forEach(i=>i.addEventListener('input',()=>{gaGrab();$('#gaPrev').textContent='→ '+(gaSlots(a).join(' · ')||'—');}));
+  $('#gaOn').addEventListener('change',e=>{a.on=e.target.selected;el.querySelector('.ga-f').classList.toggle('off',!a.on);});
+  $$('#gaTs [data-gx]').forEach(b=>b.onclick=()=>{a.times=a.times.filter(t=>t!==b.dataset.gx);gaPaint();});
+  const ad=$('#gaAdd');if(ad)ad.onclick=()=>{const t=$('#gaNew').value;if(t&&!a.times.includes(t)){a.times=[...a.times,t].sort();gaPaint();}};
+  $('#gaSave').onclick=async()=>{gaGrab();try{GA.v=await api('/api/gsheet/auto',{method:'PUT',body:JSON.stringify(a)});gaPaint();toast(a.on?'Auto-check scheduled':'Auto-check off');}catch(e){toast('Failed: '+e.message);}};
+  $('#gaRun').onclick=async()=>{const b=$('#gaRun');b.setAttribute('disabled','');try{GA.v=await api('/api/gsheet/auto/run',{method:'POST'});gaPaint();
+      toast(GA.v.state.ok===false?'Check failed: '+GA.v.state.error:'Check done');refreshPicker().catch(()=>{});loadNotifCount();}catch(e){toast('Failed: '+e.message);b.removeAttribute('disabled');}};
+  bindTips();}
+/* pratinjau jam cek mode interval (hitungan sama dengan server) */
+function gaSlots(a){const hm=v=>{const m=/^(\d{1,2}):(\d{2})$/.exec(v||'');return m?(+m[1])*60+(+m[2]):null;},f=hm(a.from),t=hm(a.to),n=Math.max(1,Math.min(12,+a.every_h||1));
+  if(f==null||t==null)return [];const out=[];for(let m=f;m<=t;m+=n*60)out.push(String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'));return out;}
+function gaGrab(){const a=GA.v.auto,ev=$('#gaEv');if(ev){a.every_h=+ev.value||1;a.from=$('#gaFr').value;a.to=$('#gaTo').value;}}
+const gaWhen=iso=>{try{return new Date(iso).toLocaleString('en-GB',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}catch(e){return iso;}};
+
 /* ===== Google Sheet (admin): koneksi Apps Script, Check only (rekonsiliasi + alarm), ambil SID/SO dari sheet.
    BAA Flow tidak pernah mengubah nama/ID/kolom lain di sheet; perbedaan = alarm. ===== */
 const GS={cfg:null,last:null,res:null,fmts:[],all:false,exp:{},selSid:new Set(),selSo:new Set(),selNew:new Set(),log:[],busy:false,stop:false};

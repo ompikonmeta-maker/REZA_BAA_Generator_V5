@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import config, db
-from .routers import (attachments, auth, gsheet, reports, backup, export, import_loc, locations, notifications, ocr, photos, progress, projects, scan, settings, stats, templates, users, wilayah)
+from .routers import (attachments, auth, gsheet, reports, backup, export, import_loc, locations, notices, notifications, ocr, photos, progress, projects, scan, settings, stats, templates, users, wilayah)
 
 app = FastAPI(title="BAA Generator", version="0.1.0")
 
@@ -21,6 +21,9 @@ def _startup() -> None:
     import threading
     from .services import wilayah as _wil
     threading.Thread(target=_wil._load, daemon=True).start()
+    # Google Sheet auto-check terjadwal (per project, diatur admin di Project & status)
+    from .routers import gsheet as _gs
+    threading.Thread(target=_gs.auto_loop, daemon=True, name="gsheet-auto").start()
 
 
 from fastapi import Depends  # noqa: E402
@@ -33,7 +36,7 @@ _GATED = (import_loc.router, locations.router, photos.router, export.router, ocr
 for r in (auth.router, settings.router, templates.router, import_loc.router, locations.router,
           photos.router, users.router, export.router, backup.router, ocr.router, stats.router,
           notifications.router, progress.router, projects.router, scan.router, attachments.router, gsheet.router, wilayah.router,
-          reports.router):
+          reports.router, notices.router):
     app.include_router(r, dependencies=[Depends(data_gate)] if r in _GATED else [])
 
 

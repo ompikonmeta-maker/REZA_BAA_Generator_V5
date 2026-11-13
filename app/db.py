@@ -211,6 +211,17 @@ CREATE TABLE IF NOT EXISTS scan_docs (
 );
 
 -- Riwayat export per lokasi (peringatan saat ganti prefix: file terkirim memakai kode lama)
+-- Notifikasi lonceng per user (admin & operator): mis. link online dari Google Sheet, auto-check gagal
+CREATE TABLE IF NOT EXISTS notices (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER NOT NULL,
+    kind        TEXT NOT NULL,                   -- online | auto_fail
+    location_id INTEGER,
+    text        TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL,
+    read_at     TEXT
+);
+
 CREATE TABLE IF NOT EXISTS export_log (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     location_id INTEGER NOT NULL,
@@ -704,6 +715,14 @@ def touch_modified(conn: sqlite3.Connection, loc_id: int, user_id, kind: str = "
     log_activity(conn, loc_id, user_id, kind, detail, now)
     from .routers.progress import mark_complete
     mark_complete(conn, loc_id, now)
+
+
+def notify(conn: sqlite3.Connection, user_ids, kind: str, text: str, loc_id: int | None = None) -> None:
+    """Notifikasi lonceng untuk satu/lebih user (tanpa commit)."""
+    now = now_iso()
+    for uid in {u for u in user_ids if u}:
+        conn.execute("INSERT INTO notices(user_id, kind, location_id, text, created_at) VALUES(?,?,?,?,?)",
+                     (uid, kind, loc_id, text[:500], now))
 
 
 def log_activity(conn: sqlite3.Connection, loc_id: int, user_id, kind: str, detail: str = "",

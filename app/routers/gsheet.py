@@ -11,12 +11,12 @@ import re
 import sqlite3
 import urllib.error
 import urllib.request
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from .. import db
 from ..deps import audit, get_db, require_admin
@@ -405,9 +405,16 @@ def apply_online(conn, user, items: list[dict]) -> dict:
     akey = db.activation_key(conn)
     now = db.now_iso()
     old = {r[0]: r[1] for r in conn.execute("SELECT location_id, online_date FROM gsheet_sync")}
-    filled = 0
+    filled, notified = 0, 0
     for it in items:
         od = it["date"].isoformat() if it["date"] else None
+        if od and not old.get(it["id"]) and it["pct"] < 100:
+            lr = conn.execute("SELECT code, name, owner_id FROM locations WHERE id=? AND deleted_at IS NULL", (it["id"],)).fetchone()
+            if lr and lr["owner_id"]:
+                db.notify(conn, [lr["owner_id"]], "online",
+                          f"{lr['code']} {lr['name'] or ''} — link online since {fmt_date(it['date'], 'dd-MMM-yyyy')}. "
+                          "Collect the evidence and complete the BAA.", it["id"])
+                notified += 1
         if od != old.get(it["id"]):
             conn.execute("INSERT INTO gsheet_sync(location_id, online_date, online_seen) VALUES(?,?,?) "
                          "ON CONFLICT(location_id) DO UPDATE SET online_date=excluded.online_date, "
@@ -424,12 +431,17 @@ def apply_online(conn, user, items: list[dict]) -> dict:
             db.touch_modified(conn, it["id"], user["id"], "act_sheet", od)
             filled += 1
     conn.commit()
-    return {"seen": sum(1 for it in items if it["date"]), "filled": filled,
+    return {"seen": sum(1 for it in items if it["date"]), "filled": filled, "notified": notified,
             "flag": sum(1 for it in items if it["date"] and it["pct"] < 100)}
 
 
 @router.post("/check")
 def check(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    return run_check(conn, user)
+
+
+def run_check(conn, user) -> dict:
+    """Check = baca sheet, rekonsiliasi, tanggal terpasang -> tanggal aktivasi & tanda Online. Dipakai tombol & auto-check."""
     cfg, res = read_sheet(config(conn))
     if cfg["key_col"] in res.get("missing", []) or cfg["name_col"] in res.get("missing", []):
         raise HTTPException(400, f"Column '{cfg['key_col']}' or '{cfg['name_col']}' not found in row 1 of the sheet")
@@ -443,6 +455,158 @@ def check(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin
                                                 "counts": out["counts"], "alarms": out["alarm_n"]})
     conn.commit()
     return out
+
+
+# ---------------------------------------------------------------- auto-check terjadwal
+AUTO_DEFAULT = {"on": False, "mode": "times", "times": ["07:00", "13:00"], "every_h": 2,
+                "from": "08:00", "to": "17:00", "days": "weekdays", "since": None}
+AUTO_USER = {"id": None, "full_name": "Auto-check", "username": "auto-check", "role": "admin"}
+
+
+def auto_cfg(conn) -> dict:
+    return {**AUTO_DEFAULT, **(db.get_setting(conn, "gsheet_auto") or {})}
+
+
+def _hm(v: str) -> tuple[int, int] | None:
+    m = re.match(r"^(\d{1,2}):(\d{2})$", str(v or "").strip())
+    if not m or int(m.group(1)) > 23 or int(m.group(2)) > 59:
+        return None
+    return int(m.group(1)), int(m.group(2))
+
+
+def day_slots(a: dict) -> list[tuple[int, int]]:
+    """Jam-jam cek dalam sehari: daftar jam tetap, atau interval N jam antara 'from' dan 'to'."""
+    if a.get("mode") == "interval":
+        f, t, n = _hm(a.get("from")), _hm(a.get("to")), max(1, min(12, int(a.get("every_h") or 1)))
+        if not f or not t:
+            return []
+        out, m = [], f[0] * 60 + f[1]
+        while m <= t[0] * 60 + t[1]:
+            out.append((m // 60, m % 60))
+            m += n * 60
+        return out
+    return sorted({x for x in (_hm(v) for v in a.get("times") or []) if x})
+
+
+def _slots_between(a: dict, start: datetime, end: datetime) -> list[datetime]:
+    sl, out, d = day_slots(a), [], start.date()
+    while d <= end.date():
+        if a.get("days") != "weekdays" or d.weekday() < 5:
+            for h, m in sl:
+                x = datetime(d.year, d.month, d.day, h, m)
+                if start < x <= end:
+                    out.append(x)
+        d += timedelta(days=1)
+    return out
+
+
+def auto_due(a: dict, st: dict, now: datetime) -> datetime | None:
+    """Jadwal terakhir yang belum dijalankan (termasuk yang terlewat saat server mati), atau None."""
+    if not a.get("on"):
+        return None
+    base = max(x for x in (st.get("last_run"), a.get("since"), (now - timedelta(days=7)).isoformat(timespec="seconds")) if x)
+    s = _slots_between(a, datetime.fromisoformat(base[:19]), now)
+    return s[-1] if s else None
+
+
+def auto_next(a: dict, now: datetime) -> str | None:
+    if not a.get("on"):
+        return None
+    s = _slots_between(a, now, now + timedelta(days=8))
+    return s[0].isoformat(timespec="minutes") if s else None
+
+
+def auto_run(conn, now: datetime | None = None) -> dict:
+    """Jalankan satu auto-check untuk project ini; simpan hasil/galat; admin diberi tahu bila gagal."""
+    now = now or datetime.now()
+    st = db.get_setting(conn, "gsheet_auto_state") or {}
+    st["last_run"] = now.isoformat(timespec="seconds")
+    try:
+        out = run_check(conn, AUTO_USER)
+        st.update(ok=True, error="", result={"changes": out["counts"]["changes"], "alarms": out["alarm_n"], **out["online"]})
+    except Exception as e:  # sheet tidak terjangkau, secret salah, dll.
+        msg = str(getattr(e, "detail", "") or e)[:300]
+        if st.get("error") != msg:      # sekali per jenis galat, bukan tiap jadwal
+            admins = [r[0] for r in conn.execute("SELECT id FROM pm_users WHERE role='admin' AND active=1")]
+            db.notify(conn, admins, "auto_fail", f"Google Sheet auto-check failed: {msg}")
+        st.update(ok=False, error=msg)
+    db.set_setting(conn, "gsheet_auto_state", st)
+    conn.commit()
+    return st
+
+
+def auto_loop() -> None:
+    """Thread latar belakang: tiap menit cek jadwal semua project aktif."""
+    import time
+    time.sleep(20)
+    while True:
+        try:
+            hub = db.connect()
+            try:
+                projects = hub.execute("SELECT * FROM projects WHERE archived=0 AND status<>'setup'").fetchall()
+            finally:
+                hub.close()
+            for p in projects:
+                try:
+                    conn = db.connect_project(p)
+                    try:
+                        a = auto_cfg(conn)
+                        if a.get("on") and config(conn).get("url") and auto_due(a, db.get_setting(conn, "gsheet_auto_state") or {}, datetime.now()):
+                            auto_run(conn)
+                    finally:
+                        conn.close()
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        time.sleep(60)
+
+
+class AutoIn(BaseModel):
+    on: bool = False
+    mode: str = "times"
+    times: list[str] = []
+    every_h: int = 2
+    from_: str = Field("08:00", alias="from")
+    to: str = "17:00"
+    days: str = "weekdays"
+
+
+def _auto_view(conn) -> dict:
+    a, now = auto_cfg(conn), datetime.now()
+    return {"auto": a, "state": db.get_setting(conn, "gsheet_auto_state") or {}, "next": auto_next(a, now),
+            "slots": [f"{h:02d}:{m:02d}" for h, m in day_slots(a)], "connected": bool(config(conn).get("url"))}
+
+
+@router.get("/auto")
+def get_auto(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    return _auto_view(conn)
+
+
+@router.put("/auto")
+def put_auto(body: AutoIn, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    if body.mode not in ("times", "interval") or body.days not in ("weekdays", "all"):
+        raise HTTPException(400, "Unknown schedule")
+    times = sorted({f"{h:02d}:{m:02d}" for h, m in (x for x in (_hm(t) for t in body.times) if x)})
+    a = {"on": body.on, "mode": body.mode, "times": times, "every_h": max(1, min(12, body.every_h)),
+         "from": body.from_, "to": body.to, "days": body.days}
+    if body.mode == "interval" and (not _hm(body.from_) or not _hm(body.to) or _hm(body.from_) > _hm(body.to)):
+        raise HTTPException(400, "Check the from / to hours")
+    if body.on and not day_slots(a):
+        raise HTTPException(400, "Add at least one check time")
+    old = auto_cfg(conn)
+    # jadwal baru dihitung mulai sekarang (jam yang sudah lewat hari ini tidak langsung dijalankan)
+    a["since"] = datetime.now().isoformat(timespec="seconds") if body.on and (not old.get("on") or old != {**old, **a}) else old.get("since")
+    db.set_setting(conn, "gsheet_auto", a)
+    conn.commit()
+    audit(conn, user, "update", "settings", "gsheet_auto", ("on " if body.on else "off ") + ",".join(f"{h:02d}:{m:02d}" for h, m in day_slots(a)))
+    return _auto_view(conn)
+
+
+@router.post("/auto/run")
+def run_auto_now(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    st = auto_run(conn)
+    return {**_auto_view(conn), "state": st}
 
 
 @router.get("/script", response_class=PlainTextResponse)

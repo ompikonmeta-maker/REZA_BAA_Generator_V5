@@ -183,3 +183,10 @@ Keputusan pengguna:
 - Banner di Entry: **Mark as clean** / Edit note / Add note — operator pemilik atau admin. Reopen atau Reset BAA menghapus flag. Done lama tanpa flag = Clean.
 - Sweeping: filter **Notes · n** di Location Log + chip "notes", kolom *Flag Done* & *Catatan* di Reports Excel, angka di Progress.
 - Google Sheet **tidak** menerima syarat clean/notes: 100% tetap Done; PDF tetap diunggah dan diganti bila ada perubahan.
+
+## Auto-check terjadwal (2026-11-13)
+- *Settings › Project & status › Google Sheet auto-check* (admin, per project): On/Off, **jam tetap** (mis. 07:00, 13:00) atau **interval** (tiap N jam antara jam mulai–selesai), Senin–Jumat atau setiap hari. Ada *Next*, *Last* (hasil/galat) dan **Run now**.
+- Hanya **Check** yang otomatis (tanggal terpasang → tanggal aktivasi, tanda Online). **Update to GSheet tetap manual.**
+- Thread latar belakang memeriksa jadwal tiap menit untuk semua project aktif; jadwal yang terlewat saat server mati dijalankan sekali begitu server hidup. Pelaku tercatat "Auto-check". Jadwal baru dihitung mulai saat disimpan.
+- **Lonceng** (admin & operator, tabel `notices`): pemilik lokasi diberi tahu saat lokasinya baru online dan BAA belum lengkap (klik → buka lokasi); admin diberi tahu bila auto-check gagal (sekali per jenis galat). Admin tetap melihat *Edit requests* di lonceng yang sama.
+- **LED** berpendar di menu **Location Log** selama ada lokasi online yang BAA-nya belum lengkap.

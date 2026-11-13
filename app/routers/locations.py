@@ -506,7 +506,7 @@ def location_options(conn: sqlite3.Connection = Depends(get_db), user=Depends(cu
                 nama = ""
         opts.append({"id": r["id"], "code": r["code"], "nama": nama, "status": r["status"], "sid": r["sid"] or "",
                      "online": bool(r["onl"])})
-    return {"options": opts, "total": len(opts)}
+    return {"options": opts, "total": len(opts), "online_n": sum(1 for o in opts if o["online"])}
 
 
 @router.post("")
