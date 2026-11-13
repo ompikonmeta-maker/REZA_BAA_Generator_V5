@@ -169,3 +169,17 @@ Mockup: https://claude.ai/artifact/EufjdGmi8PMtAiApUsQT5Y (layar update + alarm,
 - Tombol *Add value*, naik urutan, dan hapus. Bawaan: Done (100%) lalu Undone (tanggal aktivasi terisi). Setting lama (Done/Undone) otomatis diubah jadi aturan.
 - Unggah PDF tetap hanya untuk dokumen 100%, tidak bergantung pada teks status.
 - Ringkasan "Will change" menghitung per nilai.
+
+## Revisi 2026-11-13 — Tanggal Terpasang/Integrasi & flag Done
+
+Keputusan pengguna:
+- Kolom sheet **"Tanggal Terpasang/ Integrasi"** (nama kolom bisa diatur: *Installed date (read only)*) dibaca saat **Check**, format `10-Nov-2026`. Judul kolom dicocokkan toleran spasi/huruf besar.
+- **Tanpa persetujuan admin:** lokasi cocok yang belum punya tanggal aktivasi langsung diisi tanggal itu (riwayat: "Activation date … from Google Sheet"). Tanggal aktivasi yang sudah ada di BAA Flow **tidak pernah ditimpa** — tanggal BAA bisa beda dari tanggal terpasang, BAA Flow yang berlaku. Sheet kosong tidak menghapus apa pun. Nilai yang tidak terbaca → alarm.
+- Tanggal terpasang = **link sudah online**. Selama dokumen belum 100%, lokasi diberi tanda **Online** (LED merah berpendar), naik ke paling atas di Location Log, pemilih lokasi Entry, dan "My drafts" operator; ada filter **Online · n** dan banner di Entry. Tanda hilang otomatis saat dokumen lengkap 100%.
+- **Update to GSheet** menulis TANGGAL BAPB = tanggal aktivasi → STATUS BAPB ikut berubah menurut aturan status. Kolom Tanggal Terpasang di sheet tidak pernah ditulis. Apps Script tidak berubah (tidak perlu tempel ulang).
+
+## Flag Done: Clean / With notes (BAA Flow saja)
+- Saat **Finish BAA** (100%) operator memilih **Clean** (siap ke customer) atau **With notes** (catatan wajib; pilihan cepat per project, diatur admin dari dialog itu).
+- Banner di Entry: **Mark as clean** / Edit note / Add note — operator pemilik atau admin. Reopen atau Reset BAA menghapus flag. Done lama tanpa flag = Clean.
+- Sweeping: filter **Notes · n** di Location Log + chip "notes", kolom *Flag Done* & *Catatan* di Reports Excel, angka di Progress.
+- Google Sheet **tidak** menerima syarat clean/notes: 100% tetap Done; PDF tetap diunggah dan diganti bila ada perubahan.

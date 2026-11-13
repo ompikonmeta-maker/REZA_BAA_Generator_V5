@@ -73,7 +73,8 @@ def _rows(conn, wil: str, owner: int, so: str = "") -> list[dict]:
                     "status": r["status"], "owner": r["owner_name"], "prov": r["wil_prov"] or "",
                     "kab": r["wil_kab"] or "", "kec": r["wil_kec"] or "", "desa": r["wil_desa"] or "",
                     "act": _d(data.get(akey)) if akey else None, "comp": ca.date() if ca else None,
-                    "pct": pct, "miss": [_miss_id(m) for m in miss], "has_scan": r["id"] in scans, "data": data})
+                    "pct": pct, "miss": [_miss_id(m) for m in miss], "has_scan": r["id"] in scans, "data": data,
+                    "flag": (r["done_flag"] or "clean") if r["status"] == "selesai" else "", "note": r["done_note"] or ""})
     return out
 
 
@@ -309,7 +310,7 @@ def _xlsx(conn, r: dict, secs: set[str], filt: str) -> io.BytesIO:
     if "locations" in secs:
         fields = db.get_setting(conn, "location_fields", []) or []
         hdr = ["Kode", "SID", "SO", "Status", "Owner", "Provinsi", "Kab/Kota", "Kecamatan", "Desa"] + \
-              [f.get("label") or f["key"] for f in fields] + ["NIS", "Dokumen selesai", "Lama hari", "Kelengkapan %", "Kurang"]
+              [f.get("label") or f["key"] for f in fields] + ["NIS", "Dokumen selesai", "Lama hari", "Kelengkapan %", "Kurang", "Flag Done", "Catatan"]
         body = []
         for x in r["_rows"]:
             vals = []
@@ -317,7 +318,8 @@ def _xlsx(conn, r: dict, secs: set[str], filt: str) -> io.BytesIO:
                 v = x["data"].get(f["key"], "")
                 vals.append(_d(v) if f.get("type") == "date" and _d(v) else v)
             body.append([x["code"], x["sid"], x["so"], "Done" if x["status"] == "selesai" else "Draft", x["owner"], x["prov"], x["kab"], x["kec"], x["desa"],
-                         *vals, "Ya" if x["nis"] else "", x["comp"] if x["done"] else "", x["days"] if x["valid"] else "", x["pct"], ", ".join(x["miss"])])
+                         *vals, "Ya" if x["nis"] else "", x["comp"] if x["done"] else "", x["days"] if x["valid"] else "", x["pct"], ", ".join(x["miss"]),
+                         {"clean": "Clean", "notes": "With notes"}.get(x["flag"], ""), x["note"]])
         sheet("Lokasi", hdr, body)
     for ws in wb.worksheets:
         for row in ws.iter_rows(min_row=2):

@@ -30,6 +30,8 @@ DEFAULT = {
     "key_col": "ID Node Link", "name_col": "Nama Lokasi", "desa_col": "Desa", "kec_col": "Kecamatan",
     "kab_col": "Kabupaten", "prov_col": "Provinsi", "so_col": "SO",
     "status_col": "STATUS BAPB", "date_col": "TANGGAL BAPB", "link_col": "LINK BAPB",
+    # dibaca saja: tanggal link terpasang/online -> tanggal aktivasi (bila kosong) + tanda "cari eviden"
+    "online_col": "Tanggal Terpasang/ Integrasi",
     "date_fmt": "dd-MMM-yyyy",
     # aturan STATUS BAPB: dibaca dari atas, aturan pertama yang cocok dipakai; tidak ada yang cocok = kosong
     "status_rules": [{"text": "Done", "when": "complete"}, {"text": "Undone", "when": "activation"}],
@@ -44,7 +46,8 @@ CONDS = {
     "no_activation": "No activation date",
     "any": "Any location",
 }
-COLS = ("key_col", "name_col", "desa_col", "kec_col", "kab_col", "prov_col", "so_col", "status_col", "date_col", "link_col")
+COLS = ("key_col", "name_col", "desa_col", "kec_col", "kab_col", "prov_col", "so_col", "status_col", "date_col", "link_col",
+        "online_col")
 DATE_FMTS = {"dd-MMM-yyyy": None, "yyyy-mm-dd": "%Y-%m-%d", "dd/mm/yyyy": "%d/%m/%Y"}
 _MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 _MON_ID = {"mei": 5, "agu": 8, "agt": 8, "okt": 10, "des": 12}
@@ -197,7 +200,8 @@ def reconcile(conn, cfg: dict, res: dict) -> dict:
                       "desa": v.get(C["desa_col"]) or "", "kec": v.get(C["kec_col"]) or "", "kab": v.get(C["kab_col"]) or "",
                       "prov": v.get(C["prov_col"]) or "",
                       "so": (v.get(C["so_col"]) or "").strip(), "status": (v.get(C["status_col"]) or "").strip(),
-                      "date": (v.get(C["date_col"]) or "").strip(), "link": (v.get(C["link_col"]) or "").strip()})
+                      "date": (v.get(C["date_col"]) or "").strip(), "link": (v.get(C["link_col"]) or "").strip(),
+                      "online": (v.get(C["online_col"]) or "").strip() if C["online_col"] else ""})
     scope = [s for s in sheet if not sos or _so(s["so"]) in sos]
     by_key, dup_keys = {}, {}
     for s in sheet:
@@ -218,7 +222,8 @@ def reconcile(conn, cfg: dict, res: dict) -> dict:
     pdfs = {r[0]: (r[1], r[2]) for r in conn.execute("SELECT location_id, pdf_url, pdf_at FROM gsheet_sync")}
     used_sid = {_key(x["sid"]) for x in locs if x["sid"]}
     A = {k: [] for k in ("sid_diff", "take_sid", "only_sheet", "only_baa", "wil_diff", "dup_sheet",
-                         "ambiguous", "so_diff", "fill_so", "name_diff")}
+                         "ambiguous", "so_diff", "fill_so", "name_diff", "online_bad")}
+    online = []   # lokasi cocok + tanggal terpasang di sheet: {id, date|None, act}
     matched, changes, hows, claimed = {}, [], {"id": 0, "name": 0}, set()
     brief = lambda s: {"row": s["row"], "key": s["key"], "name": s["name"], "desa": s["desa"], "kec": s["kec"], "so": s["so"]}  # noqa: E731
 
@@ -272,6 +277,10 @@ def reconcile(conn, cfg: dict, res: dict) -> dict:
             A["wil_diff"].append({**lb, "sheet": brief(s)})
         matched[id(s)] = True
         hows[how] += 1
+        od = parse_date(s["online"])
+        if s["online"] and not od:
+            A["online_bad"].append({**lb, "sheet": brief(s), "value": s["online"]})
+        online.append({"id": x["id"], "date": od, "act": x["act"], "pct": x["pct"]})
         if s["so"]:
             if not x["so"]:
                 A["fill_so"].append({**lb, "sheet": brief(s), "known": db.so_match(conn, s["so"]) is not None})
@@ -316,7 +325,7 @@ def reconcile(conn, cfg: dict, res: dict) -> dict:
                    "by_id": hows["id"], "by_name": hows["name"], "changes": len(changes),
                    "to": {v: n_ch("status", v) for v in dict.fromkeys(c["ch"]["status"][1] for c in changes if "status" in c["ch"])},
                    "pdf": n_ch("link")},
-        "changes": changes, "alarms": A,
+        "changes": changes, "alarms": A, "online": online,
         "alarm_n": sum(len(v) for k, v in A.items() if k not in ("take_sid", "fill_so")) + len(res.get("missing", [])),
     }
 
@@ -333,6 +342,7 @@ class CfgIn(BaseModel):
     prov_col: str = DEFAULT["prov_col"]
     so_col: str = DEFAULT["so_col"]
     status_col: str = DEFAULT["status_col"]
+    online_col: str = DEFAULT["online_col"]
     date_col: str = DEFAULT["date_col"]
     link_col: str = DEFAULT["link_col"]
     status_rules: list[dict] = DEFAULT["status_rules"]
@@ -367,16 +377,68 @@ def test(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)
     r = call(cfg, "ping", timeout=45)
     hdr = r.get("headers") or []
     return {"ok": True, "file": r.get("file"), "sheet": r.get("sheet"), "rows": r.get("rows"), "folder": r.get("folder"),
-            "headers": [h for h in hdr if h], "missing": [cfg[k] for k in COLS if cfg[k] and cfg[k] not in hdr]}
+            "headers": [h for h in hdr if h], "missing": [cfg[k] for k in COLS if cfg[k] and _hk(cfg[k]) not in {_hk(h) for h in hdr}]}
+
+
+def _hk(h: str) -> str:
+    """Kunci judul kolom: huruf kecil tanpa spasi ('Tanggal Terpasang/ Integrasi' = 'tanggal terpasang/integrasi')."""
+    return re.sub(r"\s+", "", str(h or "")).lower()
+
+
+def read_sheet(cfg: dict) -> tuple[dict, dict]:
+    """Baca kolom yang dikonfigurasi. Judul yang beda spasi/huruf besar dicocokkan ulang ke judul asli di sheet."""
+    res = call(cfg, "read", columns=[cfg[k] for k in COLS if cfg[k]])
+    miss = res.get("missing", [])
+    if miss:
+        hk = {_hk(h): h for h in res.get("headers") or [] if h}
+        fix = {k: hk[_hk(cfg[k])] for k in COLS if cfg[k] in miss and _hk(cfg[k]) in hk}
+        if fix:
+            cfg = {**cfg, **fix}
+            res = call(cfg, "read", columns=[cfg[k] for k in COLS if cfg[k]])
+    return cfg, res
+
+
+def apply_online(conn, user, items: list[dict]) -> dict:
+    """Tanggal terpasang dari sheet: simpan per lokasi (tanda link online) dan jadikan tanggal aktivasi
+    bila BAA Flow belum punya. Tanggal aktivasi yang sudah ada di BAA Flow tidak pernah ditimpa."""
+    import json
+    akey = db.activation_key(conn)
+    now = db.now_iso()
+    old = {r[0]: r[1] for r in conn.execute("SELECT location_id, online_date FROM gsheet_sync")}
+    filled = 0
+    for it in items:
+        od = it["date"].isoformat() if it["date"] else None
+        if od != old.get(it["id"]):
+            conn.execute("INSERT INTO gsheet_sync(location_id, online_date, online_seen) VALUES(?,?,?) "
+                         "ON CONFLICT(location_id) DO UPDATE SET online_date=excluded.online_date, "
+                         "online_seen=COALESCE(gsheet_sync.online_seen, excluded.online_seen)", (it["id"], od, now))
+        if od and akey and not it["act"]:
+            r = conn.execute("SELECT data_json FROM locations WHERE id=? AND deleted_at IS NULL", (it["id"],)).fetchone()
+            if not r:
+                continue
+            data = json.loads(r[0] or "{}")
+            if data.get(akey):
+                continue
+            data[akey] = od
+            conn.execute("UPDATE locations SET data_json=? WHERE id=?", (json.dumps(data, ensure_ascii=False), it["id"]))
+            db.touch_modified(conn, it["id"], user["id"], "act_sheet", od)
+            filled += 1
+    conn.commit()
+    return {"seen": sum(1 for it in items if it["date"]), "filled": filled,
+            "flag": sum(1 for it in items if it["date"] and it["pct"] < 100)}
 
 
 @router.post("/check")
 def check(conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
-    cfg = config(conn)
-    res = call(cfg, "read", columns=[cfg[k] for k in COLS if cfg[k]])
+    cfg, res = read_sheet(config(conn))
     if cfg["key_col"] in res.get("missing", []) or cfg["name_col"] in res.get("missing", []):
         raise HTTPException(400, f"Column '{cfg['key_col']}' or '{cfg['name_col']}' not found in row 1 of the sheet")
     out = reconcile(conn, cfg, res)
+    on = apply_online(conn, user, out.pop("online"))
+    if on["filled"]:
+        out = reconcile(conn, cfg, res)          # tanggal aktivasi baru -> TANGGAL/STATUS BAPB ikut berubah
+        out.pop("online")
+    out["online"] = on
     db.set_setting(conn, "gsheet_last_check", {"at": out["checked_at"], "by": user["full_name"] or user["username"],
                                                 "counts": out["counts"], "alarms": out["alarm_n"]})
     conn.commit()
@@ -396,8 +458,7 @@ class ApplyIn(BaseModel):
 @router.post("/apply")
 def apply(body: ApplyIn, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
     """Ambil SID / SO dari sheet untuk lokasi terpilih (persetujuan admin). Dicek ulang dengan data sheet terbaru."""
-    cfg = config(conn)
-    res = call(cfg, "read", columns=[cfg[k] for k in COLS if cfg[k]])
+    cfg, res = read_sheet(config(conn))
     out = reconcile(conn, cfg, res)
     A = out["alarms"]
     sid_ok = {x["id"]: x["sheet"]["key"] for x in A["take_sid"]}

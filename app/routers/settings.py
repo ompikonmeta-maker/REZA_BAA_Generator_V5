@@ -51,6 +51,7 @@ def get_settings(conn: sqlite3.Connection = Depends(get_db), user=Depends(curren
         "attach_config": db.attach_config(conn),
         "activation_rule": db.activation_rule(conn),
         "so_list": db.so_list(conn),
+        "done_note_presets": db.get_setting(conn, "done_note_presets", db.DEFAULT_DONE_NOTES),
     }
 
 
@@ -163,6 +164,25 @@ def update_item_merks(body: ItemMerks, conn: sqlite3.Connection = Depends(get_db
     conn.commit()
     audit(conn, user, "update", "settings", "item_merks")
     return {"ok": True, "merks": merks}
+
+
+class DoneNotes(BaseModel):
+    presets: list[str]
+
+
+@router.put("/done-note-presets")
+def update_done_notes(body: DoneNotes, conn: sqlite3.Connection = Depends(get_db), user=Depends(require_admin)):
+    """Pilihan cepat catatan untuk BAA 'Done · with notes' (per project)."""
+    seen, out = set(), []
+    for x in body.presets:
+        v = x.strip()[:80]
+        if v and v.lower() not in seen:
+            seen.add(v.lower())
+            out.append(v)
+    db.set_setting(conn, "done_note_presets", out[:30])
+    conn.commit()
+    audit(conn, user, "update", "settings", "done_note_presets")
+    return {"ok": True, "presets": out[:30]}
 
 
 @router.put("/inventory-keterangan")

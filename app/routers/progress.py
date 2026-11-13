@@ -329,7 +329,12 @@ def progress(conn: sqlite3.Connection = Depends(get_db), user=Depends(_require_a
     return {"team": team, "aging": _aging(conn), "history": db.get_setting(conn, "progress_history", []) or [],
             "pipeline": {"done": team["done"], "ready": ready, "progress": len(drafts) - ready,
                          "notyet": max(0, team["total"] - team["done"] - len(drafts))},
-            "drafts": drafts, "series": series, "cycle": cyc, "can_edit": user["role"] == "admin"}
+            "drafts": drafts, "series": series, "cycle": cyc, "can_edit": user["role"] == "admin",
+            "notes_n": conn.execute("SELECT COUNT(*) FROM locations WHERE deleted_at IS NULL AND status='selesai' "
+                                    "AND done_flag='notes'").fetchone()[0],
+            "online_n": conn.execute("SELECT COUNT(*) FROM locations l WHERE l.deleted_at IS NULL AND "
+                                     "l.complete_at IS NULL AND EXISTS(SELECT 1 FROM gsheet_sync g WHERE "
+                                     "g.location_id=l.id AND COALESCE(g.online_date,'')<>'')").fetchone()[0]}
 
 
 class GoalIn(BaseModel):
@@ -473,7 +478,11 @@ def my_dash(conn: sqlite3.Connection = Depends(get_db), user=Depends(current_use
     today = _today()
     team = _team(conn)
     mine = _open_drafts(conn, "AND l.owner_id=?", (user["id"],))
-    mine.sort(key=lambda d: (-d["pct"], d["idle"]))
+    onl = {r[0]: r[1] for r in conn.execute("SELECT location_id, online_date FROM gsheet_sync "
+                                            "WHERE COALESCE(online_date,'')<>''")}
+    for d in mine:
+        d["online"] = onl.get(d["id"])              # link online (Google Sheet) -> naik paling atas
+    mine.sort(key=lambda d: (not d["online"], -d["pct"], d["idle"]))
     dd = _done_days(conn, "AND owner_id=?", (user["id"],))
     wk0 = today - timedelta(days=today.weekday())
     week = []

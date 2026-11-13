@@ -36,6 +36,11 @@ def _can_write(user, row) -> bool:
     return user["role"] == "admin" or row["owner_id"] == user["id"]
 
 
+# link sudah online menurut Google Sheet (tanggal terpasang) tetapi dokumen BAA belum lengkap 100%
+_ONLINE_SQL = ("(l.complete_at IS NULL AND EXISTS(SELECT 1 FROM gsheet_sync g WHERE g.location_id = l.id "
+               "AND g.online_date IS NOT NULL AND g.online_date <> ''))")
+
+
 class LocationIn(BaseModel):
     name: str = ""
     data: dict = {}
@@ -44,6 +49,29 @@ class LocationIn(BaseModel):
     wil_kode: str | None = None       # (lama) pilih desa resmi lewat kode saja
     sid: str | None = None            # identitas lokasi dari klien; None = tidak diubah, "" = kosongkan (admin)
     so: str | None = None             # nomor SO / order (harus terdaftar di project); None = tidak diubah, "" = kosongkan
+    done_flag: str | None = None      # saat Finish: clean | notes
+    done_note: str | None = None      # catatan wajib bila notes
+
+
+def _note_who(conn, row) -> dict | None:
+    """Flag Done: clean (siap diserahkan) / notes (masih ada catatan). Done lama tanpa flag = clean."""
+    if row["status"] != "selesai":
+        return None
+    f = row["done_flag"] or "clean"
+    by = None
+    if row["done_note_by"]:
+        u = conn.execute("SELECT COALESCE(NULLIF(TRIM(full_name),''),username) nm FROM users WHERE id=?",
+                         (row["done_note_by"],)).fetchone()
+        by = u["nm"] if u else None
+    return {"flag": f, "note": row["done_note"] or "", "by": by, "at": row["done_note_at"]}
+
+
+def _online(conn, lid: int, complete_at) -> str | None:
+    """Tanggal terpasang dari Google Sheet selama dokumen belum lengkap 100% (operator harus mengejar eviden)."""
+    if complete_at:
+        return None
+    r = conn.execute("SELECT online_date FROM gsheet_sync WHERE location_id=?", (lid,)).fetchone()
+    return r[0] if r and r[0] else None
 
 
 WIL_MODES = ("official", "desa_manual", "manual")
@@ -263,6 +291,8 @@ def _location_dict(conn: sqlite3.Connection, row, user=None) -> dict:
         "complete_at": row["complete_at"] if "complete_at" in row.keys() else None,
         "sid_request": {"value": sr["value_new"], "mine": bool(user) and sr["requester_id"] == user["id"]} if sr else None,
         "attachments": attachment_list(conn, row["id"]),
+        "done": _note_who(conn, row),
+        "online": _online(conn, row["id"], row["complete_at"]),
     }
 
 
@@ -297,6 +327,10 @@ def list_locations(
     if status in ("draft", "selesai"):
         where.append("l.status = ?")
         params.append(status)
+    elif status == "notes":
+        where.append("l.status = 'selesai' AND l.done_flag = 'notes'")
+    elif status == "online":
+        where.append(_ONLINE_SQL)
     if creator:
         where.append("l.created_by = ?")
         params.append(creator)
@@ -321,6 +355,11 @@ def list_locations(
     total = conn.execute(
         f"SELECT COUNT(*) AS c FROM locations l {wsql}", params
     ).fetchone()["c"]
+    nwhere = [w for w in where if w != _ONLINE_SQL]
+    online_n = conn.execute(f"SELECT COUNT(*) FROM locations l WHERE {' AND '.join(nwhere + [_ONLINE_SQL])}",
+                            [p for p in params]).fetchone()[0] if status != "online" else total
+    notes_n = conn.execute("SELECT COUNT(*) FROM locations WHERE deleted_at IS NULL AND status='selesai' "
+                           "AND done_flag='notes'").fetchone()[0]
 
     offset = (page - 1) * size
     rows = conn.execute(
@@ -337,11 +376,13 @@ def list_locations(
               (SELECT COUNT(*) FROM inventory_items i WHERE i.location_id = l.id AND (
                    TRIM(COALESCE(i.nama_barang,'')) = '' OR TRIM(COALESCE(i.merk_type,'')) = '' OR
                    TRIM(COALESCE(i.jumlah,'')) = '' OR TRIM(COALESCE(i.sn_tagging,'')) = '' OR
-                   TRIM(COALESCE(i.keterangan,'')) = '')) AS inv_bad
+                   TRIM(COALESCE(i.keterangan,'')) = '')) AS inv_bad,
+              l.done_flag, l.done_note, l.complete_at,
+              (SELECT g.online_date FROM gsheet_sync g WHERE g.location_id = l.id) AS online_date
             FROM locations l LEFT JOIN users u ON u.id = l.created_by
                               LEFT JOIN users o ON o.id = l.owner_id
                               LEFT JOIN users m ON m.id = l.modified_by
-            {wsql} ORDER BY l.id DESC LIMIT ? OFFSET ?""",
+            {wsql} ORDER BY ({_ONLINE_SQL}) DESC, l.id DESC LIMIT ? OFFSET ?""",
         params + [size, offset],
     ).fetchall()
 
@@ -365,10 +406,14 @@ def list_locations(
             "dup_n": dup_n.get(r["id"], 0),
             "sid": r["sid"] or "",
             "so": r["so"] or "",
+            "online": r["online_date"] if r["online_date"] and not r["complete_at"] else None,
+            "done_flag": (r["done_flag"] or "clean") if r["status"] == "selesai" else None,
+            "done_note": r["done_note"] or "",
         }
         for r in rows
     ]
-    return {"rows": result, "total": total, "page": page, "size": size, "dup_total": len(dup_n)}
+    return {"rows": result, "total": total, "page": page, "size": size, "dup_total": len(dup_n),
+            "online_n": online_n, "notes_n": notes_n}
 
 
 @router.get("/creators")
@@ -448,7 +493,8 @@ def location_options(conn: sqlite3.Connection = Depends(get_db), user=Depends(cu
     sc, scp = _scope(user)
     wsql = "WHERE l.deleted_at IS NULL" + ((" AND " + sc) if sc else "")
     rows = conn.execute(
-        f"SELECT l.id, l.code, l.name, l.status, l.data_json, l.sid FROM locations l {wsql} ORDER BY l.id DESC", scp
+        f"SELECT l.id, l.code, l.name, l.status, l.data_json, l.sid, ({_ONLINE_SQL}) AS onl FROM locations l {wsql} "
+        f"ORDER BY onl DESC, l.id DESC", scp
     ).fetchall()
     opts = []
     for r in rows:
@@ -458,7 +504,8 @@ def location_options(conn: sqlite3.Connection = Depends(get_db), user=Depends(cu
                 nama = (json.loads(r["data_json"]) or {}).get("nama_lokasi", "") or ""
             except Exception:
                 nama = ""
-        opts.append({"id": r["id"], "code": r["code"], "nama": nama, "status": r["status"], "sid": r["sid"] or ""})
+        opts.append({"id": r["id"], "code": r["code"], "nama": nama, "status": r["status"], "sid": r["sid"] or "",
+                     "online": bool(r["onl"])})
     return {"options": opts, "total": len(opts)}
 
 
@@ -599,6 +646,36 @@ def transfer_locations(body: TransferIn, conn: sqlite3.Connection = Depends(get_
     return {"ok": True, "count": n, "to": {"id": tgt["id"], "name": name}}
 
 
+class DoneFlagIn(BaseModel):
+    flag: str                      # clean | notes
+    note: str = ""
+
+
+@router.put("/{loc_id}/done-flag")
+def set_done_flag(loc_id: int, body: DoneFlagIn, conn: sqlite3.Connection = Depends(get_db),
+                  user=Depends(require_editor)):
+    """Ubah flag lokasi Done: tutup catatan (clean) atau beri/ubah catatan. Operator pemilik atau admin."""
+    row = conn.execute("SELECT * FROM locations WHERE id=? AND deleted_at IS NULL", (loc_id,)).fetchone()
+    if not row:
+        raise HTTPException(404, "Location not found")
+    if not _can_write(user, row):
+        raise HTTPException(403, "Not your location")
+    if row["status"] != "selesai":
+        raise HTTPException(400, "Only a Done location has a flag")
+    if body.flag not in ("clean", "notes"):
+        raise HTTPException(400, "Unknown flag")
+    note = body.note.strip()[:1000]
+    if body.flag == "notes" and not note:
+        raise HTTPException(400, "Write the note — what still needs fixing")
+    conn.execute("UPDATE locations SET done_flag=?, done_note=?, done_note_by=?, done_note_at=? WHERE id=?",
+                 (body.flag, note if body.flag == "notes" else None, user["id"], db.now_iso(), loc_id))
+    db.log_activity(conn, loc_id, user["id"], "done_note" if body.flag == "notes" else "done_clean",
+                    note[:200] if body.flag == "notes" else (row["done_note"] or "")[:200])
+    conn.commit()
+    audit(conn, user, "done_flag", "location", loc_id, f"{row['code']}: {body.flag}")
+    return _location_dict(conn, conn.execute("SELECT * FROM locations WHERE id=?", (loc_id,)).fetchone(), user)
+
+
 class ResetIn(BaseModel):
     ids: list[int]
     dry: bool = False  # True = hanya hitung isi yang akan terhapus (untuk kotak konfirmasi)
@@ -622,7 +699,8 @@ def _reset_one(conn, row, user) -> None:
         conn.execute(f"DELETE FROM {t} WHERE location_id=?", (lid,))
     data = json.loads(row["data_json"] or "{}")
     keep = {"nama_lokasi": data.get("nama_lokasi") or row["name"] or ""}
-    conn.execute("UPDATE locations SET data_json=?, status='draft', done_at=NULL, complete_at=NULL WHERE id=?",
+    conn.execute("UPDATE locations SET data_json=?, status='draft', done_at=NULL, complete_at=NULL, done_flag=NULL, "
+                 "done_note=NULL, done_note_by=NULL, done_note_at=NULL WHERE id=?",
                  (json.dumps(keep, ensure_ascii=False), lid))
     conn.execute("UPDATE gsheet_sync SET pdf_url=NULL, pdf_at=NULL WHERE location_id=?", (lid,))
     db.touch_modified(conn, lid, user["id"], "reset")
@@ -736,9 +814,18 @@ def update_location(loc_id: int, body: LocationIn, conn: sqlite3.Connection = De
         if pct < 100:
             conn.rollback()
             raise HTTPException(400, f"Not complete yet ({pct}%) — missing: {', '.join(miss)}")
-        conn.execute("UPDATE locations SET done_at=? WHERE id=?", (db.now_iso(), loc_id))
+        flag = "notes" if body.done_flag == "notes" else "clean"
+        note = (body.done_note or "").strip()[:1000]
+        if flag == "notes" and not note:
+            conn.rollback()
+            raise HTTPException(400, "Write the note — what still needs fixing")
+        conn.execute("UPDATE locations SET done_at=?, done_flag=?, done_note=?, done_note_by=?, done_note_at=? WHERE id=?",
+                     (db.now_iso(), flag, note if flag == "notes" else None, user["id"], db.now_iso(), loc_id))
+        if flag == "notes":
+            db.log_activity(conn, loc_id, user["id"], "done_note", note[:200])
     elif body.status != "selesai" and row["status"] == "selesai":
-        conn.execute("UPDATE locations SET done_at=NULL WHERE id=?", (loc_id,))
+        conn.execute("UPDATE locations SET done_at=NULL, done_flag=NULL, done_note=NULL, done_note_by=NULL, "
+                     "done_note_at=NULL WHERE id=?", (loc_id,))
     if changed:
         data_changed = (json.loads(new_json) != json.loads(row["data_json"] or "{}")
                         or body.name != row["name"] or wil_changed)

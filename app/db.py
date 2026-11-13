@@ -245,6 +245,9 @@ DEFAULT_PHOTO_CATEGORIES = [
     {"key": "simkopdes", "label": "Capture Buka Situs SIMKOPDES", "ocr": False, "keywords": ["simkopdes"]},
 ]
 
+# Pilihan cepat catatan BAA "Done · with notes" (diatur admin per project)
+DEFAULT_DONE_NOTES = ["Foto kurang jelas", "TTD belum lengkap", "SN belum sesuai", "Scan belum final"]
+
 # Default baris inventory untuk lokasi baru (prefilled nama perangkat)
 DEFAULT_INVENTORY_ITEMS = ["Kit Starlink", "Router", "Access Point"]
 
@@ -522,6 +525,7 @@ def _seed_project(conn: sqlite3.Connection, base: dict | None = None) -> None:
         "inventory_keterangan": ["OK"],
         "sid_config": DEFAULT_SID_CONFIG,
         "attach_config": DEFAULT_ATTACH_CONFIG,
+        "done_note_presets": DEFAULT_DONE_NOTES,
     }
     for k, v in defaults.items():
         if get_setting(conn, k) is None:
@@ -540,10 +544,15 @@ def init_project_db(p, base: dict | None = None) -> None:
     try:
         conn.execute("PRAGMA journal_mode = WAL")
         conn.executescript(PROJECT_SCHEMA)
-        for col in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_mode", "old_codes", "sid", "complete_at", "so"):
+        for col in ("wil_kode", "wil_desa", "wil_kec", "wil_kab", "wil_prov", "wil_mode", "old_codes", "sid", "complete_at", "so",
+                    "done_flag", "done_note", "done_note_by", "done_note_at"):
             if not _has_column(conn, "locations", col):
                 conn.execute(f"ALTER TABLE locations ADD COLUMN {col} TEXT")
         conn.execute("CREATE INDEX IF NOT EXISTS ix_loc_sid ON locations(upper(sid))")
+        # Google Sheet: tanggal terpasang/integrasi dari sheet (link online) per lokasi
+        for col in ("online_date", "online_seen"):
+            if not _has_column(conn, "gsheet_sync", col):
+                conn.execute(f"ALTER TABLE gsheet_sync ADD COLUMN {col} TEXT")
         # permintaan: edit (alih kepemilikan, bawaan) | sid (ganti SID: value_old -> value_new)
         for col, typ in (("kind", "TEXT NOT NULL DEFAULT 'edit'"), ("value_old", "TEXT"), ("value_new", "TEXT")):
             if not _has_column(conn, "edit_requests", col):

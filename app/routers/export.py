@@ -39,6 +39,11 @@ def _filter_where(q: str, status: str, creator: int, date: str, user=None, wil: 
     if status in ("draft", "selesai"):
         where.append("status = ?")
         params.append(status)
+    elif status == "notes":
+        where.append("status = 'selesai' AND done_flag = 'notes'")
+    elif status == "online":
+        where.append("complete_at IS NULL AND EXISTS(SELECT 1 FROM gsheet_sync g WHERE g.location_id = locations.id "
+                     "AND COALESCE(g.online_date,'') <> '')")
     if creator:
         where.append("created_by = ?")
         params.append(creator)

@@ -283,6 +283,37 @@
   .bk-bar button.pri{background:var(--md-sys-color-inverse-primary);color:var(--md-sys-color-on-primary-container)}
   .bk-dlg{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;padding:16px;background:color-mix(in srgb,var(--md-sys-color-scrim,#000) 45%,transparent)}
   .bk-dlg .box{width:min(580px,100%);padding:22px;border-radius:var(--md-sys-shape-corner-extra-large);background:var(--md-sys-color-surface-container-high);box-shadow:var(--md-sys-elevation-level3);animation:pjin .22s cubic-bezier(.05,.7,.1,1)}
+  /* LED berpendar: link online (Google Sheet) tetapi dokumen BAA belum lengkap */
+  .led{display:inline-block;flex:none;width:10px;height:10px;border-radius:50%;background:var(--md-sys-color-error);
+    box-shadow:0 0 0 0 color-mix(in srgb,var(--md-sys-color-error) 70%,transparent);animation:ledPulse 1.6s ease-out infinite;vertical-align:middle}
+  @keyframes ledPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--md-sys-color-error) 70%,transparent)}70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  @media (prefers-reduced-motion:reduce){.led{animation:none}}
+  .on-chip{display:inline-flex;align-items:center;gap:6px;margin:4px 6px 0 0;padding:2px 9px 2px 7px;border-radius:var(--md-sys-shape-corner-full);
+    font:var(--md-sys-typescale-label-small);background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);white-space:nowrap}
+  .on-chip .led{width:8px;height:8px}
+  .nt-chip{display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;border-radius:var(--md-sys-shape-corner-full);font:var(--md-sys-typescale-label-small);
+    background:var(--md-sys-color-tertiary-container);color:var(--md-sys-color-on-tertiary-container);white-space:nowrap}.nt-chip .mi{font-size:14px}
+  .cl-chip{display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;border-radius:var(--md-sys-shape-corner-full);font:var(--md-sys-typescale-label-small);
+    background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}.cl-chip .mi{font-size:14px}
+  #flagBan:empty{display:none}
+  .fl-ban{display:flex;gap:12px;align-items:center;margin:0 0 14px;padding:12px 16px;border-radius:var(--md-sys-shape-corner-large);font:var(--md-sys-typescale-body-medium)}
+  .fl-ban .tx{flex:1;min-width:0}.fl-ban .tx small{display:block;opacity:.8;font:var(--md-sys-typescale-body-small)}
+  .fl-ban.on{background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container)}
+  .fl-ban.nt{background:var(--md-sys-color-tertiary-container);color:var(--md-sys-color-on-tertiary-container)}
+  .fl-ban.cl{background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface-variant);padding:8px 16px}
+  .fl-ban>.mi{font-size:22px}.fl-ban .acts{display:flex;gap:6px;flex-wrap:wrap}
+  .fn-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}
+  .fn-opt{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:var(--md-sys-shape-corner-large);border:1px solid var(--md-sys-color-outline-variant);cursor:pointer;font:var(--md-sys-typescale-body-medium)}
+  .fn-opt b{display:block;font:var(--md-sys-typescale-title-small)}.fn-opt small{color:var(--md-sys-color-on-surface-variant)}
+  .fn-opt.sel{border-color:var(--md-sys-color-primary);background:color-mix(in srgb,var(--md-sys-color-primary) 10%,transparent)}
+  .fn-opt .mi{font-size:22px;color:var(--md-sys-color-primary)}
+  .fn-note textarea{width:100%;min-height:78px;box-sizing:border-box;padding:10px 12px;border-radius:var(--md-sys-shape-corner-small);border:1px solid var(--md-sys-color-outline);
+    background:transparent;color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-body-medium);resize:vertical}
+  .fn-pre{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
+  .fn-pre button{border:1px solid var(--md-sys-color-outline-variant);background:transparent;color:var(--md-sys-color-on-surface);border-radius:var(--md-sys-shape-corner-small);padding:4px 10px;font:var(--md-sys-typescale-label-medium);cursor:pointer}
+  .fn-pre button:hover{background:var(--md-sys-color-surface-container-highest)}
+  .fn-edit{font:var(--md-sys-typescale-label-small);color:var(--md-sys-color-primary);cursor:pointer;background:none;border:0;padding:0}
+  @media(max-width:560px){.fn-opts{grid-template-columns:1fr}}
   .rs-box md-text-field{width:100%;margin:4px 0 2px}
   .rs-del{margin:0 0 12px;padding:12px 14px;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);font:var(--md-sys-typescale-body-medium)}
   .rs-del ul{margin:6px 0 0;padding-left:20px}.rs-del li{margin:2px 0}
@@ -2531,6 +2562,7 @@
         <div id="entry-form" class="entry-grid hidden">
           <div class="entry-main">
             <div class="ro-note"><span class="mi">lock</span> Viewer mode — you can only view this entry, not edit it.</div>
+            <div id="flagBan"></div>
             <div class="card">
               <div class="sec"><span class="mi acc">location_on</span><h3>Location Data</h3></div>
               <div class="act-gate hidden" id="actGate"></div>
@@ -2655,7 +2687,7 @@
             <md-button variant="text" id="loc-clear" icon="filter_alt_off">Reset</md-button>
             <span class="grow"></span>
             <button type="button" class="dup-chip hidden" id="loc-dupf" data-tip="Same name and wilayah as another location"><span class="mi">content_copy</span>Possible duplicates <b id="loc-dupn">0</b></button>
-            <md-segmented-button id="loc-filter"><button data-value="all" selected>All</button><button data-value="draft">Draft</button><button data-value="selesai">Done</button></md-segmented-button>
+            <md-segmented-button id="loc-filter"><button data-value="all" selected>All</button><button data-value="online" data-tip="Link online in the Google Sheet, BAA not complete yet — collect the evidence">Online <span id="lfOnN"></span></button><button data-value="draft">Draft</button><button data-value="selesai">Done</button><button data-value="notes" data-tip="Done with notes — fix before handing to the customer">Notes <span id="lfNtN"></span></button></md-segmented-button>
           </div>
           <div class="loc-tw"><table><thead><tr><th class="bk-col"><span class="bk-ck" id="bkAll" data-tip="Select all shown"></span></th><th>Code</th><th>Location</th><th>Created by</th><th>Created</th><th>Last modified</th><th>Modified by</th><th>INV</th><th>Photos</th><th>Status</th><th>Completeness</th><th></th></tr></thead><tbody id="loc-table"></tbody></table></div>
           <div class="rowflex" style="margin-top:12px;align-items:center">
@@ -3370,7 +3402,7 @@ class LocationPicker{
   setValue(v){this.value=v==null?'':String(v);this._renderTrigger();return this;}
   getValue(){return this.value;}
   _renderTrigger(){const o=this.items.find(x=>x.value===this.value);const v=this.el.querySelector('.lp-val');
-    v.innerHTML=o?(`<span class="lp-nm-main">${esc(o.nama||'(no name)')}</span><span class="lp-code">${esc(o.code)}</span>`):'— select location —';v.classList.toggle('ph',!o);
+    v.innerHTML=o?(`${o.online?'<span class="led" style="margin-right:8px"></span>':''}<span class="lp-nm-main">${esc(o.nama||'(no name)')}</span><span class="lp-code">${esc(o.code)}</span>`):'— select location —';v.classList.toggle('ph',!o);
     this.el.title=o?(o.nama||'')+' · '+o.code:'';}
   // panel punya lebar sendiri (560 px), tidak ikut lebar tombol; dibatasi lebar layar
   _position(){const r=this.el.getBoundingClientRect();const w=Math.min(560,window.innerWidth-16);
@@ -3388,7 +3420,7 @@ class LocationPicker{
     const hl=t=>{const i=q?t.toLowerCase().indexOf(q):-1;return i<0?esc(t):esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+q.length))+'</mark>'+esc(t.slice(i+q.length));};
     this.list.innerHTML=rows.length?rows.map((o,i)=>`<div class="lp-opt${i===this.act?' act':''}${o.value===this.value?' sel':''}" data-v="${o.value}" title="${esc((o.nama||'(no name)')+' · '+o.code)}">
         <span class="lp-nm${o.nama?'':' empty'}">${o.nama?hl(o.nama):'(no name)'}</span>
-        <span class="lp-meta">${o.sid?`<span class="sid-chip">${esc(sidLabel())} ${hl(o.sid)}</span>`:''}<span class="lp-code">${hl(o.code)}</span><span class="lp-badge ${o.status==='selesai'?'b-s':'b-d'}">${esc(o.status||'')}</span></span></div>`).join(''):'<div class="lp-empty">No matching location.</div>';
+        <span class="lp-meta">${o.sid?`<span class="sid-chip">${esc(sidLabel())} ${hl(o.sid)}</span>`:''}<span class="lp-code">${hl(o.code)}</span><span class="lp-badge ${o.status==='selesai'?'b-s':'b-d'}">${esc(o.status||'')}</span>${o.online?'<span class="led" data-tip="Link online — collect the evidence"></span>':''}</span></div>`).join(''):'<div class="lp-empty">No matching location.</div>';
     [...this.list.querySelectorAll('.lp-opt')].forEach(el=>el.addEventListener('click',()=>this._choose(el.dataset.v)));
   }
   _choose(v){this.value=v;this._renderTrigger();this.close();this.onChange&&this.onChange(v);}
@@ -3573,7 +3605,7 @@ async function showApp(fromLogin){const lg=$('#login');$('#app').classList.remov
   else{lg.classList.add('hidden');$('#lgGreet').classList.remove('on','out');$('#lgIris').classList.remove('on');$('#lgCard').classList.remove('gone');}
   if(S.user.must_change)await onbPassword();
   if(!await pjInit()){if(window.BFIntro)BFIntro.unveil();return;}
-  S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.keterangan=s.inventory_keterangan||[];S.appTitle=s.app_title||'BAA Generator';S.sidCfg=s.sid_config||S.sidCfg;S.attCfg=s.attach_config||S.attCfg;S.actRule=s.activation_rule||S.actRule;S.soList=s.so_list||[];});
+  S.settingsReady=api('/api/settings').then(s=>{S.cats=s.photo_categories||[];S.locFields=s.location_fields||[];S.ocr=s.ocr_available;S.invItems=s.default_inventory_items||[];S.itemMerks=s.item_merks||{};S.keterangan=s.inventory_keterangan||[];S.appTitle=s.app_title||'BAA Generator';S.sidCfg=s.sid_config||S.sidCfg;S.attCfg=s.attach_config||S.attCfg;S.actRule=s.activation_rule||S.actRule;S.soList=s.so_list||[];S.notePresets=s.done_note_presets||[];});
   await S.settingsReady;
   if(S.user.role!=='admin')$$('.admin-only').forEach(x=>x.classList.add('hidden'));
   $$('.prog-nav').forEach(x=>x.classList.toggle('hidden',S.user.role==='operator'));
@@ -4853,7 +4885,7 @@ function agingRanges(a){return {fresh:`0–${a.fresh} d`,warm:`${a.fresh+1}–${
 function ageChip(d){return `<span class="pg-age-chip" style="background:var(${AGE_VAR[d.aging]});color:var(${AGE_INK[d.aging]})">${AGE_LBL[d.aging]} · ${d.idle} d</span>`;}
 function fmtDay(iso){if(!iso)return '—';const d=new Date(iso+(iso.length===10?'T00:00:00':''));return `${d.getDate()} ${_IDMON[d.getMonth()]} ${d.getFullYear()}`;}
 function hhmm(iso){const d=new Date(iso);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
-const ACT_TXT={create:'Created',data:'Edited location data',inventory:'Edited inventory',photo_add:d=>`Uploaded ${d||1} photo${(+d||1)>1?'s':''}`,photo_del:'Deleted a photo',photo_move:'Moved a photo',sn:'Edited an SN',done:'Marked Done',reopen:'Reopened',reset:'Reset the BAA',
+const ACT_TXT={create:'Created',data:'Edited location data',inventory:'Edited inventory',photo_add:d=>`Uploaded ${d||1} photo${(+d||1)>1?'s':''}`,photo_del:'Deleted a photo',photo_move:'Moved a photo',sn:'Edited an SN',done:'Marked Done',reopen:'Reopened',reset:'Reset the BAA',act_sheet:d=>`Activation date ${fmtD(d)} from Google Sheet`,done_note:d=>`Done with notes: ${d||''}`,done_clean:'Closed the notes — Done · clean',
   scan_add:'Uploaded the scan PDF',scan_del:'Removed the scan PDF',att_add:d=>'Attached '+(d||'a file'),att_del:d=>'Removed attachment '+(d||''),att_move:d=>'Moved attachment '+(d||''),
   sid:d=>`${sidLabel()} ${d||'changed'}`,so:d=>`SO ${d&&d!=='—'?'set to '+d:'cleared'}`};
 function actTxt(f){const t=ACT_TXT[f.kind];return typeof t==='function'?t(f.detail):(t||f.kind);}
@@ -4958,6 +4990,7 @@ function renderProgress(){const d=PG,t=d.team,ed=d.can_edit,el=$('#pgBody');
     <div><div class="lab">BAA done</div><div class="pg-big">${t.done} <small>/ ${edBtn('pgEdTot',t.total)}</small></div>
       <div class="pg-bar"><i style="width:${Math.min(100,pct)}%"></i>${idealPct!=null?`<b style="left:${Math.min(100,idealPct)}%" data-h="Where the team should be today: ${t.ideal_today}"></b>`:''}</div>
       <div class="mut" style="margin-top:6px">${pct}% done${idealPct!=null?` · should be ${t.ideal_today} by today`:''}</div>
+      ${d.notes_n||d.online_n?`<div class="pg-hist">${d.online_n?`<span class="led" style="margin-right:6px"></span>${d.online_n} online, BAA not complete`:''}${d.online_n&&d.notes_n?' · ':''}${d.notes_n?`${d.notes_n} Done with notes`:''}</div>`:''}
       ${hist?`<div class="pg-hist">Total changed ${hist.old??'—'} → ${hist.new} by ${esc(hist.by)} · ${fmtDay(hist.at.slice(0,10))}</div>`:(!t.total_set?`<div class="pg-hist">Total = locations entered so far${ed?' — set the estimated total':''}</div>`:'')}</div>
     <div><div class="lab">Target date</div><div class="pg-v">${edBtn('pgEdTgt',t.target_date?fmtDay(t.target_date):(ed?'Set date':'Not set'))}</div>
       <div class="mut">${t.target_date?`<b>${Math.max(0,t.days_left)} days</b> left · ${t.wd_left} working days`:'No target date yet'}</div></div>
@@ -5148,7 +5181,7 @@ async function loadMyDash(){let d;try{d=await api('/api/dash/me');}catch(e){retu
     ${t.target_date?`<div class="mut" style="margin-top:10px">Team: ${t.done} of ${t.total} done · target ${fmtDay(t.target_date)}</div>`:''}</div>`;
   const q=`<div class="card s7"><div class="ct">My drafts</div><div class="cd">Missing items at a glance · aging by last change</div>
     ${d.drafts.length?d.drafts.slice(0,6).map(x=>`<div class="me-q"><div><div style="font-weight:600;font-size:13px;text-align:center">${x.pct}%</div><div class="pg-mini" style="margin-top:4px"><i style="width:${x.pct}%"></i></div></div>
-      <div style="min-width:0"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${locLbl(x)}</div><div class="pg-miss">${x.missing.slice(0,3).map(m=>`<span class="pg-m">${esc(m)}</span>`).join('')}${x.missing.length>3?`<span class="pg-m">+${x.missing.length-3}</span>`:''}</div></div>
+      <div style="min-width:0"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x.online?`<span class="led" style="margin-right:6px" data-tip="Link online since ${fmtD(x.online)} — collect the evidence"></span>`:''}${locLbl(x)}</div><div class="pg-miss">${x.missing.slice(0,3).map(m=>`<span class="pg-m">${esc(m)}</span>`).join('')}${x.missing.length>3?`<span class="pg-m">+${x.missing.length-3}</span>`:''}</div></div>
       ${ageChip(x)}<md-button variant="tonal" size="xs" onclick="openFromLog(${x.id})">Open</md-button></div>`).join('')+(d.drafts.length>6?`<button class="mlnk" style="margin-top:8px" onclick="navTo('locations')">+${d.drafts.length-6} more in Location Log</button>`:''):'<div class="pg-empty">No open drafts.</div>'}</div>`;
   const feed=`<div class="card s12"><div class="ct">My recent work</div><div class="cd">Changes to your locations</div>
     ${d.feed.length?`<div class="me-feed">${d.feed.slice(0,10).map(f=>`<div class="sv-fi"><span class="t">${relShort(f.at)}</span><span>${esc(actTxt(f))} · ${locLbl(f.loc)}</span></div>`).join('')}</div>`:'<div class="pg-empty">No changes yet.</div>'}</div>`;
@@ -5312,7 +5345,7 @@ function requiredCats(){return S.cats||[];} /* semua kategori wajib (konsep "req
 /* ENTRY */
 async function refreshPicker(){const r=await api('/api/locations/options');const opts=r.options||[];
   $('#loc-count').textContent=r.total||'';const an=$('#lgActN');if(an)an.textContent=r.total||'';lgTrashCount();
-  pickerSel.setOptions(opts.map(l=>({value:String(l.id),code:l.code,nama:l.nama||'',status:l.status||'draft',sid:l.sid||''})));
+  pickerSel.setOptions(opts.map(l=>({value:String(l.id),code:l.code,nama:l.nama||'',status:l.status||'draft',sid:l.sid||'',online:!!l.online})));
   if(S.loc)pickerSel.setValue(String(S.loc.id));}
 /* ---- Draft-first (#23): kode dibuat hanya saat ada data pertama ---- */
 function isDraft(){return !!(S.loc&&!S.loc.id);}
@@ -5402,7 +5435,7 @@ async function dupCheck(){const el=$('#dupWarn');if(!el||!S.loc)return;const seq
   el.querySelectorAll('[data-open]').forEach(a=>a.onclick=async()=>{if(entryDirty&&!roActive()){await saveEntry(false);}openLoc(+a.dataset.open);});}
 /* Read-only bila viewer, atau operator membuka lokasi milik user lain (boleh lihat,
    tak boleh edit). Field dikunci + tombol tulis disembunyikan (class .ro). */
-function lockEntry(){rsSync();
+function lockEntry(){rsSync();flagPaint();
   const ro = (S.user && S.user.role==='viewer') || (S.loc && S.loc.can_edit===false);
   const form=$('#entry-form'); if(!form)return; form.classList.toggle('ro', !!ro);
   let ban=$('#ro-banner');
@@ -6005,7 +6038,7 @@ async function _saveEntry(finish){try{
   // lokasi hasil import tanpa tanggal aktivasi di server: simpan data (draft) dulu, karena server menolak inventory sebelum tanggal ada
   if(actStoredMissing())await api('/api/locations/'+S.loc.id,{method:'PUT',body:JSON.stringify({name:st.data.nama_lokasi||'',data:st.data,status:'draft',...wilBody(false)})});
   await api('/api/locations/'+S.loc.id+'/inventory',{method:'PUT',body:JSON.stringify({items:collectInventory()})});   // inventory dulu: server cek kelengkapan saat Done
-  await api('/api/locations/'+S.loc.id,{method:'PUT',body:JSON.stringify({name:st.data.nama_lokasi||'',data:st.data,status,...wilBody()})});
+  await api('/api/locations/'+S.loc.id,{method:'PUT',body:JSON.stringify({name:st.data.nama_lokasi||'',data:st.data,status,...wilBody(),...(status==='selesai'&&!was&&S.finFlag||{})})});
   S.loc._wilDirty=false;entryDirty=false;
   toast(status==='selesai'?(was?'Changes saved':'BAA complete ✓'):was?'Saved — back to draft (no longer complete)':finish?'Saved — still missing: '+ec.miss.join(', '):'Saved (draft)');
   const id=S.loc.id;await openLoc(id);refreshPicker();loadLocations();
@@ -6017,8 +6050,13 @@ $('#save-btn').addEventListener('click',()=>{
   if(hits.length&&!S.dupOk&&S.loc&&S.loc.status!=='selesai'&&ec&&ec.pct>=100){
     const w=(S.loc.wilayah)||{},nm=(collectData().nama_lokasi||'').trim();
     confirmDo('Possible duplicate location',`<b>${esc(nm)}</b>${w.desa?` in <b>${esc(w.desa)}</b>`:''} already exists as ${hits.map(x=>`<span class="mono">${esc(x.code)}</span> (owner ${esc(x.owner_name)}, ${esc(x.status)})`).join(' and ')}.<br><br>Finish this BAA anyway? If it's the same place, open the existing one instead and delete this draft.`,
-      ()=>{S.dupOk=true;saveEntry(true);},{okLabel:'Finish anyway'});return;}
-  saveEntry(true);});
+      ()=>{S.dupOk=true;finishAsk();},{okLabel:'Finish anyway'});return;}
+  finishAsk();});
+/* Finish pertama di 100%: pilih Clean / With notes dulu; selain itu simpan biasa */
+function finishAsk(){const ec=S.loc?entryCalc(computeState()):null;
+  if(!S.loc||S.loc.status==='selesai'||!ec||ec.pct<100){saveEntry(true);return;}
+  noteDlg({title:'Finish BAA',ok:'Finish BAA',flag:'clean'},async(flag,note)=>{S.finFlag={done_flag:flag,done_note:note};
+    try{return await saveEntry(true);}finally{S.finFlag=null;}});}
 /* ===== Auto-save draft: data lokasi, wilayah, inventory tersimpan ±1 dtk setelah berhenti mengetik ===== */
 const AS={t:0,busy:null,again:false,at:0,err:''};
 function asOn(){return !!(S.loc&&S.loc.status!=='selesai'&&S.loc.can_edit!==false&&!roActive()&&!frozenRO()&&S.user&&S.user.role!=='viewer'&&!actMissing());}
@@ -6101,7 +6139,10 @@ function fetchLocPage(page){
   return api(`/api/locations?page=${page}&size=${LOC_SIZE}&q=${q}&status=${st}&creator=${cr||0}&owner=${ow||0}&dup=${S.locDup?1:0}&date=${encodeURIComponent(dt)}&wil=${encodeURIComponent(wl)}&so=${encodeURIComponent(locSoVal())}`);
 }
 async function loadLocations(){LOC_PAGE=1;wilRegions();const r=await fetchLocPage(1);
-  LOC_ROWS=r.rows||[];LOC_TOTAL=r.total||0;renderLocTable();dupChip(r.dup_total||0);}
+  LOC_ROWS=r.rows||[];LOC_TOTAL=r.total||0;renderLocTable();dupChip(r.dup_total||0);
+  const on=$('#lfOnN'),nt=$('#lfNtN');if(on)on.textContent=r.online_n?'· '+r.online_n:'';if(nt)nt.textContent=r.notes_n?'· '+r.notes_n:'';}
+const fmtD=iso=>{if(!iso)return '';const d=new Date(iso.slice(0,10)+'T00:00:00');return isNaN(d)?iso:d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});};
+const onChip=l=>l.online?`<span class="on-chip" data-tip="Link online since ${fmtD(l.online)} (Google Sheet) — BAA not complete, collect the evidence"><span class="led"></span>Online · ${fmtD(l.online)}</span>`:'';
 /* Location Log (admin): tombol "Possible duplicates" = filter lokasi dengan nama + wilayah sama */
 function dupChip(n){const c=$('#loc-dupf');if(!c)return;const adm=S.user&&S.user.role==='admin';
   c.classList.toggle('hidden',!adm||(!n&&!S.locDup));c.classList.toggle('on',!!S.locDup);$('#loc-dupn').textContent=n;}
@@ -6113,14 +6154,14 @@ function renderLocTable(){
     const present=(l.photo_cats||[]).filter(k=>S.cats.some(c=>c.key===k)).length;
     const stCls=l.status==='selesai'?'ok':'warn';
     const wl=wilCell(l);
-    return `<tr class="lrow" data-i="${l.id}" onclick='openLocDrawer(${l.id})'><td class="bk-col" onclick="bkTog(event,${l.id})"><span class="bk-ck${BK.has(l.id)?' on':''}" data-id="${l.id}"></span></td><td><a class="loc-link mono">${esc(l.code)}</a>${(l.sid&&sidOn())||l.so?`<div>${l.sid&&sidOn()?`<span class="sid-chip" data-tip="${esc(sidLabel())}">${esc(l.sid)}</span>`:''}${l.so?`<span class="so-chip" data-tip="SO">SO ${esc(l.so)}</span>`:''}</div>`:''}</td>
+    return `<tr class="lrow" data-i="${l.id}" onclick='openLocDrawer(${l.id})'><td class="bk-col" onclick="bkTog(event,${l.id})"><span class="bk-ck${BK.has(l.id)?' on':''}" data-id="${l.id}"></span></td><td><a class="loc-link mono">${esc(l.code)}</a>${l.online?`<div>${onChip(l)}</div>`:''}${(l.sid&&sidOn())||l.so?`<div>${l.sid&&sidOn()?`<span class="sid-chip" data-tip="${esc(sidLabel())}">${esc(l.sid)}</span>`:''}${l.so?`<span class="so-chip" data-tip="SO">SO ${esc(l.so)}</span>`:''}</div>`:''}</td>
     <td>${esc(l.data.nama_lokasi||l.name||'')}${l.dup_n>1?`<span class="dup-kb" data-tip="Same name and wilayah as ${l.dup_n-1} other location${l.dup_n>2?'s':''}"><span class="mi">content_copy</span>×${l.dup_n}</span>`:''}${wl}</td>
     <td>${esc(l.creator_name||'—')}${l.owner_id&&l.owner_id!==l.created_by?`<div class="lc-own" data-tip="Current owner (can edit)"><span class="mi">swap_horiz</span>${esc(l.owner_name||'—')}</div>`:''}</td>
     <td class="lc-date">${lcWhen(l.created_at)}</td>
     <td class="lc-date">${lcWhen(l.modified_at)}</td>
     <td>${l.modifier_name?esc(l.modifier_name):'<span class="lc-none" data-tip="No record yet — shows after the next edit">—</span>'}</td>
     <td>${l.inv_count}</td><td>${present}/${S.cats.length}</td>
-    <td><span class="loc-st ${stCls}">${esc(l.status)}</span></td>
+    <td><span class="loc-st ${stCls}">${esc(l.status)}</span>${l.done_flag==='notes'?`<div><span class="nt-chip" data-tip="${esc(l.done_note)}"><span class="mi">sticky_note_2</span>notes</span></div>`:''}</td>
     <td>${locKel(l)}</td>
     <td style="text-align:right"><md-icon-button data-tip="Actions" onclick='event.stopPropagation();locMenu(this,${JSON.stringify({id:l.id,code:l.code,cd:l.can_delete,st:l.status,owner_id:l.owner_id,owner_name:l.owner_name})})'><span>more_vert</span></md-icon-button></td></tr>`;}).join('')||'<tr><td colspan=12 class="muted">No data</td></tr>';
   $('#loc-info').textContent=LOC_TOTAL?`Showing ${Math.min(LOC_ROWS.length,LOC_TOTAL)} of ${LOC_TOTAL}`:'';
@@ -6449,6 +6490,49 @@ function bkTransfer(btn){const ids=[...BK],targets=trTargets();if(!ids.length)re
     fn:()=>confirmDo('Transfer locations',`Move <b>${ids.length} location${ids.length>1?'s':''}</b> to <b>${esc(u.full_name||u.username)}</b>? They become the owner and can edit them.`,
       ()=>doTransfer(ids,u),{okLabel:'Transfer'})})));}
 
+/* ===== Flag BAA: link online (Google Sheet, belum lengkap) · Done clean / with notes ===== */
+function flagPaint(){const el=$('#flagBan');if(!el)return;const L=S.loc;if(!L||!L.id){el.innerHTML='';return;}
+  const ed=L.can_edit!==false&&S.user&&S.user.role!=='viewer',d=L.done,h=[];
+  if(L.online)h.push(`<div class="fl-ban on"><span class="led"></span><div class="tx"><b>Link online since ${fmtD(L.online)}</b> — per Google Sheet (${esc((GS.cfg&&GS.cfg.online_col)||'Tanggal Terpasang/ Integrasi')}).
+    <small>Collect the evidence (photos, inventory, signed scan) and complete this BAA.</small></div></div>`);
+  if(d&&d.flag==='notes')h.push(`<div class="fl-ban nt"><span class="mi">sticky_note_2</span><div class="tx"><b>Done · with notes</b> — ${esc(d.note)}
+    <small>${d.by?esc(d.by)+' · ':''}${d.at?fmtD(d.at):''} · fix before handing to the customer</small></div>
+    ${ed?'<div class="acts"><md-button variant="text" id="flEdit">Edit note</md-button><md-button variant="filled" icon="verified" id="flClean">Mark as clean</md-button></div>':''}</div>`);
+  else if(d)h.push(`<div class="fl-ban cl"><span class="mi">verified</span><div class="tx"><b>Done · clean</b> — ready for the customer</div>${ed?'<md-button variant="text" icon="sticky_note_2" id="flAdd">Add note</md-button>':''}</div>`);
+  el.innerHTML=h.join('');
+  const set=async(flag,note)=>{try{S.loc=locMerge(await api('/api/locations/'+L.id+'/done-flag',{method:'PUT',body:JSON.stringify({flag,note})}));
+      flagPaint();loadLocations();toast(flag==='clean'?'Notes closed — Done · clean':'Note saved');return true;}catch(e){toast('Failed: '+e.message);return false;}};
+  const a=$('#flClean'),b=$('#flEdit'),c=$('#flAdd');
+  if(a)a.onclick=()=>confirmDo('Mark as clean',`Close the note on <b>${esc(L.code)}</b>? It becomes <b>Done · clean</b> — ready for the customer.`,()=>set('clean',''),{okLabel:'Mark as clean'});
+  if(b)b.onclick=()=>noteDlg({title:'Edit note',ok:'Save note',flag:'notes',note:d.note,only:true},(f,n)=>set(f,n));
+  if(c)c.onclick=()=>noteDlg({title:'Add note',ok:'Save note',flag:'notes',note:'',only:true},(f,n)=>set(f,n));
+  bindTips();}
+/* Dialog: Done clean / with notes (+ catatan, pilihan cepat diatur admin per project) */
+function noteDlg(o,cb){let flag=o.flag||'clean';const adm=S.user&&S.user.role==='admin';
+  const d=document.createElement('div');d.className='bk-dlg';
+  const pres=()=>(S.notePresets||[]).map(x=>`<button type="button" data-np="${esc(x)}">${esc(x)}</button>`).join('');
+  d.innerHTML=`<div class="box"><h3>${esc(o.title)}</h3><p>${o.only?'What still needs fixing before this BAA goes to the customer?':'The document is 100%. Is it really finished, or are there things to fix before it goes to the customer?'}</p>
+    ${o.only?'':`<div class="fn-opts"><label class="fn-opt" data-f="clean"><span class="mi">verified</span><span><b>Clean</b><small>Ready for the customer</small></span></label>
+      <label class="fn-opt" data-f="notes"><span class="mi">sticky_note_2</span><span><b>With notes</b><small>Still needs fixing — write what</small></span></label></div>`}
+    <div class="fn-note"><textarea id="fnTxt" placeholder="e.g. Foto ONT kurang jelas, minta ulang ke teknisi">${esc(o.note||'')}</textarea>
+      <div class="fn-pre" id="fnPre">${pres()}</div>${adm?'<button type="button" class="fn-edit" id="fnEd">Edit quick notes (admin)</button><div id="fnEdBox"></div>':''}</div>
+    <div class="acts"><md-button variant="text" id="fnCancel">Cancel</md-button><md-button variant="filled" icon="task_alt" id="fnOk">${esc(o.ok)}</md-button></div></div>`;
+  document.body.appendChild(d);const shut=()=>d.remove(),tx=$('#fnTxt'),nb=d.querySelector('.fn-note'),ok=$('#fnOk');
+  const paint=()=>{d.querySelectorAll('.fn-opt').forEach(x=>x.classList.toggle('sel',x.dataset.f===flag));nb.style.display=flag==='notes'?'':'none';
+    ok.toggleAttribute('disabled',flag==='notes'&&!tx.value.trim());};
+  d.querySelectorAll('.fn-opt').forEach(x=>x.onclick=()=>{flag=x.dataset.f;paint();if(flag==='notes')tx.focus();});
+  const bindPre=()=>d.querySelectorAll('[data-np]').forEach(b=>b.onclick=()=>{const v=b.dataset.np,t=tx.value.trim();
+    if(!t.split(/;\s*/).includes(v))tx.value=t?t+'; '+v:v;paint();tx.focus();});bindPre();
+  tx.addEventListener('input',paint);
+  const ed=$('#fnEd');if(ed)ed.onclick=()=>{const box=$('#fnEdBox');box.innerHTML=`<md-text-field id="fnEdT" variant="outlined" label="Quick notes, separated by ;" value="${esc((S.notePresets||[]).join('; '))}" style="width:100%;margin-top:8px"></md-text-field>
+      <div class="acts" style="margin-top:6px"><md-button variant="text" id="fnEdS">Save list</md-button></div>`;
+    $('#fnEdS').onclick=async()=>{try{const r=await api('/api/settings/done-note-presets',{method:'PUT',body:JSON.stringify({presets:($('#fnEdT').value||'').split(';').map(x=>x.trim()).filter(Boolean)})});
+      S.notePresets=r.presets;$('#fnPre').innerHTML=pres();bindPre();box.innerHTML='';toast('Quick notes saved');}catch(e){toast('Failed: '+e.message);}};};
+  $('#fnCancel').onclick=shut;d.addEventListener('mousedown',e=>{if(e.target===d)shut();});
+  ok.onclick=async()=>{if(ok.hasAttribute('disabled'))return;ok.setAttribute('disabled','');
+    const r=await cb(flag,flag==='notes'?tx.value.trim():'');if(r===false)ok.removeAttribute('disabled');else shut();};
+  paint();}
+
 /* ===== Reset BAA: kosongkan isian lokasi (identitas tetap). Satu: admin / operator pemilik (belum Done). Banyak: admin ===== */
 function rsSync(){const b=$('#entryReset');if(!b)return;const L=S.loc,u=S.user;
   b.classList.toggle('hidden',!(L&&L.id&&u&&u.role!=='viewer'&&L.can_edit!==false&&(u.role==='admin'||L.status!=='selesai')));}
@@ -6540,7 +6624,7 @@ $('#sb-apply').addEventListener('click',async()=>{if(!SBU.file||$('#sb-apply').h
    BAA Flow tidak pernah mengubah nama/ID/kolom lain di sheet; perbedaan = alarm. ===== */
 const GS={cfg:null,last:null,res:null,fmts:[],all:false,exp:{},selSid:new Set(),selSo:new Set(),selNew:new Set(),log:[],busy:false,stop:false};
 const GS_COLS=[['key_col','Key column (= SID)'],['name_col','Location name'],['desa_col','Desa'],['kec_col','Kecamatan'],['kab_col','Kabupaten'],
-  ['prov_col','Provinsi'],['so_col','SO'],['status_col','Status column'],['date_col','Date column'],['link_col','Link column']];
+  ['prov_col','Provinsi'],['so_col','SO'],['status_col','Status column'],['date_col','Date column'],['link_col','Link column'],['online_col','Installed date (read only)']];
 const gsWhen=iso=>{try{return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return iso;}};
 async function loadGs(){try{const r=await api('/api/gsheet/config');GS.cfg=r.config;GS.last=r.last;GS.fmts=r.date_fmts;GS.conds=r.conds||{};GS.log=r.log||[];}catch(e){toast('Failed: '+e.message);return;}
   gsStatus();gsLogPaint();if(!GS.cfg.url||!GS.cfg.has_secret)gsCfgOpen(true);if(GS.res)gsRender();}
@@ -6624,6 +6708,7 @@ function gsRender(){const r=GS.res;if(!r)return;const k=r.counts,A=r.alarms,c=GS
     A.wil_diff.length?sec('',`Same name, different wilayah · ${A.wil_diff.length}`,gsList('wil_diff',A.wil_diff,x=>`<div class="it">${gsLoc(x)}${x.kec?' <small>· '+esc(x.kec)+'</small>':''} — sheet ${gsRow(x.sheet)}</div>`)):'',
     A.dup_sheet.length?sec('',`Duplicate ID in the sheet · ${A.dup_sheet.length}`,gsList('dup_sheet',A.dup_sheet,d=>`<div class="it">ID <b>${esc(d.key)}</b> · ${esc(d.name)} <small>· rows ${d.rows.join(', ')} — skipped</small></div>`)):'',
     A.ambiguous.length?sec('',`Several sheet rows match · ${A.ambiguous.length}`,gsList('ambiguous',A.ambiguous,x=>`<div class="it">${gsLoc(x)} <small>· rows ${x.rows.join(', ')}</small></div>`)):'',
+    (A.online_bad||[]).length?sec('err',`Unreadable ${esc(c.online_col||'installed date')} · ${A.online_bad.length}`,gsList('online_bad',A.online_bad,x=>`<div class="it">${gsLoc(x)} — "<b>${esc(x.value)}</b>" ${gsRow(x.sheet)} <small>· use 10-Nov-2026</small></div>`)):'',
     A.so_diff.length?sec('',`SO differs · ${A.so_diff.length}`,gsList('so_diff',A.so_diff,x=>`<div class="it">${gsLoc(x)} — BAA Flow SO <b>${esc(x.so)}</b>, sheet <b>${esc(x.sheet.so)}</b></div>`)):'',
   ].join('');
   const take=A.take_sid.length||A.fill_so.length?`<div class="gs-a"><h4 class="ok">Take from the sheet (admin)</h4>
@@ -6639,6 +6724,7 @@ function gsRender(){const r=GS.res;if(!r)return;const k=r.counts,A=r.alarms,c=GS
       <div class="rp-k"><span>Will change</span><b>${k.changes}</b><small>${Object.entries(k.to||{}).map(([v,n])=>esc(v||'empty')+' '+n).join(' · ')||'status unchanged'}</small></div>
       <div class="rp-k"><span>PDF to upload</span><b>${k.pdf}</b><small>merged PDF · documents at 100%</small></div>
       <div class="rp-k${r.alarm_n?' warn':''}"><span>Alarms</span><b>${r.alarm_n}</b><small>${esc(r.file||'')} · ${esc(r.sheet||'')}</small></div></div>
+      ${r.online&&r.online.seen?`<p class="rp-note"><span class="led" style="margin-right:8px"></span><b>${r.online.seen}</b> link${r.online.seen>1?'s':''} online per "${esc(c.online_col)}"${r.online.filled?` · <b>${r.online.filled}</b> activation date${r.online.filled>1?'s':''} filled from the sheet`:''}${r.online.flag?` · <b>${r.online.flag}</b> BAA not complete — flagged for the operators`:''}.</p>`:''}
       <p class="rp-note">Checked ${esc(gsWhen(r.checked_at))}.${k.changes?' Update to GSheet sends these changes.':' The sheet already matches BAA Flow.'}</p></div>
     <div class="gs-grid"><div class="card"><div class="sec"><span class="mi acc">difference</span><h3>Changes to send</h3><span class="grow"></span><span class="gs-msg">${esc(c.status_col)} · ${esc(c.date_col)} · ${esc(c.link_col)}</span></div>
       ${r.changes.length?`<div style="overflow-x:auto"><table class="gs-tbl"><thead><tr><th>Location</th><th>ID</th><th>Status</th><th>Date</th><th>Link</th></tr></thead><tbody>
